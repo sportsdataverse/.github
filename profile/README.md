@@ -17,7 +17,6 @@
 - [{soccerAnimate}](https://github.com/Dato-Futbol/soccerAnimate) - Create 2D animations of soccer tracking data (Compatible data sources: Metrica Sports, Catapult)
 - [{oddsapiR}](https://oddsapir.sportsdataverse.org/) - Access sports odds from the Odds API (Data sources: The Odds API)
 - [{hockeyR}](https://hockeyr.netlify.app/) - Various functions to scrape hockey play-by-play data (Data sources: NHL, Hockey Reference)
-- [{toRvik}](https://www.torvik.dev/) - a suite of functions to pull clean, detailed, and extensive college basketball statistics (Data sources: Bart Torvik, cbbstat)
 - [{gamezoneR}](https://jacklich10.github.io/gamezoneR/) - Package for working with NCAA Men’s Basketball play-by-play data (Data sources: STATS LLC’s GameZone)
 - [{mlbplotR}](https://camdenk.github.io/mlbplotR/) - Create 'ggplot2' and 'gt' Visuals with Major League Baseball Logos
 - [{cfbplotR}](https://cfbplotr.sportsdataverse.org/) - A set of functions to visualize college football teams in 'ggplot2'
