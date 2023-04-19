@@ -28,14 +28,6 @@
 - [{puntr}](https://puntalytics.github.io/puntr) - Package for puntalytics
 - [{chessR}](https://jaseziv.github.io/chessR/) - A set of functions to enable users to extract chess game data from popular chess sites (Data sources: Lichess, Chess.com)
 
-## Node.js modules <a href="https://nodejs.org" target="_blank">
-
-<a href='https://www.npmjs.com/package/sportsdataverse'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-js.png' style="float:center;margin:20px"  width="18%" min-width="100px"/></a>
-
-[![npm](https://img.shields.io/npm/v/sportsdataverse?style=for-the-badge)](https://js.sportsdataverse.org/)  [![npm](https://img.shields.io/npm/dm/sportsdataverse?style=for-the-badge)](https://www.npmjs.com/package/sportsdataverse)
-<a href='https://www.npmjs.com/package/sportsdataverse'>[![NPM](https://nodei.co/npm/sportsdataverse.png)](https://npmjs.org/package/sportsdataverse)</a>
-
-[**Documentation**](https://js.sportsdataverse.org/)
 
 ## Python Packages <a href="https://pypi.org/user/saiemgilani/" alt="Saiem's Python Packages" target="_blank"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="python" width="40" height="40"/> </a>
 
@@ -46,6 +38,14 @@ loads" src="https://img.shields.io/pypi/dm/sportsdataverse?style=for-the-badge">
 
 [**Documentation**](https://py.sportsdataverse.org/)
 
+## Node.js modules <a href="https://nodejs.org" target="_blank">
+
+<a href='https://www.npmjs.com/package/sportsdataverse'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-js.png' style="float:center;margin:20px"  width="18%" min-width="100px"/></a>
+
+[![npm](https://img.shields.io/npm/v/sportsdataverse?style=for-the-badge)](https://js.sportsdataverse.org/)  [![npm](https://img.shields.io/npm/dm/sportsdataverse?style=for-the-badge)](https://www.npmjs.com/package/sportsdataverse)
+<a href='https://www.npmjs.com/package/sportsdataverse'>[![NPM](https://nodei.co/npm/sportsdataverse.png)](https://npmjs.org/package/sportsdataverse)</a>
+
+[**Documentation**](https://js.sportsdataverse.org/)
 
 ## About the SportsDataverse
 
