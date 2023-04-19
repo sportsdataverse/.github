@@ -28,15 +28,7 @@
 - [{puntr}](https://puntalytics.github.io/puntr) - Package for puntalytics
 - [{chessR}](https://jaseziv.github.io/chessR/) - A set of functions to enable users to extract chess game data from popular chess sites (Data sources: Lichess, Chess.com)
 
-<a href='https://cfbfastR.sportsdataverse.org/'><img src='https://raw.githubusercontent.com/sportsdataverse/cfbfastR/master/logo.png' width="18%" min-width="100px" /></a><a href='https://hoopR.sportsdataverse.org/'><img src="https://raw.githubusercontent.com/sportsdataverse/hoopR/master/logo.png" width="18%" min-width="100px"/></a><a href='https://wehoop.sportsdataverse.org'><img src="https://raw.githubusercontent.com/sportsdataverse/wehoop/master/logo.png" width="18%" min-width="100px"/></a><a href='https://fastRhockey.sportsdataverse.org/'><img src='https://raw.githubusercontent.com/benhowell71/fastRhockey/main/logo.png' width="18%" min-width="100px" /></a><a href='https://jaseziv.github.io/worldfootballR/'><img src='https://raw.githubusercontent.com/sportsdataverse/sportsdataverse-R/main/data-raw/worldfootballR-logo.png' width="18%" min-width="100px" /></a><a href='https://sportyR.sportsdataverse.org/'><img src='https://raw.githubusercontent.com/rossdrucker/sportyR/main/logos/sportyr-logo-hex.png' width="18%" min-width="100px" /></a>
-
 ## Node.js modules <a href="https://nodejs.org" target="_blank">
-
-[![sportsdataverse Card](https://github-readme-stats.vercel.app/api/pin/?username=sportsdataverse&repo=sportsdataverse-js&hide_border=true&show_icons=true&theme=monokai)](https://github.com/sportsdataverse/sportsdataverse-js)
-
-
-
-## Node.js modules
 
 <a href='https://www.npmjs.com/package/sportsdataverse'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-js.png' style="float:center;margin:20px"  width="18%" min-width="100px"/></a>
 
@@ -72,7 +64,3 @@ The conference materials can be found here:
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G0KJ588)
 
 [![DigitalOcean Referral Badge](https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg)](https://www.digitalocean.com/?refcode=38816e14651f&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
-
-
-
-## R Packages <a href="https://www.r-project.org/" target="_blank" alt="R"> <img src="https://www.vectorlogo.zone/logos/r-project/r-project-icon.svg" alt="R" width="40" height="40"/> </a>
