@@ -61,6 +61,8 @@ The conference materials can be found here:
 <h3 align="left">Connect with us:</h3>
 <a href="https://twitter.com/sportsdataverse" target="blank"><img src="https://img.shields.io/twitter/follow/sportsdataverse?color=blue&label=%40sportsdataverse&logo=twitter&style=for-the-badge" alt="sportsdataverse" /></a> <a href="https://twitter.com/cfbfastR" target="blank"><img src="https://img.shields.io/twitter/follow/cfbfastR?color=blue&label=%40cfbfastR&logo=twitter&style=for-the-badge" alt="cfbfastR" /></a> <a href="https://twitter.com/saiemgilani" target="blank"><img src="https://img.shields.io/twitter/follow/saiemgilani?color=blue&label=%40saiemgilani&logo=twitter&style=for-the-badge" alt="saiemgilani" /></a>
 
+[![](https://visitcount.itsvg.in/api?id=sportsdataverse&label=Profile%20Views&color=12&icon=3&pretty=false)](https://visitcount.itsvg.in)
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G0KJ588)
 
 [![DigitalOcean Referral Badge](https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg)](https://www.digitalocean.com/?refcode=38816e14651f&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
