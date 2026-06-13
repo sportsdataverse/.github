@@ -1,0 +1,47 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))\" 2>/dev/null); case \"$f\" in *_espn_ext.py|*/tools/codegen/_generated/*|*/docs/docs/*/reference/*) echo 'BLOCKED: this is codegen output (# GENERATED -- DO NOT EDIT). Edit tools/codegen/endpoints/*.yaml or tools/codegen/templates/*, then run: uv run python tools/codegen/generate.py && uv run python tools/codegen/generate.py --check' >&2; exit 2;; esac; true"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qiE 'co-authored-by:[[:space:]]*.*(claude|copilot|gpt|gemini|cursor)|generated with \\[?claude|generated with claude' && { echo 'BLOCKED: AI co-author/attribution trailer detected. SDV rule: the human is the sole attributable contributor -- omit all Co-Authored-By / generated-with-AI trailers on commits and PRs.' >&2; exit 2; }; true"
+          },
+          {
+            "type": "command",
+            "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qiE 'espn_capture_league|gen_returns_doc|crawl|for [a-z_]+ in .*(scoreboard|teams|summary)' && ! printf '%s' \"$c\" | grep -qE 'limit|--max|--bound|head -|range\\(' && echo 'NOTE: capture/crawl without a visible attempt bound -- cap attempts (not saves) to avoid a 404 flood (the CBS recruiting incident wasted 8,400+ requests).' >&2; true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))\" 2>/dev/null); case \"$f\" in *tools/codegen/endpoints/*.yaml|*tools/codegen/templates/*|*_espn_parsers.py|*tools/codegen/generate.py|*tools/codegen/spec.py) echo 'REMINDER: codegen source changed -> regenerate + verify: uv run python tools/codegen/generate.py && uv run python tools/codegen/generate.py --check' >&2;; esac; true"
+          },
+          {
+            "type": "command",
+            "command": "f=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))\" 2>/dev/null); case \"$f\" in *tools/codegen/endpoints/*.yaml) { grep -q 'parser:' \"$f\" 2>/dev/null && ! grep -q 'returns_schema:' \"$f\" 2>/dev/null && echo 'REMINDER: an endpoint declares parser: but no returns_schema: -> add a tools/codegen/schemas/<name>.yaml with a col_name|type|description table (R-style types: integer/character/double/logical).' >&2; };; esac; true"
+          },
+          {
+            "type": "command",
+            "command": "f=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))\" 2>/dev/null); case \"$f\" in */R/*.R) echo 'REMINDER (R): regenerate docs/NAMESPACE after editing R/ -> Rscript -e \"devtools::document()\" (and styler::style_pkg() if configured).' >&2;; esac; true"
+          }
+        ]
+      }
+    ]
+  }
+}
