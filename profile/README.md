@@ -3,6 +3,7 @@
 
 ## R Packages
 
+- [{sportsdataverse}](https://sportsdataverse.org/) - The SportsDataverse meta-package for R — loads the core SDV R packages in one call
 - [{cfbfastR}](https://cfbfastR.sportsdataverse.org/) - An R package to quickly obtain clean and tidy college football play by play data (Data sources: CollegeFootballData, ESPN)
 - [{hoopR}](https://hoopR.sportsdataverse.org/) - A utility to quickly obtain clean and tidy men's
     basketball play by play data (Data sources: NBA Stats API, ESPN, KenPom)
@@ -10,7 +11,7 @@
     basketball play by play data (Data sources: WNBA Stats API, ESPN)
 - [{baseballr}](https://BillPetti.github.io/baseballr/) - Provides numerous utilities for acquiring and analyzing
     baseball data from online sources (Data sources: Baseball Reference, FanGraphs, MLB Stats API, NCAA)
-- [{fastRhockey}](https://fastrhockey.sportsdataverse.org/) - A utility to scrape and load hockey play-by-play data and statistics (Data sources: Premier Hockey Federation, NHL)
+- [{fastRhockey}](https://fastrhockey.sportsdataverse.org/) - A utility to scrape and load hockey play-by-play data and statistics (Data sources: NHL, PWHL)
 - [{worldfootballR}](https://jaseziv.github.io/worldfootballR/) - allow users to extract various world football results and player statistics from popular football (soccer) data sites (Data sources: FB Reference, Transfermarkt, Understat, Fotmob)
 - [{sportyR}](https://sportyr.sportsdataverse.org/) - Create scaled 'ggplot' representations of playing surfaces. Playing surfaces are drawn pursuant to rule-book specifications.
 - [{ggshakeR}](https://abhiamishra.github.io/ggshakeR/) - Analysis and visualization R package that works with publically available soccer data (Compatible data sources: FB Reference, StatsBomb, Understat)
@@ -46,6 +47,19 @@ loads" src="https://img.shields.io/pypi/dm/sportsdataverse?style=for-the-badge">
 <a href='https://www.npmjs.com/package/sportsdataverse'>[![NPM](https://nodei.co/npm/sportsdataverse.png)](https://npmjs.org/package/sportsdataverse)</a>
 
 [**Documentation**](https://js.sportsdataverse.org/)
+
+## Claude Code plugin
+
+The SportsDataverse ships a [Claude Code](https://claude.com/claude-code) plugin —
+**`sdv-toolkit`** — with skills, agents, hooks, and an MCP server encoding the SDV
+engineering conventions (codegen-safe edit guards, multi-provider league scaffolding,
+returns-schema + docstring auditors, polars-1.x / parser-contract reviewers, and
+R pkgdown/roxygen helpers).
+
+```sh
+claude plugin marketplace add sportsdataverse/sportsdataverse
+claude plugin install sdv-toolkit@sportsdataverse
+```
 
 ## About the SportsDataverse
 
