@@ -70,7 +70,7 @@ Verify: `claude plugin list` should show `sdv-toolkit` and its skills/agents/hoo
 | `docstring-auditor` | Google-style napoleon docstrings (`Args/Returns/Raises/Example`, `See Also`, no raw `>>>`). |
 | `provider-shape-mapper` | Maps a captured provider payload → top-level-key table + returns table + divergence notes. |
 | `http-layer-reviewer` | `dl_utils.download()` + capture/crawl code against the retry/pooling/backoff/bound-to-attempts rules. |
-| `polars-1x-reviewer` | Flags 0.18-era polars API (`groupby`/`with_row_count`/`.apply(`/`pl.count()`/`cumsum`/`set_at_idx`/`how="outer"`/lookaround regex). |
+| `polars-1x-reviewer` | Flags outdated polars in 3 tiers vs the installed 1.x (lockfile 1.42): removed pre-1.0 API (runtime errors), within-1.x deprecations (`melt`/`pivot(columns=)`/`collect(streaming=True)`/`map_dict`/`min_periods`/`take`/`clip_min`/`json_extract`/…), and perf/modernize advisories (`map_elements` UDFs, eager-read) — plus the bool-mask + lookaround-regex conventions. |
 | `espn-parser-contract-reviewer` | Parser contract (polars default, zero-row-on-empty/never-raise, snake_case, `return_as_pandas`) + `ENDPOINT_PARSERS` coverage. |
 | `roxygen-doc-reviewer` | R roxygen completeness (`@param`/`@return` table/`@examples`) + `_pkgdown.yml` reference coverage. |
 
