@@ -54,6 +54,13 @@ Verify: `claude plugin list` should show `sdv-toolkit` and its skills/agents/hoo
 | `new-example-notebook` | Scaffold a per-sport `examples/notebooks/0X_<sport>_intro.ipynb`. |
 | `sdv-r-returns-table` | Generate roxygen `@return` markdown tables matching the Python returns convention. |
 | `sdv-pkgdown-personalize` | Apply the bespoke SDV pkgdown theming + fix the shared `extra.css` BS5 bugs. |
+| `pandas-to-polars` | Convert pandas DataFrame/Series code → idiomatic **polars 1.2+** (idiom map, `null`≠`NaN`, no-index model, SDV 1.x conventions) — incl. the `0.36-live` pandas→polars reconciliation. |
+| `port-r-to-python` | Port R logic (nflfastR/cfbfastR/baseballr/hoopR…) → sdv-py polars, parity-test-first. |
+| `port-python-to-r` | Reverse: port sdv-py Python logic → an SDV R package (tidyverse/data.table idiom map), parity-test-first. |
+| `preflight` | Fast scoped local sweep (ruff + mypy ratchet + tests on changed files only) before commit/PR. |
+| `ship` | Gated end-to-end PR flow: regen codegen docs → lint → full pytest → commit → push → wait for CI green → confirm merge. |
+| `release` | Cut a sdv-py PyPI release: bump version, CHANGELOG entry, docs snapshot, tag a GitHub Release (triggers the publish workflow). |
+| `address-bot-reviews` | Triage + resolve CodeRabbit/Copilot review threads on a PR (fix the valid, reply/decline the rest, resolve each). |
 
 ### 🤖 Agents (`agents/`) — specialized reviewers/auditors
 

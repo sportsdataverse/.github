@@ -1,13 +1,13 @@
 {
   "name": "sdv-toolkit",
-  "version": "0.1.0",
-  "description": "SportsDataverse engineering toolkit: codegen-safe edit guards, multi-provider league/source scaffolding (ESPN/Fox/CBS/Yahoo/247/Torvik), returns-schema + docstring auditors, network-layer review, and SDV-style R pkgdown/roxygen helpers. Shared across the ~40 SDV repos (Python + R).",
+  "version": "0.2.0",
+  "description": "SportsDataverse engineering toolkit: codegen-safe edit guards, multi-provider league/source scaffolding (ESPN/Fox/CBS/Yahoo/247/Torvik), returns-schema + docstring auditors, network-layer review, pandas→polars-1.2+ conversion, R↔Python porting, the Python dev-workflow (preflight/ship/release/address-bot-reviews), and SDV-style R pkgdown/roxygen helpers. Shared across the ~40 SDV repos (Python + R).",
   "author": {
     "name": "Saiem Gilani",
     "url": "https://github.com/saiemgilani"
   },
   "homepage": "https://github.com/sportsdataverse",
-  "keywords": ["sportsdataverse", "codegen", "espn", "polars", "pkgdown", "roxygen"],
+  "keywords": ["sportsdataverse", "codegen", "espn", "polars", "pandas", "pkgdown", "roxygen"],
   "hooks": "./hooks/hooks.json",
   "mcpServers": "./.mcp.json"
 }
