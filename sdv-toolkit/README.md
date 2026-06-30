@@ -73,6 +73,10 @@ Verify: `claude plugin list` should show `sdv-toolkit` and its skills/agents/hoo
 | `polars-1x-reviewer` | Flags outdated polars in 3 tiers vs the installed 1.x (lockfile 1.42): removed pre-1.0 API (runtime errors), within-1.x deprecations (`melt`/`pivot(columns=)`/`collect(streaming=True)`/`map_dict`/`min_periods`/`take`/`clip_min`/`json_extract`/…), and perf/modernize advisories (`map_elements` UDFs, eager-read) — plus the bool-mask + lookaround-regex conventions. |
 | `espn-parser-contract-reviewer` | Parser contract (polars default, zero-row-on-empty/never-raise, snake_case, `return_as_pandas`) + `ENDPOINT_PARSERS` coverage. |
 | `roxygen-doc-reviewer` | R roxygen completeness (`@param`/`@return` table/`@examples`) + `_pkgdown.yml` reference coverage. |
+| `extraction-semantics-reviewer` | (sdv-py Tier-2 validation) Triages an `extraction` WARN — judges from the null-row `cleaned_text` samples whether the parser missed a named participant or the field is legitimately null for that play type. |
+| `anomaly-triage-reviewer` | (sdv-py Tier-2 validation) Triages a `sweep` WARN (null-rate spike / mean-shift vs prior release) — real regression vs expected data change (rule/era, sparse new column, schedule mix). |
+| `parity-divergence-reviewer` | (sdv-py Tier-2 validation) Triages a `numeric_parity` WARN (corr < oracle floor) — real model/producer regression vs documented acceptable divergence (WPA SNR, kickoff/PAT feature-substitution, NFL raw-vs-model-domain). |
+| `leakage-reviewer` | (sdv-py Tier-2 validation) Triages a `leakage_lint` (Python/R ungrouped lag/cum) or `boundary_leakage` (cumulative non-reset) WARN — real cross-game leak vs already-grouped / single-game / intentional, accounting for the linters' documented heuristic limits. |
 
 ### 🔌 MCP (`.mcp.json`)
 
