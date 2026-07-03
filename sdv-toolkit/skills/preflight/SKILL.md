@@ -18,6 +18,22 @@ feedback; use `/ship` for the full release-gate flow.
    git status --porcelain | sed 's/^...//; s/.* -> //' | grep -E '\.py$'
    ```
 
+   **New module? Shadow check first.** If the change ADDS a new
+   `sportsdataverse/**/<name>.py`, confirm the filename doesn't collide with an
+   existing symbol in the target package (star-imported wrapper, generated
+   function, loader). A module that shares a name with a released function
+   rebinds the package attribute — existing callers get
+   `TypeError: 'module' object is not callable`. This has shipped twice
+   (`nba_possessions`, `nfl_standings`):
+
+   ```sh
+   grep -rn "\b<name>\b" sportsdataverse/<pkg>/__init__.py
+   uv run python -c "import sportsdataverse.<pkg> as p; print(type(getattr(p, '<name>', None)))"
+   ```
+
+   If it collides, rename the module file (e.g. `<name>_calc.py`) — the public
+   function inside can keep its name; only the filename collides.
+
 2. **Ruff** — format + lint the changed files (the PostToolUse hook already
    formats on edit; this catches anything edited outside Claude):
 

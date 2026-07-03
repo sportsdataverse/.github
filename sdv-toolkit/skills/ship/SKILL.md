@@ -37,6 +37,18 @@ clean."** Create one todo per numbered step and check them off as you go.
    If `--check` is non-zero, the generated tree drifted — regenerate and stage
    the result. The same gate runs in CI and the `sdv-codegen` pre-commit hook.
 
+   **Branch head, not per-task.** On a multi-commit / multi-task branch, re-run
+   the gate at the FINAL branch head even if it passed mid-branch — later
+   commits that add exports or docstrings silently invalidate an earlier
+   regeneration (per-task green does not compose; this failed a real
+   whole-branch review).
+
+   **Shadow check before regenerating.** If the branch added a new module under
+   a package with generated wrappers, first confirm the filename doesn't shadow
+   a wrapper function (see `/preflight`'s new-module check). Regenerating WITH
+   a shadow in place silently DROPS the shadowed wrapper from the generated
+   `parsed/` module — fix the name first, then regenerate.
+
 2. **Lint + format.** The PostToolUse ruff hook formats files as they're edited,
    but run the suite-wide pass before committing so nothing slips through:
 
