@@ -1,6 +1,6 @@
 ---
 name: sdv-ship
-description: Use when shipping a change in sportsdataverse-py (sdv-py) — opening, pushing, or merging a PR. Runs the steps in the correct order (regenerate codegen docs, lint, full pytest, commit, push, wait for CI green, confirm merge) and never cleans up a branch before the merge is confirmed. Invoke for "ship this", "open/merge the PR", "land this change", or any end-of-change release flow.
+description: Use when shipping a change in sportsdataverse-py (sdv-py) — opening, pushing, or merging a PR. Runs the steps in the correct order (regenerate codegen docs, update changelog/docs/tutorials, lint, full pytest, commit + verify it landed, push, wait for CI green, triage bot reviews CodeRabbit/Sourcery/Copilot, confirm merge, write a session note) and never cleans up a branch before the merge is confirmed. Invoke for "ship this", "open/merge the PR", "land this change", or any end-of-change release flow.
 ---
 
 # Ship a change (sdv-py)
@@ -49,7 +49,18 @@ clean."** Create one todo per numbered step and check them off as you go.
    a shadow in place silently DROPS the shadowed wrapper from the generated
    `parsed/` module — fix the name first, then regenerate.
 
-2. **Lint + format.** The PostToolUse ruff hook formats files as they're edited,
+2. **Update changelog / docs / tutorials (conditional — skip only if truly N/A).**
+   - **User-facing change** (new function, renamed/removed surface, behavior or
+     dependency change)? Add a `CHANGELOG.md` entry under the unreleased heading
+     (the `sync-docs-changelog` pre-commit hook mirrors it into the docs site).
+   - **New/changed public surface**? Check whether the relevant example notebook
+     (`examples/notebooks/0X_<sport>_intro.ipynb`) or a hand-authored conceptual
+     doc page mentions the old surface — update it. Generated reference pages are
+     already handled by step 1; never hand-edit those.
+   - Internal-only refactor with zero user-visible effect → note "changelog N/A"
+     in the todo and move on. Don't invent an entry for noise.
+
+3. **Lint + format.** The PostToolUse ruff hook formats files as they're edited,
    but run the suite-wide pass before committing so nothing slips through:
 
    ```sh
@@ -61,7 +72,7 @@ clean."** Create one todo per numbered step and check them off as you go.
    nothing committed, suspect the pre-commit ruff hook rewrote files; re-`git add`
    and re-commit. Confirm the commit actually landed (`git log -1 --oneline`).
 
-3. **Run the full test suite.** Not a subset — the whole thing must be green
+4. **Run the full test suite.** Not a subset — the whole thing must be green
    before declaring done.
 
    ```sh
@@ -71,47 +82,64 @@ clean."** Create one todo per numbered step and check them off as you go.
    Live-API tests are gated behind `SDV_PY_LIVE_TESTS=1` and skip by default;
    that's expected. A red suite is a stop-ship — fix before continuing.
 
-4. **Commit.** Conventional Commits subject, scoped where useful. No AI co-author
-   trailer. Split unrelated work into separate commits.
+5. **Commit — then VERIFY it landed.** Conventional Commits subject, scoped where
+   useful. No AI co-author trailer. Split unrelated work into separate commits.
+   After every `git commit`, confirm with `git log -1 --oneline` + `git status`
+   that HEAD is your new commit and nothing is left half-staged. Two hooks
+   silently abort commits while printing mostly-green output: the ruff-format
+   hook (rewrites files) and **doctoc** (rewrites any staged README/markdown
+   with a TOC). In both cases: re-`git add` the hook-modified files and
+   re-commit — never `--no-verify`.
 
-5. **Push** the feature branch and **open the PR** (or update it):
+6. **Push** the feature branch and **open the PR** (or update it):
 
    ```sh
    git push -u origin HEAD
    gh pr create --fill        # or: gh pr view --web  to edit
    ```
 
-6. **Wait for CI to go green.** Do not merge on a yellow/pending or red run.
+7. **Wait for CI to go green.** Do not merge on a yellow/pending or red run.
 
    ```sh
    gh pr checks --watch
    ```
 
    If CI fails, read the failing job, fix, and loop back to the relevant step
-   (often step 1 for docs drift or step 3 for tests). Report the failure — do
+   (often step 1 for docs drift or step 4 for tests). Report the failure — do
    not silently retry.
 
-7. **Address automated reviews (CodeRabbit / Copilot).** They post a few minutes
-   after CI. Triage + resolve the unresolved bot threads before merging — run
-   `/sdv-address-bot-reviews` (fix the valid ones, decline convention-conflicts with
-   a CLAUDE.md citation, then reply + resolve each thread). Skip only if no bot
-   review landed.
+8. **Address automated reviews (CodeRabbit / Sourcery / Copilot).** They post a
+   few minutes after CI. Triage + resolve the unresolved bot threads before
+   merging — run `/sdv-address-bot-reviews` (fix the valid ones, decline
+   convention-conflicts with a CLAUDE.md citation, then reply + resolve each
+   thread). Skip only if no bot review landed.
 
-8. **Merge — only after CI is green and bot threads are resolved.**
+9. **Merge — only after CI is green and bot threads are resolved.**
 
    ```sh
    gh pr merge --squash        # or the project's preferred strategy
    ```
 
-9. **Confirm the merge landed, THEN clean up.** Verify before deleting anything:
+10. **Confirm the merge landed, THEN clean up.** Verify before deleting anything:
 
-   ```sh
-   gh pr view --json state,mergedAt   # state must be MERGED
-   ```
+    ```sh
+    gh pr view --json state,mergedAt   # state must be MERGED
+    ```
 
-   Only once `state == MERGED`: delete the branch and `git switch main && git pull`.
-   **Never delete the branch before this confirmation** — a premature cleanup
-   stranded work in a past session.
+    Only once `state == MERGED`: delete the branch and `git switch main && git pull`.
+    **Never delete the branch before this confirmation** — a premature cleanup
+    stranded work in a past session.
+
+11. **Write a session note.** Capture what shipped while the context is fresh, so
+    the next session (or a compaction recovery) doesn't re-derive it:
+    - If the repo has an SDD ledger (`.superpowers/sdd/progress.md`), append one
+      entry there: date, branch, PR # + URL, the commit range, gates passed
+      (tests/mypy/drift), and any deferred follow-ups.
+    - Otherwise write `dev/session-notes/YYYY-MM-DD-<slug>.md` (`dev/` is
+      gitignored — working notes, not repo docs).
+    - If the ship changed durable cross-session state (a program milestone, a new
+      convention, a gotcha worth remembering), also update the memory topic file
+      for that program.
 
 ## Stop conditions (report, don't push through)
 

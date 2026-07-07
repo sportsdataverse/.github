@@ -1,6 +1,6 @@
 ---
 name: parity-divergence-reviewer
-description: "Use to triage a `numeric_parity` WARN finding from the sdv-py validation harness — judge whether a column's correlation below its oracle floor is a real model/producer regression or a documented, acceptable divergence. Read-only; emits a Verdict."
+description: "Use to triage a `numeric_parity` WARN finding from the sdv-py validation harness — judge whether a column's correlation below its oracle floor is a real model/producer regression or a documented, acceptable divergence. Scope: harness findings on EXISTING datasets only; design-time review of NEW model/backtest code (oracle gates, metrics, leakage) belongs to `oracle-gate-reviewer`. Read-only; emits a Verdict."
 tools: Read, Grep, Glob
 ---
 

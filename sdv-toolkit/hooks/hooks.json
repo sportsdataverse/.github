@@ -32,6 +32,18 @@
           {
             "type": "command",
             "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qE 'git commit' && [ -f recipe/meta.yaml ] && { s=$(git diff --cached --name-only 2>/dev/null); printf '%s\\n' \"$s\" | grep -qx 'pyproject.toml' && ! printf '%s\\n' \"$s\" | grep -qx 'recipe/meta.yaml' && echo 'NOTE: pyproject.toml is staged but recipe/meta.yaml is not -- if [project.dependencies] changed, mirror the dep into the recipe run requirements (a missing rapidfuzz broke conda builds twice). No dep change? ignore.' >&2; }; true"
+          },
+          {
+            "type": "command",
+            "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qE 'git push' && [ -f tools/codegen/generate.py ] && { r=$(git diff --name-only @{u}..HEAD 2>/dev/null || git diff --name-only origin/main...HEAD 2>/dev/null); printf '%s\\n' \"$r\" | grep -qE '(tools/codegen/|sportsdataverse/).*\\.(py|yaml)$' && ! printf '%s\\n' \"$r\" | grep -qE 'docs/docs/|sportsdataverse/parsed/' && echo 'NOTE: push range touches Python/codegen sources but contains NO regenerated outputs (docs/docs/ or sportsdataverse/parsed/) -- if any public function, docstring, or endpoint YAML changed, run the drift gate at the branch head first: uv run python tools/codegen/generate.py && uv run python tools/codegen/generate.py --check (CI fails on drift). Internal-only change? ignore.' >&2; }; true"
+          },
+          {
+            "type": "command",
+            "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qE 'git commit' && { for p in $(git diff --cached --name-only --diff-filter=A 2>/dev/null | grep -E '^tests/fixtures/.*\\.(parquet|json|csv)$'); do d=$(dirname \"$p\"); [ -f \"$d/README.md\" ] || git diff --cached --name-only 2>/dev/null | grep -qx \"$d/README.md\" || { echo \"NOTE: fixture(s) added under $d with no README.md -- committed fixtures need a provenance README (source URL/wrapper, capture date, row counts, id dtypes, known gaps) per the fixtures convention.\" >&2; break; }; done; }; true"
+          },
+          {
+            "type": "command",
+            "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qE 'git commit' && b=$(git branch --show-current 2>/dev/null) && { [ \"$b\" = \"main\" ] || [ \"$b\" = \"master\" ]; } && git remote get-url origin 2>/dev/null | grep -qi 'sportsdataverse' && echo 'NOTE: committing directly on main in a sportsdataverse repo -- the convention is branch + PR (git switch -c <type>/<slug> first). Deliberate maintainer hotfix? proceed.' >&2; true"
           }
         ]
       }
@@ -40,6 +52,10 @@
       {
         "matcher": "Edit|MultiEdit|Write",
         "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))\" 2>/dev/null | tr '\\\\' '/'); case \"$f\" in *.py) [ -f \"$f\" ] || exit 0; if [ -x .venv/Scripts/ruff.exe ]; then .venv/Scripts/ruff.exe format \"$f\" >/dev/null 2>&1 || true; elif [ -x .venv/bin/ruff ]; then .venv/bin/ruff format \"$f\" >/dev/null 2>&1 || true; elif command -v ruff >/dev/null 2>&1; then ruff format \"$f\" >/dev/null 2>&1 || true; fi;; esac; true"
+          },
           {
             "type": "command",
             "command": "f=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))\" 2>/dev/null); case \"$f\" in *tools/codegen/endpoints/*.yaml|*tools/codegen/templates/*|*_espn_parsers.py|*tools/codegen/generate.py|*tools/codegen/spec.py) echo 'REMINDER: codegen source changed -> regenerate + verify: uv run python tools/codegen/generate.py && uv run python tools/codegen/generate.py --check' >&2;; esac; true"
@@ -51,6 +67,15 @@
           {
             "type": "command",
             "command": "f=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))\" 2>/dev/null); case \"$f\" in */R/*.R) echo 'REMINDER (R): regenerate docs/NAMESPACE after editing R/ -> Rscript -e \"devtools::document()\" (and styler::style_pkg() if configured).' >&2;; esac; true"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qE 'git commit' && { h=$(git log -1 --oneline 2>/dev/null); n=$(git status --porcelain 2>/dev/null | grep -vc '^??'); echo \"POST-COMMIT VERIFY: HEAD = [$h]; tracked files still modified/staged: $n. If HEAD is not the commit just made (or leftovers remain), a pre-commit hook (ruff-format / doctoc) rewrote files and silently ABORTED it -- re-git-add the rewritten files and re-commit; never --no-verify.\" >&2; }; true"
           }
         ]
       }

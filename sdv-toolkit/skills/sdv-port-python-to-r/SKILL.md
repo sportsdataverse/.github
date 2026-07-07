@@ -86,7 +86,10 @@ devtools::check()                # R CMD check (or the package's CI-parity targe
 ```
 
 Match the package's existing lint/style (most SDV R packages follow tidyverse style;
-`styler::style_pkg()` if configured). Commit with the package's Conventional-Commit scope
+`styler::style_pkg()` if configured). **Dispatch the `port-parity-reviewer` agent on the
+ported function(s)** — the comprehensive post-port audit works in both directions (ID-join
+types, regex flavor divergence, indexing, NA semantics, golden-master adequacy); fix its
+MUST-FIX findings. Commit with the package's Conventional-Commit scope
 (`feat(cfb): ...`) and **no AI co-author trailer** (SDV ecosystem rule).
 
 ## See also

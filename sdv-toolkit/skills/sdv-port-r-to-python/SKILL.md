@@ -66,7 +66,7 @@ Hard rules (from sdv-py CLAUDE.md — these are the high-frequency port bugs):
 
 - **polars 1.x surface only.** No `groupby` / `with_row_count` / `apply` / `pl.count` /
   `cumsum` / `set_at_idx` / `how="outer"` / `str.strip`. If you wrote a 0.18-era call,
-  it's a bug. Run the `polars-1x-reviewer` agent after porting.
+  it's a bug (the step-6 review pass catches these).
 - **No regex lookaround.** Rust/polars regex rejects `(?=)`/`(?!)`/`(?<=)`/`(?<!)`. To
   stop a capture at a stopword, use the inline case toggle `(?i)prefix(?-i: NAMES)`.
 - **ID dtype discipline.** Pick one canonical dtype per id at the boundary and keep it.
@@ -96,8 +96,12 @@ uv run mypy                                   # if the file is in the [tool.mypy
 uv run pytest tests/<sport>/ tests/test_id_conventions.py -q
 ```
 
-New modules must be fully typed and appended to the `[tool.mypy] files` ratchet. Escalate
-to `/sdv-preflight` (scoped sweep) then `/sdv-ship` (full gate) before merge.
+New modules must be fully typed and appended to the `[tool.mypy] files` ratchet. Then
+**dispatch the `port-parity-reviewer` agent on the ported module(s)** — it is the
+comprehensive post-port audit (ID-join dtypes, regex divergence, 1-based indexing,
+NA/null/NaN drift, silent recycling, golden-master-test adequacy, module-name shadowing)
+and hands polars currency to `polars-1x-reviewer`. Fix its MUST-FIX findings before
+escalating to `/sdv-preflight` (scoped sweep) then `/sdv-ship` (full gate).
 
 ## 7. Record the reconciliation
 
@@ -105,8 +109,29 @@ If this was a `0.36-live` → `main` port, note the function + commit in `dev/` 
 function-by-function reconciliation map stays current. Don't merge `0.36-live` wholesale —
 it's pandas-flavored and would undo the polars migration; port semantic fixes by translation.
 
+## Fan-out mode (multi-module ports)
+
+For a package-scale port (many independent R modules), parallelize steps 1–6 with
+one implementer subagent per module instead of porting serially:
+
+- **Cap concurrency at ~6–8** — more trips a server-side rate limit. If completion
+  notifications look throttled, the on-disk outputs are ground truth, not the
+  notifications.
+- **Per-module gate**: a module is DONE only when its golden-master parity test
+  (steps 2–3) passes — an agent's "done" report without a green parity test is
+  not done. Each agent's brief carries: the pinned R source path, the fixture
+  contract, the idiom hard-rules, and its report-file path.
+- **Ledger checkpoint**: track per-module status in the SDD ledger, namespaced
+  under `.superpowers/sdd/<plan-slug>/` (flat `task-N-*` names clobber across
+  plans). On any interruption (rate limit, compaction, session end) resume from
+  the ledger + `git log` — never re-dispatch a module the ledger marks complete.
+- **Review wave**: after each module goes green (not at the very end), dispatch
+  `port-parity-reviewer` on it — findings are cheapest before dependent modules
+  stack on top.
+
 ## See also
 
-- `reprocess` — for the heavy sweep that re-runs the ported pipeline over a corpus.
+- `port-parity-reviewer` (agent) — the comprehensive post-port audit; dispatch it in step 6.
+- `/sdv-build-data` — for the heavy sweep that re-runs a ported pipeline over a corpus in a `-data` repo.
 - `sdv-port-python-to-r` — the reverse direction (sdv-py → the SDV R packages).
 - sdv-py `CLAUDE.md` "Polars version" + "ID column types" sections are the authoritative idiom/dtype reference.

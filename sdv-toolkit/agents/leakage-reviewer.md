@@ -1,6 +1,6 @@
 ---
 name: leakage-reviewer
-description: "Use to triage a `leakage_lint` (Python/R source) or `boundary_leakage` (cumulative-non-reset) WARN finding from the sdv-py validation harness — judge whether a lag/cumulative op is a real cross-game data leak or a benign / already-grouped case. Read-only; emits a Verdict."
+description: "Use to triage a `leakage_lint` (Python/R source) or `boundary_leakage` (cumulative-non-reset) WARN finding from the sdv-py validation harness — judge whether a lag/cumulative op is a real cross-game data leak or a benign / already-grouped case. Scope: harness findings on EXISTING datasets only; design-time review of NEW model/backtest code (as-of-date splits, gate integrity) belongs to `oracle-gate-reviewer`. Read-only; emits a Verdict."
 tools: Read, Grep, Glob
 ---
 
