@@ -65,7 +65,8 @@ Verify: `claude plugin list` should show `sdv-toolkit` and its skills/agents/hoo
 | `release` | Cut a sdv-py PyPI release: bump version, CHANGELOG entry, docs snapshot, tag a GitHub Release (triggers the publish workflow). |
 | `address-bot-reviews` | Triage + resolve CodeRabbit/Copilot review threads on a PR (fix the valid, reply/decline the rest, resolve each). |
 | `stack` | Land stacked PRs bottom-up: map the stack, merge, retarget + `rebase --onto` after each squash-merge, re-run the codegen drift gate at every new head; depth cap ~4. |
-| `scrape-job` | Generate a user-executable runbook for any >3-min scraping/backfill job: unbuffered timestamped logging, live watch command, resumable checkpoint, env-only rate tuning, per-site gotchas (NBA TLS-hang, NCAA proxy, ESPN 403). |
+| `scrape-job` | Generate a user-executable runbook for any >3-min scraping/backfill job: unbuffered timestamped logging, live watch command, resumable checkpoint, env-only rate tuning, per-site gotchas (NBA TLS-hang, NCAA proxy, ESPN 403). Raw-repo aware: output saves into the owning `-raw` repo's canonical committed tree (`nfl/raw/{season}/{game_id}.json`, `cfb/json/…`), launcher in its `scripts/`, `*_schedule_master.parquet` flag upsert. |
+| `build-data` | The `-data` repo pipeline: ingest the sibling `-raw` tree → builder module per dataset (`<x>_data_build/`) → validation-harness + parity-vs-prior-release checks → publish (git commit + per-file `gh release upload --clobber`, release-map aware) → wire `daily_*_processor.sh`. |
 
 ### 🤖 Agents (`agents/`) — specialized reviewers/auditors
 
