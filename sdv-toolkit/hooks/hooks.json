@@ -7,6 +7,10 @@
           {
             "type": "command",
             "command": "f=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))\" 2>/dev/null); case \"$f\" in *_espn_ext.py|*/tools/codegen/_generated/*|*/docs/docs/*/reference/*) echo 'BLOCKED: this is codegen output (# GENERATED -- DO NOT EDIT). Edit tools/codegen/endpoints/*.yaml or tools/codegen/templates/*, then run: uv run python tools/codegen/generate.py && uv run python tools/codegen/generate.py --check' >&2; exit 2;; esac; true"
+          },
+          {
+            "type": "command",
+            "command": "f=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))\" 2>/dev/null | tr '\\\\' '/'); case \"$f\" in */.superpowers/sdd/task-*) echo 'BLOCKED: flat SDD task artifact -- task-N-*.md names clobber across plans. Namespace it under a per-plan subdir: .superpowers/sdd/<plan-slug>/task-N-*.md (the shared progress.md ledger stays at the sdd/ root).' >&2; exit 2;; esac; true"
           }
         ]
       },
@@ -20,6 +24,14 @@
           {
             "type": "command",
             "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qiE 'espn_capture_league|gen_returns_doc|crawl|for [a-z_]+ in .*(scoreboard|teams|summary)' && ! printf '%s' \"$c\" | grep -qE 'limit|--max|--bound|head -|range\\(' && echo 'NOTE: capture/crawl without a visible attempt bound -- cap attempts (not saves) to avoid a 404 flood (the CBS recruiting incident wasted 8,400+ requests).' >&2; true"
+          },
+          {
+            "type": "command",
+            "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qE 'git commit' && { s=$(git diff --cached --name-only 2>/dev/null); printf '%s\\n' \"$s\" | grep -qx 'uv.lock' && ! printf '%s\\n' \"$s\" | grep -qx 'pyproject.toml' && echo 'NOTE: uv.lock is staged WITHOUT pyproject.toml -- uv run mypy/pytest silently re-locks uv.lock. Unintentional? git restore --staged uv.lock && git checkout uv.lock. Deliberate? commit it separately as chore(deps): re-lock.' >&2; }; true"
+          },
+          {
+            "type": "command",
+            "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qE 'git commit' && [ -f recipe/meta.yaml ] && { s=$(git diff --cached --name-only 2>/dev/null); printf '%s\\n' \"$s\" | grep -qx 'pyproject.toml' && ! printf '%s\\n' \"$s\" | grep -qx 'recipe/meta.yaml' && echo 'NOTE: pyproject.toml is staged but recipe/meta.yaml is not -- if [project.dependencies] changed, mirror the dep into the recipe run requirements (a missing rapidfuzz broke conda builds twice). No dep change? ignore.' >&2; }; true"
           }
         ]
       }

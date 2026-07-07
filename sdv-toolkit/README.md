@@ -37,6 +37,9 @@ Verify: `claude plugin list` should show `sdv-toolkit` and its skills/agents/hoo
 | codegen-regen-reminder | PostToolUse(Edit/Write) | Nudges `generate.py` + `--check` after editing codegen sources (`endpoints/*.yaml`, templates, parsers, `generate.py`, `spec.py`). |
 | returns-schema-reminder | PostToolUse(Edit/Write) | Flags an endpoint YAML that declares `parser:` but no `returns_schema:`. |
 | r-document-reminder | PostToolUse(Edit/Write) | Nudges `devtools::document()` after editing `R/*.R`. |
+| sdd-namespacing-guard | PreToolUse(Edit/Write) | **Blocks** flat `.superpowers/sdd/task-*.md` writes — task artifacts must be namespaced under `.superpowers/sdd/<plan-slug>/` (flat names clobber across plans; `progress.md` stays at the root). |
+| uv-lock-relock-guard | PreToolUse(Bash) | **Warns** on `git commit` when `uv.lock` is staged without `pyproject.toml` — the silent `uv run mypy/pytest` re-lock riding into an unrelated commit. |
+| recipe-dep-sync-guard | PreToolUse(Bash) | **Warns** on `git commit` when `pyproject.toml` is staged but `recipe/meta.yaml` (present in the repo) is not — runtime deps must be mirrored into the conda recipe (the rapidfuzz lesson). |
 
 ### 🎯 Skills (`skills/`) — invoke with `/sdv-toolkit:<name>`
 
@@ -61,6 +64,8 @@ Verify: `claude plugin list` should show `sdv-toolkit` and its skills/agents/hoo
 | `ship` | Gated end-to-end PR flow: regen codegen docs → lint → full pytest → commit → push → wait for CI green → confirm merge. |
 | `release` | Cut a sdv-py PyPI release: bump version, CHANGELOG entry, docs snapshot, tag a GitHub Release (triggers the publish workflow). |
 | `address-bot-reviews` | Triage + resolve CodeRabbit/Copilot review threads on a PR (fix the valid, reply/decline the rest, resolve each). |
+| `stack` | Land stacked PRs bottom-up: map the stack, merge, retarget + `rebase --onto` after each squash-merge, re-run the codegen drift gate at every new head; depth cap ~4. |
+| `scrape-job` | Generate a user-executable runbook for any >3-min scraping/backfill job: unbuffered timestamped logging, live watch command, resumable checkpoint, env-only rate tuning, per-site gotchas (NBA TLS-hang, NCAA proxy, ESPN 403). |
 
 ### 🤖 Agents (`agents/`) — specialized reviewers/auditors
 
