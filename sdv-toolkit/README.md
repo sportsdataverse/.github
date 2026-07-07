@@ -41,32 +41,32 @@ Verify: `claude plugin list` should show `sdv-toolkit` and its skills/agents/hoo
 | uv-lock-relock-guard | PreToolUse(Bash) | **Warns** on `git commit` when `uv.lock` is staged without `pyproject.toml` — the silent `uv run mypy/pytest` re-lock riding into an unrelated commit. |
 | recipe-dep-sync-guard | PreToolUse(Bash) | **Warns** on `git commit` when `pyproject.toml` is staged but `recipe/meta.yaml` (present in the repo) is not — runtime deps must be mirrored into the conda recipe (the rapidfuzz lesson). |
 
-### 🎯 Skills (`skills/`) — invoke with `/sdv-toolkit:<name>`
+### 🎯 Skills (`skills/`) — every skill is `sdv-`-prefixed; invoke with `/sdv-<name>` (or fully qualified: `/sdv-toolkit:sdv-<name>`)
 
 | Skill | Purpose |
 |---|---|
-| `add-provider-source` | Meta-skill: add a league/source for any provider (ESPN/Fox/CBS/Yahoo/247/Torvik) — capture → returns doc → catalog → wrapper. |
-| `add-espn-league` | Register a new ESPN league family (leagues.yaml row, pre-create dir+`__init__`, regenerate, gated live test, drift gate). |
-| `add-sport-parser` | Scaffold a sport-specific parser module + `_SPORT_PARSER_OVERRIDES` routing + fixtures (the soccer/cricket pattern). |
-| `add-fox-league` | Fox Bifrost API (`apikey`+`api-version`, `{sport}` path param). |
-| `add-cbs-league` | CBS NAPI (auth-free data-backed resources). |
-| `add-yahoo-source` | Yahoo scraper source. |
-| `gen-returns-schema` | Generate a `col_name|type|description` returns table (Python schema YAML or R roxygen) from a payload / DataFrame. |
-| `capture-endpoint` | Hardened, provider-agnostic single-body capture (structured id-walk, error-envelope skip). |
-| `regen-docs` | `generate.py --docs` → Docusaurus build check → release snapshot. |
-| `new-example-notebook` | Scaffold a per-sport `examples/notebooks/0X_<sport>_intro.ipynb`. |
+| `sdv-add-provider-source` | Meta-skill: add a league/source for any provider (ESPN/Fox/CBS/Yahoo/247/Torvik) — capture → returns doc → catalog → wrapper. |
+| `sdv-add-espn-league` | Register a new ESPN league family (leagues.yaml row, pre-create dir+`__init__`, regenerate, gated live test, drift gate). |
+| `sdv-add-sport-parser` | Scaffold a sport-specific parser module + `_SPORT_PARSER_OVERRIDES` routing + fixtures (the soccer/cricket pattern). |
+| `sdv-add-fox-league` | Fox Bifrost API (`apikey`+`api-version`, `{sport}` path param). |
+| `sdv-add-cbs-league` | CBS NAPI (auth-free data-backed resources). |
+| `sdv-add-yahoo-source` | Yahoo scraper source. |
+| `sdv-gen-returns-schema` | Generate a `col_name|type|description` returns table (Python schema YAML or R roxygen) from a payload / DataFrame. |
+| `sdv-capture-endpoint` | Hardened, provider-agnostic single-body capture (structured id-walk, error-envelope skip). |
+| `sdv-regen-docs` | `generate.py --docs` → Docusaurus build check → release snapshot. |
+| `sdv-new-example-notebook` | Scaffold a per-sport `examples/notebooks/0X_<sport>_intro.ipynb`. |
 | `sdv-r-returns-table` | Generate roxygen `@return` markdown tables matching the Python returns convention. |
 | `sdv-pkgdown-personalize` | Apply the bespoke SDV pkgdown theming + fix the shared `extra.css` BS5 bugs. |
-| `pandas-to-polars` | Convert pandas DataFrame/Series code → idiomatic **polars 1.2+** (idiom map, `null`≠`NaN`, no-index model, SDV 1.x conventions) — incl. the `0.36-live` pandas→polars reconciliation. |
-| `port-r-to-python` | Port R logic (nflfastR/cfbfastR/baseballr/hoopR…) → sdv-py polars, parity-test-first. |
-| `port-python-to-r` | Reverse: port sdv-py Python logic → an SDV R package (tidyverse/data.table idiom map), parity-test-first. |
-| `preflight` | Fast scoped local sweep (ruff + mypy ratchet + tests on changed files only) before commit/PR. |
-| `ship` | Gated end-to-end PR flow: regen codegen docs → lint → full pytest → commit → push → wait for CI green → confirm merge. |
-| `release` | Cut a sdv-py PyPI release: bump version, CHANGELOG entry, docs snapshot, tag a GitHub Release (triggers the publish workflow). |
-| `address-bot-reviews` | Triage + resolve CodeRabbit/Copilot review threads on a PR (fix the valid, reply/decline the rest, resolve each). |
-| `stack` | Land stacked PRs bottom-up: map the stack, merge, retarget + `rebase --onto` after each squash-merge, re-run the codegen drift gate at every new head; depth cap ~4. |
-| `scrape-job` | Generate a user-executable runbook for any >3-min scraping/backfill job: unbuffered timestamped logging, live watch command, resumable checkpoint, env-only rate tuning, per-site gotchas (NBA TLS-hang, NCAA proxy, ESPN 403). Raw-repo aware: output saves into the owning `-raw` repo's canonical committed tree (`nfl/raw/{season}/{game_id}.json`, `cfb/json/…`), launcher in its `scripts/`, `*_schedule_master.parquet` flag upsert. |
-| `build-data` | The `-data` repo pipeline: ingest the sibling `-raw` tree → builder module per dataset (`<x>_data_build/`) → validation-harness + parity-vs-prior-release checks → publish (git commit + per-file `gh release upload --clobber`, release-map aware) → wire `daily_*_processor.sh`. |
+| `sdv-pandas-to-polars` | Convert pandas DataFrame/Series code → idiomatic **polars 1.2+** (idiom map, `null`≠`NaN`, no-index model, SDV 1.x conventions) — incl. the `0.36-live` pandas→polars reconciliation. |
+| `sdv-port-r-to-python` | Port R logic (nflfastR/cfbfastR/baseballr/hoopR…) → sdv-py polars, parity-test-first. |
+| `sdv-port-python-to-r` | Reverse: port sdv-py Python logic → an SDV R package (tidyverse/data.table idiom map), parity-test-first. |
+| `sdv-preflight` | Fast scoped local sweep (ruff + mypy ratchet + tests on changed files only) before commit/PR. |
+| `sdv-ship` | Gated end-to-end PR flow: regen codegen docs → lint → full pytest → commit → push → wait for CI green → confirm merge. |
+| `sdv-release` | Cut a sdv-py PyPI release: bump version, CHANGELOG entry, docs snapshot, tag a GitHub Release (triggers the publish workflow). |
+| `sdv-address-bot-reviews` | Triage + resolve CodeRabbit/Copilot review threads on a PR (fix the valid, reply/decline the rest, resolve each). |
+| `sdv-stack` | Land stacked PRs bottom-up: map the stack, merge, retarget + `rebase --onto` after each squash-merge, re-run the codegen drift gate at every new head; depth cap ~4. |
+| `sdv-scrape-job` | Generate a user-executable runbook for any >3-min scraping/backfill job: unbuffered timestamped logging, live watch command, resumable checkpoint, env-only rate tuning, per-site gotchas (NBA TLS-hang, NCAA proxy, ESPN 403). Raw-repo aware: output saves into the owning `-raw` repo's canonical committed tree (`nfl/raw/{season}/{game_id}.json`, `cfb/json/…`), launcher in its `scripts/`, `*_schedule_master.parquet` flag upsert. |
+| `sdv-build-data` | The `-data` repo pipeline: ingest the sibling `-raw` tree → builder module per dataset (`<x>_data_build/`) → validation-harness + parity-vs-prior-release checks → publish (git commit + per-file `gh release upload --clobber`, release-map aware) → wire `daily_*_processor.sh`. |
 
 ### 🤖 Agents (`agents/`) — specialized reviewers/auditors
 

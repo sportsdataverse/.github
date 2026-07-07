@@ -163,4 +163,4 @@ Bodies inspected: <count> (<date range>)
 
 After writing the file, print its absolute path and a one-line summary of the row count
 and column count discovered. Do not modify any sdv-py source files, YAML endpoints, or
-schema files — those are handled by the `gen-returns-schema` skill.
+schema files — those are handled by the `sdv-gen-returns-schema` skill.

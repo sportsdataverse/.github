@@ -126,6 +126,6 @@ Total empty descriptions: N
 After the tables, emit a **Fill Order** — a flat ranked list of the 10 most impactful
 files to fix first (largest absolute empty-description count wins ties). For each,
 give the file path relative to the repo root, the count, and the suggested next action
-(e.g. "run `gen-returns-schema` skill against live endpoint + back-fill").
+(e.g. "run `sdv-gen-returns-schema` skill against live endpoint + back-fill").
 
 Never suggest edits directly. Your output is analysis only.
