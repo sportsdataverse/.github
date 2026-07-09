@@ -36,10 +36,21 @@ Every spine starts with the validation substrate, not the model:
 - **Leakage split**: an `as_of_*_split(frame, cutoff)` helper returning strictly
   `date < cutoff`. Every predictive backtest rates event G using only data
   before G — this is the line the oracle-gate-reviewer checks hardest.
+  **The trap that hit two independent Tier-3/5 spines:** a rating/rate fit
+  over the FULL season, then reused inside the per-game as-of walk — the
+  public `as_of` param filtered the box scores but NOT the ratings, giving
+  false leakage safety while the docstrings claimed "as-of". Recompute every
+  rating/rate as-of the event's date; if a per-date recompute is intractable
+  at fixture scale, DROP the "as-of" claim and document the full-season
+  snapshot caveat — never label as-of anything that isn't.
 - **Oracle fixtures**: capture via `/sdv-capture-oracle` (column contracts,
   Utf8 ids, name crosswalk, provenance README). Defer expensive per-game
   oracle samples to the phase that consumes them — don't block Phase 1 on a
-  rate-limited scrape.
+  rate-limited scrape. If a high-volume oracle capture throttles on
+  stats.nba.com / stats.ncaa.org, route it through the ProxyBonanza pool
+  (proven transport `dev/ncaa_proxy.py`: curl_cffi `impersonate="chrome"` +
+  rotating proxies) rather than just slowing down — reach for it the moment a
+  capture throttles, not after.
 
 ## 2. Per-task TDD loop (one commit per task)
 
@@ -77,6 +88,14 @@ Task-loop gotchas that recur:
   probabilities; MAE vs closing market line for spreads/totals; Spearman +
   MAE vs the external oracle for ratings; per-bucket calibration for in-game
   WP; calibration slope for simulators.
+- **Every oracle join carries a min-size + dtype guard.** Assert
+  `left.schema[k] == right.schema[k]` before the join AND
+  `assert joined.height >= <observed N>` after it. A bare `assert height > 0`,
+  or an `if height >= N:` with no `else`, lets a shrunken / re-captured fixture
+  pass a top-K or Spearman check on a handful of rows (`spearman_corr(n=1)` is
+  `nan`; a partial shrink to a few correlated rows passes vacuously). This guard
+  was missing on nearly every Tier-3/5 spine's oracle join — write it WITH the
+  gate, not at review.
 - Fitted constants (σ, HFA, coefficients) come from a committed `dev/` fitting
   script whose output values are pasted into the constants table with a comment
   citing the script + fit sample — never presented as magic numbers.
