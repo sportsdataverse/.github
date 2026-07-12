@@ -1,6 +1,6 @@
 {
   "name": "sdv-toolkit",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "SportsDataverse engineering toolkit — all skills invoke as /sdv-<name>: codegen-safe edit guards, multi-provider league/source scaffolding (ESPN/Fox/CBS/Yahoo/247/Torvik), returns-schema + docstring auditors, network-layer review, pandas→polars-1.2+ conversion, R↔Python porting, the Python dev-workflow (sdv-preflight/sdv-ship/sdv-release/sdv-address-bot-reviews/sdv-stack), the raw/data producer pipeline (sdv-scrape-job/sdv-build-data), the model-spine build loop (sdv-model-spine/sdv-capture-oracle + oracle-gate/port-parity reviewers), commit/push-time guards (uv.lock re-lock, conda-recipe dep-sync, post-commit verify, codegen-drift-on-push, fixture-provenance, main-commit), and SDV-style R pkgdown/roxygen helpers. Shared across the ~40 SDV repos (Python + R).",
   "author": {
     "name": "Saiem Gilani",

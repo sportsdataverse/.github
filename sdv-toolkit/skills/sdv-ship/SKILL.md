@@ -1,6 +1,6 @@
 ---
 name: sdv-ship
-description: Use when shipping a change in sportsdataverse-py (sdv-py) — opening, pushing, or merging a PR. Runs the steps in the correct order (regenerate codegen docs, update changelog/docs/tutorials, lint, full pytest, commit + verify it landed, push, wait for CI green, triage bot reviews CodeRabbit/Sourcery/Copilot, confirm merge, write a session note) and never cleans up a branch before the merge is confirmed. Invoke for "ship this", "open/merge the PR", "land this change", or any end-of-change release flow.
+description: Use when shipping a change in sportsdataverse-py (sdv-py) — opening, pushing, or merging a PR. Runs the steps in the correct order (regenerate codegen docs, update changelog/docs/tutorials, lint, full pytest, commit + verify it landed, push, triage bot reviews CodeRabbit/Sourcery/Copilot immediately — in parallel with CI, not after it — wait for CI green, confirm merge, write a session note) and never cleans up a branch before the merge is confirmed. Invoke for "ship this", "open/merge the PR", "land this change", or any end-of-change release flow.
 ---
 
 # Ship a change (sdv-py)
@@ -98,7 +98,24 @@ clean."** Create one todo per numbered step and check them off as you go.
    gh pr create --fill        # or: gh pr view --web  to edit
    ```
 
-7. **Wait for CI to go green.** Do not merge on a yellow/pending or red run.
+   The pre-push hook re-runs the codegen drift gate (~3-5 min), so a push
+   regularly outlives a 2-minute foreground tool timeout — run it
+   `run_in_background` and confirm the remote head afterwards
+   (`git ls-remote origin <branch>`).
+
+7. **Triage automated reviews (CodeRabbit / Sourcery / Copilot) — do NOT wait
+   for CI.** The bots post within a few minutes of the push, long before the
+   pytest matrix finishes; triage them in parallel with CI so review fixes and
+   the CI run overlap instead of serializing. Run `/sdv-address-bot-reviews`
+   (fix the valid ones, decline convention-conflicts with a CLAUDE.md citation,
+   then reply + resolve each thread). Treat bot findings as leads to VERIFY
+   against the code, not verdicts — a "Major" can be a false positive
+   (generated-doc "hand-edit" flags when `--check` passes) and a real one can
+   hide behind a bland title (reproduce it with a failing test before fixing).
+   If a fix lands, push it and let CI restart. Skip only if no bot review
+   landed.
+
+8. **Wait for CI to go green.** Do not merge on a yellow/pending or red run.
 
    ```sh
    gh pr checks --watch
@@ -106,19 +123,22 @@ clean."** Create one todo per numbered step and check them off as you go.
 
    If CI fails, read the failing job, fix, and loop back to the relevant step
    (often step 1 for docs drift or step 4 for tests). Report the failure — do
-   not silently retry.
-
-8. **Address automated reviews (CodeRabbit / Sourcery / Copilot).** They post a
-   few minutes after CI. Triage + resolve the unresolved bot threads before
-   merging — run `/sdv-address-bot-reviews` (fix the valid ones, decline
-   convention-conflicts with a CLAUDE.md citation, then reply + resolve each
-   thread). Skip only if no bot review landed.
+   not silently retry. Two watcher gotchas: a `--watch` started before a
+   re-push keeps watching the OLD head (relaunch it), and after any merge the
+   PR-branch run is superseded — the definitive signal is **main's post-merge
+   run** (`gh run list --branch main`).
 
 9. **Merge — only after CI is green and bot threads are resolved.**
 
    ```sh
    gh pr merge --squash        # or the project's preferred strategy
    ```
+
+   If the human directs an early merge (`--admin`) past pending/red checks:
+   only override a failure you have READ and verified as infra flake (Vercel
+   preview deploy, runner DNS), never an unread one — admin merges silently
+   accept red required checks (a red codegen gate rode onto main exactly this
+   way) — and afterwards confirm main's post-merge run goes green.
 
 10. **Confirm the merge landed, THEN clean up.** Verify before deleting anything:
 

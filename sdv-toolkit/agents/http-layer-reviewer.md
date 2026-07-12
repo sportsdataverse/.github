@@ -19,6 +19,9 @@ Grep: `grep -n "response" sportsdataverse/dl_utils.py | head -20`
 **3. Re-raise on retry exhaustion** — after the retry budget is exhausted, the function must `raise` the most recent exception (or a wrapped version of it). Flag any path that `return`s `None`, `return`s an unbound variable, or silently swallows the exception.
 Grep: `grep -nE "return response|return None" sportsdataverse/dl_utils.py`
 
+**3b. Interleaved failure modes at loop exit — trace EVERY `continue`** — when a retry loop tracks state across attempts (`last_exc`, `response`, a retry counter), simulate the INTERLEAVED sequences, not just homogeneous ones: a connection error on attempt 1 (sets `last_exc`) followed by a retryable *status* on the FINAL attempt. Any `continue` reachable on the last iteration exhausts the loop into the post-loop exit path, which can raise a STALE exception from an earlier attempt instead of returning the current response (a real shipped bug — CodeRabbit caught it after this reviewer's happy-path trace missed it). For each `continue`, ask: "can this run on the final iteration, and what does the post-loop path then see?" Flag any retry branch not guarded by an `attempt < attempts - 1` (or equivalent) condition.
+Grep: `grep -n "continue" sportsdataverse/dl_utils.py` then hand-trace each against the loop-exit code.
+
 **4. Wrappers trust `download()` — no redundant try/except** — callers of `download()` must not wrap the call in `try/except`. Flag any calling module that catches the exception raised by `download()` and silently continues or returns `None`.
 Grep: `grep -nE "try:|except.*download|except Exception" <changed_caller_file>`
 
