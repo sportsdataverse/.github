@@ -1,0 +1,69 @@
+name: orphan-scripts
+
+# Reusable orphan-script gate for SDV -raw/-data repos (2026-08-02 pipeline audit §8.2).
+# Every driver/launcher in scripts/ (and top-level ops/) must be referenced by a
+# runbook (README/CLAUDE.md/docs), a workflow, or another script — otherwise the next
+# human (or session) cannot distinguish a load-bearing stage from a dead one-off.
+# ops/oneoff/ and ops/init/ are exempt (dated archives by convention).
+#
+# Caller repos add a ~12-line workflow:
+#   jobs:
+#     check:
+#       uses: sportsdataverse/.github/.github/workflows/orphan-scripts.yml@main
+
+on:
+  workflow_call: {}
+
+jobs:
+  orphan-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check every scripts/ and ops/ script is referenced
+        shell: python
+        run: |
+          import sys
+          from pathlib import Path
+
+          root = Path(".").resolve()
+
+          candidates = []
+          for pat in ("scripts/*.sh", "scripts/*.py", "scripts/*.ps1", "ops/*.sh", "ops/*.py"):
+              candidates.extend(p for p in root.glob(pat) if p.is_file())
+
+          ref_sources = []
+          for pat in (
+              "README*", "CLAUDE.md", "CONTRIBUTING.md",
+              "docs/**/*.md", ".github/workflows/*.yml", ".github/workflows/*.yaml",
+              ".github/copilot-instructions.md",
+              "scripts/*.sh", "scripts/*.py", "ops/*.sh", "ops/*.py",
+              "Makefile", "justfile",
+          ):
+              ref_sources.extend(p for p in root.glob(pat) if p.is_file())
+
+          corpus = {}
+          for p in ref_sources:
+              try:
+                  corpus[p] = p.read_text(encoding="utf-8", errors="replace")
+              except OSError:
+                  pass
+
+          orphans = []
+          for script in sorted(candidates):
+              name = script.name
+              referenced = any(
+                  name in text for p, text in corpus.items() if p.resolve() != script.resolve()
+              )
+              if not referenced:
+                  orphans.append(script.relative_to(root))
+
+          if orphans:
+              print("ORPHAN SCRIPTS (referenced by no runbook/workflow/driver):")
+              for o in orphans:
+                  print(f"  - {o}")
+              print(
+                  "Fix: wire it into a driver/workflow, document it in the README "
+                  "run-order, or archive it under ops/oneoff/ (dated) / delete it."
+              )
+              sys.exit(1)
+          print(f"OK: {len(candidates)} scripts all referenced.")
