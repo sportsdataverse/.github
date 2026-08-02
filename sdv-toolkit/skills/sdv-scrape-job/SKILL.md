@@ -82,7 +82,22 @@ echo "EXIT=$?" | tee -a "$LOG"   # grep-able completion marker; do NOT trust a
   exit non-zero.
 - **Resumable checkpoint**: derive done-ness from what's on disk
   (per-game JSON present ⇒ skip) rather than a separate state file when
-  possible — the data IS the checkpoint.
+  possible — the data IS the checkpoint. **Presence is not validity**: the
+  skip check must also reject empty/unparseable payloads (`{}` counted as
+  "captured" once blocked 3,347 refetches). Never persist an empty payload.
+- **Boolean CLI flags**: the tolerant house `str2bool` (unknown text →
+  `False`, never raises — a cron typo must not trigger a full re-scrape).
+  `argparse type=bool` is a bug (`bool('false') is True`), and the parsed
+  flag must be threaded all the way to the dispatch site — a one-off
+  hardcoded `True` in a dispatch tuple severed `-r` for months (cfb
+  `72b835e0a`).
+- **Season-scoped sentinels** (multi-season campaigns): write
+  `.done_<season>` only on exit 0, never on an output file's existence.
+- **Per-stage timing**: the driver logs elapsed seconds per stage into the
+  run summary so pace regressions are visible run-over-run.
+- **Placement/naming**: follow `/sdv-pipeline-layout` (stage-numbered
+  scrapers, `ops/oneoff/` for dated one-shots, the orphan test on
+  `scripts/`).
 
 ## Per-site gotchas (check before writing the script)
 

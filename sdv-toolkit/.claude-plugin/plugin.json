@@ -1,7 +1,7 @@
 {
   "name": "sdv-toolkit",
-  "version": "0.3.5",
-  "description": "SportsDataverse engineering toolkit \u2014 all skills invoke as /sdv-<name>: codegen-safe edit guards, multi-provider league/source scaffolding (ESPN/Fox/CBS/Yahoo/247/Torvik), returns-schema + docstring auditors, network-layer review, pandas\u2192polars-1.2+ conversion, R\u2194Python porting, the Python dev-workflow (sdv-preflight/sdv-ship/sdv-release/sdv-address-bot-reviews/sdv-stack), the raw/data producer pipeline (sdv-scrape-job/sdv-build-data), the model-spine build loop (sdv-model-spine/sdv-capture-oracle + oracle-gate/port-parity reviewers), commit/push-time guards (uv.lock re-lock, conda-recipe dep-sync, post-commit verify, codegen-drift-on-push, fixture-provenance, main-commit), and SDV-style R pkgdown/roxygen helpers. Shared across the ~40 SDV repos (Python + R).",
+  "version": "0.3.6",
+  "description": "SportsDataverse engineering toolkit — all skills invoke as /sdv-<name>: codegen-safe edit guards, multi-provider league/source scaffolding (ESPN/Fox/CBS/Yahoo/247/Torvik), returns-schema + docstring auditors, network-layer review, pandas→polars-1.2+ conversion, R↔Python porting, the Python dev-workflow (sdv-preflight/sdv-ship/sdv-release/sdv-address-bot-reviews/sdv-stack), the raw/data producer pipeline (sdv-pipeline-layout placement/naming/idempotency rules + sdv-scrape-job/sdv-build-data/sdv-standardize-repo, backed by the org-level orphan-scripts CI gate), the model-spine build loop (sdv-model-spine/sdv-capture-oracle + oracle-gate/port-parity reviewers), commit/push-time guards (uv.lock re-lock, conda-recipe dep-sync, post-commit verify, codegen-drift-on-push, fixture-provenance, main-commit), and SDV-style R pkgdown/roxygen helpers. Shared across the ~40 SDV repos (Python + R).",
   "author": {
     "name": "Saiem Gilani",
     "url": "https://github.com/saiemgilani"

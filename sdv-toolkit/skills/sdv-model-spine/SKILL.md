@@ -115,8 +115,16 @@ Re-run the same oracle gates on the sibling's fixtures at identical thresholds.
 3. Reviewer pass: `polars-1x-reviewer` + `oracle-gate-reviewer` (+
    `returns-table-auditor` if schemas were added; `port-parity-reviewer` if the
    spine ports external source code).
-4. Append the SDD ledger / session note (what shipped, gate results, follow-ups).
-5. **Write the restart prompt** so the next session resumes cold:
+4. **Publish operability** (if the spine publishes artifacts): add/update the
+   owning repo's CLAUDE.md **Model registry row** (model | artifact(s) | release
+   tag | training data | fitting script | gates at publish | last retrain |
+   cadence — `frozen` valid but explicit; unknown cells `TODO`, never
+   fabricated). The retrain path must pass the orphan test — wired into a
+   workflow (dispatch-only is fine) or the runbook, never a stranded script
+   (`retrain_xg_models.R` failure class). Verify artifact
+   `feature_names == *_FEATURES` at package time; consumers re-verify on load.
+5. Append the SDD ledger / session note (what shipped, gate results, follow-ups).
+6. **Write the restart prompt** so the next session resumes cold:
 
    ```text
    Continue <spine> in <repo> — <next phase>, inline execution (executing-plans, TDD).
@@ -136,7 +144,7 @@ Re-run the same oracle gates on the sibling's fixtures at identical thresholds.
    DO-NOT-REDO list with gate numbers, and the gotchas that cost time this
    session. Hand it to the user at the stopping point.
 
-6. When merging: hand off to `/sdv-ship` (it owns the PR/CI/bot-review/merge flow).
+7. When merging: hand off to `/sdv-ship` (it owns the PR/CI/bot-review/merge flow).
 
 ## Stop conditions (report, don't push through)
 
