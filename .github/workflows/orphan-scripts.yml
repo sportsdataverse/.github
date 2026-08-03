@@ -1,10 +1,16 @@
 name: orphan-scripts
 
-# Reusable orphan-script gate for SDV -raw/-data repos (2026-08-02 pipeline audit §8.2).
-# Every driver/launcher in scripts/ (and top-level ops/) must be referenced by a
-# runbook (README/CLAUDE.md/docs), a workflow, or another script — otherwise the next
-# human (or session) cannot distinguish a load-bearing stage from a dead one-off.
-# ops/oneoff/ and ops/init/ are exempt (dated archives by convention).
+# Reusable script/reference gate for SDV -raw/-data repos (2026-08-02 pipeline audit §8.2).
+#
+# Two checks, opposite directions:
+#   1. No orphan scripts — every driver/launcher in scripts/ (and top-level ops/)
+#      must be referenced by a runbook (README/CLAUDE.md/docs), a workflow, or
+#      another script; otherwise the next human (or session) cannot distinguish a
+#      load-bearing stage from a dead one-off. ops/oneoff/ and ops/init/ are exempt
+#      (dated archives by convention).
+#   2. No phantom references — every script named in command position must exist.
+#      Added 2026-08-03 after a rename pass updated code references (which fail
+#      loudly) and missed docs (which fail silently).
 #
 # Caller repos add a ~12-line workflow:
 #   jobs:
@@ -29,6 +35,8 @@ jobs:
             ops
             docs
             .github
+            R
+            python
             README.md
             CLAUDE.md
             CONTRIBUTING.md
@@ -84,3 +92,90 @@ jobs:
               )
               sys.exit(1)
           print(f"OK: {len(candidates)} scripts all referenced.")
+
+      # The inverse check. The gate above proves every script is referenced; this
+      # proves every reference resolves. That direction is the more dangerous one:
+      # an orphan is dead weight a reader can ignore, while a phantom reference is
+      # an instruction to run something that does not exist. Real cases it catches
+      # (2026-08-02/03 audit): a live annual workflow calling a deleted R script,
+      # and three repos' copilot-instructions.md -- which the agent harness injects
+      # as a standing rule -- naming pipelines that had been removed.
+      - name: Check every referenced script exists
+        shell: python
+        run: |
+          import re
+          import sys
+          from pathlib import Path
+
+          root = Path(".").resolve()
+
+          # A script name in COMMAND POSITION, i.e. something a reader is being
+          # told to run. Deliberately NOT bare backticked names: docs legitimately
+          # mention removed files in prose ("recover it with git show <sha>^:x.R"),
+          # and flagging those would punish the documentation we want written.
+          INVOCATION = re.compile(
+              r"(?:python3?|bash|sh|Rscript|uv\s+run\s+python|\./)\s+"
+              r"([\w./-]+\.(?:py|sh|R))\b"
+          )
+          # Dated planning artifacts are archives, not runbooks.
+          EXCLUDE_PARTS = {"superpowers", "plans", "specs", "archive"}
+          # Source dirs this repo owns. Matching on the NAME rather than the dir
+          # existing is deliberate: an emptied R/ is untracked by git, and that is
+          # exactly when every reference into it has gone stale.
+          OWNED = {"R", "scripts", "python", "ops"}
+
+          ref_sources = []
+          for pat in (
+              "README*", "CLAUDE.md", "CONTRIBUTING.md",
+              "docs/**/*.md", ".github/workflows/*.yml", ".github/workflows/*.yaml",
+              ".github/copilot-instructions.md",
+              "scripts/*.sh", "scripts/*.py", "ops/*.sh", "ops/*.py",
+              "Makefile", "justfile",
+          ):
+              ref_sources.extend(p for p in root.glob(pat) if p.is_file())
+
+          phantoms = []
+          for src in sorted(ref_sources):
+              if EXCLUDE_PARTS & set(src.relative_to(root).parts):
+                  continue
+              try:
+                  text = src.read_text(encoding="utf-8", errors="replace")
+              except OSError:
+                  continue
+              for line in text.splitlines():
+                  # A #-commented line is a note, not an instruction -- including
+                  # "this used to run X; X was deleted" notes. A dead command in a
+                  # YAML `run: |` body is not prefixed and is still caught, which
+                  # is the case that actually breaks CI.
+                  if line.lstrip().startswith("#"):
+                      continue
+                  for ref in INVOCATION.findall(line):
+                      if any(c in ref for c in "${<*"):      # placeholder/variable
+                          continue
+                      bare = ref.lstrip("./").removeprefix("../")
+                      if (root / ref).is_file() or (root / bare).is_file():
+                          continue
+                      # Bare basename may live anywhere in the tree.
+                      if "/" not in ref and any(root.rglob(ref)):
+                          continue
+                      # An absolute path is a host path; a first segment we don't
+                      # own is a sibling repo's tree. Neither is ours to fail on.
+                      if ref.startswith("/") or (
+                          "/" in ref and bare.split("/")[0] not in OWNED
+                      ):
+                          continue
+                      phantoms.append(
+                          (src.relative_to(root), ref, line.strip()[:100])
+                      )
+
+          if phantoms:
+              print("PHANTOM REFERENCES (documented/invoked script does not exist):")
+              for src, ref, line in phantoms:
+                  print(f"  - {src}: {ref}")
+                  print(f"      | {line}")
+              print(
+                  "Fix: point it at the real path, or -- if the script was retired "
+                  "-- say so in a # comment rather than leaving a live invocation."
+              )
+              sys.exit(1)
+          print("OK: every referenced script resolves.")
