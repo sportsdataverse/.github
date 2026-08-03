@@ -153,16 +153,19 @@ jobs:
                       if any(c in ref for c in "${<*"):      # placeholder/variable
                           continue
                       bare = ref.lstrip("./").removeprefix("../")
+                      # Decide ownership BEFORE touching the filesystem. An
+                      # absolute path is a host path (`root / "/root/x"` collapses
+                      # to /root/x, and probing that on the runner raises
+                      # PermissionError); a first segment we don't own is a
+                      # sibling repo's tree. Neither is ours to fail on.
+                      if ref.startswith("/") or (
+                          "/" in ref and bare.split("/")[0] not in OWNED
+                      ):
+                          continue
                       if (root / ref).is_file() or (root / bare).is_file():
                           continue
                       # Bare basename may live anywhere in the tree.
                       if "/" not in ref and any(root.rglob(ref)):
-                          continue
-                      # An absolute path is a host path; a first segment we don't
-                      # own is a sibling repo's tree. Neither is ours to fail on.
-                      if ref.startswith("/") or (
-                          "/" in ref and bare.split("/")[0] not in OWNED
-                      ):
                           continue
                       phantoms.append(
                           (src.relative_to(root), ref, line.strip()[:100])
