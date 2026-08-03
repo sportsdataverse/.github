@@ -104,10 +104,28 @@ jobs:
         shell: python
         run: |
           import re
+          import subprocess
           import sys
           from pathlib import Path
 
           root = Path(".").resolve()
+
+          # Resolve references against the git TREE, not the worktree. The
+          # checkout above is sparse, so `Path.is_file()` / `rglob` answer
+          # "was this materialized?" rather than "does this exist?" -- and a
+          # doc invoking a script that lives outside the sparse set (e.g. a
+          # vendored package dir) would be reported as a phantom that is in
+          # fact present in the repo. `git ls-tree -r HEAD` lists the whole
+          # tree even in a shallow + sparse clone. It also means we never
+          # probe the filesystem for an attacker- or typo-supplied absolute
+          # path, which used to raise PermissionError on the runner.
+          tracked = set(
+              subprocess.run(
+                  ["git", "ls-tree", "-r", "HEAD", "--name-only"],
+                  capture_output=True, text=True, check=True,
+              ).stdout.splitlines()
+          )
+          tracked_names = {p.rsplit("/", 1)[-1] for p in tracked}
 
           # A script name in COMMAND POSITION, i.e. something a reader is being
           # told to run. Deliberately NOT bare backticked names: docs legitimately
@@ -162,10 +180,12 @@ jobs:
                           "/" in ref and bare.split("/")[0] not in OWNED
                       ):
                           continue
-                      if (root / ref).is_file() or (root / bare).is_file():
+                      if ref in tracked or bare in tracked:
                           continue
-                      # Bare basename may live anywhere in the tree.
-                      if "/" not in ref and any(root.rglob(ref)):
+                      # Bare basename may live anywhere in the tree -- a
+                      # runbook block that cd's into a subdir first invokes
+                      # its scripts by name alone.
+                      if "/" not in ref and ref in tracked_names:
                           continue
                       phantoms.append(
                           (src.relative_to(root), ref, line.strip()[:100])
