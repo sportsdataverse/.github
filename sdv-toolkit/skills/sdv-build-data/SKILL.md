@@ -36,9 +36,18 @@ existing package layout govern over this table — read them first.
    the norm).
 3. **Validate before publish** — run the validation-harness checks the repo
    wires (constant-column, extraction coverage, parity vs the PRIOR release
-   for overlapping seasons). Where an R producer released the dataset
-   (cfb-data), the python build must parity-match the R-released parquet
-   before it ships. The harness has caught real producer bugs — do not skip.
+   for overlapping seasons). The harness has caught real producer bugs — do
+   not skip.
+   **R/Python parity (standing policy, 2026-08-03):** `-data` repos carry BOTH
+   pipelines — Python primary, R maintained as the methodological equivalent,
+   both moving together. Parity is keyed on the DATASET, not the file: R is
+   dataset-per-file, Python is layer-per-module with datasets as
+   `config.REGISTRY` rows. Before publishing a dataset, confirm the other
+   language still produces it; a dataset that exists on only one side is a
+   parity gap to close, not a simplification. **Neither side is automatically
+   authoritative** — a divergence is a review item, decided on which is
+   methodologically right. The one codified exception is `cfb-data`, where R
+   is the released producer and python builders must parity-match its parquet.
 4. **Publish** — two mirrors, both required when the repo uses both:
    - **git commit** of the data tree (batch, conventional message);
    - **release assets**: `gh release upload <tag> <one-file> --clobber` —

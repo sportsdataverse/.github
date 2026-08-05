@@ -1,6 +1,6 @@
 ---
 name: sdv-standardize-repo
-description: Use when bringing an SDV `-raw` or `-data` repo onto the standard template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, purges, R-chain retirement) — the executed sequence from pilots 1–6 (wehoop-wbb pair, hoopR-nba-stats pair, wehoop-wnba-stats pair) with every landmine those pilots hit. Invoke for "standardize <repo>", "bring <repo> onto the template", "repo standardization pilot", or the fan-out to the remaining -raw/-data repos.
+description: Use when bringing an SDV `-raw` or `-data` repo onto the standard template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, purges, R/Python dual-pipeline parity) — the executed sequence from pilots 1–6 (wehoop-wbb pair, hoopR-nba-stats pair, wehoop-wnba-stats pair) with every landmine those pilots hit. Invoke for "standardize <repo>", "bring <repo> onto the template", "repo standardization pilot", or the fan-out to the remaining -raw/-data repos.
 ---
 
 # Standardize an SDV `-raw`/`-data` repo
@@ -44,12 +44,30 @@ ones get silently skipped — split accordingly.
    claim: diff game-id sets first and copy anything only-here into the raw
    store (pilot 4 found 85 preseason games per family that the sweep's
    season-type scope never captures). `.qs` + `.csv.gz` per D30.
-7. **R-chain retirement** (`-data`): only after proving the Python registry
-   covers every dataset the R scripts produce. Rewrite workflows Python-only:
-   uv, raw store over `raw.githubusercontent.com`, season default computed in
-   bash (NBA rolls over in OCTOBER; WNBA is calendar-year — never copy one
-   league's rule to the other). Keep an annual job if the daily cron windows
-   miss an event (WNBA draft is mid-April; daily runs May–Oct).
+7. **R/Python dual-pipeline parity** (`-data`) — **DO NOT retire the R chain.**
+   Standing policy (2026-08-03): Python is the PRIMARY pipeline and gets the
+   work; R is maintained alongside it as a methodological/language equivalent;
+   **both sides move together when either changes**. Two R chains were retired
+   on 2026-08-02 under the old rule and had to be restored
+   (`hoopR-nba-stats-data` 645 lines, `nfl-data` 251) — if a repo has no R
+   twin, that is a gap to fill, not a state to preserve.
+   - **Parity is DATASET-level, not file-level.** The two sides decompose
+     differently on purpose: R is dataset-per-file
+     (`espn_{lg}_NN_{dataset}_creation.R`), Python is layer-per-module
+     (`{lg}_data_build/{ingest,reshapers,build,publish}.py`) with datasets as
+     registry rows. There is no `01_pbp.R` ↔ `01_pbp.py` pair to couple; the
+     shared key is the dataset name, which `config.REGISTRY` already carries
+     ("Mirrors each `espn_{lg}_NN_*_creation.R` script").
+   - **Neither side is automatically authoritative.** A divergence is a review
+     item — do not "fix" R to match Python or vice versa without deciding which
+     is methodologically right. (`cfb-data` is the exception with an explicit
+     rule: R is the released producer there, so python builders parity-match.)
+   - Workflows may still be Python-only — restoring the twin preserves the
+     METHOD in a second language, it does not re-schedule R. When rewriting a
+     workflow: uv, raw store over `raw.githubusercontent.com`, season default
+     computed in bash (NBA rolls over in OCTOBER; WNBA is calendar-year — never
+     copy one league's rule to the other). Keep an annual job if the daily cron
+     windows miss an event (WNBA draft is mid-April; daily runs May–Oct).
 8. **Docs/close-out**: update the repo's own agent-facing docs to the new
    layout; record lessons in the spec (§12.x); memory topic update.
 
