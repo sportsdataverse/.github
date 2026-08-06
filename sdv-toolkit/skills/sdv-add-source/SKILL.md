@@ -249,7 +249,58 @@ and any sport needing per-sport parser overrides.
    — one `parse_<sport>_<short>` function per endpoint short name, plus a
    `parse_<sport>_summary(payload, section=None, ...)` dispatcher for
    multi-section endpoints (one `_parse_summary_<section>` private helper
-   per section).
+   per section). Minimal skeleton:
+
+   ```python
+   from __future__ import annotations
+
+   from typing import Any
+
+   import pandas as pd
+   import polars as pl
+
+   from sportsdataverse.dl_utils import underscore
+
+
+   def _to_frame(records: list[dict], return_as_pandas: bool) -> pl.DataFrame | pd.DataFrame:
+       if not records:
+           df = pl.DataFrame()
+           return df.to_pandas() if return_as_pandas else df
+       pdf = pd.json_normalize(records)
+       pdf.columns = [underscore(c) for c in pdf.columns]
+       # stringify any list cells
+       for col in pdf.columns:
+           if pdf[col].apply(lambda x: isinstance(x, list)).any():
+               pdf[col] = pdf[col].astype(str)
+       frame = pl.from_pandas(pdf)
+       return frame.to_pandas() if return_as_pandas else frame
+
+
+   def parse_<sport>_scoreboard(
+       payload: dict[str, Any],
+       return_as_pandas: bool = False,
+   ) -> pl.DataFrame | pd.DataFrame:
+       events = payload.get("events", [])
+       return _to_frame(events, return_as_pandas)
+
+
+   def parse_<sport>_summary(
+       payload: dict[str, Any],
+       section: str | None = None,
+       return_as_pandas: bool = False,
+   ) -> dict[str, pl.DataFrame | pd.DataFrame] | pl.DataFrame | pd.DataFrame:
+       """Dispatch all 21 sub-frames or a single named section."""
+       parsers = {
+           "header": _parse_summary_header,
+           "lineups": _parse_summary_lineups,
+           # add more sections here
+       }
+       if section is not None:
+           fn = parsers.get(section, lambda p, r: _to_frame([], r))
+           return fn(payload, return_as_pandas)
+       return {name: fn(payload, return_as_pandas) for name, fn in parsers.items()}
+   ```
+
 2. **Register in codegen** — `tools/codegen/generate.py`:
 
    ```python
@@ -268,8 +319,41 @@ and any sport needing per-sport parser overrides.
    documenting URL + capture date.
 4. **Write failing tests first** (`tests/test_espn_<sport>_parsers.py`) —
    column presence, empty-payload zero-row behavior, and the
-   `return_as_pandas=True` path. Run to confirm the right failure (not an
-   import error), implement the parser, re-run to green.
+   `return_as_pandas=True` path:
+
+   ```python
+   import json, pathlib, pytest
+   import polars as pl
+
+   FIXTURE_DIR = pathlib.Path(__file__).parent / "fixtures" / "espn" / "<sport>"
+
+   def load(league: str, endpoint: str) -> dict:
+       return json.loads((FIXTURE_DIR / league / f"{endpoint}.json").read_text())
+
+   def test_parse_<sport>_scoreboard_columns():
+       from sportsdataverse.<sport>.<sport>_espn_parsers import parse_<sport>_scoreboard
+       payload = load("<league>", "scoreboard")
+       df = parse_<sport>_scoreboard(payload)
+       assert isinstance(df, pl.DataFrame)
+       assert df.height > 0
+       assert "id" in df.columns  # adjust to actual schema
+
+   def test_parse_<sport>_scoreboard_empty():
+       from sportsdataverse.<sport>.<sport>_espn_parsers import parse_<sport>_scoreboard
+       df = parse_<sport>_scoreboard({})
+       assert isinstance(df, pl.DataFrame)
+       assert df.height == 0
+
+   def test_parse_<sport>_scoreboard_pandas():
+       import pandas as pd
+       from sportsdataverse.<sport>.<sport>_espn_parsers import parse_<sport>_scoreboard
+       payload = load("<league>", "scoreboard")
+       df = parse_<sport>_scoreboard(payload, return_as_pandas=True)
+       assert isinstance(df, pd.DataFrame)
+   ```
+
+   Run to confirm the right failure (not an import error), implement the
+   parser, re-run to green.
 
 ---
 

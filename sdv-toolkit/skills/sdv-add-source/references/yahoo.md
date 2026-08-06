@@ -29,8 +29,10 @@ curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
 
 **B — XHR intercept** (browser DevTools → Network → Fetch/XHR filter). Common
 patterns: `api-secure.sports.yahoo.com/v1/editorial/...`,
-`sports.yahoo.com/_td/<sport>/...`. Document the full URL + any required
-headers (User-Agent, Referer, Cookie).
+`sports.yahoo.com/_td/<sport>/...`,
+`query1.finance.yahoo.com/...` (finance crossover, used for sports betting
+lines). Document the full URL + any required headers (User-Agent, Referer,
+Cookie).
 
 Once you have the blob, walk it to find the data of interest instead of
 guessing depth:
