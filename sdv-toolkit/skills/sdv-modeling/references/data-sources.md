@@ -33,13 +33,16 @@ answer two different questions, and treating them as one is itself a bug
 class:
 
 - **Dataset floor** (`loader_map.json`'s `floor` field): the earliest season
-  a `load_*` call returns *any* rows. Below it, most ESPN-release loaders
-  degrade gracefully — `_read_release_parquet` returns `None`, the season is
-  added to a `missing` list, and `cli_warn()` fires (e.g. `load_cfb_betting`,
-  `load_cfb_fpi_weekly`) — but non-release/CFBD-backed loaders instead raise
-  `SeasonNotFoundError` outright (`sportsdataverse/cfb/cfb_loaders.py:1556`,
-  `:1650`). Either way this floor is at least observable if you're watching
-  for it.
+  a `load_*` call returns *any* rows. Two behaviors coexist **inside the same
+  loader**, keyed on how far below the documented floor the caller asks:
+  `load_cfb_betting` and `load_cfb_fpi_weekly` both raise `SeasonNotFoundError`
+  outright for a season below their hard floor (2004 / 2005 respectively —
+  `sportsdataverse/cfb/cfb_loaders.py:1553-1566` raises at `:1555-1556`,
+  `:1647-1650` raises at `:1649-1650`), but for an individual missing asset
+  *at or above* that floor the same function degrades gracefully instead —
+  `_read_release_parquet` returns `None`, the season is added to a `missing`
+  list, and `cli_warn()` fires (`cfb_loaders.py:1557-1565`). Either way this
+  floor is at least observable if you're watching for it.
 - **Model-training window** (`audit.md`): what season range a *specific
   shipped artifact* was actually fit on — which is frequently narrower than
   the dataset floor above, and that gap is the genuinely silent failure mode.
@@ -90,7 +93,7 @@ directly:
   earliest season with a complete window given a 2002 raw floor is
   `2002 + 3 = 2005`. `recruiting.py:230-245` enforces this at build time,
   raising `FileNotFoundError` rather than publishing a season with a
-  silently-thinner composite. (The same file's docstring flags the
+  silently-thinner composite. (The same file's inline comment flags the
   earlier bug this fixed: applying the 4-class window requirement to
   `cfb_recruits` too made 2002-2004 recruit-class *pulls* fail on classes
   that predate the floor and "were never going to exist" — `recruits` was
@@ -172,9 +175,13 @@ Feeds: T1.0 prediction stack (pregame/in-game WP, ratings) reads
 `load_mbb_schedule` + `load_mbb_pbp`; T1.1/T1.2 player-value spine additionally
 needs `load_mbb_player_boxscore`/`load_mbb_shots`, which floor at 2025 —
 a hard structural ceiling for that spine, not a choice (`audit.md` §MBB/WBB).
-WBB mirrors this table 1:1 against `espn_womens_college_basketball_*` tags
-(same 11 loader names with an `_wbb_` prefix, same floor pattern:
-pbp/box floor 2002, shots/rosters floor 2026).
+WBB uses the same 11 loader names against `espn_womens_college_basketball_*`
+tags but is not a 1:1 floor mirror: `load_wbb_pbp`/`_player_boxscore`/
+`_team_boxscore`/`_schedule` floor 2002, matching MBB — but
+`load_wbb_standings`/`_team_season_stats` floor at **2026**, where MBB's
+equivalents floor at 2003, and `load_wbb_game_rosters`/`_officials`/
+`_player_season_stats`/`_rosters`/`_shots` floor at 2026 versus MBB's 2025
+(`loader_map.json`).
 
 ### MLB (5 loaders — all stubs)
 
@@ -205,49 +212,156 @@ span table).
 
 ### NFL (35 loaders — the most heterogeneous host mix)
 
-Most NFL loaders are `nflverse`/`ffverse` mirrors with `floor=null`
-(no per-season partitioning probed by the audit script): `load_nfl_combine`,
-`_contracts`, `_depth_charts`, `_draft_picks`, `_ff_opportunity`,
-`_ftn_charting`, `_injuries`, `_ngs_passing`/`_receiving`/`_rushing`,
-`_officials`, `_pbp_participation`, `_pfr_*` (8 variants), `_schedule`,
-`_snap_counts`, `_teams`, `_trades`, `_weekly_rosters`. The `sdv-release`
-subset (also all `floor=null` in this JSON, though `audit.md`'s
-model-training table separately documents their real span): `load_nfl_pbp`
-(`nfl_model_pbp`, 1999–2025 per `audit.md`), `load_nfl_espn_qbr`
-(`nfl_espn_qbr`), `load_nfl_player_stats`/`_players`/`_rosters`/`_team_stats`.
-`load_nfl_nextgen_stats` and `load_nfl_pfr_advstats` (the two unified loaders
-— see the sdv-py `CLAUDE.md` "don't add new per-type wrappers" rule) show
-`host=null` in this JSON because they dispatch to per-type URLs at call time
-rather than owning one fixed path.
+| Loader | Host | Floor | Source |
+|---|---|---|---|
+| `load_nfl_combine` | nflverse | – | `config.NFL_COMBINE_URL` |
+| `load_nfl_contracts` | nflverse | – | `config.NFL_CONTRACTS_URL` |
+| `load_nfl_depth_charts` | nflverse | – | `depth_charts` |
+| `load_nfl_draft_picks` | nflverse | – | `config.NFL_DRAFT_PICKS_URL` |
+| `load_nfl_espn_qbr` | sdv-release | – | `nfl_espn_qbr` |
+| `load_nfl_ff_opportunity` | nflverse | – | `config.NFL_FF_OPPORTUNITY_URL` |
+| `load_nfl_ff_playerids` | sdv-git-tree | – | `config.NFL_FF_PLAYERIDS_URL` |
+| `load_nfl_ff_rankings` | sdv-git-tree | – | `config.NFL_FF_RANKINGS_DRAFT_URL` |
+| `load_nfl_ftn_charting` | nflverse | – | `ftn_charting` |
+| `load_nfl_injuries` | nflverse | – | `injuries` |
+| `load_nfl_nextgen_stats` | – | – | dispatches per-type at call time (unified loader) |
+| `load_nfl_ngs_passing` | nflverse | – | `config.NFL_NGS_PASSING_URL` |
+| `load_nfl_ngs_receiving` | nflverse | – | `config.NFL_NGS_RECEIVING_URL` |
+| `load_nfl_ngs_rushing` | nflverse | – | `config.NFL_NGS_RUSHING_URL` |
+| `load_nfl_officials` | nflverse | – | `config.NFL_OFFICIALS_URL` |
+| `load_nfl_pbp` | sdv-release | – | `nfl_model_pbp` (1999–2025 per `audit.md`; `floor=null` in this JSON) |
+| `load_nfl_pbp_participation` | nflverse | – | `pbp_participation` |
+| `load_nfl_pfr_advstats` | – | – | dispatches per-type/summary at call time (unified loader) |
+| `load_nfl_pfr_def` | nflverse | – | `config.NFL_PFR_SEASON_DEF_URL` |
+| `load_nfl_pfr_pass` | nflverse | – | `config.NFL_PFR_SEASON_PASS_URL` |
+| `load_nfl_pfr_rec` | nflverse | – | `config.NFL_PFR_SEASON_REC_URL` |
+| `load_nfl_pfr_rush` | nflverse | – | `config.NFL_PFR_SEASON_RUSH_URL` |
+| `load_nfl_pfr_weekly_def` | – | – | – |
+| `load_nfl_pfr_weekly_pass` | – | – | – |
+| `load_nfl_pfr_weekly_rec` | – | – | – |
+| `load_nfl_pfr_weekly_rush` | – | – | – |
+| `load_nfl_player_stats` | sdv-release | – | `nfl_player_stats` |
+| `load_nfl_players` | sdv-release | – | `nfl_players` |
+| `load_nfl_rosters` | sdv-release | – | `nfl_rosters` |
+| `load_nfl_schedule` | nflverse | – | `config.NFL_TEAM_SCHEDULE_URL` |
+| `load_nfl_snap_counts` | nflverse | – | `snap_counts` |
+| `load_nfl_team_stats` | sdv-release | – | `nfl_team_stats` |
+| `load_nfl_teams` | nflverse | – | `config.NFL_TEAM_LOGO_URL` |
+| `load_nfl_trades` | nflverse | – | `config.NFL_TRADES_URL` |
+| `load_nfl_weekly_rosters` | nflverse | – | `weekly_rosters` |
+
+Every loader in this league shows `floor=null` in `loader_map.json` — none
+of NFL's sources are partitioned in a way the audit script could probe a
+per-season floor from (`nflverse`/`ffverse` mirrors ship one combined file;
+the `sdv-release` subset's real span is documented separately in `audit.md`'s
+model-training table, e.g. `nfl_model_pbp` 1999–2025). `load_nfl_nextgen_stats`
+and `load_nfl_pfr_advstats` are the two unified loaders (see the sdv-py
+`CLAUDE.md` "don't add new per-type wrappers" rule) — they show `host=null`
+because they dispatch to per-type URLs at call time rather than owning one
+fixed path.
 
 ### NHL (28 loaders) + PWHL (21 loaders) — same shape, `nhl_*`/`pwhl_*` tags
 
-NHL: pbp/box/rosters/schedule family floors at **2010**
-(`load_nhl_pbp_full`/`_lite`, `load_nhl_player_boxscores`, `load_nhl_rosters`,
-`load_nhl_schedules`, `load_nhl_team_boxscores`); the per-game detail family
-(`game_info`, `linescore`, `penalties`, `scoring`, `scratches`,
-`skater_boxscores`, `three_stars`) floors at **2024**; `shifts`/`shootout`/
-`shots_by_period`/`officials` float at **2025**. Several `load_nhl_*_box`
-aliases (`goalie_box`, `player_box`, `skater_box`, `team_box`) resolve
-`host=null` — dispatch shims over the canonical `*_boxscore(s)` names, not
-independent sources. PWHL mirrors the shape exactly but every floor is 2024
-except `shootout` (2026) — **the whole league is only 3 seasons old**, so
-these floors are the same ceiling `audit.md` §PWHL documents, not an
-independent finding.
+| Loader | Host | Floor | Source |
+|---|---|---|---|
+| `load_nhl_game_info` | sdv-release | 2024 | `nhl_game_info` |
+| `load_nhl_game_rosters` | sdv-release | 2024 | `nhl_game_rosters` |
+| `load_nhl_games` | sdv-release | – | `nhl_schedules` |
+| `load_nhl_goalie_box` | – | – | – (dispatch shim over `load_nhl_goalie_boxscores`) |
+| `load_nhl_goalie_boxscores` | sdv-release | 2024 | `nhl_goalie_boxscores` |
+| `load_nhl_linescore` | sdv-release | 2024 | `nhl_linescore` |
+| `load_nhl_officials` | sdv-release | 2025 | `nhl_officials` |
+| `load_nhl_pbp` | sdv-release | 2010 | `nhl_pbp_full` |
+| `load_nhl_pbp_full` | sdv-release | 2010 | `nhl_pbp_full` |
+| `load_nhl_pbp_lite` | sdv-release | 2010 | `nhl_pbp_lite` |
+| `load_nhl_penalties` | sdv-release | 2024 | `nhl_penalties` |
+| `load_nhl_player_box` | – | – | – (dispatch shim over `load_nhl_player_boxscores`) |
+| `load_nhl_player_boxscore` | sdv-release | 2010 | `nhl_player_boxscores` |
+| `load_nhl_player_boxscores` | sdv-release | 2010 | `nhl_player_boxscores` |
+| `load_nhl_rosters` | sdv-release | 2010 | `nhl_rosters` |
+| `load_nhl_schedule` | sdv-release | 2010 | `nhl_schedules` |
+| `load_nhl_schedules` | sdv-release | 2010 | `nhl_schedules` |
+| `load_nhl_scoring` | sdv-release | 2024 | `nhl_scoring` |
+| `load_nhl_scratches` | sdv-release | 2024 | `nhl_scratches` |
+| `load_nhl_shifts` | sdv-release | 2025 | `nhl_shifts` |
+| `load_nhl_shootout` | sdv-release | 2025 | `nhl_shootout` |
+| `load_nhl_shots_by_period` | sdv-release | 2025 | `nhl_shots_by_period` |
+| `load_nhl_skater_box` | – | – | – (dispatch shim over `load_nhl_skater_boxscores`) |
+| `load_nhl_skater_boxscores` | sdv-release | 2024 | `nhl_skater_boxscores` |
+| `load_nhl_team_box` | – | – | – (dispatch shim over `load_nhl_team_boxscores`) |
+| `load_nhl_team_boxscore` | sdv-release | 2010 | `nhl_team_boxscores` |
+| `load_nhl_team_boxscores` | sdv-release | 2010 | `nhl_team_boxscores` |
+| `load_nhl_three_stars` | sdv-release | 2024 | `nhl_three_stars` |
+
+NHL floors group into three bands: pbp/box/rosters/schedule at **2010**,
+the per-game detail family (`game_info`, `linescore`, `penalties`, `scoring`,
+`scratches`, `skater_boxscores`, `three_stars`) at **2024**, and `shifts`/
+`shootout`/`shots_by_period`/`officials` at **2025**.
+
+| Loader | Host | Floor | Source |
+|---|---|---|---|
+| `load_pwhl_game_info` | sdv-release | 2024 | `pwhl_game_info` |
+| `load_pwhl_game_rosters` | sdv-release | 2024 | `pwhl_game_rosters` |
+| `load_pwhl_games` | sdv-release | – | `pwhl_schedules` |
+| `load_pwhl_goalie_box` | – | – | – |
+| `load_pwhl_goalie_boxscores` | sdv-release | 2024 | `pwhl_goalie_boxscores` |
+| `load_pwhl_officials` | sdv-release | 2024 | `pwhl_officials` |
+| `load_pwhl_pbp` | sdv-release | 2024 | `pwhl_pbp` |
+| `load_pwhl_penalty_summary` | sdv-release | 2024 | `pwhl_penalty_summary` |
+| `load_pwhl_player_box` | – | – | – |
+| `load_pwhl_player_boxscores` | sdv-release | 2024 | `pwhl_player_boxscores` |
+| `load_pwhl_rosters` | sdv-release | 2024 | `pwhl_rosters` |
+| `load_pwhl_schedule` | – | – | – |
+| `load_pwhl_schedules` | sdv-release | 2024 | `pwhl_schedules` |
+| `load_pwhl_scoring_summary` | sdv-release | 2024 | `pwhl_scoring_summary` |
+| `load_pwhl_shootout` | sdv-release | 2026 | `pwhl_shootout` |
+| `load_pwhl_shots_by_period` | sdv-release | 2024 | `pwhl_shots_by_period` |
+| `load_pwhl_skater_box` | – | – | – |
+| `load_pwhl_skater_boxscores` | sdv-release | 2024 | `pwhl_skater_boxscores` |
+| `load_pwhl_team_box` | – | – | – |
+| `load_pwhl_team_boxscores` | sdv-release | 2024 | `pwhl_team_boxscores` |
+| `load_pwhl_three_stars` | sdv-release | 2024 | `pwhl_three_stars` |
+
+PWHL mirrors NHL's shape (same `*_box` dispatch-shim pattern) but every
+floor is 2024 except `shootout` (2026) — **the whole league is only 3
+seasons old**, so these floors are the same ceiling `audit.md` §PWHL
+documents, not an independent finding.
 
 ### WNBA (25 loaders — the widest single-league set, two source families)
 
-`espn_wnba_*` family (ESPN, `sdv-release`): pbp/player_boxscore floor 2002;
-schedule floor 2002; game_rosters/officials/player_season_stats/rosters/
-shots/standings/team_season_stats float 2024; draft floats 2026;
-team_boxscore floats 2002. `wnba_stats_*` family (stats.wnba.com,
-`sdv-release`): everything floors 2025 or 2026 (`schedules`/`draft`/
-`player_game_logs` at 2025; the rest — `pbp`, `lineups`, `shots`, `coaches`,
-`rosters`, `standings`, `game_rosters`, `officials`, `player_season_stats`,
-`team_season_stats` — at 2026). This mirrors `audit.md`'s WNBA §finding
-that the ESPN pbp family goes back 25 seasons (2002–2026) while the
-possession-sim glue is locked to stats.wnba.com's single 2026 season — two
-source families with radically different depth feeding the same league.
+| Loader | Host | Floor | Source |
+|---|---|---|---|
+| `load_wnba_draft` | sdv-release | 2026 | `espn_wnba_draft` |
+| `load_wnba_game_rosters` | sdv-release | 2024 | `espn_wnba_game_rosters` |
+| `load_wnba_officials` | sdv-release | 2024 | `espn_wnba_officials` |
+| `load_wnba_pbp` | sdv-release | 2002 | `espn_wnba_pbp` |
+| `load_wnba_player_boxscore` | sdv-release | 2002 | `espn_wnba_player_boxscores` |
+| `load_wnba_player_season_stats` | sdv-release | 2024 | `espn_wnba_player_season_stats` |
+| `load_wnba_rosters` | sdv-release | 2024 | `espn_wnba_rosters` |
+| `load_wnba_schedule` | sdv-release | 2002 | `espn_wnba_schedules` |
+| `load_wnba_shots` | sdv-release | 2024 | `espn_wnba_shots` |
+| `load_wnba_standings` | sdv-release | 2024 | `espn_wnba_standings` |
+| `load_wnba_team_boxscore` | sdv-release | 2002 | `espn_wnba_team_boxscores` |
+| `load_wnba_team_season_stats` | sdv-release | 2024 | `espn_wnba_team_season_stats` |
+| `load_wnba_stats_coaches` | sdv-release | 2026 | `wnba_stats_coaches` |
+| `load_wnba_stats_draft` | sdv-release | 2025 | `wnba_stats_draft` |
+| `load_wnba_stats_game_rosters` | sdv-release | 2026 | `wnba_stats_game_rosters` |
+| `load_wnba_stats_lineups` | sdv-release | 2026 | `wnba_stats_lineups` |
+| `load_wnba_stats_officials` | sdv-release | 2026 | `wnba_stats_officials` |
+| `load_wnba_stats_pbp` | sdv-release | 2026 | `wnba_stats_pbp` |
+| `load_wnba_stats_player_game_logs` | sdv-release | 2025 | `wnba_stats_player_game_logs` |
+| `load_wnba_stats_player_season_stats` | sdv-release | 2026 | `wnba_stats_player_season_stats` |
+| `load_wnba_stats_rosters` | sdv-release | 2026 | `wnba_stats_rosters` |
+| `load_wnba_stats_schedules` | sdv-release | 2025 | `wnba_stats_schedules` |
+| `load_wnba_stats_shots` | sdv-release | 2026 | `wnba_stats_shots` |
+| `load_wnba_stats_standings` | sdv-release | 2026 | `wnba_stats_standings` |
+| `load_wnba_stats_team_season_stats` | sdv-release | 2026 | `wnba_stats_team_season_stats` |
+
+Two source families, radically different depth: `espn_wnba_*` (ESPN) goes
+back to 2002 for pbp/schedule/boxscores; `wnba_stats_*` (stats.wnba.com)
+floors at 2025 or 2026 across the board. This mirrors `audit.md`'s WNBA
+§finding that the ESPN pbp family spans 25 seasons (2002–2026) while the
+possession-sim glue is locked to stats.wnba.com's single 2026 season.
 
 ---
 
@@ -279,18 +393,29 @@ stats.nba.com/stats.wnba.com per run.
 
 External validation corpora, keyed by where the *committed test fixture*
 lives (not the live URL — re-derive from the fixture's README when
-refreshing). Every fixture ID column is `Utf8`, cast from the raw ESPN
-integer, so it joins against `load_*` output without a dtype cast.
+refreshing). **ID dtype is NOT universal across this table — verify per
+row before joining.** The ESPN-derived basketball/football fixtures (Torvik,
+Torvik BPM, ESPN FPI/BPI/predictor/odds) are `Utf8`, cast from the raw ESPN
+integer, so they join against `load_*` output without a cast. The NHL
+MoneyPuck/EvolvingHockey fixtures do **not** follow that convention:
+`mp_gsax.parquet`'s `player_id`, `mp_shots_sample.parquet`'s `game_id`/
+`shooter_id`, and `eh_skaters.parquet`'s `player_id` are all `Int64`
+(verified via `polars.read_parquet(...).schema`), and
+`moneypuck_teams_2023.parquet` has **no id column at all** — it's keyed on
+`team` (a name string), same as `eh_skaters.parquet`'s name-based crosswalk.
+Joining an `Int64` MoneyPuck id straight into a `Utf8` loader column is
+exactly the silent-zero-match id-dtype bug class the ecosystem's `CLAUDE.md`
+warns about — cast one side first and assert the join actually matched rows.
 
 | Oracle | Fixture path | Columns (verified) | Coverage | Use |
 |---|---|---|---|---|
 | Torvik/Barttorvik (CFB-analog ratings) | `tests/fixtures/mbb_prediction/torvik_2024.parquet` | `team_id, team, adj_o, adj_d, adj_em, adj_tempo, rank` (`adj_tempo` is null — source CSV has no tempo column) | 2024 only, 350 teams | Phase-1 ratings gate, Spearman(`adj_em`) ≥0.95 (observed 0.990) — `mbb_prediction/README.md` |
-| Torvik BPM (player-value) | `tests/fixtures/mbb_player_value/barttorvik_bpm_{2025,2026}.parquet` | `player, team, bpm, obpm, dbpm` (`bpm == obpm+dbpm` by construction) | 2025, 2026 | primary player-BPM oracle, ~97% name-matched to `team_id` |
+| Torvik BPM (player-value) | `tests/fixtures/mbb_player_value/barttorvik_bpm_{2025,2026}.parquet` | `player_id, player, team, team_id, season, bpm, obpm, dbpm, gp, min_per, role` (`player_id`/`team_id` are `Utf8`; `bpm == obpm+dbpm` by construction) | 2025, 2026 | primary player-BPM oracle, ~97.3% name-matched to `team_id` (`mbb_player_value/README.md:33` — 4,922/5,059) |
 | KenPom | **not captured — paywalled, no flat endpoint.** Referenced only as a methodology descriptor in docstrings | — | — | `sportsdataverse/mbb/mbb_ncaa_strength.py:1,16,621`, `sportsdataverse/cfb/cfb_opponent_adjust.py:297` ("KenPom-style fixed-point solver"); Torvik/GameOnPaper substitute as the free-tier oracle |
-| ESPN FPI (CFB's BPI-equivalent) | `tests/fixtures/cfb_prediction/fpi_2023.parquet` + `fpi_resume_2023.parquet` | `team_id, team, fpi, fpi_rank`; resume adds `fpi_sos_rank, fpi_sor_rank, fpi_gc_rank` | 2023 only, 133 teams | corresponds to the `load_cfb_fpi_weekly` release loader (floor 2005, §1c) |
+| ESPN FPI (CFB's BPI-equivalent) | `tests/fixtures/cfb_prediction/fpi_2023.parquet` + `fpi_resume_2023.parquet` | `team_id, team, fpi, fpi_rank`; resume adds `fpi_sos_rank, fpi_sor_rank, fpi_gc_rank` | 2023 only, 133 teams | corresponds to the `load_cfb_fpi_weekly` release loader (floor 2005, §1) |
 | ESPN BPI (MBB/WBB) | `tests/fixtures/mbb_prediction/espn_bpi_2024.parquet` | `team_id, team, bpi, bpi_rank, bpi_offense, bpi_defense, sos, sos_rank, sor, sor_rank, wins, losses` | 2024 only, 362 teams | Phase-4 SoS Spearman gate |
-| ESPN predictor (win-prob) | `tests/fixtures/{cfb,mbb,nhl}_prediction/espn_predictor_sample.parquet` | `game_id, home_team_id, away_team_id, home_win_prob, predicted_margin` (CFB); MBB adds a `gameProjection`-derived `home_win_prob` | per-league sample, one season | Win-prob Brier gate vs ESPN BPI/predictor |
-| Market closing lines | `tests/fixtures/{cfb,mbb,nhl}_prediction/espn_odds_sample.parquet`, CFB also `market_odds_2024.parquet` | `game_id, close_spread_home, close_total` (home spread, negative = home favored) | per-league sample | Spread/total MAE gate; CFB corr(`predicted_margin`, `-close_spread_home`) = −0.95 |
+| ESPN predictor (win-prob) — **schema differs per league, do not assume one contract** | `tests/fixtures/{cfb,mbb,nhl}_prediction/espn_predictor_sample.parquet` | CFB (5 cols): `game_id, home_team_id, away_team_id, home_win_prob, predicted_margin`. MBB (**4** cols, no `predicted_margin`): `game_id, home_team_id, away_team_id, home_win_prob` — `home_win_prob` here is ESPN's own `gameProjection`/100, the same derivation CFB already ships as a column, not an addition. NHL (**team-name keyed, not `_team_id`**): `game_id, home_team, away_team, home_win_prob` | per-league sample, one season | Win-prob Brier gate vs ESPN BPI/predictor |
+| Market closing lines — **schema differs per league** | `tests/fixtures/{cfb,mbb,nhl}_prediction/espn_odds_sample.parquet`, CFB also `market_odds_2024.parquet` | CFB/MBB: `game_id, close_spread_home, close_total` (home spread, negative = home favored). NHL: `game_id, close_puck_line_home, close_total` — a puck line, not a point spread | per-league sample | Spread/total MAE gate; CFB corr(`predicted_margin`, `-close_spread_home`) = −0.95 |
 | MoneyPuck (NHL team xG) | `tests/fixtures/nhl_prediction/moneypuck_teams_2023.parquet` | `team, xgf, xga, xg_diff, gf, ga` | 2023, 32 teams | team-level xG concurrent-validity |
 | MoneyPuck (NHL goalie GSAx) | `tests/fixtures/nhl_player_impact/mp_gsax.parquet` | `player_id, goalie, gsax` (`gsax = xGoals - goals`) | 2024-25 regular season, 103 goalies | Spearman vs internal GSAx, floor 0.65 (`nhl_player_impact/README.md`) |
 | MoneyPuck (per-shot xG) | `tests/fixtures/nhl_player_impact/mp_shots_sample.parquet` | `game_id, period, shooter_id, game_seconds, mp_xgoal, mp_goal` | 3 games, 266 shots | NHL-booster-vs-MoneyPuck agreement gate (corr 0.66, 97% match) |
