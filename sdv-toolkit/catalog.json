@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "entries": [
     {
       "name": "sdv-data-pipeline",
@@ -28,7 +28,7 @@
     {
       "name": "sdv-model-spine",
       "kind": "skill",
-      "purpose": "Oracle-gated model build loop: capture oracle, worktree, harness, TDD, gates, parity, close-out.",
+      "purpose": "Oracle-gated modeling build loop: capture oracle, worktree, harness, TDD, gates, parity, close-out.",
       "archetypes": [
         "sdv-py",
         "data"
@@ -207,7 +207,7 @@
     {
       "name": "sdv-model-reviewer",
       "kind": "agent",
-      "purpose": "Audit new model/validation code: gates, leakage boundary, metric fit, silent no-op, sklearn contract, lineage, oracle joins.",
+      "purpose": "Audit new modeling/validation code: gates, leakage boundary, metric fit, silent no-op, sklearn contract, lineage, oracle joins.",
       "archetypes": [
         "sdv-py",
         "data"
@@ -342,7 +342,7 @@
     {
       "name": "sdv-sklearn",
       "kind": "skill",
-      "purpose": "scikit-learn and XGBoost failures specific to panel-sports data, each with its detection test.",
+      "purpose": "scikit-learn and XGBoost modeling failures specific to panel-sports data, each with its detection test.",
       "archetypes": [
         "sdv-py",
         "data"
