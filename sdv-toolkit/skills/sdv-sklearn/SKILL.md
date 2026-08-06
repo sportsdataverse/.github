@@ -172,6 +172,8 @@ path uses a *different* factor for the same kind of conversion:
 #: :func:`oracle_rapm_alphas` — the oracle's ``lambda_to_alpha(l, n) = l * n / 2``
 #: where ``n`` is the number of possessions (design-matrix rows), NOT players.
 ORACLE_RAPM_LAMBDAS: tuple[float, ...] = (0.01, 0.05, 0.1)
+
+#: Oracle RidgeCV fold count (explicit 5-fold, NOT sklearn's default LOOCV).
 ORACLE_RAPM_CV: int = 5
 ```
 
@@ -287,34 +289,70 @@ delta_hat = np.asarray(ridge.coef_, dtype=np.float64)
 beta_hat = prior_mean + delta_hat
 ```
 
-`fit_intercept=False` here is not a stylistic choice — the docstring states
-the fitted `FitResult` carries `intercept=0.0` by contract. Fitting the same
-residualized `yprime` with the sklearn *default* `fit_intercept=True`
-instead doesn't error or warn; it finds a nonzero intercept the residualized
-target has nothing left to explain with, and that intercept silently shifts
-`beta_hat = prior_mean + intercept + delta_hat` for **every player by the
-same constant** — breaking any downstream anchoring against the prior (e.g.
-`methods.md`'s schedule-strength anchoring: "the possession-weighted sum of
-a team's player RAPM ≈ that team's KenPom rating").
+`fit_intercept=False` here is not a stylistic choice — `nba_adj_rapm.py:107`
+hardcodes the returned `FitResult(coef=beta_hat, intercept=0.0,
+posterior=samples)`. Note what `:84`'s `beta_hat = prior_mean + delta_hat`
+actually does with the fit: it reads **only** `ridge.coef_`. `intercept_` is
+never added back — under the contracted `fit_intercept=False` config
+`intercept_` doesn't exist to add, and `:107`'s literal `intercept=0.0` is
+correct as written.
 
-**Detection test — verified on a synthetic RAPM-shaped design (200 players,
-3000 possessions, noisy prior): `fit_intercept=True` on the residualized
-target picked up `intercept_=0.555`, shifting every player's final rating by
-a mean of `0.50`; `fit_intercept=False` gives exactly `intercept_=0.0`.**
+The real risk is what happens if `fit_intercept=True` (sklearn's own
+default) is ever substituted for the documented `False` — verified on the
+actual `nba_rapm.py` alpha grid (`np.logspace(2, 5, 8)`; both configs
+independently select the identical `alpha_=100.0`) against a RAPM-shaped
+design (200 players, 3000 possessions, noisy prior, residualized target):
+
+```
+fit_intercept=True:  ridge.intercept_ = 0.55509  (a real, nonzero fit)
+coef_ discrepancy vs. the correct fit_intercept=False config:
+  mean = -0.05190, std = 0.00181  (NOT a clean constant: np.allclose is False)
+```
+
+Two real, distinct harms, neither of which is "every player shifts by a
+constant 0.50" (that number does not reproduce — the correct code never
+adds `intercept_` back, so there is no additive shift to measure in the
+first place):
+
+1. **`ridge.coef_` itself differs** between the two configs by a real,
+   if modest, amount (mean ≈ 0.05 at this design's scale) — not because an
+   intercept gets added, but because sklearn implicitly centers the design
+   and target before fitting when `fit_intercept=True`, and that centering
+   changes what the ridge penalty shrinks. `RidgeCV`'s own λ selection
+   (`alpha_`) is unaffected here, so this discrepancy is entirely in
+   `coef_`, not in a different regularization strength being chosen.
+2. **The `intercept=0.0` contract at `:107` becomes a lie.** A caller who
+   fits with `fit_intercept=True` and still constructs
+   `FitResult(coef=ridge.coef_, intercept=0.0, ...)` — matching the
+   existing code shape — silently discards a real, nonzero `ridge.intercept_`
+   (0.555 in this measurement) while asserting the field is exactly zero.
+   That's the concrete harm worth stating plainly: not a uniform rating
+   shift, but a documented invariant (`intercept` is always `0.0`) that
+   quietly stops being true.
+
+**Detection test.**
 
 ```python
 def assert_no_redundant_intercept(fitted_ridge, *, tol=1e-6) -> None:
     """A RidgeCV fit on a target already centered/residualized against a
     prior mean (nba_adj_rapm.py's y' = y - X @ mu pattern, fit_intercept=
-    False by contract) has nothing left for an intercept to explain.
-    fit_intercept=True (the sklearn default) fits one anyway -- a nonzero
-    value means the fit picked up a global shift that double-counts against
-    the prior once added back (beta_hat = prior_mean + intercept + delta)."""
+    False by contract, intercept=0.0 hardcoded into FitResult at :107) has
+    nothing left for an intercept to explain. fit_intercept=True (the
+    sklearn default) fits one anyway -- a nonzero value means :107's
+    hardcoded intercept=0.0 no longer matches what was actually fit, and
+    coef_ itself has been altered by the implicit centering fit_intercept=
+    True performs."""
     assert abs(fitted_ridge.intercept_) < tol, (
         f"intercept_={fitted_ridge.intercept_:.4f} on a centered/residualized "
-        "target -- refit with fit_intercept=False (see nba_adj_rapm.py:81)"
+        "target -- refit with fit_intercept=False (see nba_adj_rapm.py:81); "
+        "as fit, FitResult's hardcoded intercept=0.0 would misrepresent this fit"
     )
 ```
+
+Would this fire? Yes — verified live above: `fit_intercept=True` on the
+residualized target produced `intercept_=0.55509`, well past `tol`;
+`fit_intercept=False` (the actual `nba_adj_rapm.py:81` config) always gives
+`intercept_=0.0` exactly, by construction, so it passes.
 
 **A cautionary note earned by verifying this file's own tests before
 shipping them** (per the "would this test actually fire" discipline this

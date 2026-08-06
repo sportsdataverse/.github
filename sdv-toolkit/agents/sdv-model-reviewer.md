@@ -111,7 +111,7 @@ Confirmed instances of this class in this ecosystem, each with its test:
 
 | Failure | Assertion that would have caught it |
 |---|---|
-| ridge fit with lambda applied to nothing (crushing every coefficient toward zero) | `corr(adjusted output, raw input) < 0.95` — coefficient magnitude is NOT the assertion: on the real incident shape (`alpha = 325 × n`, sparse) the coefficients differ enormously from the unregularized fit (`‖ols.coef_‖=1.396` vs. `‖ridge.coef_‖=0.00017`) while the *adjusted* output still collapses onto the raw input; only the output-level correlation catches it (`failure-modes.md` §2, `checks.py`'s `NOOP_CORR_THRESHOLD = 0.95`) |
+| ridge fit with lambda applied to nothing (crushing every coefficient toward zero) | `corr(adjusted output, raw input) < 0.95` — coefficient magnitude is NOT the assertion: in the real incident (`alpha = 325 × n`) `adj_off_epa` correlated `0.9928` with its own raw, unadjusted `EPAplay_off` even though the underlying ridge coefficients differ enormously from an unregularized fit; only the output-level correlation catches it (`failure-modes.md` §2, `checks.py`'s `NOOP_CORR_THRESHOLD = 0.95`) |
 | Boolean `fill_null` no-op | null count strictly decreased |
 | release tag on the wrong commit | tag SHA == build SHA |
 | lambda no-op republish | published artifact hash changed |

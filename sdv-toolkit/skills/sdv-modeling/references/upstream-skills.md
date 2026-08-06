@@ -31,9 +31,8 @@ generically, plain `KFold` is fine. `model-reviewer.md` §5 (the
 "never a bare `KFold`... must use `GroupKFold` (groups=) for panel data or
 `TimeSeriesSplit` for anything ordered in time" — which is exactly the
 SDV-specific rule a generic sklearn skill would never restate. `sdv-sklearn`
-(first-party, Task 9 of this plan — does not exist yet) is the build-time
-counterpart: where to reach for it *while writing* the fit, not just at
-review time.
+(first-party) is the build-time counterpart: where to reach for it *while
+writing* the fit, not just at review time.
 
 ## Routing table
 
