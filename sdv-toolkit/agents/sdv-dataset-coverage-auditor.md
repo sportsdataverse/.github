@@ -119,9 +119,23 @@ static half's result stand in for the whole row. Surface 5 is *not* in this grou
 more: its non-static half (the repo-global `--check` gate) is never the row's verdict at
 all, static or otherwise — see surface 5 below for its own per-dataset proxy.
 
-**1 — Release asset.** Not a repo grep: needs a live GitHub API call.
-`gh release view <tag> --repo sportsdataverse/<league>-data --json assets --jq '.assets[].name'`
-and check the dataset's file name appears. `present`/`missing` from the call's result;
+**1 — Release asset.** Not a repo grep: needs a live GitHub API call. **Do not assume
+the `sportsdataverse/<league>-data` formula names the right repo** — confirmed wrong
+for `cfb_passing` (`gh release view espn_cfb_passing --repo
+sportsdataverse/cfbfastR-cfb-data` → "release not found"; `sportsdataverse/cfb-data`
+doesn't resolve at all) and for `nba_stats_schedules`: both actually live under the
+single shared `sportsdataverse/sportsdataverse-data` repo, which hosts the
+ESPN-scrape and stats-API-derived release family across every league (see the
+multi-repo topology note above surfaces 39-47 — it isn't only a local-path-op
+concern, it's this surface's own repo target too). **The reliable per-dataset source
+of the real repo + tag is the loader's own docstring**: every generated `sdv-py`
+loader carries a `Source: https://github.com/<owner>/<repo>/releases/tag/<tag>` line
+(e.g. `cfb_loaders.py:64` → `sportsdataverse/sportsdataverse-data`, tag
+`espn_cfb_passing`) — read that line and use its repo + tag, not the formula. For a
+`REGISTRY`-only entry with no `sdv-py` loader at all, fall back to the per-league
+producer repo from the topology note. Once you have the right repo + tag:
+`gh release view <tag> --repo <repo> --json assets --jq '.assets[].name'` and check
+the dataset's file name appears. `present`/`missing` from the call's result;
 `unverifiable-offline` only if `gh` itself fails (no auth/network) — that's an
 environment failure, not the surface's own limit, so say so explicitly rather than
 folding it into the same bucket as surfaces 3/8/10.
@@ -129,12 +143,26 @@ folding it into the same bucket as surfaces 3/8/10.
 **2 — Python loader.** Fully static. `<dataset>` here means the expanded
 `load_<league>_<dataset>` identifier from the namespace-binding note above (prefer the
 `REGISTRY` entry's own `loader` field when one exists), not the bare `REGISTRY` name.
-`grep -n '<DATASET>_URL' sdv-py/sportsdataverse/config.py` and
+The verdict-bearing check is
 `grep -n 'def load_<league>_<dataset>(' sdv-py/sportsdataverse/<league>/<league>_loaders.py`
-— **anchor with the trailing `(`**, or an unanchored grep for a shorter identifier
-substring-matches a longer real function name and reports a false `present` (e.g.
-`def load_nhl_goalie_box` with no anchor hits `def load_nhl_goalie_boxscores(`). Both
-hit → `present` with both `file:line`s. Either miss → `missing`.
+**and, where the league has one, its `<league>_loaders_extra.py` sibling** — confirmed
+today for `cfb`, `nhl`, `pwhl`, and `wnba` (e.g. `load_cfb_betting_lines` and
+`load_cfb_rosters_crosswalk` are real, working loaders defined *only* in
+`cfb/cfb_loaders_extra.py`, not in the base file; grepping the base file alone
+false-negatives them). **Anchor with the trailing `(`**, or an unanchored grep for a
+shorter identifier substring-matches a longer real function name and reports a false
+`present` (e.g. `def load_nhl_goalie_box` with no anchor hits `def
+load_nhl_goalie_boxscores(`). A hit in either file → `present`, cite the `file:line`.
+No hit in either → `missing`.
+
+Flagged observation against the contract row: `grep '<DATASET>_URL' config.py` is
+**not** a reliable second half of this check and should not gate the verdict —
+`config.py` has 78 `_URL` constants total against 245 real `def load_*` functions
+across every loader file (base + extra); confirmed several loaders that
+`_read_release_parquet` per season with an inline f-string tag (`load_cfb_passing`,
+`load_nba_stats_schedules`, …) never define one. Requiring the URL-constant grep to
+report `present` would false-negative the majority of real loaders. Cite it as
+supporting evidence when it exists; its absence is not disqualifying on its own.
 
 **3 — Loader schema.** Split. Key existence is static (same expanded identifier as
 surface 2):
@@ -145,10 +173,27 @@ parquet's footer (e.g. `pl.scan_parquet(<release_url>).collect_schema()`) — re
 half as `unverifiable-offline` unless you actually performed the network read (note it
 explicitly when you do), and never claim schema-agreement from the key's mere existence.
 
-**4 — Returns-table descriptions.** Fully static. For every column found under the
-surface-3 key, `grep -n '<column>:' -A2 sdv-py/tools/codegen/manual_column_descriptions.yaml`
-and confirm a non-empty `description:`. `present` only if every column has one;
-`missing` and name the first empty/absent column otherwise.
+**4 — Returns-table descriptions.** Fully static, but **the file is flat `col: text`
+entries under each top-level loader key — there is no nested `description:` sub-key
+anywhere in it.** Verified: `manual_column_descriptions.yaml:2610`
+`load_cfb_passing:` is immediately followed by lines like `  EPAgame: EPA generated
+per game.` — a bare `-A2` grep for `description:` after a column name will never
+match, for any dataset, so don't write that check. For every column found under the
+surface-3 key: `grep -n -A2 '^load_<league>_<dataset>:' sdv-py/tools/codegen/
+manual_column_descriptions.yaml` to find the block, then confirm each column has a
+non-empty flat value (`^  <column>:\s*\S`) within it. `present` only if every column
+has one; `missing` and name the first empty/absent column otherwise — but **flag this
+as a lower bound, not a hard verdict**: `generate.py`'s real resolution is
+`_manual_col_desc(schema, col) or _r_col_desc(league, col)` (`generate.py:304-325`,
+`367`) — a column blank in this file can still render with real prose in the actual
+generated docs page via the R-package-description fallback. Verified:
+`load_cfb_passing`'s `team_id`/`pos_team`/`division` are blank in this file yet appear
+with full descriptions in `docs/docs/cfb/reference/loaders.md:1664-1666`. If you can
+cheaply cross-check the dataset's generated docs page (surface 5's evidence) for the
+column instead of stopping at this file, do so and let that override a `missing` this
+file alone would suggest; if not, report the file-only result as `missing (lower
+bound — not cross-checked against the generated docs' R-fallback text)`, not as a
+flat `missing`.
 
 **5 — Reference docs.** Split, and the split matters: `generate.py --check` is a
 repo-global gate — running it tells you nothing about this one dataset, so **never use
@@ -210,19 +255,48 @@ combined `present` for this row.
 
 **9 — API exposure.** Fully static. Uses the bare `REGISTRY` name (no expansion —
 `curation.yaml`'s `semantic:` block lists it as a candidate value, e.g.
-`plays: [pbp]`, `betting: [betting_lines]`):
-`grep -n '<dataset>' sdv-db/python/src/sdv_db/api/gen/curation.yaml` for the source
-entry — match it as a `semantic:` list value, not a `name:` key (those are the
-unrelated cross-league resource names, see the namespace note) — then confirm the
-generated `api/generated/endpoints.py` resolves an endpoint for it
-(`grep -n '<dataset>' sdv-db/python/src/sdv_db/api/generated/endpoints.py`). Both
-present → `present`; curation entry present but generated output stale/missing →
-`missing`, and say "regenerate via `scripts/gen_api.py`", not "add a new endpoint."
+`plays: [pbp]`, `betting: [betting_lines]`). **`curation.yaml`'s `semantic:` block is
+not the only path to a real endpoint, and checking it alone false-negatives most of
+the inventory.** It curates just 25 friendly cross-league alias names; separately,
+`scripts/gen_api.py` also auto-generates a bare per-table endpoint
+(`EndpointSpec(path='<table>', table='<table>', ...)`) for essentially every
+`REGISTRY` table regardless of curation — confirmed 253 `kind='table'` entries
+(119 distinct `table=` values) against 266 `REGISTRY` rows, with 85 of those
+`table=` values absent from `curation.yaml` entirely (129 datasets score differently
+between "curation.yaml only" and the corrected check on a full sweep). `cfb/passing`
+is a verified example: zero `curation.yaml` hits, yet a real
+`EndpointSpec(path='passing', table='passing', schema='cfb', ...)` exists.
 
-**10 — Platform freshness.** Split. Code-auditable half:
-`grep -n '_TS_CANDIDATES\|_ID_CANDIDATES' sdv-db/python/src/sdv_db/heartbeat.py` and
-confirm the dataset's table/columns resolve under one of those candidate lists —
-`present`/`missing` from that read. The "shows in the platform DB tab" half needs a
+Check **both**, and treat either hit as sufficient: `grep -n '<dataset>'
+sdv-db/python/src/sdv_db/api/gen/curation.yaml` (match it as a `semantic:` list
+value, not a `name:` key — those are the unrelated cross-league resource names, see
+the namespace note) **or** `grep -n "table='<dataset>'"
+sdv-db/python/src/sdv_db/api/generated/endpoints.py` (anchored with the quotes, not a
+bare substring grep — `curation.yaml` itself has same-family substring risk, e.g. a
+`REGISTRY` dataset literally named `betting` unanchored-substring-matches the
+unrelated `betting: [betting_lines]` line). Either present → `present`, cite whichever
+matched. Curation entry present but generated `endpoints.py` stale/missing for it →
+`missing`, and say "regenerate via `scripts/gen_api.py`", not "add a new endpoint."
+Neither present → `missing`.
+
+**10 — Platform freshness.** Split. Code-auditable half: `grep -n
+'_TS_CANDIDATES\|_ID_CANDIDATES' sdv-db/python/src/sdv_db/heartbeat.py` finds where the
+candidate lists are *defined* — it is not itself the per-dataset evidence, and
+stopping there is under-specified: it never names an offline source for the *dataset's*
+actual columns, so two different datasets would produce identical grep output. The
+live resolution (`heartbeat.py`'s `collect()`) intersects a table's real columns —
+read from Postgres `information_schema.columns` at runtime — against
+`_TS_CANDIDATES`/`_ID_CANDIDATES`; that table only exists once surface 7/8 have run,
+so it can't be read statically. **The offline proxy is the column list already
+gathered for surface 3** (`loader_schemas.yaml`'s `load_<league>_<dataset>:` entry):
+cross-reference those column names against `_TS_CANDIDATES`/`_ID_CANDIDATES` by hand.
+`present` only if the dataset also has a surface-7 `REGISTRY` row (no row, no live
+table, nothing to ever resolve) **and** at least one column name matches
+`_TS_CANDIDATES` (or, if column dtypes are available, a `Date`/`Timestamp`-typed
+column — `_pick()` falls back to dtype when no candidate name matches).
+`missing` otherwise — verified example: `cfb_passing`'s 43 columns match neither list
+by name nor carry a Date/Timestamp dtype, so `heartbeat.collect()` would list that
+table with no `last_updated` at all. The "shows in the platform DB tab" half needs a
 running `sdv-web` instance and a live DB — report it as `unverifiable-offline — requires
 a running sdv-web instance and a live query against the DB-status endpoint`, and don't
 let the code-auditable half's pass stand in for it.
@@ -270,21 +344,47 @@ retrain exists" and not "present" on the strength of an unrelated cron.
 - **Single dataset**: given `(league, dataset)`, run all 12 rows and return the table
   below for that one dataset.
 - **Full-inventory sweep**: iterate over every dataset, but first **normalize the two
-  sources onto one `(league, dataset)` namespace before unioning them — do not union
-  the raw strings**, or every dataset that appears in both sources gets double-counted
-  (a `loader_schemas.yaml` key `load_cfb_betting` and a `REGISTRY` pair
-  `(cfb, "betting")` are the *same* dataset under the namespace-binding note above, not
-  two). Normalize by stripping the `load_<league>_` prefix from each
-  `loader_schemas.yaml` key (match the longest known-league prefix — some leagues are
-  themselves two-token, e.g. `nba_stats`) to get its candidate `(league, dataset)` pair,
-  then compare against `REGISTRY`'s own `(league, name)` keys (enumerate with
-  `sorted(REGISTRY)` via the same programmatic resolution as surface 7, not a grep).
-  After normalization, a genuine one-sided appearance is still a real gap, just a
-  narrower and correctly-attributed one: present only in `loader_schemas.yaml` → a real
-  surface-7 gap (no catalog row) for that one dataset; present only in `REGISTRY` → a
-  real surface-3 gap (no loader schema) for that one dataset. Neither case doubles the
-  dataset count. A caller-supplied dataset list overrides this default and scopes the
-  sweep to exactly the `(league, dataset)` pairs named.
+  sources onto one identity before unioning them — do not union the raw strings, and do
+  not derive the join key by stripping `load_<league>_` off the `loader_schemas.yaml`
+  key.** That prefix-strip approach invents phantom duplicate datasets whenever a
+  `REGISTRY` entry's short `name` doesn't match the formula: verified,
+  `load_nba_stats_schedules` is the real loader for `REGISTRY`'s
+  `(nba_stats, "schedule")` (singular — read the entry's own `loader` field, don't
+  reformulate), but stripping the `load_nba_stats_` prefix off the
+  `loader_schemas.yaml` key mechanically yields `(nba_stats, "schedules")` (plural) — a
+  second, fictitious dataset that isn't in `REGISTRY` at all under that spelling. The
+  same divergence recurs for `load_nhl_player_boxscore` (`REGISTRY` name
+  `player_box`, formula yields `player_boxscore`) and `load_phf_schedules`
+  (`REGISTRY` name `schedule`, formula yields `schedules`) — a prefix-strip sweep
+  reports these as one-sided (schema-only, no catalog row) when they are in fact fully
+  cataloged under their real `REGISTRY` name; **that misreport is itself a surface-2
+  finding (the catalog's recorded name/loader diverges from the formula), never a
+  surface-7 gap.**
+
+  **Join on `REGISTRY`'s own `loader` field, not on a reformulated name:**
+  1. Enumerate `REGISTRY` programmatically (`sorted(REGISTRY)`, same resolution as
+     surface 7); collect each entry's `(league, name)` key and its `loader` field
+     (may be `None` for entries with no Python loader at all).
+  2. Enumerate every top-level key in `loader_schemas.yaml` — these are already real
+     loader identifiers (`load_cfb_betting`, `load_nba_stats_schedules`, …), so keep
+     them as-is; do not strip and reformulate.
+  3. A `loader_schemas.yaml` key **matches** a `REGISTRY` entry if it equals that
+     entry's `loader` field exactly (string equality, not formula-derived). That's one
+     dataset, one identity — tally it once, under the `REGISTRY` entry's `(league,
+     name)`.
+  4. A `loader_schemas.yaml` key with no `REGISTRY` entry whose `loader` field equals
+     it is genuinely loader-only → a real surface-7 gap (no catalog row) for the
+     `(league, dataset)` pair the key's own prefix-strip formula suggests (the formula
+     is fine as a *fallback label* for genuinely uncataloged datasets — it's only
+     unsafe as the *join key* against `REGISTRY`).
+  5. A `REGISTRY` entry whose `loader` field (if any) has no matching
+     `loader_schemas.yaml` key is genuinely schema-less → a real surface-3 gap for
+     that entry's `(league, name)`.
+
+  After this join, a genuine one-sided appearance is still a real gap — narrower and
+  correctly attributed, per steps 4-5. Neither case doubles the dataset count, and no
+  case fabricates one. A caller-supplied dataset list overrides this default and scopes
+  the sweep to exactly the `(league, dataset)` pairs named.
 
 ## Output — a ranked backlog, not a mandate
 
