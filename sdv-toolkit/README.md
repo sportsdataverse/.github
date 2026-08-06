@@ -14,19 +14,23 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-add-source` | Add a league/sport/endpoint/provider to sdv-py: capture, catalog, returns doc, scaffold, fixtures, drift gate. |
 | `/sdv-conventions` | Archetype convention packs; the router points here. |
 | `/sdv-data-pipeline` | Producer lifecycle for -raw/-data repos: standardize, placement, scrape, build, validate, publish. |
+| `/sdv-dataset-lifecycle` | Drive a new or updated release tag through all 12 downstream surfaces across five repos; record deliberate skips. |
 | `/sdv-document` | Produce documentation surface: Python returns schema, roxygen @return table, notebook, pkgdown theming. |
 | `/sdv-guide` | Callable index: what the toolkit has, when to use each part, and the rename map. |
 | `/sdv-learn` | Promote a durable session finding into the right toolkit surface, with its detection test. |
 | `/sdv-model-spine` | Oracle-gated model build loop: capture oracle, worktree, harness, TDD, gates, parity, close-out. |
+| `/sdv-modeling` | Modeling domain reference: methods, data sources, prior art, metrics and gates, failure modes, per-sport inventories. |
 | `/sdv-port` | Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures. |
 | `/sdv-regen-docs` | Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release. |
 | `/sdv-ship` | Land a change: regen docs, preflight, commit, push, bot-triage, codegen gate, merge, stack retarget, release. |
+| `/sdv-sklearn` | scikit-learn and XGBoost modeling failures specific to panel-sports data, each with its detection test. |
 | `/sdv-triage` | Sweep open issues and PRs across the org, classify each, act on tiers 0-1, propose tiers 2-4. |
 
 ## Agents
 
 | Agent | What it reviews |
 |---|---|
+| `sdv-dataset-coverage-auditor` | Read-only: report which of the 12 dataset propagation surfaces are missing, per dataset or across the inventory. |
 | `sdv-docs-reviewer` | Audit or produce the three-column returns table, Python or R; map a provider payload into documentation. |
 | `sdv-harness-triage` | Triage a validation-harness WARN by finding_type and emit a Verdict. |
 | `sdv-issue-triage` | Classify one open issue or PR into one of six verdicts, read-only, with evidence. |

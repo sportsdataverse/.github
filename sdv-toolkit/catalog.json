@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "entries": [
     {
       "name": "sdv-data-pipeline",
@@ -324,6 +324,63 @@
         "real-but-large",
         "out-of-scope",
         "bot-noise"
+      ]
+    },
+    {
+      "name": "sdv-modeling",
+      "kind": "skill",
+      "purpose": "Modeling domain reference: methods, data sources, prior art, metrics and gates, failure modes, per-sport inventories.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ],
+      "hands_off_to": [
+        "sdv-model-spine",
+        "sdv-sklearn"
+      ]
+    },
+    {
+      "name": "sdv-sklearn",
+      "kind": "skill",
+      "purpose": "scikit-learn and XGBoost modeling failures specific to panel-sports data, each with its detection test.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ],
+      "hands_off_to": [
+        "sdv-model-spine"
+      ]
+    },
+    {
+      "name": "sdv-dataset-lifecycle",
+      "kind": "skill",
+      "purpose": "Drive a new or updated release tag through all 12 downstream surfaces across five repos; record deliberate skips.",
+      "archetypes": [
+        "data",
+        "sdv-py"
+      ],
+      "phases": [
+        "detect",
+        "select-surfaces",
+        "propagate",
+        "ledger"
+      ],
+      "dispatches": [
+        "sdv-dataset-coverage-auditor",
+        "sdv-docs-reviewer",
+        "sdv-r-reviewer"
+      ],
+      "hands_off_to": [
+        "sdv-ship"
+      ]
+    },
+    {
+      "name": "sdv-dataset-coverage-auditor",
+      "kind": "agent",
+      "purpose": "Read-only: report which of the 12 dataset propagation surfaces are missing, per dataset or across the inventory.",
+      "archetypes": [
+        "data",
+        "sdv-py"
       ]
     }
   ]

@@ -1,0 +1,27 @@
+# Hockey (NHL / PWHL / HockeyTech minors)
+
+`methods.md` marks xG, rating/prediction-market, and simulation "not covered" for hockey — this file is the only place they're actually documented. Shorthand: `nhl-design.md` = `ClaudeCowork/specs/2026-07-07-nhl-prediction-market-design.md`; `parity-results.md` = `sdv-py/dev/t5_xg_reevaluation/parity-results.md`.
+
+## 1. Models
+
+**xG — two different models.** NHL (`sportsdataverse/nhl/nhl_xg.py:1-17`) **reuses fastRhockey's two published xgboost boosters verbatim** (5v5 + special-teams, keyed by strength state, plus a penalty-shot constant `0.3202197`) — never retrains; distance/angle/rebound are descriptive-only, not features, since adding them would break the boosters' embedded `feature_names`. PWHL has no booster to reuse: `PwhlCoordXGModel` (`sportsdataverse/pwhl/pwhl_xg_proxy.py:573-628`) is a from-scratch sklearn `LogisticRegression` on HockeyTech coordinates — `shot_distance`/`shot_angle` base (`:314`), extended with `rebound`/`is_home`/`is_pp`/`is_sh`/`empty_net_for`, plus optional per-strength Platt recalibration (`calibrate_strength=True` default, `fit_pwhl_coord_xg:631`). NHL booster AUC 0.784 (120,345 shots) vs PWHL logistic production AUC 0.697 (18,031 LOSO): NHL discriminates better (more features), PWHL calibrates better (ECE 0.004 vs NHL's 0.022 at the smaller-feature stage) — the PWHL lever going forward is discrimination, not calibration (`parity-results.md` headline table).
+
+**Rating + prediction market — shipped as designed**: `nhl_team_ratings.py` (①), `nhl_market.py` (②), `nhl_player_props.py` (③), plus PWHL by-reference shims. ① is **not Elo** — opponent-adjusted even-strength xG rate via a rate-iterative fixed point (`adjust_rate_opponent`, `nhl_team_ratings.py:210-298`), shrunk toward league mean by a fitted games-played prior `shrink_k` (NHL 15.0, PWHL 25.0 — larger for PWHL's shorter history, `nhl_prediction_constants.py:150,192`). ② pregame is the shared Φ-margin closed form (`norm.cdf(exp_margin/margin_sd)`, `nhl_market.py:130-146`); shipped `margin_sd` is 0.9085 (NHL) / 1.19 (PWHL) on the **xG-margin scale**, not the 2.1-2.3 raw-goal-margin SD the design doc's rationale describes (`nhl_prediction_constants.py:146,188` vs `nhl-design.md` §3.2b). ② in-game WP is one bundled logistic (`nhl/models/nhl_in_game_wp.json`, no first-use download) on 7 features: `score_diff`, `sec_remaining`, `sqrt_sec_remaining`, `strength_diff`, `home_goalie_pulled`, `away_goalie_pulled`, `pregame_logit` (`nhl_market.py:310-371`) — the design's pulled-goalie + pregame-anchor set shipped as specified.
+
+**Simulation is explicitly out of scope**, not just undocumented — the design spec names season/playoff Monte Carlo a non-goal, "a follow-on plan" (`nhl-design.md` §1), so `methods.md`'s "not covered" holds for hockey sim.
+
+## 2. Datasets feeding them
+
+xG needs coordinate pbp: NHL reads `load_nhl_pbp_full`/`_lite` (2010 floor); PWHL reads `load_pwhl_pbp` (2024 floor, a ceiling not a choice — both per `data-sources.md` §2/§1c). ① reads the same pbp + `load_nhl_schedule`/`load_pwhl_schedules`. ③ reads `load_nhl_skater_boxscores` (2010 floor). None of this needs the NHL per-game-detail band (`game_info`/`penalties`/`shifts`, 2024-2025 floor, `data-sources.md` §2).
+
+## 3. Gotchas
+
+- **Coordinate-canvas dialect** (`hockeytech_a` ≈850×400, PWHL/AHL vs `hockeytech_b` ≈600×300, the other 18 minors — CLAUDE.md "Hockey"; `hockeytech/_leagues.py:46,61-82`) feeds PWHL's coordinate xG directly: distance/angle is only correct if the assigned dialect matches the real canvas; new leagues default `_b` until probed (`_parsers.py:397-423`).
+- **`fill_null(0.0)` xG lie** — `failure-modes.md` #16, not re-derived here.
+- **PWHL/NHL `game_id` dtype divergence** — `failure-modes.md` #14 addendum (`Utf8` vs `Int64`, a documented hazard, not a confirmed incident); `nhl-design.md` §5 independently sidesteps it for the rating spine by keying joins on `team: Utf8` (abbreviation) where possible.
+- **Stale xG-floor docstring** — `data-sources.md` §1c: real NHL xG training window is 2009-10–2025-26 (partial), coordinate floor ~2007-08, but a stale R docstring still says "2010–2024."
+- **PWHL leak caught + guarded**: a naive prior-event join for pre-shot movement scored AUC 0.755 because PWHL emits a coordless duplicate `goal` row after the scoring `shot`, so a goal's "prior event" was itself; filtering to real play events drops it to the honest 0.707 in-harness / 0.697 production (`parity-results.md` Phase 4).
+
+## 4. The oracle that gates hockey
+
+Fixture catalog + dtype warning: `data-sources.md` §4 (MoneyPuck team xG, goalie GSAx, per-shot xG; EvolvingHockey RAPM/WAR — all `Int64`-keyed vs the `Utf8` basketball/football fixtures; cast + assert before joining). The three NHL concurrent-validity gates carry different evidentiary weight from the same small-n samples: GSAx-vs-MoneyPuck (n=6) is a sanity check, not a magnitude certification; skater-RAPM-vs-EH (n=72) is a powered magnitude gate because n=72 clears Spearman's own significance threshold; WAR-vs-EH-WAR (n=72) sits inside the noise band at that n, so it's a directional sign check only (`metrics-and-gates.md` §4). `nhl-design.md` §4 sets its own ①-ratings gate the same disciplined way — Spearman **plus** a documented floor from the value observed at gate time (`spearman(adj_xg_net, MoneyPuck) ≥ 0.85`), never Spearman alone (`metrics-and-gates.md` §6).

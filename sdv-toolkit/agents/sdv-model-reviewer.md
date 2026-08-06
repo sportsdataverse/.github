@@ -111,7 +111,7 @@ Confirmed instances of this class in this ecosystem, each with its test:
 
 | Failure | Assertion that would have caught it |
 |---|---|
-| ridge fit with lambda applied to nothing | coefficients differ from the unregularized fit |
+| ridge fit with lambda applied to nothing (crushing every coefficient toward zero) | `corr(adjusted output, raw input) < 0.95` — coefficient magnitude is NOT the assertion: in the real incident (`alpha = 325 × n`) `adj_off_epa` correlated `0.9928` with its own raw, unadjusted `EPAplay_off` even though the underlying ridge coefficients differ enormously from an unregularized fit; only the output-level correlation catches it (`failure-modes.md` §2, `checks.py`'s `NOOP_CORR_THRESHOLD = 0.95`) |
 | Boolean `fill_null` no-op | null count strictly decreased |
 | release tag on the wrong commit | tag SHA == build SHA |
 | lambda no-op republish | published artifact hash changed |
@@ -147,9 +147,16 @@ Procedure:
   with a `game_id`/`player_id`/`season` column; if the panel has one, this is
   MUST-FIX.
   Grep: `grep -nE "cross_val_score\(|cross_validate\(|GridSearchCV\(|GroupKFold\(" <file>`
-  then confirm `groups=` is actually passed through when `GroupKFold` is used
-  — a `GroupKFold` instantiated but never given `groups=` at `.split()`/
-  `cross_val_score(groups=)` degrades silently to an ungrouped split.
+  then confirm `groups=` is actually passed through when `GroupKFold` is used.
+  Omitting it does NOT degrade silently — verified across sklearn 0.20.4
+  through 1.9.0, `GroupKFold().split(X)` and
+  `cross_val_score(cv=GroupKFold())` both raise
+  `ValueError: The 'groups' parameter should not be None.` immediately, so a
+  bare omission is caught the first time the code runs. The MUST-FIX case is
+  a caller passing the *wrong* array as `groups=` (e.g. `y` instead of the
+  real group id, or an already-shuffled row index) — that passes without
+  error and produces a real but meaningless grouping, which this loud error
+  cannot catch.
 - **Preprocessing lives inside the Pipeline.** A `StandardScaler`/
   `OneHotEncoder`/`Normalizer`/`PCA` fit on the full frame before the
   train/test split leaks the held-out rows' statistics into training. Flag
