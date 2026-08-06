@@ -6,7 +6,7 @@ target is polars 1.x `main`. This direction is entirely inside sdv-py, so the re
 
 > **Sibling directions — don't reach for this file if:** the source is **R** (use
 > `r-to-python.md`), or the code is already polars but on the **0.18 API** (that's a version
-> migration — run the `polars-1x-reviewer` agent, not a pandas conversion).
+> migration — run `sdv-python-reviewer` with the `polars` lens, not a pandas conversion).
 
 ## The three mental-model shifts (most bugs live here)
 

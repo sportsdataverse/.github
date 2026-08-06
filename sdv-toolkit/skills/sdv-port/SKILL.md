@@ -106,10 +106,11 @@ devtools::check()                # R CMD check (or the package's CI-parity targe
 - **`sdv-python-reviewer`** with the `polars` lens — always, when the change lands Python
   code (`r-to-python`, `pandas-to-polars`).
 - For `python-to-r`, also run the target package's R-side reviewers
-  (`roxygen-doc-reviewer` / `returns-table-auditor`) per `references/python-to-r.md`.
+  (`sdv-r-reviewer` roxygen lens / `sdv-docs-reviewer` returns-table mode) per
+  `references/python-to-r.md`.
 
-Fix MUST-FIX findings before escalating to `/sdv-preflight` (Python target) or the
-package's own CI-parity check (R target), then `/sdv-ship`.
+Fix MUST-FIX findings before escalating to `/sdv-ship` (Python target) or the
+package's own CI-parity check (R target).
 
 ## 7. Record 0.36-live reconciliations (when applicable)
 

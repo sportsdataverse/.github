@@ -110,8 +110,8 @@ but when it applies, these are invisible until a handful of cells fail parity.
   `nba_possessions`, `nfl_standings`, `mbb_team_ratings`). Grep the package
   `__init__` exports before accepting a new module name.
 - Ported code that reintroduces pandas idioms in a polars module (or 0.18-era
-  polars API) — hand off to `polars-1x-reviewer` rather than duplicating its
-  tiers; just flag the file.
+  polars API) — hand off to `sdv-python-reviewer` (`lens: polars`) rather than
+  duplicating its tiers; just flag the file.
 
 ## Output format
 

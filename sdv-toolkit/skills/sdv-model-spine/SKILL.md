@@ -124,7 +124,7 @@ Every spine builds the validation substrate before the model:
   published references and mark which fitting task overwrites them.
 - **Leakage split**: an `as_of_*_split(frame, cutoff)` helper returning strictly
   `date < cutoff`. Every predictive backtest rates event G using only data
-  before G — this is the line the oracle-gate-reviewer checks hardest.
+  before G — this is the line the `sdv-model-reviewer` agent checks hardest.
   **The trap that hit two independent Tier-3/5 spines:** a rating/rate fit
   over the FULL season, then reused inside the per-game as-of walk — the
   public `as_of` param filtered the box scores but NOT the ratings, giving
