@@ -26,6 +26,13 @@ def _plural(n, word):
     return "%d %s%s" % (n, word, "" if n == 1 else "s")
 
 
+def _cell(text):
+    # ponytail: catalog purposes are free text and may contain literal "|",
+    # which is a GFM table-cell delimiter -- escape it so every current and
+    # future catalog entry renders as one row, not a chokepoint per entry.
+    return text.replace("|", "\\|")
+
+
 def render_readme(catalog) -> str:
     skills, agents = _split(catalog)
     out = [
@@ -44,10 +51,10 @@ def render_readme(catalog) -> str:
         "|---|---|",
     ]
     for e in skills:
-        out.append("| `/%s` | %s |" % (e["name"], e["purpose"]))
+        out.append("| `/%s` | %s |" % (_cell(e["name"]), _cell(e["purpose"])))
     out += ["", "## Agents", "", "| Agent | What it reviews |", "|---|---|"]
     for e in agents:
-        out.append("| `%s` | %s |" % (e["name"], e["purpose"]))
+        out.append("| `%s` | %s |" % (_cell(e["name"]), _cell(e["purpose"])))
     out.append("")
     return "\n".join(out)
 
@@ -88,7 +95,9 @@ def main(argv) -> int:
     plugin_path = root / ".claude-plugin" / "plugin.json"
     plugin = json.loads(plugin_path.read_text(encoding="utf-8"))
     plugin["description"] = render_plugin_description(catalog)
-    targets.append((plugin_path, json.dumps(plugin, indent=2) + "\n", None))
+    targets.append(
+        (plugin_path, json.dumps(plugin, indent=2, ensure_ascii=False) + "\n", None)
+    )
 
     market_path = org_root / ".claude-plugin" / "marketplace.json"
     if market_path.exists():
@@ -96,7 +105,9 @@ def main(argv) -> int:
         for p in market.get("plugins", []):
             if p.get("name") == "sdv-toolkit":
                 p["description"] = render_marketplace_description(catalog)
-        targets.append((market_path, json.dumps(market, indent=2) + "\n", None))
+        targets.append(
+            (market_path, json.dumps(market, indent=2, ensure_ascii=False) + "\n", None)
+        )
 
     stale = []
     for path, content, _ in targets:

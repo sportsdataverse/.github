@@ -28,5 +28,5 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `sdv-harness-triage` | Triage a validation-harness WARN by finding_type and emit a Verdict. |
 | `sdv-model-reviewer` | Audit new model/validation code: gates, leakage boundary, metric fit, silent no-op, sklearn contract, lineage, oracle joins. |
 | `sdv-parity-reviewer` | Audit a cross-language port for ID-dtype, regex, indexing, null-semantics, and numeric-fidelity bug classes. |
-| `sdv-python-reviewer` | Python review by lens: polars | http | parser-contract | docstring. |
+| `sdv-python-reviewer` | Python review by lens: polars \| http \| parser-contract \| docstring. |
 | `sdv-r-reviewer` | R review by lens; owns roxygen/pkgdown/parity, routes general R concerns upstream. |

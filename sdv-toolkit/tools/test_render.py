@@ -53,6 +53,24 @@ class RenderTest(unittest.TestCase):
         smaller = {"version": "0.4.0", "entries": CATALOG["entries"][:1]}
         self.assertIn("1 skill", render.render_plugin_description(smaller))
 
+    def test_readme_escapes_pipe_in_purpose(self):
+        catalog = {
+            "version": "0.4.0",
+            "entries": [
+                {
+                    "name": "sdv-pipey",
+                    "kind": "agent",
+                    "purpose": "Review by lens: polars | http | docstring.",
+                    "archetypes": ["sdv-py"],
+                }
+            ],
+        }
+        out = render.render_readme(catalog)
+        row = next(line for line in out.splitlines() if "sdv-pipey" in line)
+        self.assertIn("polars \\| http \\| docstring.", row)
+        # exactly two data cells: leading/trailing "|" plus one separator "|"
+        self.assertEqual(row.count("|") - row.count("\\|"), 3)
+
 
 if __name__ == "__main__":
     unittest.main()
