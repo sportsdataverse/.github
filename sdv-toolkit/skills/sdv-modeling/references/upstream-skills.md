@@ -52,8 +52,8 @@ writing* the fit, not just at review time.
 | sklearn/XGBoost on panel-sports data — writing the fit | `sdv-sklearn` (first-party) | `sdv-toolkit:sdv-sklearn` |
 | sklearn/XGBoost on panel-sports data — reviewing a fit already written | `sdv-model-reviewer` (`lens: sklearn-contract`) | `sdv-toolkit:sdv-model-reviewer` |
 
-**Resolution note.** The ten non-`sdv-sklearn` rows above are vendored,
-first-party skills shipped from `sdv-toolkit/skills/sdv-<name>/` — see
+**Resolution note.** The ten vendored rows above are first-party skills
+shipped from `sdv-toolkit/skills/sdv-<name>/` — see
 `sdv-toolkit/NOTICE.md` for provenance (original name, source path, and
 licence state as found). They were previously personal, machine-local
 directories at `~/.claude/skills/<name>` with no verifiable public install

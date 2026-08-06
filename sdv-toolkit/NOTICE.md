@@ -34,3 +34,17 @@ content itself.
 **The other 8 skills** (all except `ml-pipeline` and `polars`) ship no
 `license:` or author metadata in their upstream frontmatter. They are vendored
 as installed, with no licence claim made or implied.
+
+## Known upstream defects
+
+Left as-is, not fixed, to keep the "otherwise unmodified" claim above true —
+recorded here instead so it ships documented rather than silently.
+
+- `skills/sdv-python-performance-optimization/references/details.md:342` —
+  the markdown link `[references/advanced-patterns.md](references/advanced-patterns.md)`
+  resolves relative to its own directory, so it points at
+  `references/references/advanced-patterns.md`, which does not exist. The
+  file is actually at `references/advanced-patterns.md` (i.e. a sibling of
+  `details.md`), so the correct target would be `advanced-patterns.md`. This
+  line is byte-identical to the upstream original — inherited, not
+  introduced by the rename.
