@@ -69,9 +69,15 @@ worse than naming the gap.
 `train_test_split(shuffle=True)` puts correlated rows on both sides of the
 split. **Never a bare `KFold` on grouped or time-ordered data** — use
 `GroupKFold(groups=...)` for panel data, `TimeSeriesSplit` for anything
-ordered in time (`sdv-model-reviewer.md` §5, verbatim). A `GroupKFold`
-*instantiated* but never given `groups=` at `.split()` degrades silently to
-an ungrouped split — same failure, one line quieter.
+ordered in time (`sdv-model-reviewer.md` §5, verbatim). Omitting `groups=`
+entirely does NOT belong in this catalog — verified across sklearn 0.20.4
+through 1.9.0, `GroupKFold().split(X)` (and `cross_val_score(cv=
+GroupKFold())` without `groups=`) both raise `ValueError: The 'groups'
+parameter should not be None.` immediately; that's a loud failure caught the
+first time the code runs, not a silent one. The actually-silent version of
+this trap is passing the *wrong* array as `groups=` — `y` by mistake, or an
+already-shuffled row index — which produces a real, meaningless grouping
+with no error at all.
 
 **Why invisible.** The fit runs, `cross_val_score` returns a number, and the
 number looks *better* than the honest one — a model that memorized which
