@@ -261,6 +261,18 @@
         "audit",
         "map"
       ]
+    },
+    {
+      "name": "sdv-conventions",
+      "kind": "skill",
+      "purpose": "Archetype convention packs; the router points here.",
+      "archetypes": [
+        "sdv-py",
+        "raw",
+        "data",
+        "r-package",
+        "toolkit"
+      ]
     }
   ]
 }
