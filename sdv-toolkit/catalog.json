@@ -112,14 +112,6 @@
       ]
     },
     {
-      "name": "port-parity-reviewer",
-      "kind": "agent",
-      "purpose": "Use after porting a module between R and Python (either direction \u2014 nflfastR/cfbfastR/hoopR/wehoop/bigballR \u2194 sdv-py, or a TS/Scala source like the hoop-explorer port) to audit the ported code for the recurring cross-language bug classes and verify parity-test coverage.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "provider-shape-mapper",
       "kind": "agent",
       "purpose": "Use to map a captured provider payload (ESPN/Fox/CBS/Yahoo) into documentation \u2014 produces a top-level-key table, a col_name|type|description returns table, and divergence-vs-sibling notes.",
@@ -261,6 +253,16 @@
         "leakage_lint",
         "boundary_leakage",
         "numeric_parity"
+      ]
+    },
+    {
+      "name": "sdv-parity-reviewer",
+      "kind": "agent",
+      "purpose": "Audit a cross-language port for ID-dtype, regex, indexing, null-semantics, and numeric-fidelity bug classes.",
+      "archetypes": [
+        "sdv-py",
+        "r-package",
+        "data"
       ]
     }
   ]
