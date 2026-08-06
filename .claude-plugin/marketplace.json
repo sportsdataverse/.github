@@ -5,13 +5,13 @@
     "url": "https://github.com/sportsdataverse"
   },
   "metadata": {
-    "description": "SportsDataverse Claude Code plugins — engineering tooling for the SportsDataverse Python + R packages."
+    "description": "SportsDataverse Claude Code plugins \u2014 engineering tooling for the SportsDataverse Python + R packages."
   },
   "plugins": [
     {
       "name": "sdv-toolkit",
       "source": "./sdv-toolkit",
-      "description": "Codegen-safe edit guards, multi-provider league/source scaffolding (ESPN/Fox/CBS/Yahoo/247/Torvik), returns-schema + docstring auditors, polars-1x / parser-contract / http-layer reviewers, and SDV-style R pkgdown/roxygen helpers."
+      "description": "SportsDataverse engineering toolkit: 8 skills and 6 agents covering the ship lifecycle, R/Python porting, the raw/data producer pipeline, model spines, provider onboarding, and documentation -- with an archetype router that loads the right conventions on session start."
     }
   ]
 }

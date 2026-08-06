@@ -26,3 +26,6 @@ jobs:
       - name: Catalog is bound to the tree
         working-directory: sdv-toolkit
         run: python tools/check_catalog.py .
+      - name: Rendered surfaces are current
+        working-directory: sdv-toolkit
+        run: python tools/render.py --check
