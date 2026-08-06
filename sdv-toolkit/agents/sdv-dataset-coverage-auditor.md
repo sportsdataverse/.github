@@ -58,10 +58,16 @@ entries:
   `sdv-py/tools/codegen/schemas/loader_schemas.yaml` key `load_cfb_betting:` (present);
   a bare `^load_betting:` does not exist in that file. **Prefer the `REGISTRY` entry's
   own `loader` field over the formula whenever a `REGISTRY` entry exists** — a handful
-  diverge from the formula (verified: `(nhl, "goalie_box")`'s recorded `loader` is
-  `load_nhl_goalie_box`, which matches neither the formula's expectation nor the real
-  sdv-py function, `load_nhl_goalie_boxscores`). Report that kind of divergence itself
-  as a surface-2 finding — don't reformulate until something matches.
+  diverge from the *real sdv-py function name*, not from the formula itself (verified:
+  `(nhl, "goalie_box")`'s recorded `loader` is `load_nhl_goalie_box`, which matches the
+  `load_<league>_<dataset>` formula exactly, but `nhl_loaders.py:508` defines
+  `def load_nhl_goalie_boxscores(...)` — the catalog's recorded loader name is stale
+  against the real function). Report that kind of divergence itself as a surface-2
+  finding — don't reformulate until something matches. **This is also why S2's grep
+  below must be anchored with a trailing `(`**: an unanchored `grep 'def
+  load_nhl_goalie_box'` is a substring match that hits `def
+  load_nhl_goalie_boxscores(` and silently reports `present`, swallowing exactly this
+  divergence.
 - **Validation-registry key (surface 11)**: `<league>_<dataset>` — no `load_` prefix.
   Verified: `sdv-py/tools/validation/registry.py` keys its dict `DATASETS["cfb_passing"]`,
   not `DATASETS["passing"]` or `DATASETS["load_cfb_passing"]`.
@@ -107,23 +113,28 @@ offline` > `present` (worst sub-verdict wins). A row with one `missing` half is 
 ## Per-surface investigation
 
 Run these for each dataset. Where a surface's condition has both a static and a
-non-static half (3, 5, 8, 10), check the static half fully and report the non-static
+non-static half (3, 8, 10), check the static half fully and report the non-static
 half as `unverifiable-offline` with its own "what would verify it" — do not let the
-static half's result stand in for the whole row.
+static half's result stand in for the whole row. Surface 5 is *not* in this group any
+more: its non-static half (the repo-global `--check` gate) is never the row's verdict at
+all, static or otherwise — see surface 5 below for its own per-dataset proxy.
 
 **1 — Release asset.** Not a repo grep: needs a live GitHub API call.
 `gh release view <tag> --repo sportsdataverse/<league>-data --json assets --jq '.assets[].name'`
 and check the dataset's file name appears. `present`/`missing` from the call's result;
 `unverifiable-offline` only if `gh` itself fails (no auth/network) — that's an
 environment failure, not the surface's own limit, so say so explicitly rather than
-folding it into the same bucket as surfaces 3/5/10.
+folding it into the same bucket as surfaces 3/8/10.
 
 **2 — Python loader.** Fully static. `<dataset>` here means the expanded
 `load_<league>_<dataset>` identifier from the namespace-binding note above (prefer the
 `REGISTRY` entry's own `loader` field when one exists), not the bare `REGISTRY` name.
 `grep -n '<DATASET>_URL' sdv-py/sportsdataverse/config.py` and
-`grep -n 'def load_<league>_<dataset>' sdv-py/sportsdataverse/<league>/<league>_loaders.py`.
-Both hit → `present` with both `file:line`s. Either miss → `missing`.
+`grep -n 'def load_<league>_<dataset>(' sdv-py/sportsdataverse/<league>/<league>_loaders.py`
+— **anchor with the trailing `(`**, or an unanchored grep for a shorter identifier
+substring-matches a longer real function name and reports a false `present` (e.g.
+`def load_nhl_goalie_box` with no anchor hits `def load_nhl_goalie_boxscores(`). Both
+hit → `present` with both `file:line`s. Either miss → `missing`.
 
 **3 — Loader schema.** Split. Key existence is static (same expanded identifier as
 surface 2):
@@ -157,12 +168,16 @@ filename search — see the table's warning). R exports use the same expanded
 `load_nhl_pbp` — never the bare `load_pbp`), so grep the expanded form, not the bare
 `REGISTRY` name. First decide applicability: does this dataset's domain belong to one
 of `cfbfastR` / `hoopR` / `wehoop` / `fastRhockey` at all? If not, `not-applicable`. If
-yes, `grep -c 'export(load_<league>_<dataset>' <sibling-repo>/NAMESPACE` — nonzero →
-`present` (cite the NAMESPACE line and the R file it resolves to); zero → `missing`.
+yes, `grep -c 'export(load_<league>_<dataset>)' <sibling-repo>/NAMESPACE` — **anchor
+with the closing `)`**, or an unanchored grep substring-matches a longer sibling export
+(e.g. an unanchored search for `pbp` also counts `export(load_nhl_pbp_full)` and
+`export(load_nhl_pbp_lite)`, which would falsely mark a `pbp` dataset `present` even if
+only the `_lite`/`_full` variants are actually exported). Nonzero → `present` (cite the
+NAMESPACE line and the R file it resolves to); zero → `missing`.
 
 **7 — Catalog row.** Fully static, but **do not grep for the literal `"<league>",
 "<dataset>"` pair — it will false-negative on the large majority of real entries.**
-`REGISTRY` is built by `_build_registry()` (`catalog.py:79-424`) inside `for` loops —
+`REGISTRY` is built by `_build_registry()` (`catalog.py:77-424`) inside `for` loops —
 e.g. `for lg in (*_BOX_SPORTS, "cfb"): add(_sdv_py(lg, "pbp", f"load_{lg}_pbp"))` — so
 the literal string pair never appears in the file even for datasets that are genuinely
 registered. Verified: `grep '"nba", "pbp"' catalog.py`, `grep '"cfb", "betting"'
@@ -227,24 +242,28 @@ dict key is the actual identifier and is unambiguous.
 `grep -rl 'schedule:' <league>-data/.github/workflows/`; any hit anywhere in the repo
 satisfies that grep, including a cron for a completely unrelated model, which silently
 promotes an orphaned retrain to `present`.** Verified against
-`cfbfastR-dev/cfbfastR-cfb-data`: that grep returns 6 files, but only one of them
-(`cfb_model_pipeline.yml`, the file whose `schedule:` trigger is real) has `run:` steps
-naming `train-ep`, `train-wp ... --variant spread`, `train-qbr`, `train-fd`, `train-fg`,
-`train-xpass`, `train-two-pt` — so `ep.md`'s retrain genuinely is wired
-(`grep -n 'train-ep\|ep\.ubj' cfb_model_pipeline.yml` hits). But `rb_eval.md` and
-`era_model_refresh.md` — both real lineage docs in the same `docs/models/` — have zero
-hits for their own name/token in *any* schedule-bearing workflow
-(`grep -rn 'rb_eval\|rb-eval\|xrepa' .github/workflows/*.yml` and `grep -rn
+`cfbfastR-dev/cfbfastR-cfb-data`: that grep returns 6 files, all with genuine `cron:`
+triggers of their own (`model_pipeline` 1, `postweek` 1, `previews` 4, `ratings_cron` 4,
+`recruiting_proj_cron` 2, `daily_cfb` 4) — so "which file has a real schedule" isn't
+what distinguishes them. What distinguishes them is that only one,
+`cfb_model_pipeline.yml`, has `run:` steps naming `train-ep`, `train-wp ... --variant
+spread`, `train-qbr`, `train-fd`, `train-fg`, `train-xpass`, `train-two-pt` — so `ep.md`'s
+retrain genuinely is wired (`grep -n 'train-ep\|ep\.ubj' cfb_model_pipeline.yml` hits).
+But `rb_eval.md` and `era_model_refresh.md` — both real lineage docs in the same
+`docs/models/` — have zero hits for their own name/token in *any* schedule-bearing
+workflow (`grep -rn 'rb_eval\|rb-eval\|xrepa' .github/workflows/*.yml` and `grep -rn
 'era_model\|era-model' .github/workflows/*.yml` both return nothing), even though the
-repo-wide `schedule:` grep is non-empty. **Check:** within the specific schedule-bearing
-workflow file(s), grep for a token identifying *this* dataset's training target — the
-dataset name itself, or an artifact/CLI token the lineage doc cites (`<dataset>.ubj`,
-`train-<dataset>`, a script path). Lineage doc + a schedule-bearing file that actually
-references it → `present`. Lineage doc exists but no schedule-bearing file's `run:`
-steps reference it (even if the repo has crons for other models) → `missing`: "retrain
-path may be orphaned or manual-only — no schedule-bearing workflow references this
-dataset's training target by name," not "no retrain exists" and not "present" on the
-strength of an unrelated cron.
+repo-wide `schedule:` grep is non-empty for all 6 files, `cfb_model_pipeline.yml`
+included. **Check:** within the specific schedule-bearing workflow file(s), grep for a
+token naming *this dataset's own* training artifact or CLI subcommand — not just any
+token the lineage doc happens to mention (a doc can legitimately reference a sibling
+model's artifact in passing; the token must identify *this* dataset's own output, e.g.
+`<dataset>.ubj` or `train-<dataset>`). Lineage doc + a schedule-bearing file that
+actually references its own artifact → `present`. Lineage doc exists but no
+schedule-bearing file's `run:` steps reference its own artifact (even if the repo has
+crons for other models) → `missing`: "retrain path may be orphaned or manual-only — no
+schedule-bearing workflow references this dataset's own training target," not "no
+retrain exists" and not "present" on the strength of an unrelated cron.
 
 ## Modes
 
