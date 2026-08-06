@@ -30,7 +30,7 @@ run the others unless the caller explicitly asked for `lens: all`.
 Hand adjacent concerns to their own agent/lens rather than duplicating them
 here: polars currency → `sdv-python-reviewer` (`lens: polars`); ported-code
 fidelity → `sdv-parity-reviewer`; returns-table coverage →
-`sdv-docs-reviewer` (`mode: returns-table`); triage of an *existing* dataset's
+`sdv-docs-reviewer` (`mode: audit`); triage of an *existing* dataset's
 harness WARN finding (as opposed to design-time review of new code) →
 `sdv-harness-triage` (`finding_type: leakage_lint` / `boundary_leakage` /
 `numeric_parity` / `sweep`).

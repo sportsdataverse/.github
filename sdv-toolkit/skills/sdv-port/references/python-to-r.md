@@ -80,7 +80,7 @@ Every exported R function needs a complete roxygen block: `@param` for each arg,
 
 - `devtools::document()` to regenerate `man/*.Rd` + `NAMESPACE`.
 - Add the function to `_pkgdown.yml` reference so it appears on the site.
-- Run `sdv-r-reviewer` (roxygen lens) and `sdv-docs-reviewer` (returns-table mode) to check
+- Run `sdv-r-reviewer` (roxygen lens) and `sdv-docs-reviewer` (`mode: audit`) to check
   completeness.
 
 Match the package's existing lint/style (most SDV R packages follow tidyverse style;
