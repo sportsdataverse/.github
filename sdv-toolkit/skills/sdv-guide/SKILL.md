@@ -11,8 +11,20 @@ files already on disk — don't hand-maintain a second copy of any of it.
 ## Rendering the index
 
 1. Read `catalog.json`. If an argument was given (e.g. `modeling`, `R`,
-   `shipping`, `data`, `porting`), keep only entries whose `name`,
-   `purpose`, `archetypes`, or `phases` case-insensitively contain it.
+   `shipping`, `data`, `porting`), split each entry's `name`, `purpose`,
+   `archetypes`, and `phases` into words on non-alphanumeric characters
+   (hyphens, slashes, spaces), and keep only entries with a matching
+   word. A word matches the argument, case-insensitively, if: it equals
+   the argument; it equals the argument with a trailing `ing` removed
+   (and, when that leaves the stem ending in a doubled consonant, drop
+   one — `shipping`→`ship`, `porting`→`port`, `modeling`→`model`); or it
+   *starts with* the argument or that stem (`sdv-port` still matches
+   `porting`). **Exception:** arguments of 2 characters or fewer (e.g.
+   `R`) match a whole word only, exactly and case-sensitively, with no
+   stemming or prefix matching — a case-insensitive substring match on a
+   single letter would hit nearly every entry, so `R` intentionally
+   surfaces only entries whose text carries a standalone capital `R`
+   (the language), not every entry that happens to contain the letter.
    With no argument, keep every entry.
 2. Render the filtered entries the way `tools/render.py`'s
    `render_readme(catalog)` does (skills table, then agents table) — call

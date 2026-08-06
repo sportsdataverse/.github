@@ -251,8 +251,9 @@ to five papers (`apm-research/deep-research-report.md` §5):
 ### Post-merge wiring — re-targeted at the private engine, one item dissolved
 
 `program-status.md`'s "Outstanding" table (written before the delivery
-decision) lists producer `audit=` opt-ins, an `sdv-build-data` toolkit step,
-an sdv-web ingest endpoint, and sdv-db contract fields as follow-ups meant to
+decision) lists producer `audit=` opt-ins, an `sdv-build-data` (now
+`/sdv-data-pipeline`) toolkit step, an sdv-web ingest endpoint, and sdv-db
+contract fields as follow-ups meant to
 land once the donor branch merged into `sdv-py`. **That premise no longer
 holds, but the items are not dead work.** Addendum 22 draws a line between
 two different buckets: point (4) DISSOLVES the "post-merge call-site
