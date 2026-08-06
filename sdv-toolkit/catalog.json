@@ -350,6 +350,29 @@
       "hands_off_to": [
         "sdv-model-spine"
       ]
+    },
+    {
+      "name": "sdv-dataset-lifecycle",
+      "kind": "skill",
+      "purpose": "Drive a new or updated release tag through all 12 downstream surfaces across five repos; record deliberate skips.",
+      "archetypes": [
+        "data",
+        "sdv-py"
+      ],
+      "phases": [
+        "detect",
+        "select-surfaces",
+        "propagate",
+        "ledger"
+      ],
+      "dispatches": [
+        "sdv-dataset-coverage-auditor",
+        "sdv-docs-reviewer",
+        "sdv-r-reviewer"
+      ],
+      "hands_off_to": [
+        "sdv-ship"
+      ]
     }
   ]
 }

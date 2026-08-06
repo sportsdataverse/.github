@@ -14,6 +14,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-add-source` | Add a league/sport/endpoint/provider to sdv-py: capture, catalog, returns doc, scaffold, fixtures, drift gate. |
 | `/sdv-conventions` | Archetype convention packs; the router points here. |
 | `/sdv-data-pipeline` | Producer lifecycle for -raw/-data repos: standardize, placement, scrape, build, validate, publish. |
+| `/sdv-dataset-lifecycle` | Drive a new or updated release tag through all 12 downstream surfaces across five repos; record deliberate skips. |
 | `/sdv-document` | Produce documentation surface: Python returns schema, roxygen @return table, notebook, pkgdown theming. |
 | `/sdv-guide` | Callable index: what the toolkit has, when to use each part, and the rename map. |
 | `/sdv-learn` | Promote a durable session finding into the right toolkit surface, with its detection test. |
