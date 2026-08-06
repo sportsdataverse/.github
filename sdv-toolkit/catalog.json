@@ -1,0 +1,317 @@
+{
+  "version": "0.3.7",
+  "entries": [
+    {
+      "name": "sdv-add-cbs-league",
+      "kind": "skill",
+      "purpose": "Add a CBS Sports (NAPI) league/resource \u2014 capture + catalog in sdv-internal-refs/cbs. disable-model-invocation: true",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-add-espn-league",
+      "kind": "skill",
+      "purpose": "Register a new ESPN league family in sdv-py \u2014 leagues.yaml row, pre-create package dir + __init__, regenerate, gated live test, verify the drift gate. disable-model-invocation: tru",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-add-fox-league",
+      "kind": "skill",
+      "purpose": "Add a Fox Sports (Bifrost) league/sport \u2014 capture + catalog in sdv-internal-refs/fox. disable-model-invocation: true",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-add-provider-source",
+      "kind": "skill",
+      "purpose": "Add a league/source for ANY SportsDataverse provider (ESPN, Fox Bifrost, CBS NAPI, Yahoo, 247Sports, Torvik) \u2014 capture bodies, generate the returns doc, extend the catalog, scaffol",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-add-sport-parser",
+      "kind": "skill",
+      "purpose": "Add sport-specific tidy parsers for an ESPN sport (soccer/cricket pattern) \u2014 parser module + per-sport codegen routing + fixtures + TDD. disable-model-invocation: true",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-add-yahoo-source",
+      "kind": "skill",
+      "purpose": "Add a Yahoo Sports source \u2014 capture + catalog in sdv-internal-refs/yahoo (HTML/JSON scrape). disable-model-invocation: true",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-address-bot-reviews",
+      "kind": "skill",
+      "purpose": "Use to triage and resolve automated code-review comments that land on a sportsdataverse-py (sdv-py) PR from CodeRabbit or GitHub Copilot \u2014 fetch the unresolved review threads, fix ",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-build-data",
+      "kind": "skill",
+      "purpose": "Use when building or extending a dataset in an SDV `-data` repo (nfl-data, cfb-data, hoopR-*-data, wehoop-*-data, fastRhockey-*-data) \u2014 the ingest \u2192 build \u2192 validate \u2192 publish pipe",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-capture-endpoint",
+      "kind": "skill",
+      "purpose": "Hardened, provider-agnostic single-body capture for ESPN/Fox/CBS \u2014 structured id discovery, error-envelope skip, atomic writes. disable-model-invocation: true",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-capture-oracle",
+      "kind": "skill",
+      "purpose": "Use when capturing an external oracle/validation corpus into committed test fixtures \u2014 Torvik/KenPom ratings, ESPN BPI/predictor/odds, market closing lines, MoneyPuck, published RA",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-gen-returns-schema",
+      "kind": "skill",
+      "purpose": "Generate a col_name|type|description returns table (Python schema YAML or R roxygen @return) from a sample payload or a live DataFrame's schema. disable-model-invocation: true",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-model-spine",
+      "kind": "skill",
+      "purpose": "Use when executing a model-spine implementation plan (the ClaudeCowork specs/plans backlog \u2014 prediction stacks, ratings engines, projection/impact models) or building any oracle-ga",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-new-example-notebook",
+      "kind": "skill",
+      "purpose": "Scaffold a per-sport intro Jupyter notebook (examples/notebooks/0X_<sport>_intro.ipynb). disable-model-invocation: true",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-pandas-to-polars",
+      "kind": "skill",
+      "purpose": "Use when converting pandas DataFrame/Series code to polars 1.2+ in a SportsDataverse repo \u2014 translating a `df.loc`/`np.select`/`df.assign`/`groupby().transform`/`merge` block, reco",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-pipeline-layout",
+      "kind": "skill",
+      "purpose": "Use BEFORE creating any new script in an SDV `-raw`/`-data`/`-db` repo, and when naming/placing pipeline stages, ops tools, one-offs, or model training/publish code \u2014 the placement",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-pkgdown-personalize",
+      "kind": "skill",
+      "purpose": "Apply the bespoke SportsDataverse pkgdown theming and fix the shared extra.css Bootstrap-5 bugs (dark-mode-invisible text, dead .navbar-dark selectors). disable-model-invocation: t",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-port-python-to-r",
+      "kind": "skill",
+      "purpose": "Use when porting Python logic from the SportsDataverse Python package (sdv-py) into a SportsDataverse R package \u2014 cfbfastR, hoopR, wehoop, baseballr, fastRhockey, softballR, etc. E",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-port-r-to-python",
+      "kind": "skill",
+      "purpose": "Use when porting R logic into the Python SportsDataverse package (sdv-py) \u2014 e.g. translating an nflfastR / cfbfastR / cfbscrapR / baseballr / hoopR R function, reconciling a fix fr",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-preflight",
+      "kind": "skill",
+      "purpose": "Use for a fast local sanity sweep on the current changes in sportsdataverse-py (sdv-py) before committing or opening a PR \u2014 runs ruff, the mypy ratchet, and the relevant tests scop",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-r-returns-table",
+      "kind": "skill",
+      "purpose": "Generate or back-fill a roxygen @return markdown table (col_name|type|description) for an SDV R function, matching the Python returns convention. disable-model-invocation: true",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-regen-docs",
+      "kind": "skill",
+      "purpose": "Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release. disable-model-invocation: true",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-release",
+      "kind": "skill",
+      "purpose": "Use when cutting a new sportsdataverse-py (sdv-py) PyPI release \u2014 bump the version, write the CHANGELOG entry, freeze the docs snapshot, and tag a GitHub Release (which triggers th",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-scrape-job",
+      "kind": "skill",
+      "purpose": "Use when setting up any scraping/backfill job expected to run more than ~3 minutes (ESPN, stats.nba.com/wnba.com, stats.ncaa.org, Savant) \u2014 generates a user-executable runbook scri",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-ship",
+      "kind": "skill",
+      "purpose": "Use when shipping a change in sportsdataverse-py (sdv-py) \u2014 opening, pushing, or merging a PR. Runs the steps in the correct order (regenerate codegen docs, update changelog/docs/t",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-stack",
+      "kind": "skill",
+      "purpose": "Use to manage a chain of stacked PRs in an SDV repo \u2014 mapping the stack, merging bottom-up, retargeting + rebasing children after a squash-merge, and re-running the codegen drift g",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-standardize-repo",
+      "kind": "skill",
+      "purpose": "Use when bringing an SDV `-raw` or `-data` repo onto the standard template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, purges, R/Python dual-pipeline p",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "anomaly-triage-reviewer",
+      "kind": "agent",
+      "purpose": "Use to triage a `sweep` WARN finding from the sdv-py validation harness \u2014 judge whether a null-rate spike or mean-shift vs the prior release is a real regression or an expected dat",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "docstring-auditor",
+      "kind": "agent",
+      "purpose": "Use to audit Python docstring completeness/quality in sdv-py \u2014 flags public callables missing Google-style napoleon Args/Returns/Raises/Example or See-Also blocks, and any raw >>> ",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "espn-parser-contract-reviewer",
+      "kind": "agent",
+      "purpose": "Use after adding/editing an ESPN parser in sdv-py to verify the universal parser contract and ENDPOINT_PARSERS coverage.",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "extraction-semantics-reviewer",
+      "kind": "agent",
+      "purpose": "Use to triage an `extraction` WARN finding from the sdv-py validation harness \u2014 judge whether a low-coverage extracted column is a real parser bug or a legitimately-null field for ",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "http-layer-reviewer",
+      "kind": "agent",
+      "purpose": "Use when changing sdv-py network code (dl_utils.download, capture/crawl tooling) to verify the retry/pooling/backoff/bounding conventions.",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "leakage-reviewer",
+      "kind": "agent",
+      "purpose": "Use to triage a `leakage_lint` (Python/R source) or `boundary_leakage` (cumulative-non-reset) WARN finding from the sdv-py validation harness \u2014 judge whether a lag/cumulative op is",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "oracle-gate-reviewer",
+      "kind": "agent",
+      "purpose": "Use before merging new model/validation code (a model-spine phase, a ratings engine, a backtest, a simulator) to audit its correctness contract \u2014 distinct from the Tier-2 validatio",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "parity-divergence-reviewer",
+      "kind": "agent",
+      "purpose": "Use to triage a `numeric_parity` WARN finding from the sdv-py validation harness \u2014 judge whether a column's correlation below its oracle floor is a real model/producer regression o",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "polars-1x-reviewer",
+      "kind": "agent",
+      "purpose": "Use after writing/editing polars code in sdv-py to keep it current with the installed polars (lockfile resolves to 1.42; pin >=1.0,<2.0; review floor 1.2+). Flags three tiers \u2014 rem",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "port-parity-reviewer",
+      "kind": "agent",
+      "purpose": "Use after porting a module between R and Python (either direction \u2014 nflfastR/cfbfastR/hoopR/wehoop/bigballR \u2194 sdv-py, or a TS/Scala source like the hoop-explorer port) to audit the",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "provider-shape-mapper",
+      "kind": "agent",
+      "purpose": "Use to map a captured provider payload (ESPN/Fox/CBS/Yahoo) into documentation \u2014 produces a top-level-key table, a col_name|type|description returns table, and divergence-vs-siblin",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "returns-table-auditor",
+      "kind": "agent",
+      "purpose": "Use to audit returns-schema coverage and quality across sdv-py + the R packages \u2014 finds functions/endpoints missing a col_name|type|description returns table, schema columns with e",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "roxygen-doc-reviewer",
+      "kind": "agent",
+      "purpose": "Use to review SportsDataverse R package documentation \u2014 checks roxygen completeness (@param/@return table/@examples) and _pkgdown.yml reference coverage.",
+      "archetypes": [
+        "all"
+      ]
+    }
+  ]
+}
