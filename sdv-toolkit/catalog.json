@@ -176,14 +176,6 @@
       ]
     },
     {
-      "name": "roxygen-doc-reviewer",
-      "kind": "agent",
-      "purpose": "Use to review SportsDataverse R package documentation \u2014 checks roxygen completeness (@param/@return table/@examples) and _pkgdown.yml reference coverage.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-add-source",
       "kind": "skill",
       "purpose": "Add a league/sport/endpoint/provider to sdv-py: capture, catalog, returns doc, scaffold, fixtures, drift gate.",
@@ -246,6 +238,34 @@
         "parser-contract",
         "docstring",
         "all"
+      ]
+    },
+    {
+      "name": "sdv-r-reviewer",
+      "kind": "agent",
+      "purpose": "R review by lens; owns roxygen/pkgdown/parity, routes general R concerns upstream.",
+      "archetypes": [
+        "r-package"
+      ],
+      "lenses": [
+        "roxygen",
+        "tidy-idiom",
+        "metaprogramming",
+        "style",
+        "package-structure",
+        "cran",
+        "performance",
+        "parity",
+        "all"
+      ],
+      "pulls": [
+        "r-skills:tidyverse-patterns",
+        "r-skills:rlang-patterns",
+        "r-skills:r-style-guide",
+        "r-skills:r-package-development",
+        "r-lib:testing-r-packages",
+        "r-lib:cran-extrachecks",
+        "r-skills:r-performance"
       ]
     }
   ]
