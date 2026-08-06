@@ -130,8 +130,11 @@ multi-repo topology note above surfaces 39-47 — it isn't only a local-path-op
 concern, it's this surface's own repo target too). **The reliable per-dataset source
 of the real repo + tag is the loader's own docstring**: every generated `sdv-py`
 loader carries a `Source: https://github.com/<owner>/<repo>/releases/tag/<tag>` line
-(e.g. `cfb_loaders.py:64` → `sportsdataverse/sportsdataverse-data`, tag
-`espn_cfb_passing`) — read that line and use its repo + tag, not the formula. For a
+(verified: `load_cfb_passing`'s own `Source:` line resolves to
+`sportsdataverse/sportsdataverse-data`, tag `espn_cfb_passing` — grep
+`grep -A5 'def load_cfb_passing(' cfb_loaders.py`, don't hardcode a line number, a
+sibling repo's line numbers rot across ordinary commits) — read that line and use its
+repo + tag, not the formula. For a
 `REGISTRY`-only entry with no `sdv-py` loader at all, fall back to the per-league
 producer repo from the topology note. Once you have the right repo + tag:
 `gh release view <tag> --repo <repo> --json assets --jq '.assets[].name'` and check
@@ -188,7 +191,9 @@ as a lower bound, not a hard verdict**: `generate.py`'s real resolution is
 `367`) — a column blank in this file can still render with real prose in the actual
 generated docs page via the R-package-description fallback. Verified:
 `load_cfb_passing`'s `team_id`/`pos_team`/`division` are blank in this file yet appear
-with full descriptions in `docs/docs/cfb/reference/loaders.md:1664-1666`. If you can
+with full descriptions in `docs/docs/cfb/reference/loaders.md` (grep the column name
+under that dataset's block — don't cite a fixed line number for this file either; it
+already rotted once mid-session from an unrelated `sdv-py` commit). If you can
 cheaply cross-check the dataset's generated docs page (surface 5's evidence) for the
 column instead of stopping at this file, do so and let that override a `missing` this
 file alone would suggest; if not, report the file-only result as `missing (lower
@@ -373,10 +378,40 @@ retrain exists" and not "present" on the strength of an unrelated cron.
      dataset, one identity — tally it once, under the `REGISTRY` entry's `(league,
      name)`.
   4. A `loader_schemas.yaml` key with no `REGISTRY` entry whose `loader` field equals
-     it is genuinely loader-only → a real surface-7 gap (no catalog row) for the
-     `(league, dataset)` pair the key's own prefix-strip formula suggests (the formula
-     is fine as a *fallback label* for genuinely uncataloged datasets — it's only
-     unsafe as the *join key* against `REGISTRY`).
+     it string-for-string is **not yet** safe to call loader-only — string equality on
+     `loader` alone still fabricates gaps two more ways, both live in the inventory
+     today, so run both of these cheap confirmations before the verdict:
+     - **(a) loader=None / different-source entries.** Check whether the key's own
+       formula-derived `(league, name)` pair is *itself* a `REGISTRY` key, regardless
+       of that entry's `loader` field. Verified: `load_nba_stats_standings` has no
+       `REGISTRY` entry whose `loader` equals it, but `(nba_stats, "standings")` **is**
+       a real `REGISTRY` row — `Dataset(source='release_asset', loader=None,
+       asset_url='.../standings_{season}.parquet')`, a raw release asset with no
+       Python loader backing it at all. If the formula pair resolves in `REGISTRY`,
+       it's cataloged — stop here, don't fall through to a gap.
+     - **(b) thin aliases and duplicate-tag loaders.** `sdv-py` ships both
+       R-parity-naming aliases (a one-line wrapper: `def load_pwhl_team_box(...): return
+       load_pwhl_team_boxscores(...)`, docstring literally "Alias of
+       load_pwhl_team_boxscores() for naming parity with fastRhockey (R)" —
+       `pwhl_loaders_extra.py`) and independently-defined loaders that read the exact
+       same release tag under two names (`load_nhl_pbp` and `load_nhl_pbp_full` both
+       carry `Source: .../releases/tag/nhl_pbp_full`; `load_nhl_player_boxscore` and
+       `load_nhl_player_boxscores` both carry `Source: .../releases/tag/
+       nhl_player_boxscores`, same pattern for `team_boxscores`/`schedules`). A
+       distinct `def` is not a distinct dataset when it's an alias of, or reads the
+       identical release tag as, an already-cataloged loader. Before calling a key
+       loader-only: read its own docstring body (the same read S1 already does for the
+       `Source:` line) for an "Alias of `<other_ident>`" sentence, or extract its
+       `Source:`/release-tag string and check whether any *already-cataloged* loader
+       (one that already matched a `REGISTRY` entry's `loader` field in step 3, or
+       resolved via 4(a)) carries the identical tag. Either hit → this key is the same
+       dataset as the one it aliases/shares a tag with, already accounted for; do not
+       add it as a second entry.
+     Only after both (a) and (b) come up empty is the key genuinely loader-only → a
+     real surface-7 gap (no catalog row) for the `(league, dataset)` pair the key's own
+     prefix-strip formula suggests (the formula is fine as a *fallback label* for a
+     genuinely uncataloged dataset — it's only unsafe as the *join key* against
+     `REGISTRY`).
   5. A `REGISTRY` entry whose `loader` field (if any) has no matching
      `loader_schemas.yaml` key is genuinely schema-less → a real surface-3 gap for
      that entry's `(league, name)`.
