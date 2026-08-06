@@ -112,22 +112,6 @@
       ]
     },
     {
-      "name": "provider-shape-mapper",
-      "kind": "agent",
-      "purpose": "Use to map a captured provider payload (ESPN/Fox/CBS/Yahoo) into documentation \u2014 produces a top-level-key table, a col_name|type|description returns table, and divergence-vs-sibling notes.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "returns-table-auditor",
-      "kind": "agent",
-      "purpose": "Use to audit returns-schema coverage and quality across sdv-py + the R packages \u2014 finds functions/endpoints missing a col_name|type|description returns table, schema columns with empty descriptions, and endpoint YAMLs that declare a parser but no returns_schema.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-add-source",
       "kind": "skill",
       "purpose": "Add a league/sport/endpoint/provider to sdv-py: capture, catalog, returns doc, scaffold, fixtures, drift gate.",
@@ -263,6 +247,19 @@
         "sdv-py",
         "r-package",
         "data"
+      ]
+    },
+    {
+      "name": "sdv-docs-reviewer",
+      "kind": "agent",
+      "purpose": "Audit or produce the three-column returns table, Python or R; map a provider payload into documentation.",
+      "archetypes": [
+        "sdv-py",
+        "r-package"
+      ],
+      "modes": [
+        "audit",
+        "map"
       ]
     }
   ]
