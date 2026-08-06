@@ -325,6 +325,19 @@
         "out-of-scope",
         "bot-noise"
       ]
+    },
+    {
+      "name": "sdv-modeling",
+      "kind": "skill",
+      "purpose": "Modeling domain reference: methods, data sources, prior art, metrics and gates, failure modes, per-sport inventories.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ],
+      "hands_off_to": [
+        "sdv-model-spine",
+        "sdv-sklearn"
+      ]
     }
   ]
 }

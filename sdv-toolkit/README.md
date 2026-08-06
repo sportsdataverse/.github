@@ -18,6 +18,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-guide` | Callable index: what the toolkit has, when to use each part, and the rename map. |
 | `/sdv-learn` | Promote a durable session finding into the right toolkit surface, with its detection test. |
 | `/sdv-model-spine` | Oracle-gated model build loop: capture oracle, worktree, harness, TDD, gates, parity, close-out. |
+| `/sdv-modeling` | Modeling domain reference: methods, data sources, prior art, metrics and gates, failure modes, per-sport inventories. |
 | `/sdv-port` | Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures. |
 | `/sdv-regen-docs` | Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release. |
 | `/sdv-ship` | Land a change: regen docs, preflight, commit, push, bot-triage, codegen gate, merge, stack retarget, release. |
