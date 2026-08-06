@@ -66,6 +66,30 @@
       ]
     },
     {
+      "name": "sdv-data-pipeline",
+      "kind": "skill",
+      "purpose": "Producer lifecycle for -raw/-data repos: standardize, placement, scrape, build, validate, publish.",
+      "archetypes": [
+        "raw",
+        "data"
+      ],
+      "phases": [
+        "standardize",
+        "placement",
+        "scrape",
+        "build",
+        "validate",
+        "publish"
+      ],
+      "dispatches": [
+        "sdv-python-reviewer",
+        "sdv-harness-triage"
+      ],
+      "hands_off_to": [
+        "sdv-ship"
+      ]
+    },
+    {
       "name": "sdv-gen-returns-schema",
       "kind": "skill",
       "purpose": "Generate a col_name|type|description returns table (Python schema YAML or R roxygen @return) from a sample payload or a live DataFrame's schema.",
@@ -267,30 +291,6 @@
       "purpose": "Use to review SportsDataverse R package documentation \u2014 checks roxygen completeness (@param/@return table/@examples) and _pkgdown.yml reference coverage.",
       "archetypes": [
         "all"
-      ]
-    },
-    {
-      "name": "sdv-data-pipeline",
-      "kind": "skill",
-      "purpose": "Producer lifecycle for -raw/-data repos: standardize, placement, scrape, build, validate, publish.",
-      "archetypes": [
-        "raw",
-        "data"
-      ],
-      "phases": [
-        "standardize",
-        "placement",
-        "scrape",
-        "build",
-        "validate",
-        "publish"
-      ],
-      "dispatches": [
-        "sdv-python-reviewer",
-        "sdv-harness-triage"
-      ],
-      "hands_off_to": [
-        "sdv-ship"
       ]
     }
   ]
