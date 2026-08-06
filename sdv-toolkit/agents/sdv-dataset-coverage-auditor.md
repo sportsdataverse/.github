@@ -399,14 +399,29 @@ retrain exists" and not "present" on the strength of an unrelated cron.
        `load_nhl_player_boxscores` both carry `Source: .../releases/tag/
        nhl_player_boxscores`, same pattern for `team_boxscores`/`schedules`). A
        distinct `def` is not a distinct dataset when it's an alias of, or reads the
-       identical release tag as, an already-cataloged loader. Before calling a key
-       loader-only: read its own docstring body (the same read S1 already does for the
-       `Source:` line) for an "Alias of `<other_ident>`" sentence, or extract its
-       `Source:`/release-tag string and check whether any *already-cataloged* loader
-       (one that already matched a `REGISTRY` entry's `loader` field in step 3, or
-       resolved via 4(a)) carries the identical tag. Either hit → this key is the same
-       dataset as the one it aliases/shares a tag with, already accounted for; do not
-       add it as a second entry.
+       identical release tag as, an already-cataloged loader. **"Already-cataloged"
+       here means any loader named in a `REGISTRY` entry's `loader` field** — not only
+       one that also happens to be a `loader_schemas.yaml` key matched in step 3;
+       `REGISTRY`'s row is what makes a loader cataloged, independent of whether that
+       exact identifier also cleared step 3. Before calling a key loader-only, check
+       all three, in either alias direction — the candidate is usually the one
+       *without* the "Alias of" sentence, since the short, R-parity-named wrapper is
+       what typically earns the `REGISTRY` row (verified: `load_pwhl_schedule`, the
+       cataloged wrapper, reads "Alias of `load_pwhl_schedules`" — the *candidate* is
+       `load_pwhl_schedules`, which itself carries no "Alias of" sentence at all;
+       checking only the candidate's own docstring for "Alias of" therefore misses
+       this shape entirely):
+       - **(b.i)** the candidate's own docstring reads "Alias of `<other_ident>`", and
+         `<other_ident>` is already-cataloged.
+       - **(b.ii)** some already-cataloged loader in this league is itself defined as
+         "Alias of `<candidate>`" — read every other `def load_<league>_*` in the same
+         league file(s), and for each one already-cataloged, check whether *its*
+         docstring names the candidate.
+       - **(b.iii)** the candidate's own `Source:`/release-tag string matches the tag
+         of an already-cataloged loader.
+       Any hit among (b.i)-(b.iii) → this key is the same dataset as the one it
+       aliases/shares a tag with, already accounted for; do not add it as a second
+       entry.
      Only after both (a) and (b) come up empty is the key genuinely loader-only → a
      real surface-7 gap (no catalog row) for the `(league, dataset)` pair the key's own
      prefix-strip formula suggests (the formula is fine as a *fallback label* for a
