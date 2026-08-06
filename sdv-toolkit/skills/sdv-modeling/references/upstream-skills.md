@@ -48,7 +48,7 @@ review time.
 | Polars idiom inside sdv-py specifically — pinned version, removed-API tiers, bool-mask/lookaround-regex conventions | `sdv-python-reviewer` (`lens: polars`) | `sdv-toolkit:sdv-python-reviewer` |
 | Hot-path profiling and optimization | `python-performance-optimization` | `python-performance-optimization` |
 | Notebook workflows (Jupyter/JupyterLab/marimo/Colab) | `working-in-notebooks` | `working-in-notebooks` |
-| sklearn/XGBoost on panel-sports data — writing the fit | `sdv-sklearn` (first-party; Task 9 of this plan) | `sdv-toolkit:sdv-sklearn` (not yet shipped) |
+| sklearn/XGBoost on panel-sports data — writing the fit | `sdv-sklearn` (first-party) | `sdv-toolkit:sdv-sklearn` |
 | sklearn/XGBoost on panel-sports data — reviewing a fit already written | `sdv-model-reviewer` (`lens: sklearn-contract`) | `sdv-toolkit:sdv-model-reviewer` |
 
 **Resolution note.** The eight non-first-party rows above are unscoped
@@ -62,6 +62,7 @@ personal, machine-local directories — not a git repo, not part of any
 marketplace manifest, and not installed by `sdv-toolkit` or any other
 plugin — with no verifiable public install source; if a row doesn't resolve
 on your machine, read it as a **topic pointer** (the kind of skill to look
-for) rather than a literal invocation. `sdv-sklearn` does not exist on disk
-yet — the row ships anyway because Task 9 of this same plan creates it under
-exactly that name; do not invoke it until it lands.
+for) rather than a literal invocation. `sdv-sklearn` is the exception to
+that caveat — it's this ecosystem's own first-party skill
+(`sdv-toolkit/skills/sdv-sklearn/`), not a personal machine-local directory,
+and it's shipped.

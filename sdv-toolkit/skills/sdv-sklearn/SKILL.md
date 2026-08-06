@@ -77,9 +77,14 @@ an ungrouped split — same failure, one line quieter.
 number looks *better* than the honest one — a model that memorized which
 `game_id` it's seeing wins twice on the shuffled-in duplicate.
 `cross_val_score` on a bare estimator has the same shape one level up:
-preprocessing fit inside the scoring loop on the full fold instead of just
-the training split leaks fold statistics forward, and the CV score is
-optimistic in a way nothing flags.
+preprocessing (or feature selection) fit on the full frame *before*
+`cross_val_score` sees it, instead of fold-by-fold inside a `Pipeline`,
+leaks fold statistics — and, worse, leaks the held-out fold's own labels
+through a selection step — forward, and the CV score is optimistic in a way
+nothing flags. **The detection test for this specific sub-trap lives in
+Family C** (`assert_no_preprocessing_leak`) rather than duplicated here,
+since the mechanism is identical: a transform fit outside the CV loop vs.
+inside a `Pipeline`.
 
 **Real citation.** The codebase already does this correctly where it
 matters most — the PWHL xG cross-validation harness explicitly groups by
@@ -88,6 +93,7 @@ matters most — the PWHL xG cross-validation harness explicitly groups by
 ```python
 # dev/t5_xg_reevaluation/xg_cv_harness.py:103-111
 games = allsh["game_id"].to_numpy()
+gkf = GroupKFold(n_splits=5)
 game_ids = allsh["game_id"].unique().to_list()
 idx = np.arange(len(game_ids))
 gk_folds = []
@@ -146,22 +152,33 @@ cross-referenced, not restated here** — its assertion
 `checks.py`. What follows is the general form of the same class, plus the
 sub-traps the brief names that the λ-no-op doesn't cover.
 
-**Alpha scale depends on the λ convention the source used.** glmnet's λ and
-sklearn's `alpha` are NOT the same number for the same regularization
-strength — `alpha ≈ lambda * n_samples`, and `n_samples` means the design
-matrix's *row* count (possessions), not the player count. Copying a
-published λ straight into sklearn's `alphas=` without the conversion is
-exactly how the confirmed incident happened. This ecosystem's own oracle-fit
-variant path performs the conversion explicitly and documents *why*
-`n_samples` means possessions, not players:
+**Alpha scale depends on the λ convention the source used — and the
+conversion FACTOR isn't universal either.** `failure-modes.md` §2 states the
+CFB incident's own convention as `alpha = lambda * n` (glmnet's general
+elastic-net relationship). This ecosystem's separate, real oracle-fit RAPM
+path uses a *different* factor for the same kind of conversion:
 
 ```python
-# sportsdataverse/nba/nba_rapm_variants.py:63-90 (oracle_rapm_alphas)
-# Ryan Davis's reference RAPM: lambda_to_alpha(l, n) = l * n / 2.0
-# n = X.shape[0] (possessions, i.e. regression samples) -- NOT len(player_ids).
+# sportsdataverse/nba/nba_rapm_variants.py:53-60 (module-level constants),
+# formula documented again at :72-73 inside oracle_rapm_alphas()'s docstring
+#: Ryan Davis's oracle RAPM lambda grid (``rapm/rapm.py``), 3 points.
+#: Converted to sklearn's ``alpha`` scale per possession (sample) count via
+#: :func:`oracle_rapm_alphas` — the oracle's ``lambda_to_alpha(l, n) = l * n / 2``
+#: where ``n`` is the number of possessions (design-matrix rows), NOT players.
 ORACLE_RAPM_LAMBDAS: tuple[float, ...] = (0.01, 0.05, 0.1)
 ORACLE_RAPM_CV: int = 5
 ```
+
+`l * n / 2` here, `lambda * n` in the CFB incident — a real factor-of-2
+divergence between two cited, verified conversions, not a typo in this
+file. Both are legitimate: which one applies depends on whether the source
+library's loss function carries its own `1/2` on the RSS term (`(1/2)‖y −
+Xβ‖² + λ‖β‖²` vs. `‖y − Xβ‖² + λ‖β‖²`) — a convention detail that varies by
+implementation and is exactly why "copy the published λ" is dangerous even
+once you know sklearn's `alpha` and glmnet's `λ` aren't the same number:
+the *ratio between them* isn't fixed either. `n_samples` in both cases means
+the design matrix's *row* count (possessions), never the player count —
+that half of the convention is universal across both citations.
 
 against the plain-RAPM path's independently-tuned, non-interchangeable grid:
 
@@ -248,6 +265,51 @@ def assert_alpha_not_at_grid_edge(ridge_cv, alphas) -> None:
     )
 ```
 
+**`fit_intercept` with an already-centered design.** `RidgeCV`'s default is
+`fit_intercept=True` — correct for a raw, non-centered target (plain RAPM
+fits points-per-stint directly). It is silently *wrong* for a target that's
+already been centered by residualizing against a prior mean, the
+prior-informed RAPM pattern this ecosystem ships:
+
+```python
+# sportsdataverse/nba/nba_adj_rapm.py:77-84 (_fit_prior_ridge)
+# Residualize: y' = y - X @ prior_mean
+yprime = np.asarray(y, dtype=np.float64) - X @ prior_mean
+# Ridge on residualized problem; select λ via cross-validation
+ridge = RidgeCV(alphas=alphas, fit_intercept=False).fit(X, yprime)   # <- False, deliberately
+delta_hat = np.asarray(ridge.coef_, dtype=np.float64)
+beta_hat = prior_mean + delta_hat
+```
+
+`fit_intercept=False` here is not a stylistic choice — the docstring states
+the fitted `FitResult` carries `intercept=0.0` by contract. Fitting the same
+residualized `yprime` with the sklearn *default* `fit_intercept=True`
+instead doesn't error or warn; it finds a nonzero intercept the residualized
+target has nothing left to explain with, and that intercept silently shifts
+`beta_hat = prior_mean + intercept + delta_hat` for **every player by the
+same constant** — breaking any downstream anchoring against the prior (e.g.
+`methods.md`'s schedule-strength anchoring: "the possession-weighted sum of
+a team's player RAPM ≈ that team's KenPom rating").
+
+**Detection test — verified on a synthetic RAPM-shaped design (200 players,
+3000 possessions, noisy prior): `fit_intercept=True` on the residualized
+target picked up `intercept_=0.555`, shifting every player's final rating by
+a mean of `0.50`; `fit_intercept=False` gives exactly `intercept_=0.0`.**
+
+```python
+def assert_no_redundant_intercept(fitted_ridge, *, tol=1e-6) -> None:
+    """A RidgeCV fit on a target already centered/residualized against a
+    prior mean (nba_adj_rapm.py's y' = y - X @ mu pattern, fit_intercept=
+    False by contract) has nothing left for an intercept to explain.
+    fit_intercept=True (the sklearn default) fits one anyway -- a nonzero
+    value means the fit picked up a global shift that double-counts against
+    the prior once added back (beta_hat = prior_mean + intercept + delta)."""
+    assert abs(fitted_ridge.intercept_) < tol, (
+        f"intercept_={fitted_ridge.intercept_:.4f} on a centered/residualized "
+        "target -- refit with fit_intercept=False (see nba_adj_rapm.py:81)"
+    )
+```
+
 **A cautionary note earned by verifying this file's own tests before
 shipping them** (per the "would this test actually fire" discipline this
 skill asks of every other detection test): an earlier draft of this section
@@ -328,6 +390,48 @@ Would this fire? Yes on both — reorder a `ColumnTransformer`'s
 add a column to `all_input_columns` that no transformer entry claims and the
 second trips, exactly as `remainder="drop"` would silently behave.
 
+**Detection test — the CV-score-inflation shape directly (this is also what
+closes Family A's `cross_val_score`-leaks-preprocessing sub-trap; not
+duplicated there).** Verified on 60 rows of **pure noise** (`y` independent
+of `X`, 400 candidate features): feature selection fit on the full frame
+before `cross_val_score` reached **0.767** mean CV accuracy on data with no
+real signal, because `SelectKBest` saw every fold's labels — including the
+held-out one — before any fold was scored; the same selector wrapped inside
+a `Pipeline` (fold-only) scored **0.533**, correctly near chance:
+
+```python
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import Pipeline
+
+def assert_no_preprocessing_leak(X, y, k, cv, *, leak_margin=0.1) -> None:
+    """Feature selection (or scaling) fit on the FULL X before cross_val_score
+    leaks every held-out fold's labels into what gets selected -- the leaked
+    score doesn't just look a little better, on pure noise it can look like
+    a real, working model. Compare against the same selector fit fold-by-fold
+    inside a Pipeline."""
+    leaked_X = SelectKBest(f_classif, k=k).fit_transform(X, y)  # LEAK: sees every fold's y
+    leaked_score = cross_val_score(LogisticRegression(max_iter=1000), leaked_X, y, cv=cv).mean()
+
+    correct_pipe = Pipeline([
+        ("select", SelectKBest(f_classif, k=k)),
+        ("clf", LogisticRegression(max_iter=1000)),
+    ])
+    correct_score = cross_val_score(correct_pipe, X, y, cv=cv).mean()
+
+    assert leaked_score - correct_score < leak_margin, (
+        f"leaked-selection CV accuracy {leaked_score:.3f} beats the in-pipeline "
+        f"score {correct_score:.3f} by >= {leak_margin} -- the leak is inflating "
+        "validation performance"
+    )
+```
+
+Would this fire? Yes — verified live: on pure-noise data the assertion
+raises (`0.767 - 0.533 = 0.234 >= 0.1`); running the same comparison with
+the selector correctly wrapped in a `Pipeline` on *both* sides (no leak
+anywhere to detect) passes.
+
 ---
 
 ## D. Calibration
@@ -401,6 +505,61 @@ given `X`/`y` to meaningfully shrink `||coef||` relative to the near-MLE
 diverges from its mean predicted probability by more than `max_gap`, exactly
 the shape a good-Brier/bad-calibration model produces.
 
+**Detection test — `class_weight="balanced"` moves `predict_proba`'s own
+baseline.** Verified on a synthetic 1000-row set at true prevalence
+**7.2%**: a `class_weight="balanced"` fit's `predict_proba` averaged
+**16.3%** — the model still predicts fine per-row, it's just no longer
+telling you the true base rate if you read its mean as one; a plain fit on
+the same data averaged **7.2%**, matching to five decimal places:
+
+```python
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+def assert_balanced_weight_prior_shift_is_known(X, y, *, min_gap=0.02) -> None:
+    """class_weight='balanced' reweights the loss so predict_proba's mean no
+    longer matches the true class prevalence -- a caller who reads a base
+    rate off predict_proba (e.g. an expected-event-count downstream
+    consumer) after fitting with class_weight='balanced' gets a silently
+    wrong number. This does not mean 'balanced' is wrong to use -- only that
+    its intercept shift must be a conscious tradeoff, not a default nobody
+    accounted for."""
+    true_rate = float(np.mean(y))
+    balanced = LogisticRegression(max_iter=1000, class_weight="balanced").fit(X, y)
+    predicted_rate = float(balanced.predict_proba(X)[:, 1].mean())
+    gap = abs(predicted_rate - true_rate)
+    assert gap > min_gap, (
+        f"predict_proba mean ({predicted_rate:.3f}) still matches true prevalence "
+        f"({true_rate:.3f}) under class_weight='balanced' -- unexpected, verify y "
+        "is actually imbalanced"
+    )
+```
+
+This assertion's direction is inverted relative to every other test in this
+file, deliberately — `gap > min_gap` is the *expected*, healthy outcome
+here (the mechanism working exactly as `class_weight="balanced"` is
+documented to), and the point of the assertion is to force a caller to
+*consciously confirm* the shift is happening rather than silently assume
+`predict_proba` still reflects the true rate. Verified live on the
+imbalanced synthetic set: it **passed** (`gap=0.091 > min_gap=0.02`),
+correctly surfacing the shift. As a control, the same check run on a plain
+(non-`balanced`) fit over identical data measured `gap≈0.00001` — well
+under `min_gap`, i.e. it would correctly **fail** this assertion, which is
+the right outcome for a control: a plain fit's `predict_proba` mean really
+does still track the true rate, so an assertion built to catch the
+`"balanced"` shift should not fire on it.
+
+**Two named sub-traps ship without a test, honestly left as gaps rather
+than a synthetic stand-in:** sigmoid-vs-isotonic choice in
+`CalibratedClassifierCV`, and "`predict_proba` on a non-probabilistic
+decision-boundary classifier needs `CalibratedClassifierCV`." Both require
+a decision-boundary classifier (an SVM, or hinge-loss model) this codebase
+has zero of — `CalibratedClassifierCV` has zero call sites anywhere in
+`sportsdataverse/`, confirmed by grep — so a test here would be exercising
+sklearn's docs, not this ecosystem's code, and risks exactly the kind of
+unverified-against-anything-real assertion this file exists to avoid
+shipping.
+
 ---
 
 ## E. Unseen entities
@@ -465,27 +624,45 @@ def assert_unseen_categories_are_flagged(
     assert not all_zero.any(), f"{int(all_zero.sum())} unseen-category rows encoded as all-zero"
 
 
-def assert_not_treating_ids_as_ordinal(fit_and_predict_fn, ids, y) -> None:
+def assert_not_treating_ids_as_ordinal(fit_and_predict_fn, ids, y, *, rng=None) -> None:
     """Adversarial construction, not a bigger probe (failure-modes.md #12's
-    lesson applies here too): reverse the id-to-code mapping and require the
-    fit to be invariant. A model reading the ordinal code as a magnitude
-    gives DIFFERENT predictions when the arbitrary mapping is reversed."""
+    lesson applies here too): relabel the id-to-code mapping with a RANDOM
+    PERMUTATION and require the fit to be invariant. Reversing the mapping
+    is NOT a valid adversarial construction here -- reversal is an affine
+    transform of the code (code_rev = K-1-code_fwd), and both an ordinary
+    least-squares fit and any distance-based model (kNN) are exactly
+    invariant to an affine reparameterization of a single feature, so a
+    reversal-based test PASSES on the exact bug it claims to catch. A
+    random permutation is not affine, so it breaks that invariance and
+    correctly exposes a model reading the code as a magnitude."""
+    rng = rng if rng is not None else np.random.default_rng(0)
     codes_fwd = {v: i for i, v in enumerate(sorted(set(ids)))}
-    codes_rev = {v: i for i, v in enumerate(sorted(set(ids), reverse=True))}
+    K = len(codes_fwd)
+    perm = rng.permutation(K)
+    codes_perm = {v: int(perm[i]) for i, v in enumerate(sorted(set(ids)))}
     pred_fwd = fit_and_predict_fn(np.array([codes_fwd[i] for i in ids]), y)
-    pred_rev = fit_and_predict_fn(np.array([codes_rev[i] for i in ids]), y)
-    assert np.allclose(pred_fwd, pred_rev, atol=1e-6), (
-        "predictions changed when the id -> code mapping was reversed -- "
+    pred_perm = fit_and_predict_fn(np.array([codes_perm[i] for i in ids]), y)
+    assert np.allclose(pred_fwd, pred_perm, atol=1e-6), (
+        "predictions changed when the id -> code mapping was permuted -- "
         "the model is reading the ordinal code as a magnitude"
     )
 ```
 
-Would this fire? Yes on both — the first raises whenever any row for a
-category outside `fit_categories` encodes to all zeros (the `ignore`/
-hand-rolled behavior); the second raises for any model whose fit isn't
-invariant to an arbitrary relabeling of a categorical id, which is every
-linear or distance-based model and is specifically NOT true of a model that
-correctly treats the id as unordered categorical.
+Would this fire? Yes on both, verified live against real sklearn. The first
+raises whenever any row for a category outside `fit_categories` encodes to
+all zeros (the `ignore`/hand-rolled behavior). The second was caught wrong
+on the first pass of this file — an earlier draft used
+`sorted(set(ids), reverse=True)` instead of a permutation, and running it
+against a real `sklearn.linear_model.LinearRegression` fit on the raw
+ordinal code showed the test **passing on the exact bug it names**:
+reversal is affine, and OLS predictions are exactly invariant under an
+affine reparameterization of a single feature (as is any distance-based
+model — reversal preserves every pairwise `|a-b|`). The random-permutation
+version above was verified against the same `LinearRegression` fit (fires:
+predictions differ under a random relabeling) and against a
+relabel-invariant per-category-mean fit (passes, as it should — a model
+that genuinely treats the id as unordered categorical is invariant to any
+permutation, not just an affine one).
 
 ---
 
@@ -613,7 +790,11 @@ def assert_blas_threads_pinned_when_parallel(n_jobs) -> None:
     """sklearn's n_jobs (joblib) parallelism stacks with BLAS's own internal
     threading -- n_jobs=8 workers each spawning 8 OpenBLAS/MKL threads
     oversubscribes the box. It never errors, it just runs slower while
-    looking identical in the code."""
+    looking identical in the code. CAVEAT: this checks one specific env-var
+    lever, not actual thread counts -- it false-fires on code that pins
+    BLAS threads correctly via threadpoolctl or joblib's own
+    inner_max_num_threads instead of this env var (see Family I's fuller
+    note on the same function)."""
     if n_jobs not in (1, None):
         for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
             assert os.environ.get(var) == "1", f"n_jobs={n_jobs} without {var}=1"
@@ -645,7 +826,7 @@ as XGBoost `.ubj` (self-describing) paired with a `.card.json` sidecar, never
 a pickle:
 
 ```
-sportsdataverse/cfb/models/*.ubj   (10 files: ep_model, fd_model, fg_model,
+sportsdataverse/cfb/models/*.ubj   (9 files: ep_model, fd_model, fg_model,
                                      qbr_model, two_pt_model, wp_naive,
                                      wp_spread, xpass_model, cfb_cp_model)
 sportsdataverse/nfl/models/*.ubj   (9 files, same family)
@@ -666,6 +847,20 @@ mechanism `cfb_pbp.py`'s own comment names directly:
 # names so xgboost validates feature_names alignment.
 ```
 
+Loading all 18 shipped `.ubj` files and reading `Booster.feature_names`
+directly (not trusting a comment) shows exactly one has none embedded:
+`nfl/models/qbr_model.ubj` — every other file, including
+`nfl/models/xpass_model.ubj` (19 embedded names), carries them. The real
+call site for the actually-silent case is:
+
+```python
+# sportsdataverse/nfl/nfl_pbp.py:67-69,4878
+qbr_model = Booster({"nthread": 4})
+qbr_model.load_model(qbr_model_file)
+...
+dtest_qbr = DMatrix(pass_qbr[qbr_vars], feature_names=list(qbr_vars))
+```
+
 **Detection test.**
 
 ```python
@@ -674,9 +869,9 @@ from xgboost import Booster
 def assert_booster_matches_contract(model_path: str, expected_features: list[str]) -> None:
     """A stale or swapped .ubj (wrong file copied into models/) loads fine
     and predicts fine -- only a feature_names check catches the mismatch
-    before a wrong prediction ships. Some boosters in this ecosystem were
-    trained WITHOUT embedded feature_names (ep_wp.py:200) -- skip those,
-    they're covered by Family J's caller-side check instead."""
+    before a wrong prediction ships. nfl/models/qbr_model.ubj has no
+    embedded feature_names (verified) -- skip it, it's covered by Family
+    J's caller-side check instead."""
     booster = Booster()
     booster.load_model(model_path)
     if booster.feature_names is not None:
@@ -747,7 +942,14 @@ import os
 
 def assert_blas_threads_pinned(n_jobs) -> None:
     """See Family G -- the same check, restated here because it's a
-    performance symptom (silent slowdown) as much as a determinism one."""
+    performance symptom (silent slowdown) as much as a determinism one.
+    CAVEAT: this is a config-presence assertion, not a behavioral detector
+    -- it cannot observe actual thread oversubscription, only whether one
+    specific env-var lever was pulled. It will FALSE-FIRE on code that
+    correctly pins BLAS threads a different way (threadpoolctl.threadpool_
+    limits(1), or joblib.parallel_backend(..., inner_max_num_threads=1))
+    without setting OMP_NUM_THREADS. Treat this as a cheap default-path
+    check, not a substitute for actually timing n_jobs=1 vs n_jobs=N."""
     if n_jobs not in (1, None):
         assert os.environ.get("OMP_NUM_THREADS") == "1", f"n_jobs={n_jobs} without OMP_NUM_THREADS=1"
 ```
@@ -778,9 +980,17 @@ written against, the constraint silently pins the wrong feature.
 **Why invisible.** A `DMatrix` built with the wrong `feature_names=` order
 still has the right shape, predicts a real number for every row, and the
 booster itself only validates the order when its own embedded
-`feature_names` are present — for a `.ubj` trained *without* embedded names
-(`ep_wp.py:200` documents this happens in this ecosystem), there is nothing
-on the model side to check the caller's order against at all.
+`feature_names` are present — for a `.ubj` trained *without* embedded names,
+there is nothing on the model side to check the caller's order against at
+all. This ecosystem has exactly one such file today, verified by loading
+every shipped `.ubj` and reading `Booster.feature_names` directly:
+`nfl/models/qbr_model.ubj` (see Family H). The comment at `ep_wp.py:200`
+claims `XPASS_FEATURES`'s model was trained without embedded names, but
+loading the real `nfl/models/xpass_model.ubj` shows **19 embedded names**,
+byte-for-byte matching `XPASS_FEATURES`'s own 19 entries in order — that
+comment is itself stale on two counts (it also says "17 features," not 19)
+and is a genuine finding in `sportsdataverse/nfl/ep_wp.py`, not a citation
+error in this file (see the task report for the upstream note).
 
 **Real citation.** This is the one family where the codebase's existing
 discipline is already the fix, consistently, at every call site — zero
@@ -797,16 +1007,21 @@ order a DataFrame happened to produce:
 ```python
 # sportsdataverse/nfl/ep_wp.py:169
 # Feature order must match the trained model's ``feature_names`` exactly.
-# sportsdataverse/nfl/ep_wp.py:200
-# trained without embedded ``feature_names`` (Booster.feature_names is None), so
-# the input matrix MUST be supplied with columns in EXACTLY this order.
+
+# sportsdataverse/nfl/nfl_pbp.py:67-69,4878 -- qbr_model.ubj, verified
+# feature_names=None; this is the one call site the caller-side
+# feature_names= contract is actually load-bearing for, not ep_wp.py:200
+qbr_model = Booster({"nthread": 4})
+qbr_model.load_model(qbr_model_file)
+dtest_qbr = DMatrix(pass_qbr[qbr_vars], feature_names=list(qbr_vars))
 ```
 
 For models trained *with* embedded `feature_names`, xgboost itself raises a
 real `ValueError` on a mismatch — that half of the contract is already loud,
-not silent. For models trained *without* them (the `ep_wp.py:200` case), the
-caller's own constant list is the only source of truth, with nothing
-verifying it against the trainer. That constant is provably correct today —
+not silent. For models trained *without* them (`qbr_model.ubj`, the one
+verified real instance), the caller's own constant list (`qbr_vars`) is the
+only source of truth, with nothing verifying it against the trainer.
+`EP_FEATURES` is a *different* constant, provably correct today —
 `cfb/model_vars.py:80-89`'s `ep_final_names` matches `cfb/models/
 ep_model.card.json`'s `"features"` list (`TimeSecsRem`, `yards_to_goal`,
 `distance`, `down_1`..`down_4`, `pos_score_diff_start`) exactly.
@@ -817,9 +1032,9 @@ ep_model.card.json`'s `"features"` list (`TimeSecsRem`, `yards_to_goal`,
 def assert_feature_order_matches_training(booster, dmatrix_feature_names: list[str]) -> None:
     """If the .ubj carries embedded feature_names, xgboost itself already
     raises on a mismatch. The genuinely silent case is a booster trained
-    WITHOUT embedded names (ep_wp.py:200) -- there, the caller's own
-    constant list is the only contract, so pin it against the model card
-    rather than trusting it re-read here."""
+    WITHOUT embedded names (verified: nfl/models/qbr_model.ubj) -- there,
+    the caller's own constant list is the only contract, so pin it against
+    the model card rather than trusting it re-read here."""
     if booster.feature_names is not None:
         assert booster.feature_names == dmatrix_feature_names, (
             "xgboost would already raise on this -- unreachable if the .ubj is embedded"
@@ -841,6 +1056,19 @@ Would this fire? Yes — reorder or rename anything in `ep_final_names`
 relative to the shipped `ep_model.card.json`'s `features` list and
 `test_ep_features_match_model_card` fails immediately; as written today
 against the real files it passes, because the two are confirmed identical.
+
+**Two named sub-traps ship without a test, honestly left as gaps:**
+early-stopping needing a genuine untouched holdout (not a CV fold reused for
+both hyperparameter selection and the stopping decision), and
+`monotone_constraints=` binding to feature position rather than name.
+Neither has a real call site in this codebase to ground a test against —
+`monotone_constraints` appears zero times in `sportsdataverse/`, and no
+early-stopping (`early_stopping_rounds=`) call site exists either — and a
+trustworthy version of either test requires actually training an XGBoost
+model with the constraint or the stopping callback wired up, which is
+expensive enough to get subtly wrong that it risks the exact defect class
+this file is built to avoid (see Family B's discarded-draft note above for
+what that looks like when it isn't caught before shipping).
 
 ---
 
