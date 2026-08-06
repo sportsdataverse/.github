@@ -50,14 +50,6 @@
       ]
     },
     {
-      "name": "sdv-build-data",
-      "kind": "skill",
-      "purpose": "Use when building or extending a dataset in an SDV `-data` repo (nfl-data, cfb-data, hoopR-*-data, wehoop-*-data, fastRhockey-*-data) \u2014 the ingest \u2192 build \u2192 validate \u2192 publish pipeline that reads the sibling `-raw` repo tree, writes tidy parquet, and publishes via git commit + per-file gh release upload.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-capture-endpoint",
       "kind": "skill",
       "purpose": "Hardened, provider-agnostic single-body capture for ESPN/Fox/CBS \u2014 structured id discovery, error-envelope skip, atomic writes.",
@@ -93,14 +85,6 @@
       "name": "sdv-new-example-notebook",
       "kind": "skill",
       "purpose": "Scaffold a per-sport intro Jupyter notebook (examples/notebooks/0X_<sport>_intro.ipynb).",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "sdv-pipeline-layout",
-      "kind": "skill",
-      "purpose": "Use BEFORE creating any new script in an SDV `-raw`/`-data`/`-db` repo, and when naming/placing pipeline stages, ops tools, one-offs, or model training/publish code \u2014 the placement-decides-lifecycle rules, canonical stage numbering, idempotency contract, and model-registry requirements from the 2026-08-02 pipeline audit.",
       "archetypes": [
         "all"
       ]
@@ -154,14 +138,6 @@
       ]
     },
     {
-      "name": "sdv-scrape-job",
-      "kind": "skill",
-      "purpose": "Use when setting up any scraping/backfill job expected to run more than ~3 minutes (ESPN, stats.nba.com/wnba.com, stats.ncaa.org, Savant) \u2014 generates a user-executable runbook script with unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, saving into the owning SDV `-raw` repo's canonical committed tree (not scratch dirs).",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-ship",
       "kind": "skill",
       "purpose": "Land a change: regen docs, preflight, commit, push, bot-triage, codegen gate, merge, stack retarget, release.",
@@ -187,14 +163,6 @@
         "sdv-python-reviewer",
         "sdv-r-reviewer",
         "sdv-docs-reviewer"
-      ]
-    },
-    {
-      "name": "sdv-standardize-repo",
-      "kind": "skill",
-      "purpose": "Use when bringing an SDV `-raw` or `-data` repo onto the standard template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, purges, R/Python dual-pipeline parity) \u2014 the executed sequence from pilots 1\u20136 (wehoop-wbb pair, hoopR-nba-stats pair, wehoop-wnba-stats pair) with every landmine those pilots hit.",
-      "archetypes": [
-        "all"
       ]
     },
     {
@@ -299,6 +267,30 @@
       "purpose": "Use to review SportsDataverse R package documentation \u2014 checks roxygen completeness (@param/@return table/@examples) and _pkgdown.yml reference coverage.",
       "archetypes": [
         "all"
+      ]
+    },
+    {
+      "name": "sdv-data-pipeline",
+      "kind": "skill",
+      "purpose": "Producer lifecycle for -raw/-data repos: standardize, placement, scrape, build, validate, publish.",
+      "archetypes": [
+        "raw",
+        "data"
+      ],
+      "phases": [
+        "standardize",
+        "placement",
+        "scrape",
+        "build",
+        "validate",
+        "publish"
+      ],
+      "dispatches": [
+        "sdv-python-reviewer",
+        "sdv-harness-triage"
+      ],
+      "hands_off_to": [
+        "sdv-ship"
       ]
     }
   ]
