@@ -1,5 +1,12 @@
 # MBB / WBB
 
+Shorthand: `roadmap.md` = `ClaudeCowork/notes/model-build-roadmap.md` (the
+25-spine build roadmap this file cites throughout, verified against its
+L12/L14/L20-26/L129 content below — **not** the same-named shorthand in
+`prior-art.md`, which points at the unrelated six-workstream
+`ClaudeCowork/plans/2026-07-17-sdv-model-roadmap.md`; don't conflate the
+two). `audit.md` = see `data-sources.md:15`.
+
 25-spine roadmap Tier 1 (`roadmap.md` L20-26): T1.0 Prediction & Tournament,
 T1.1 Player-Value & Projection, T1.2 Shot Quality — all **specced** at
 compile time (`roadmap.md` L12 status legend, ✅ = "spec+plan written"; L14

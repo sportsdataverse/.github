@@ -18,7 +18,7 @@
 
 **Decision surfaces** (`nfl_fourth_down.py`) — an nfl4th port: `get_go_wp`/`get_fg_wp`/`get_punt_wp` (punt uses a bundled `punt_data.parquet` landing distribution, prob-weighted over the receiving team's ensuing-drive WP); `fourth_down_recommendation` is the max-WP choice among go/punt/field-goal, `wp_added = 100*(go_wp - max(fg_wp, punt_wp))` in points.
 
-**QBR** — `qbr_model.ubj` is bundled but ships **no `.card.json`**, unlike all 7 of CFB's model artifacts (`sportsdataverse/cfb/models/*.card.json` exist; the same glob under `nfl/models/` is empty). Combined with "training window unknown, no script found anywhere" (`data-sources.md` §1c), QBR has no recorded provenance at all.
+**QBR** — `qbr_model.ubj` is bundled but ships **no `.card.json`**, unlike 7 of CFB's 9 `.ubj` boosters (`sportsdataverse/cfb/models/*.card.json`: 7 files exist there; the same glob under `nfl/models/` is empty; CFB's own remaining 2 boosters, `fd_model.ubj`/`cfb_cp_model.ubj`, also ship with no card — see `sports/cfb.md` §1, not "all of CFB"). Combined with "training window unknown, no script found anywhere" (`data-sources.md` §1c), QBR has no recorded provenance at all.
 
 **Simulation** (`nfl_simulations.py`) — a faithful vectorized port of `nflseedR::nfl_simulations()` + `nflseedR_compute_results` (MIT), full NFL tiebreakers, round-by-round playoffs with reseeding, draft order; seeded via a `numpy` RNG (`seed` param), one vectorized pass instead of nflseedR's `furrr`-chunked parallelism.
 

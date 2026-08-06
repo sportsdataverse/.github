@@ -98,14 +98,15 @@ matters most — the PWHL xG cross-validation harness explicitly groups by
 
 ```python
 # dev/t5_xg_reevaluation/xg_cv_harness.py:103-111
-games = allsh["game_id"].to_numpy()
-gkf = GroupKFold(n_splits=5)
-game_ids = allsh["game_id"].unique().to_list()
-idx = np.arange(len(game_ids))
-gk_folds = []
-for tr_i, te_i in GroupKFold(n_splits=5).split(idx, groups=idx):
-    gk_folds.append(([game_ids[i] for i in tr_i], [game_ids[i] for i in te_i]))
-_report("GroupKFold(5) by game", _collect(pbp, gk_folds))
+    # GroupKFold(5) grouped by game_id
+    games = allsh["game_id"].to_numpy()
+    gkf = GroupKFold(n_splits=5)
+    game_ids = allsh["game_id"].unique().to_list()
+    idx = np.arange(len(game_ids))
+    gk_folds = []
+    for tr_i, te_i in GroupKFold(n_splits=5).split(idx, groups=idx):
+        gk_folds.append(([game_ids[i] for i in tr_i], [game_ids[i] for i in te_i]))
+    _report("GroupKFold(5) by game", _collect(pbp, gk_folds))
 ```
 
 The season-ordered counterpart is `nba_model_validation.py:927 walk_forward`
@@ -192,8 +193,10 @@ against the plain-RAPM path's independently-tuned, non-interchangeable grid:
 
 ```python
 # sportsdataverse/nba/nba_rapm.py:22-23,236
-DEFAULT_RAPM_ALPHAS: np.ndarray = np.logspace(2, 5, 8)   # 100 .. 100,000
-model = RidgeCV(alphas=alphas, fit_intercept=True)        # sparse csr_matrix, solver="auto"
+#: Alpha grid for RidgeCV (logspace 100 … 100 000, 8 points).
+DEFAULT_RAPM_ALPHAS: np.ndarray = np.logspace(2, 5, 8)
+...
+model = RidgeCV(alphas=alphas, fit_intercept=True)
 ```
 
 The module docstring for the variants file is explicit that the two grids are
@@ -220,15 +223,23 @@ wrong even with a careful, existing test suite watching it.
 **Solver behavior on sparse matrices is a Family-B/Family-I boundary, not a
 silent Family-B bug by itself.** `Ridge(solver="cholesky")`/`"svd"` on a
 sparse `X` *raises* (`check_array(accept_sparse=False)` for those solvers) —
-loud, not the class this skill catalogs. `RidgeCV`'s default `solver="auto"`
-picks a sparse-safe path, which is why `nba_rapm.py:235`'s own comment notes
-it explicitly: `# RidgeCV — accepts sparse csr_matrix with default
-solver="auto"`. The actually-silent version is `sag`/`saga`: they're
-iterative and stochastic, and an under-iterated fit returns a plausible,
-wrong coefficient vector without raising — that's Family F's
-`ConvergenceWarning`/`n_iter_` trap wearing a ridge-specific hat; the
-detection test below is the ridge-specific form, and cross-references
-Family F for the general one.
+loud, not the class this skill catalogs. **`RidgeCV` has no `solver=`
+parameter at all** — verified `'solver' in
+signature(RidgeCV.__init__).parameters` is `False` on sklearn 1.9.0; it
+still handles sparse `X` fine regardless (verified live: a sparse
+`csr_matrix` fits under both `RidgeCV`'s default `cv=None` generalized-CV
+path and an explicit `cv=<int>` path), it just has no solver knob to pick
+one. `nba_rapm.py:235`'s own comment — `# Fit RidgeCV — accepts sparse
+csr_matrix with default solver="auto"` — is itself imprecise on that one
+point (there is no `solver=` default to name), though the substantive claim
+it's making, that `RidgeCV` accepts sparse input, is correct. The actually-
+silent version of this trap lives one level down, on the plain `Ridge` a
+caller reaches for instead of `RidgeCV` when `alpha` is fixed rather than
+cross-validated: `Ridge(solver="sag"/"saga")` is iterative and stochastic,
+and an under-iterated fit returns a plausible, wrong coefficient vector
+without raising — that's Family F's `ConvergenceWarning`/`n_iter_` trap
+wearing a ridge-specific hat; the detection test below is the ridge-specific
+form, and cross-references Family F for the general one.
 
 **Detection test — sub-convergence solver check (a general form of the
 λ-no-op assertion, applicable to any ridge fit, not restated from the
@@ -265,13 +276,34 @@ actually bracketed anything:
 def assert_alpha_not_at_grid_edge(ridge_cv, alphas) -> None:
     """RidgeCV.alpha_ landing on min(alphas) or max(alphas) means the grid
     didn't bracket the true optimum -- the 'cross-validated' choice is only
-    as good as the narrowest or widest value someone hardcoded."""
+    as good as the narrowest or widest value someone hardcoded.
+
+    Scope: only meaningful for a WIDE, exploratory grid built to search for
+    an interior optimum. It is NOT a general-purpose ridge-fit check -- a
+    narrow, independently-tuned production grid can legitimately select its
+    own edge value with no bug present. Do not run this against
+    `nba_rapm.py`'s shipped `np.logspace(2, 5, 8)` grid (or any grid like
+    it, already narrowed by prior tuning); see 'Would this fire?' below."""
     chosen = ridge_cv.alpha_
     lo, hi = min(alphas), max(alphas)
     assert chosen not in (lo, hi), (
         f"RidgeCV selected alpha={chosen} at the edge of the searched grid [{lo}, {hi}]"
     )
 ```
+
+Would this fire? Depends on the grid's intent, by design, verified live in
+both directions plus the false-alarm case this scope note exists to avoid:
+on a noisy RAPM-shaped design (4000 rows, 150 features), a wide exploratory
+grid (`np.logspace(-2, 6, 20)`) selects an interior `alpha_=61.6` and
+passes; narrowing that same grid to deliberately miss the optimum's region
+(`np.logspace(-2, 1, 5)`) selects the edge (`alpha_=10.0`) and fires. Run
+against this file's own reference config instead — `nba_rapm.py`'s shipped
+`np.logspace(2, 5, 8)` grid on a realistic RAPM design — and it fires on
+`alpha_=100.0`, exactly the false alarm the scope note warns about: that
+selection is the same one `:303-304` above treats as a normal,
+correctly-regularized fit, not a bug. Use this test only on a grid you
+built to search for an interior optimum, never against an already-tuned
+production grid.
 
 **`fit_intercept` with an already-centered design.** `RidgeCV`'s default is
 `fit_intercept=True` — correct for a raw, non-centered target (plain RAPM
@@ -285,6 +317,7 @@ prior-informed RAPM pattern this ecosystem ships:
 yprime = np.asarray(y, dtype=np.float64) - X @ prior_mean
 # Ridge on residualized problem; select λ via cross-validation
 ridge = RidgeCV(alphas=alphas, fit_intercept=False).fit(X, yprime)   # <- False, deliberately
+lam = float(ridge.alpha_)
 delta_hat = np.asarray(ridge.coef_, dtype=np.float64)
 beta_hat = prior_mean + delta_hat
 ```
@@ -677,12 +710,27 @@ def assert_not_treating_ids_as_ordinal(fit_and_predict_fn, ids, y, *, rng=None) 
     least-squares fit and any distance-based model (kNN) are exactly
     invariant to an affine reparameterization of a single feature, so a
     reversal-based test PASSES on the exact bug it claims to catch. A
-    random permutation is not affine, so it breaks that invariance and
-    correctly exposes a model reading the code as a magnitude."""
+    random permutation is not affine in general, so it breaks that
+    invariance and correctly exposes a model reading the code as a
+    magnitude -- EXCEPT at K=2, where the only non-identity permutation
+    IS the reversal (there are only two permutations of two elements:
+    identity and the swap), so it inherits the exact same blind spot one
+    layer down. rng.permutation(K) can also land on the identity by chance
+    at any K, silently no-op'ing the whole test. Both are handled below:
+    reject an identity draw at any K, and refuse to run at all below K=3,
+    where no non-affine permutation exists to construct."""
     rng = rng if rng is not None else np.random.default_rng(0)
     codes_fwd = {v: i for i, v in enumerate(sorted(set(ids)))}
     K = len(codes_fwd)
+    assert K >= 3, (
+        f"K={K} categories -- below K=3 every permutation of the codes is "
+        "affine (K=2 has only the identity and a full reversal), so no "
+        "permutation exists here that isn't already covered by the "
+        "reversal blind spot this test exists to avoid; this test needs K>=3"
+    )
     perm = rng.permutation(K)
+    while np.array_equal(perm, np.arange(K)):  # reject an identity draw
+        perm = rng.permutation(K)
     codes_perm = {v: int(perm[i]) for i, v in enumerate(sorted(set(ids)))}
     pred_fwd = fit_and_predict_fn(np.array([codes_fwd[i] for i in ids]), y)
     pred_perm = fit_and_predict_fn(np.array([codes_perm[i] for i in ids]), y)
@@ -695,18 +743,34 @@ def assert_not_treating_ids_as_ordinal(fit_and_predict_fn, ids, y, *, rng=None) 
 Would this fire? Yes on both, verified live against real sklearn. The first
 raises whenever any row for a category outside `fit_categories` encodes to
 all zeros (the `ignore`/hand-rolled behavior). The second was caught wrong
-on the first pass of this file — an earlier draft used
-`sorted(set(ids), reverse=True)` instead of a permutation, and running it
-against a real `sklearn.linear_model.LinearRegression` fit on the raw
-ordinal code showed the test **passing on the exact bug it names**:
-reversal is affine, and OLS predictions are exactly invariant under an
-affine reparameterization of a single feature (as is any distance-based
-model — reversal preserves every pairwise `|a-b|`). The random-permutation
-version above was verified against the same `LinearRegression` fit (fires:
-predictions differ under a random relabeling) and against a
-relabel-invariant per-category-mean fit (passes, as it should — a model
-that genuinely treats the id as unordered categorical is invariant to any
-permutation, not just an affine one).
+*twice*, at two different layers, each verified live before shipping this
+version:
+
+1. An earlier draft used `sorted(set(ids), reverse=True)` instead of a
+   permutation, and running it against a real
+   `sklearn.linear_model.LinearRegression` fit on the raw ordinal code
+   showed the test **passing on the exact bug it names**: reversal is
+   affine, and OLS predictions are exactly invariant under an affine
+   reparameterization of a single feature (as is any distance-based model —
+   reversal preserves every pairwise `|a-b|`).
+2. Switching to `rng.permutation(K)` looked like a fix, but with
+   `rng = np.random.default_rng(0)` (this function's own default),
+   `rng.permutation(2)` deterministically draws `[0, 1]` — the identity —
+   so at exactly `K=2` categories the "random" permutation silently no-ops
+   every single run. Worse: even a rejected-identity draw at `K=2` can only
+   ever land on `[1, 0]`, the full reversal — the one non-identity
+   permutation of two elements *is* the reversal case (1) already proved
+   affine-invariant, so no fix that stays at `K=2` can close this gap.
+   Verified live on `LinearRegression`: at `K=2` the (unguarded) test passes
+   on the ordinal-magnitude bug every time; at `K=3` and `K=4` it fires
+   correctly (`predictions changed when the id -> code mapping was
+   permuted`) both with the identity-draw at seed 0
+   (`rng.permutation(3) == [2, 0, 1]`, already non-identity) and after the
+   reject-identity loop. The `K >= 3` guard above raises cleanly on the
+   `K=2` case instead of silently passing on it. Against a
+   relabel-invariant per-category-mean fit, all three of `K=2/3/4` pass, as
+   they should — a model that genuinely treats the id as unordered
+   categorical is invariant to any permutation, not just an affine one.
 
 ---
 
@@ -846,9 +910,11 @@ def assert_blas_threads_pinned_when_parallel(n_jobs) -> None:
 
 Would this fire? Yes — the first raises whenever `fit_fn` has any
 un-seeded randomness reachable from identical inputs (swap in a
-`RidgeCV(solver="saga")` without a fixed `random_state` and it diverges
-between calls); `GaussianMixture(random_state=seed)` at
-`mlb_pitch_classify.py:68` passes it by construction.
+`Ridge(solver="saga")` without a fixed `random_state` and it diverges
+between calls — verified live: two fits over identical data differ, `Ridge`
+is the one with a `solver=` knob, `RidgeCV` has none, see Family B);
+`GaussianMixture(random_state=seed)` at `mlb_pitch_classify.py:68` passes it
+by construction.
 
 ---
 
@@ -899,6 +965,7 @@ call site for the actually-silent case is:
 
 ```python
 # sportsdataverse/nfl/nfl_pbp.py:67-69,4878
+qbr_model_file = _nfl_resource_filename("sportsdataverse", "nfl/models/qbr_model.ubj")
 qbr_model = Booster({"nthread": 4})
 qbr_model.load_model(qbr_model_file)
 ...
@@ -1055,8 +1122,10 @@ order a DataFrame happened to produce:
 # sportsdataverse/nfl/nfl_pbp.py:67-69,4878 -- qbr_model.ubj, verified
 # feature_names=None; this is the one call site the caller-side
 # feature_names= contract is actually load-bearing for, not ep_wp.py:200
+qbr_model_file = _nfl_resource_filename("sportsdataverse", "nfl/models/qbr_model.ubj")
 qbr_model = Booster({"nthread": 4})
 qbr_model.load_model(qbr_model_file)
+...  # :70-4877 elided (4,809 lines) -- the rest of NFLPlayProcess, unrelated to qbr_model
 dtest_qbr = DMatrix(pass_qbr[qbr_vars], feature_names=list(qbr_vars))
 ```
 
