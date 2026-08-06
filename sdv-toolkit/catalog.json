@@ -120,33 +120,9 @@
       ]
     },
     {
-      "name": "docstring-auditor",
-      "kind": "agent",
-      "purpose": "Use to audit Python docstring completeness/quality in sdv-py \u2014 flags public callables missing Google-style napoleon Args/Returns/Raises/Example or See-Also blocks, and any raw >>> doctest prompts.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "espn-parser-contract-reviewer",
-      "kind": "agent",
-      "purpose": "Use after adding/editing an ESPN parser in sdv-py to verify the universal parser contract and ENDPOINT_PARSERS coverage.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "extraction-semantics-reviewer",
       "kind": "agent",
       "purpose": "Use to triage an `extraction` WARN finding from the sdv-py validation harness \u2014 judge whether a low-coverage extracted column is a real parser bug or a legitimately-null field for that play type.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "http-layer-reviewer",
-      "kind": "agent",
-      "purpose": "Use when changing sdv-py network code (dl_utils.download, capture/crawl tooling) to verify the retry/pooling/backoff/bounding conventions.",
       "archetypes": [
         "all"
       ]
@@ -171,14 +147,6 @@
       "name": "parity-divergence-reviewer",
       "kind": "agent",
       "purpose": "Use to triage a `numeric_parity` WARN finding from the sdv-py validation harness \u2014 judge whether a column's correlation below its oracle floor is a real model/producer regression or a documented, acceptable divergence.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "polars-1x-reviewer",
-      "kind": "agent",
-      "purpose": "Use after writing/editing polars code in sdv-py to keep it current with the installed polars (lockfile resolves to 1.42; pin >=1.0,<2.0; review floor 1.2+).",
       "archetypes": [
         "all"
       ]
@@ -261,6 +229,23 @@
       "hands_off_to": [
         "sdv-regen-docs",
         "sdv-ship"
+      ]
+    },
+    {
+      "name": "sdv-python-reviewer",
+      "kind": "agent",
+      "purpose": "Python review by lens: polars | http | parser-contract | docstring.",
+      "archetypes": [
+        "sdv-py",
+        "raw",
+        "data"
+      ],
+      "lenses": [
+        "polars",
+        "http",
+        "parser-contract",
+        "docstring",
+        "all"
       ]
     }
   ]
