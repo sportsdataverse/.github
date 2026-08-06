@@ -16,13 +16,12 @@ no CI, no package manifest.
   - `.claude-plugin/plugin.json` — plugin manifest (wires `hooks` + `mcpServers`).
   - `.mcp.json` — MCP servers (`context7`, HTTP).
   - `hooks/hooks.json` — Pre/PostToolUse guards (see Conventions).
-  - `agents/*.md` — 7 review agents (returns-table-auditor, docstring-auditor,
-    provider-shape-mapper, polars-1x-reviewer, espn-parser-contract-reviewer,
-    http-layer-reviewer, roxygen-doc-reviewer).
-  - `skills/<name>/SKILL.md` — 12 skills (add-provider-source, add-espn-league,
-    add-sport-parser, add-fox-league, add-cbs-league, add-yahoo-source,
-    gen-returns-schema, capture-endpoint, regen-docs, new-example-notebook,
-    sdv-r-returns-table, sdv-pkgdown-personalize).
+  - `agents/*.md` — 7 review agents (sdv-python-reviewer, sdv-r-reviewer,
+    sdv-model-reviewer, sdv-parity-reviewer, sdv-docs-reviewer,
+    sdv-harness-triage, sdv-issue-triage).
+  - `skills/<name>/SKILL.md` — 11 skills (sdv-guide, sdv-ship, sdv-port,
+    sdv-data-pipeline, sdv-model-spine, sdv-add-source, sdv-document,
+    sdv-regen-docs, sdv-conventions, sdv-learn, sdv-triage).
 
 ## Conventions
 
