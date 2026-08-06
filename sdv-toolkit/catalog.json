@@ -289,6 +289,26 @@
       "archetypes": [
         "all"
       ]
+    },
+    {
+      "name": "sdv-triage",
+      "kind": "skill",
+      "purpose": "Sweep open issues and PRs across the org, classify each, act on tiers 0-1, propose tiers 2-4.",
+      "archetypes": [
+        "all"
+      ],
+      "phases": [
+        "auth-check",
+        "sweep",
+        "classify",
+        "tier-0-1-act",
+        "propose"
+      ],
+      "dispatches": [
+        "sdv-issue-triage",
+        "sdv-python-reviewer",
+        "sdv-r-reviewer"
+      ]
     }
   ]
 }
