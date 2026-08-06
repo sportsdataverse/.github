@@ -115,7 +115,7 @@ actually fit on, independent of what the underlying dataset now covers:
 
 | League | Regime | Floor / window | Note |
 |---|---|---|---|
-| CFB | full-history + era one-hots | 2004–2025 (all 12 `sportsdataverse/cfb/models/*` artifacts) | no season-floor constant in code — `--seasons=None` defaults to everything on disk; `training_seasons: null` on every model card is prose-only provenance |
+| CFB | full-history + era one-hots | 2004–2025 (all 12 `sportsdataverse/cfb/models/*` artifacts) | no season-floor constant in code — `--seasons=None` defaults to everything on disk; **as of the 0.0.75 retrain (2026-08-02), all 7 `.card.json` cards read `training_seasons: [2004, 2025]`, `trained_date: "2026-08-02"` — no longer prose-only provenance. See `sports/cfb.md` §1 for the supersession note and the two boosters (`fd_model.ubj`/`cfb_cp_model.ubj`) that still ship with no card at all.** |
 | NFL | full-history + era one-hots | 1999–2025 | departs from upstream nflfastR/nfl4th narrower windows on purpose; `qbr_model.ubj`'s training window is **unknown, no script found anywhere** |
 | NHL xG (`xg_model_5v5`/`_st`) | full-history + era one-hots | 2009-10–2025-26 (partial) | coordinate floor ~2007-08; a stale R docstring still says "2010–2024" |
 | MBB/WBB in-game WP | oracle-season fit | 2023 only | leakage separation from the 2024 gate season; could train 2006–2026 (MBB) / 2008–2026 (WBB) today |

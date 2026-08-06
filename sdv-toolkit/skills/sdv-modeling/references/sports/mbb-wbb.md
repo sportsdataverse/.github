@@ -1,12 +1,16 @@
 # MBB / WBB
 
 25-spine roadmap Tier 1 (`roadmap.md` L20-26): T1.0 Prediction & Tournament,
-T1.1 Player-Value & Projection, T1.2 Shot Quality — all done at compile time
-(`roadmap.md` L14, "all 25 spines ... BUILD-OUT COMPLETE").
+T1.1 Player-Value & Projection, T1.2 Shot Quality — all **specced** at
+compile time (`roadmap.md` L12 status legend, ✅ = "spec+plan written"; L14
+"all 25 spines... have a spec+plan pair on disk... **Nothing committed to
+any repo**"). What's actually shipped is verified below against the code,
+not against this roadmap's ✅ marks.
 
 ## 1. Models and where they live
 
-- **Rating engine (T1.0, model ①):** `mbb_team_ratings.py` calls `_common/ratings.py::iterative_opponent_adjust` — a **KenPom-style fixed-point solver**; `roadmap.md` L129 says it's shared with NBA and *mathematically distinct* from the CFB/NFL ridge family (`opponent_adjusted_ridge`), "don't force-unify." Produces AdjO/AdjD/AdjEM (`mbb_team_ratings.py:1-16`).
+- **Rating engine (T1.0, model ①):** `mbb_team_ratings.py:25` imports `_common/ratings.py::iterative_opponent_adjust` — a **KenPom-style fixed-point solver**; `roadmap.md` L129 says it's shared with NBA and *mathematically distinct* from the CFB/NFL ridge family (`opponent_adjusted_ridge`), "don't force-unify." Produces AdjO/AdjD/AdjEM.
+- **Bracketology + season sim (T1.0 phase 5/6, also shipped):** `mbb_bracketology.py` (resume-score seeding + at-large selection, blending ① with SoS/WAB) and `mbb_season_sim.py` (Monte Carlo sampling `margin ~ Normal(exp_margin, margin_sd)` off the Phase-2 closed form, seeded `numpy.random.default_rng`); `wbb_bracketology.py`/`wbb_season_sim.py` mirror both.
 - **A second, different KenPom-style solver** feeds player-value: `mbb_ncaa_strength.py::run_iterative_adjustment_with_hca` (`:611-637`, ported from hoop-explorer) is a Jacobi iteration — `adj_game = raw_game * (league / (opp_adj ± hca))`, re-estimating HCA from home/away possession-imbalance residuals each sweep, over per-game shooting rates — not the same code as the team-efficiency solver above. `data-sources.md` §4 cites this file (`:1,16,621`) as the ecosystem's fixed-point-solver reference since real KenPom has no captured corpus (paywalled).
 - **Prediction stack (T1.0 phase 2):** `mbb_game_predict.py` — closed-form pregame margin/win-prob/total from the ratings above, plus a bundled xgboost/logistic in-game WP artifact (`:1-39`). League-agnostic; HFA/sigma/tempo come from `mbb_prediction_constants.py`'s `LeagueConstants` table.
 - **Player-value spine (T1.1):** `mbb_rapm.py`/`mbb_box_bpm.py` + `mbb_ratings.py`'s individual O/D rating (Dean-Oliver ORtg/DRtg, ported from hoop-explorer, `:1-16`) feed the RAPM prior — see `methods.md`'s Possession-engines section for the schedule-strength anchoring + freshman-prior mechanism (cross-ref, not re-derived here).

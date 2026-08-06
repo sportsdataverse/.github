@@ -1,8 +1,9 @@
 # MLB — pitching, hitting, fielding, game-state
 
 **Correction to this file's own brief:** it describes MLB as "design-only,
-never built." That's wrong — `sportsdataverse/mlb/` ships ~30 modules under
-a T6.1–T6.4 program, two committed xgboost artifacts, and a publish-scoping
+never built." That's wrong — `sportsdataverse/mlb/` holds 42 `.py` files, 20
+of them the T6.1–T6.4 model modules in the table below (16 carry an explicit
+`T6.x` docstring tag), two committed xgboost artifacts, and a publish-scoping
 pass naming exact tag composition + live gate values (`mlb-scoping.md`);
 `soccer.md` is actually design-only, don't conflate the two. Shorthand:
 `pitching-design.md` = `ClaudeCowork/specs/2026-07-07-mlb-pitching-design.md`;

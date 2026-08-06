@@ -1,6 +1,6 @@
 # Soccer — designed, not built
 
-**Designed, not built.** `sportsdataverse/soccer/` ships exactly two files — `soccer_espn_ext.py` (112 ESPN wrappers) + `soccer_espn_parsers.py` — no `soccer_xg.py`/`soccer_player_rating.py`/`soccer_possession_value.py`/`models/` exist (verified by directory listing). `mlb.md` in this directory is the sport whose parallel "design-only" brief claim turned out false — soccer is where it's actually true. Shorthand: `plan.md` = `ClaudeCowork/plans/2026-07-07-soccer-models.md`; `design.md` = `ClaudeCowork/specs/2026-07-07-soccer-models-design.md`.
+**Designed, not built.** `sportsdataverse/soccer/` has no model modules and no `models/` directory — only `soccer_espn_ext.py` (112 ESPN wrappers), `soccer_espn_parsers.py`, `__init__.py`, and 12 per-league subpackages (ESPN scraping, not modeling). No `soccer_xg.py`/`soccer_player_rating.py`/`soccer_possession_value.py` exist (verified by directory listing). `mlb.md` in this directory is the sport whose parallel "design-only" brief claim turned out false — soccer is where it's actually true. Shorthand: `plan.md` = `ClaudeCowork/plans/2026-07-07-soccer-models.md`; `design.md` = `ClaudeCowork/specs/2026-07-07-soccer-models-design.md`.
 
 ## The designed spine (all four: designed, not shipped)
 
