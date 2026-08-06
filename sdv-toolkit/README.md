@@ -30,6 +30,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 
 | Agent | What it reviews |
 |---|---|
+| `sdv-dataset-coverage-auditor` | Read-only: report which of the 12 dataset propagation surfaces are missing, per dataset or across the inventory. |
 | `sdv-docs-reviewer` | Audit or produce the three-column returns table, Python or R; map a provider payload into documentation. |
 | `sdv-harness-triage` | Triage a validation-harness WARN by finding_type and emit a Verdict. |
 | `sdv-issue-triage` | Classify one open issue or PR into one of six verdicts, read-only, with evidence. |

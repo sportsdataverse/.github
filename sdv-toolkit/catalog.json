@@ -373,6 +373,15 @@
       "hands_off_to": [
         "sdv-ship"
       ]
+    },
+    {
+      "name": "sdv-dataset-coverage-auditor",
+      "kind": "agent",
+      "purpose": "Read-only: report which of the 12 dataset propagation surfaces are missing, per dataset or across the inventory.",
+      "archetypes": [
+        "data",
+        "sdv-py"
+      ]
     }
   ]
 }
