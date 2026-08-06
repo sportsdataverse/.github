@@ -137,8 +137,9 @@ Total empty descriptions: N
 After the tables, emit a **Fill Order** — a flat ranked list of the 10 most impactful
 files to fix first (largest absolute empty-description count wins ties). For each,
 give the file path relative to the repo root, the count, and the suggested next action
-(e.g. "run `sdv-gen-returns-schema` skill against live endpoint + back-fill", or "add
-descriptions to `manual_column_descriptions.yaml`, never to the schema file directly").
+(e.g. "run `/sdv-document` Phase 1 (`returns-schema-py`) against the live endpoint +
+back-fill", or "add descriptions to `manual_column_descriptions.yaml`, never to the
+schema file directly").
 
 Never suggest edits directly. Your audit output is analysis only.
 

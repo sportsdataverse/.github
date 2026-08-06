@@ -144,6 +144,7 @@ implementer subagent per module instead of porting serially:
   — the idiom map + bug-class table for each direction.
 - `sdv-parity-reviewer` (agent) — the comprehensive post-port audit; dispatch it in step 6.
 - `sdv-python-reviewer` (agent, `polars` lens) — polars-1x currency check for Python-target ports.
-- `/sdv-build-data` — for the heavy sweep that re-runs a ported pipeline over a corpus in a `-data` repo.
+- `/sdv-data-pipeline` Phase 4 (build) — for the heavy sweep that re-runs a ported pipeline
+  over a corpus in a `-data` repo.
 - sdv-py `CLAUDE.md` "Polars version" + "ID column types" sections are the authoritative
   idiom/dtype reference for the Python side.

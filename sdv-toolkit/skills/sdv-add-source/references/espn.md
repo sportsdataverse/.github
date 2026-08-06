@@ -151,5 +151,5 @@ circular import. Only `polars`, `pandas`, `typing`, `sportsdataverse.dl_utils`.
 - ESPN is the only provider with a codegen scaffold phase today; Fox/CBS/Yahoo
   stop at Part A (capture + catalog) until they're wired into sdv-py.
 - ESPN error envelopes use `{"code", "message", ...}`; Fox/CBS use a bare
-  `{"error": "..."}` — the two predicates differ (see `sdv-capture-endpoint`
-  logic folded into `SKILL.md`'s capture phase).
+  `{"error": "..."}` — the two predicates differ (see the capture phase in
+  this skill's own `SKILL.md`).

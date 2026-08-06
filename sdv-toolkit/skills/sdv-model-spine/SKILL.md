@@ -92,10 +92,11 @@ TOC and abort the first commit — re-add and re-commit.
 
 #### Boundaries (which capture skill governs)
 
-- **Single API payload for a parser fixture / returns schema** → `/sdv-capture-endpoint`
-  (structured id-walk, error-envelope skip, atomic writes).
-- **Long-running scrape (>3 min) or a `-raw` repo's committed tree** → `/sdv-scrape-job`
-  (user-executable runbook, resumable checkpoint, env-only rate tuning).
+- **Single API payload for a parser fixture / returns schema** → `/sdv-add-source`
+  Phase 1 (structured id-walk, error-envelope skip, atomic writes).
+- **Long-running scrape (>3 min) or a `-raw` repo's committed tree** →
+  `/sdv-data-pipeline` Phase 3 (user-executable runbook, resumable checkpoint,
+  env-only rate tuning).
 - **This phase** owns model-gate oracle corpora: external reference values committed as
   test fixtures with contracts, crosswalks, and provenance.
 
