@@ -68,11 +68,12 @@ listed in the same document §1 — used to score, not to re-derive, the mimicry
 
 ### The much larger "SDV model program" (WS1–WS6 + reference-port waves) — built, but NOT in sdv-py
 
-Starting 2026-07-17 a 25-workstream program (publish-integrity gate,
+Starting 2026-07-17 a six-workstream program, WS1–WS6 (publish-integrity gate,
 eval/experiment-ledger, declarative FeatureSet layer, a full generative
 possession/drive/event-stream simulator for all nine SDV sports, odds/markets
-math, and a per-league feature-catalog port of a reference stack) was built
-and gated on real fixtures across dozens of addenda. **Its final home is not
+math, and opportunistic fold-ins including the per-league feature-catalog port
+of a reference stack) was built and gated on real fixtures across dozens of
+addenda. (`roadmap.md` "Sequencing & effort" table, WS1–WS6.) **Its final home is not
 `sdv-py`.** The 2026-07-22 delivery decision (the later of the roadmap's many
 status updates, and the one recorded last in `program-status.md` too)
 supersedes every earlier "ship vehicle: sdv-py PR" note in the roadmap's
@@ -234,24 +235,38 @@ to five papers (`apm-research/deep-research-report.md` §5):
 - **Franks, A.M. et al. (2016)**, "Meta-analytics" — three meta-metrics for
   evaluating *any* APM model: Discrimination (true skill vs. noise),
   Stability (rating evolution over time), Independence (redundancy across
-  metrics). Not implemented anywhere in the corpus as of the read date — an
-  open opportunity, not a rejection.
+  metrics). The Franks meta-metric *suite* itself is not implemented
+  anywhere in the corpus (no hit for "Franks" or "meta-analytic" in either
+  program document set) — an open opportunity, not a rejection. Note this
+  is narrower than "Discrimination is unmeasured": the SDV program does
+  separately measure discrimination, engine-side, as its own walk-forward
+  metric — "DISCRIMINATION UNLOCKED" / "WALK-FORWARD NOW MEASURES
+  DISCRIMINATION" (`roadmap.md` Addendum 26) — just not via Franks's
+  formal meta-metric framework.
 
 ---
 
 ## 3. Open / blocked
 
-### Post-merge wiring — dissolved, not merely blocked
+### Post-merge wiring — re-targeted at the private engine, one item dissolved
 
 `program-status.md`'s "Outstanding" table (written before the delivery
 decision) lists producer `audit=` opt-ins, an `sdv-build-data` toolkit step,
 an sdv-web ingest endpoint, and sdv-db contract fields as follow-ups meant to
 land once the donor branch merged into `sdv-py`. **That premise no longer
-holds.** The 2026-07-22 delivery decision states plainly that with the
-engine private-only, "sdv-py keeps nothing," so there is nothing in `sdv-py`
-for these items to wire into — the open item is dissolved, not merely
-postponed. (`roadmap.md` Addendum 22, points 4–5, superseding
-`program-status.md`'s "Outstanding" table.)
+holds, but the items are not dead work.** Addendum 22 draws a line between
+two different buckets: point (4) DISSOLVES the "post-merge call-site
+migration off the `_common` shims" item outright — "the shims exist only on
+the frozen branch; the engine's imports are already canonical" — and
+likewise "sdv-py keeps X" becomes "sdv-py keeps nothing." Point (5) covers
+the items actually named above (producer opt-ins, toolkit step, sdv-web
+endpoint, sdv-db fields) and says the opposite of dissolved: these
+integrations "consume the ENGINE privately," and scheduling the
+engine-side gates that used to be sdv-py CI's job is explicitly "**the
+reframed open item**" — re-targeted, not closed. (`roadmap.md` Addendum 22,
+point 4 for the dissolved shim-migration item, point 5 for the re-targeted
+producer/harness/sdv-web/sdv-db items; superseding `program-status.md`'s
+"Outstanding" table framing, which predates the delivery decision.)
 
 ### Data-blocked
 
@@ -303,8 +318,10 @@ addendum; `roadmap.md` WS5/WS6.)
 ### NBA Model Zoo v2 mimicry-gap proposal — status unresolved
 
 `model-zoo-v2-gap-analysis.md` is headed **"STATUS: PROPOSAL — awaiting user
-review (not an approved spec)"**, dated 2026-07-02. It proposes 18 additions
-across three tiers to close the gap between sdv-py's shipped NBA zoo and
+review (not an approved spec)"**, dated 2026-07-02. It proposes 15 additions
+across three tiers (5 each, `model-zoo-v2-gap-analysis.md` §3 lines 86-116),
+plus 3 more (items 16-18) in a later "daily axis" addendum — 18 total — to
+close the gap between sdv-py's shipped NBA zoo and
 LEBRON/DARKO/xRAPM/EPM: Tier 1 (oracle-in-hand thin slices — luck-adjusted
 LA-RAPM, four-factor RAPM, multi-season time-decay RAPM, a concurrent-validity
 Oracle ⑤, a shared WAR/e-wins layer), Tier 2 (fidelity upgrades — tracking-informed
