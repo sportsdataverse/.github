@@ -219,7 +219,7 @@ span table).
 | `load_nfl_depth_charts` | nflverse | – | `depth_charts` |
 | `load_nfl_draft_picks` | nflverse | – | `config.NFL_DRAFT_PICKS_URL` |
 | `load_nfl_espn_qbr` | sdv-release | – | `nfl_espn_qbr` |
-| `load_nfl_ff_opportunity` | nflverse | – | `config.NFL_FF_OPPORTUNITY_URL` |
+| `load_nfl_ff_opportunity` | ffverse | – | `config.NFL_FF_OPPORTUNITY_URL` |
 | `load_nfl_ff_playerids` | sdv-git-tree | – | `config.NFL_FF_PLAYERIDS_URL` |
 | `load_nfl_ff_rankings` | sdv-git-tree | – | `config.NFL_FF_RANKINGS_DRAFT_URL` |
 | `load_nfl_ftn_charting` | nflverse | – | `ftn_charting` |
