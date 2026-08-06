@@ -29,6 +29,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 |---|---|
 | `sdv-docs-reviewer` | Audit or produce the three-column returns table, Python or R; map a provider payload into documentation. |
 | `sdv-harness-triage` | Triage a validation-harness WARN by finding_type and emit a Verdict. |
+| `sdv-issue-triage` | Classify one open issue or PR into one of six verdicts, read-only, with evidence. |
 | `sdv-model-reviewer` | Audit new model/validation code: gates, leakage boundary, metric fit, silent no-op, sklearn contract, lineage, oracle joins. |
 | `sdv-parity-reviewer` | Audit a cross-language port for ID-dtype, regex, indexing, null-semantics, and numeric-fidelity bug classes. |
 | `sdv-python-reviewer` | Python review by lens: polars \| http \| parser-contract \| docstring. |

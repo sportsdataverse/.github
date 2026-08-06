@@ -309,6 +309,22 @@
         "sdv-python-reviewer",
         "sdv-r-reviewer"
       ]
+    },
+    {
+      "name": "sdv-issue-triage",
+      "kind": "agent",
+      "purpose": "Classify one open issue or PR into one of six verdicts, read-only, with evidence.",
+      "archetypes": [
+        "all"
+      ],
+      "verdicts": [
+        "actionable-now",
+        "already-fixed",
+        "needs-info",
+        "real-but-large",
+        "out-of-scope",
+        "bot-noise"
+      ]
     }
   ]
 }
