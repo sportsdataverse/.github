@@ -136,14 +136,6 @@
       ]
     },
     {
-      "name": "oracle-gate-reviewer",
-      "kind": "agent",
-      "purpose": "Use before merging new model/validation code (a model-spine phase, a ratings engine, a backtest, a simulator) to audit its correctness contract \u2014 distinct from the Tier-2 validation agents, which triage harness WARN findings on existing datasets.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "parity-divergence-reviewer",
       "kind": "agent",
       "purpose": "Use to triage a `numeric_parity` WARN finding from the sdv-py validation harness \u2014 judge whether a column's correlation below its oracle floor is a real model/producer regression or a documented, acceptable divergence.",
@@ -266,6 +258,25 @@
         "r-lib:testing-r-packages",
         "r-lib:cran-extrachecks",
         "r-skills:r-performance"
+      ]
+    },
+    {
+      "name": "sdv-model-reviewer",
+      "kind": "agent",
+      "purpose": "Audit new model/validation code: gates, leakage boundary, metric fit, silent no-op, sklearn contract, lineage, oracle joins.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ],
+      "lenses": [
+        "gate-integrity",
+        "leakage-boundary",
+        "metric-fit",
+        "silent-no-op",
+        "sklearn-contract",
+        "lineage",
+        "oracle-join",
+        "all"
       ]
     }
   ]
