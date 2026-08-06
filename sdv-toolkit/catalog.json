@@ -50,14 +50,6 @@
       ]
     },
     {
-      "name": "sdv-address-bot-reviews",
-      "kind": "skill",
-      "purpose": "Use to triage and resolve automated code-review comments that land on a sportsdataverse-py (sdv-py) PR from CodeRabbit or GitHub Copilot \u2014 fetch the unresolved review threads, fix the valid ones, reply to (and decline, with rationale) the rest, then resolve each thread.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-build-data",
       "kind": "skill",
       "purpose": "Use when building or extending a dataset in an SDV `-data` repo (nfl-data, cfb-data, hoopR-*-data, wehoop-*-data, fastRhockey-*-data) \u2014 the ingest \u2192 build \u2192 validate \u2192 publish pipeline that reads the sibling `-raw` repo tree, writes tidy parquet, and publishes via git commit + per-file gh release upload.",
@@ -146,14 +138,6 @@
       ]
     },
     {
-      "name": "sdv-preflight",
-      "kind": "skill",
-      "purpose": "Use for a fast local sanity sweep on the current changes in sportsdataverse-py (sdv-py) before committing or opening a PR \u2014 runs ruff, the mypy ratchet, and the relevant tests scoped to changed files only (not the whole suite).",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-r-returns-table",
       "kind": "skill",
       "purpose": "Generate or back-fill a roxygen @return markdown table (col_name|type|description) for an SDV R function, matching the Python returns convention.",
@@ -170,14 +154,6 @@
       ]
     },
     {
-      "name": "sdv-release",
-      "kind": "skill",
-      "purpose": "Use when cutting a new sportsdataverse-py (sdv-py) PyPI release \u2014 bump the version, write the CHANGELOG entry, freeze the docs snapshot, and tag a GitHub Release (which triggers the PyPI publish workflow).",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-scrape-job",
       "kind": "skill",
       "purpose": "Use when setting up any scraping/backfill job expected to run more than ~3 minutes (ESPN, stats.nba.com/wnba.com, stats.ncaa.org, Savant) \u2014 generates a user-executable runbook script with unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, saving into the owning SDV `-raw` repo's canonical committed tree (not scratch dirs).",
@@ -188,17 +164,29 @@
     {
       "name": "sdv-ship",
       "kind": "skill",
-      "purpose": "Use when shipping a change in sportsdataverse-py (sdv-py) \u2014 opening, pushing, or merging a PR. Runs the steps in the correct order (regenerate codegen docs, update changelog/docs/tutorials, lint, full pytest, commit + verify it landed, push, triage bot reviews CodeRabbit/Sourcery/Copilot immediately \u2014 in parallel with CI, not after it \u2014 wait for CI green, confirm merge, write a session note) and never cleans up a branch before the merge is confirmed.",
+      "purpose": "Land a change: regen docs, preflight, commit, push, bot-triage, codegen gate, merge, stack retarget, release.",
       "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "sdv-stack",
-      "kind": "skill",
-      "purpose": "Use to manage a chain of stacked PRs in an SDV repo \u2014 mapping the stack, merging bottom-up, retargeting + rebasing children after a squash-merge, and re-running the codegen drift gate at each new branch head.",
-      "archetypes": [
-        "all"
+        "sdv-py",
+        "raw",
+        "data",
+        "r-package",
+        "toolkit"
+      ],
+      "phases": [
+        "regen-docs",
+        "preflight",
+        "commit",
+        "push",
+        "bot-triage",
+        "ci-gate",
+        "merge",
+        "stack-retarget",
+        "release"
+      ],
+      "dispatches": [
+        "sdv-python-reviewer",
+        "sdv-r-reviewer",
+        "sdv-docs-reviewer"
       ]
     },
     {
