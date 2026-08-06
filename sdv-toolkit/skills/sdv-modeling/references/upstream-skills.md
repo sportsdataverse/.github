@@ -57,6 +57,11 @@ skills installed at `~/.claude/skills/<name>` (symlinked from
 prefix — confirmed against each `SKILL.md`'s frontmatter `name:` field, which
 matches its directory name in every case. This is a different layout than
 the plugin cache/marketplace trees this ecosystem's own skills ship from; do
-not assume the `plugin:skill` form for these eight. `sdv-sklearn` does not
-exist on disk yet — the row ships anyway because Task 9 of this same plan
-creates it under exactly that name; do not invoke it until it lands.
+not assume the `plugin:skill` form for these eight. These eight are
+personal, machine-local directories — not a git repo, not part of any
+marketplace manifest, and not installed by `sdv-toolkit` or any other
+plugin — with no verifiable public install source; if a row doesn't resolve
+on your machine, read it as a **topic pointer** (the kind of skill to look
+for) rather than a literal invocation. `sdv-sklearn` does not exist on disk
+yet — the row ships anyway because Task 9 of this same plan creates it under
+exactly that name; do not invoke it until it lands.
