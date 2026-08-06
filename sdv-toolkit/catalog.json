@@ -2,14 +2,6 @@
   "version": "0.3.7",
   "entries": [
     {
-      "name": "sdv-capture-oracle",
-      "kind": "skill",
-      "purpose": "Use when capturing an external oracle/validation corpus into committed test fixtures \u2014 Torvik/KenPom ratings, ESPN BPI/predictor/odds, market closing lines, MoneyPuck, published RAPM/EPM, or any third-party reference a model gate will assert against.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-data-pipeline",
       "kind": "skill",
       "purpose": "Producer lifecycle for -raw/-data repos: standardize, placement, scrape, build, validate, publish.",
@@ -36,9 +28,27 @@
     {
       "name": "sdv-model-spine",
       "kind": "skill",
-      "purpose": "Use when executing a model-spine implementation plan (the ClaudeCowork specs/plans backlog \u2014 prediction stacks, ratings engines, projection/impact models) or building any oracle-gated analytics module in an SDV repo.",
+      "purpose": "Oracle-gated model build loop: capture oracle, worktree, harness, TDD, gates, parity, close-out.",
       "archetypes": [
-        "all"
+        "sdv-py",
+        "data"
+      ],
+      "phases": [
+        "capture-oracle",
+        "worktree-baseline",
+        "oracle-harness",
+        "tdd-tasks",
+        "gates",
+        "shim-parity",
+        "closeout",
+        "review"
+      ],
+      "dispatches": [
+        "sdv-model-reviewer",
+        "sdv-parity-reviewer"
+      ],
+      "hands_off_to": [
+        "sdv-ship"
       ]
     },
     {
