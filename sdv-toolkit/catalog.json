@@ -2,62 +2,6 @@
   "version": "0.3.7",
   "entries": [
     {
-      "name": "sdv-add-cbs-league",
-      "kind": "skill",
-      "purpose": "Add a CBS Sports (NAPI) league/resource \u2014 capture + catalog in sdv-internal-refs/cbs.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "sdv-add-espn-league",
-      "kind": "skill",
-      "purpose": "Register a new ESPN league family in sdv-py \u2014 leagues.yaml row, pre-create package dir + __init__, regenerate, gated live test, verify the drift gate.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "sdv-add-fox-league",
-      "kind": "skill",
-      "purpose": "Add a Fox Sports (Bifrost) league/sport \u2014 capture + catalog in sdv-internal-refs/fox.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "sdv-add-provider-source",
-      "kind": "skill",
-      "purpose": "Add a league/source for ANY SportsDataverse provider (ESPN, Fox Bifrost, CBS NAPI, Yahoo, 247Sports, Torvik) \u2014 capture bodies, generate the returns doc, extend the catalog, scaffold the wrapper.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "sdv-add-sport-parser",
-      "kind": "skill",
-      "purpose": "Add sport-specific tidy parsers for an ESPN sport (soccer/cricket pattern) \u2014 parser module + per-sport codegen routing + fixtures + TDD.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "sdv-add-yahoo-source",
-      "kind": "skill",
-      "purpose": "Add a Yahoo Sports source \u2014 capture + catalog in sdv-internal-refs/yahoo (HTML/JSON scrape).",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "sdv-capture-endpoint",
-      "kind": "skill",
-      "purpose": "Hardened, provider-agnostic single-body capture for ESPN/Fox/CBS \u2014 structured id discovery, error-envelope skip, atomic writes.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-capture-oracle",
       "kind": "skill",
       "purpose": "Use when capturing an external oracle/validation corpus into committed test fixtures \u2014 Torvik/KenPom ratings, ESPN BPI/predictor/odds, market closing lines, MoneyPuck, published RAPM/EPM, or any third-party reference a model gate will assert against.",
@@ -291,6 +235,31 @@
       "purpose": "Use to review SportsDataverse R package documentation \u2014 checks roxygen completeness (@param/@return table/@examples) and _pkgdown.yml reference coverage.",
       "archetypes": [
         "all"
+      ]
+    },
+    {
+      "name": "sdv-add-source",
+      "kind": "skill",
+      "purpose": "Add a league/sport/endpoint/provider to sdv-py: capture, catalog, returns doc, scaffold, fixtures, drift gate.",
+      "archetypes": [
+        "sdv-py"
+      ],
+      "phases": [
+        "capture",
+        "catalog",
+        "returns-doc",
+        "scaffold",
+        "fixtures",
+        "drift-gate"
+      ],
+      "dispatches": [
+        "sdv-python-reviewer",
+        "sdv-docs-reviewer"
+      ],
+      "hands_off_to": [
+        "sdv-document",
+        "sdv-regen-docs",
+        "sdv-ship"
       ]
     }
   ]
