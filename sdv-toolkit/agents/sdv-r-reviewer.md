@@ -16,7 +16,7 @@ this file — it will drift.
 
 | lens | This agent owns | Name this upstream skill |
 |---|---|---|
-| `roxygen` | @param / @return table / @examples completeness; _pkgdown.yml coverage | owned below — no routing |
+| `roxygen` | @param / @return table / @examples completeness; _pkgdown.yml coverage | owned below (not `sdv-document` — that skill dispatches *to* this reviewer, so routing back would be circular) |
 | `tidy-idiom` | — | `r-skills:tidyverse-patterns` |
 | `metaprogramming` | — | `r-skills:rlang-patterns` |
 | `style` | — | `r-skills:r-style-guide` |
