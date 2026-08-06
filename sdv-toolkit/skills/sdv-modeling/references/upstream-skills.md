@@ -38,30 +38,28 @@ writing* the fit, not just at review time.
 
 | Need | Route to | Invocation |
 |---|---|---|
-| CV strategy, metric selection, hyperparameter tuning, experiment tracking | `evaluating-ml-models` | `evaluating-ml-models` |
-| Feature engineering — encoding, scaling, datetime/text features, leakage-safe preprocessing | `engineering-ml-features` | `engineering-ml-features` |
-| Model registry, retraining orchestration, MLflow/Weights & Biases, Feast, DVC | `ml-pipeline` | `ml-pipeline` |
-| General statistical modeling / analytics not covered by a more specific row | `data-scientist` | `data-scientist` |
-| Data-quality validation and observability on pipeline inputs | `assuring-data-pipelines` | `assuring-data-pipelines` |
-| Polars idiom in general (non-SDV) | `polars` skill | `polars` |
+| CV strategy, metric selection, hyperparameter tuning, experiment tracking | `sdv-evaluating-ml-models` | `sdv-toolkit:sdv-evaluating-ml-models` |
+| Feature engineering — encoding, scaling, datetime/text features, leakage-safe preprocessing | `sdv-engineering-ml-features` | `sdv-toolkit:sdv-engineering-ml-features` |
+| Model registry, retraining orchestration, MLflow/Weights & Biases, Feast, DVC | `sdv-ml-pipeline` | `sdv-toolkit:sdv-ml-pipeline` |
+| General statistical modeling / analytics not covered by a more specific row | `sdv-data-scientist` | `sdv-toolkit:sdv-data-scientist` |
+| Data-quality validation and observability on pipeline inputs | `sdv-assuring-data-pipelines` | `sdv-toolkit:sdv-assuring-data-pipelines` |
+| Polars idiom in general (non-SDV) | `sdv-polars` skill | `sdv-toolkit:sdv-polars` |
 | Polars idiom inside sdv-py specifically — pinned version, removed-API tiers, bool-mask/lookaround-regex conventions | `sdv-python-reviewer` (`lens: polars`) | `sdv-toolkit:sdv-python-reviewer` |
-| Hot-path profiling and optimization | `python-performance-optimization` | `python-performance-optimization` |
-| Notebook workflows (Jupyter/JupyterLab/marimo/Colab) | `working-in-notebooks` | `working-in-notebooks` |
+| Hot-path profiling and optimization | `sdv-python-performance-optimization` | `sdv-toolkit:sdv-python-performance-optimization` |
+| Notebook workflows (Jupyter/JupyterLab/marimo/Colab) | `sdv-working-in-notebooks` | `sdv-toolkit:sdv-working-in-notebooks` |
+| Exploratory data analysis — profiling, chart selection, statistical tests | `sdv-analyzing-data` | `sdv-toolkit:sdv-analyzing-data` |
+| Batch pipeline construction with Polars/DuckDB/PyArrow — ETL, medallion architecture, partitioning | `sdv-building-data-pipelines` | `sdv-toolkit:sdv-building-data-pipelines` |
 | sklearn/XGBoost on panel-sports data — writing the fit | `sdv-sklearn` (first-party) | `sdv-toolkit:sdv-sklearn` |
 | sklearn/XGBoost on panel-sports data — reviewing a fit already written | `sdv-model-reviewer` (`lens: sklearn-contract`) | `sdv-toolkit:sdv-model-reviewer` |
 
-**Resolution note.** The eight non-first-party rows above are unscoped
-skills installed at `~/.claude/skills/<name>` (symlinked from
-`~/.agents/skills/<name>`), invoked by their bare name with no plugin
-prefix — confirmed against each `SKILL.md`'s frontmatter `name:` field, which
-matches its directory name in every case. This is a different layout than
-the plugin cache/marketplace trees this ecosystem's own skills ship from; do
-not assume the `plugin:skill` form for these eight. These eight are
-personal, machine-local directories — not a git repo, not part of any
-marketplace manifest, and not installed by `sdv-toolkit` or any other
-plugin — with no verifiable public install source; if a row doesn't resolve
-on your machine, read it as a **topic pointer** (the kind of skill to look
-for) rather than a literal invocation. `sdv-sklearn` is the exception to
-that caveat — it's this ecosystem's own first-party skill
-(`sdv-toolkit/skills/sdv-sklearn/`), not a personal machine-local directory,
-and it's shipped.
+**Resolution note.** The ten non-`sdv-sklearn` rows above are vendored,
+first-party skills shipped from `sdv-toolkit/skills/sdv-<name>/` — see
+`sdv-toolkit/NOTICE.md` for provenance (original name, source path, and
+licence state as found). They were previously personal, machine-local
+directories at `~/.claude/skills/<name>` with no verifiable public install
+source; vendoring replaced that machine-local dependency, so every row above
+is now a literal, portable `sdv-toolkit:sdv-<name>` invocation like any other
+skill in this plugin — not a topic pointer. `sdv-sklearn` remains the one
+row that was never vendored from anywhere: it's this ecosystem's own
+first-party skill, purpose-built for the SDV-specific concern described
+above.
