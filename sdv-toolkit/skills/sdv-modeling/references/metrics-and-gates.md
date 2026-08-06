@@ -22,7 +22,6 @@ Shorthand used in citations:
 | `cfb-season-odds-calibration.py` | `sdv-py/tests/cfb/test_cfb_season_odds_calibration.py` |
 | `cfb-ratings-parity-ship.md` | `sdv-py/dev/session-notes/2026-07-28-cfb-ratings-parity-ship.md` |
 | `mbb-prediction-backtest.py` | `sdv-py/tests/mbb/test_mbb_prediction_backtest.py` |
-| `nba-playtype-constants.py` | `sdv-py/sportsdataverse/nba/nba_playtype_constants.py` |
 | `mbb_prediction/README.md` | `sdv-py/tests/fixtures/mbb_prediction/README.md` |
 | `nhl_player_impact/README.md` | `sdv-py/tests/fixtures/nhl_player_impact/README.md` |
 | `cfb_prediction/README.md` | `sdv-py/tests/fixtures/cfb_prediction/README.md` |
@@ -40,13 +39,15 @@ re-deriving numbers it already states.
 
 `reviewer.md` §3 (`metric-fit` lens) is the authoritative statement:
 probabilities get Brier and/or log-loss **plus** a calibration table (a good
-Brier score can hide miscalibration); point predictions (spread/total) get
-MAE vs the closing market line with the sign convention handled explicitly;
-ratings get Spearman rank correlation plus MAE vs the external oracle;
-simulators get retrospective calibration (advancement at ~predicted rates,
-slope band) with seeded RNG. Flag a metric that doesn't match the model's
-output type — RMSE alone on a probability column, or no calibration check on
-anything that outputs a probability (`reviewer.md` §3).
+Brier score can hide miscalibration), with **in-game WP specifically
+requiring per-time-bucket calibration**; point predictions (spread/total)
+get MAE vs the closing market line with the sign convention handled
+explicitly; ratings get Spearman rank correlation plus MAE vs the external
+oracle; simulators get retrospective calibration (advancement at
+~predicted rates, slope band) with seeded RNG. Flag a metric that doesn't
+match the model's output type — RMSE alone on a probability column, or no
+calibration check on anything that outputs a probability (`reviewer.md`
+§3, "in-game WP → per-time-bucket calibration").
 
 The shared implementation every per-sport `*_prediction_constants` /
 `*_projection_constants` module re-exports lives in exactly one place —
@@ -69,7 +70,11 @@ slope** on neutral courts to `0.9 <= slope <= 1.1`
 (`mbb-prediction-backtest.py:185-202`), and the NBA in-game WP gate does the
 same at `[0.85, 1.15]` (`sdv-py/tests/nba/test_nba_in_game_wp.py:120-124`) —
 both are the calibration-table idea collapsed to one number via a
-regression-slope statistic, not a replacement for the binned table.
+regression-slope statistic, not a replacement for the binned table. Neither
+exemplar is the agent's **per-time-bucket** in-game-WP calibration above:
+both bin on predicted-*probability*, not on time/clock-bucket, so treat
+them as calibration-slope instances, not as evidence the per-time-bucket
+rule is already satisfied.
 
 ### Spreads/totals → MAE vs the closing market line
 
@@ -105,10 +110,16 @@ win totals rank-calibrated (`spearman(exp_wins, actual) >= 0.90`), and the
 elite teams' simulated playoff probability separates from the field median
 (`cfb-season-odds-calibration.py:1-16`). The harness design's Oracle ④
 (interval calibration) is the credible-interval analogue for player-rating
-posteriors: empirical coverage at 50/80/90/95% against a held-out half,
-returning `n/a` for point-estimate models rather than fabricating a number
-(`harness-design.md` §4 Oracle ④, "for models with a `posterior` ... Plain
-RAPM has no posterior → this oracle returns `n/a` for it").
+posteriors: form credible intervals per player rating and measure empirical
+coverage at 50/80/90/95% (a calibration curve), returning `n/a` for
+point-estimate models rather than fabricating a number (`harness-design.md`
+§4 Oracle ④, "for models with a `posterior` ... Plain RAPM has no posterior
+→ this oracle returns `n/a` for it"). The design leaves the exact holdout
+mechanism unspecified at Oracle ④ itself — "held-out half" is Oracle ②'s
+(split-half reliability) construction, not Oracle ④'s; don't conflate them
+(`harness-design.md` §4 Oracle ②, "Randomly halve the season's games ... ";
+Oracle ④, "For models with a `posterior`, form credible intervals per
+player rating and measure empirical coverage").
 
 ---
 
@@ -175,16 +186,22 @@ The shared implementation is `as_of_ratings_split(results, cutoff_date)`:
 (`metrics.py:146-163`).
 
 `cfb-prediction-backtest.py` shows what testing the *actual join* rather
-than a proxy for it looks like — and names the failure mode explicitly. An
-earlier gate version re-derived the same `through_week + 1` offset the join
-uses and asserted it was `>= 2`, which is a property of the fixture, not of
-the join: had the join itself been changed to use same-week or future
-ratings, that earlier test would still have passed, because it never
-touched a predicted row. The current test instead checks the snapshot each
-*prediction* actually landed on, per side, and asserts the week-vs-snapshot
-offset is exactly `[1]` for every row. Its own docstring names the general
-failure mode: "Testing a proxy for the thing is how leakage survives a
-green suite" (`cfb-prediction-backtest.py:100-118`).
+than a proxy for it looks like — and names the failure mode explicitly. Its
+docstring states why the `+1` offset exists at all: "`through_week == W`
+INCLUDES week W, so joining a week-W game to the W snapshot would let it
+see its own result" (`cfb-prediction-backtest.py:103-104`) — treating
+`through_week` as inclusive of its own boundary, exactly the failure
+`reviewer.md` §2 names, is precisely why the join must offset by one week
+rather than join same-week. An earlier gate version re-derived the same
+`through_week + 1` offset the join uses and asserted it was `>= 2`, which is
+a property of the fixture, not of the join: had the join itself been
+changed to use same-week or future ratings, that earlier test would still
+have passed, because it never touched a predicted row. The current test
+instead checks the snapshot each *prediction* actually landed on, per side,
+and asserts the week-vs-snapshot offset is exactly `[1]` for every row. Its
+own docstring names the general failure mode: "Testing a proxy for the
+thing is how leakage survives a green suite"
+(`cfb-prediction-backtest.py:100-118`).
 
 Window/lag features must be grouped (`.over("game_id")` / per-season); an
 ungrouped `shift`/`cum_sum` leaks across game boundaries when frames
@@ -320,28 +337,38 @@ follow for a new one:
 
 A ratings gate that only checks rank correlation can pass a model whose
 *scale* is wrong, because Spearman is invariant to any monotone
-transformation of one side — reordering never changes the rank correlation,
-even if the reordered values are off by a constant factor.
+**rescaling** of one side — multiplying, shifting, or otherwise stretching
+the values along a monotone curve never changes the rank correlation, even
+if the rescaled values are off by a large constant factor. (Reordering the
+values is the one operation that *would* move Spearman — a rescale, by
+definition, does not reorder anything.)
 
 This is not a hypothetical — it happened in this ecosystem's CFB ratings
 work and shipped before being caught. From the session notes: "User flagged
 adj_net magnitudes (0.63 top) vs expected <0.46 → diagnosed: published stat
 was ridge coefficient+intercept (competitive-only), NOT the R adjust_epa
-netted average (gameonpaper 2024 max 0.366). **Spearman gates are
-scale-blind → shipped unseen.**" (`cfb-ratings-parity-ship.md:44-47`). The
+netted average (gameonpaper 2024 max 0.366). Spearman gates are
+scale-blind → shipped unseen." (`cfb-ratings-parity-ship.md:45-47`). The
 Spearman-only ratings gate (§1 above, `cfb-ratings-oracle.py`) had been
-green the entire time the magnitude was wrong, because reordering the wrong
-scale onto the right rank order doesn't move the rank correlation at all.
+green the entire time the magnitude was wrong, because rescaling the wrong
+magnitude onto the right rank order doesn't move the rank correlation at all.
 
 The fix that followed in the same session was a **magnitude gate** added
 alongside the existing rank gate, plus a full rescale (netted `adj_*`
-values, refit constants) — not a Spearman-floor change
+values, refit constants) — not a Spearman-floor change. The same cited fix
+also **re-derived two existing floors downward** (SP+ off 0.82, exp-wins
+0.885) and raised one, "all in-test documented"
 (`cfb-ratings-parity-ship.md:53-55`, "netted adj_*, true-EPA ST, refit
-constants ... magnitude gate"). The general rule this instance backs:
-**a ratings gate needs a scale check (MAE/RMSE vs the oracle, or a
-magnitude-band assert) in addition to Spearman — never Spearman alone**,
-which is exactly what `reviewer.md` §3 already states ("Ratings → rank
-correlation (Spearman) + MAE vs the external oracle").
+constants ... magnitude gate ... 2 floors re-derived down ... + 1 raised —
+all in-test documented") — exactly the re-derivation-after-a-rescale case §2
+licenses: a floor can move when the underlying quantity's *definition*
+changes, as long as the new floor is documented against a newly-observed
+value, not loosened to paper over a regression in the old definition. The
+general rule this instance backs: **a ratings gate needs a scale check
+(MAE/RMSE vs the oracle, or a magnitude-band assert) in addition to
+Spearman — never Spearman alone**, which is exactly what `reviewer.md` §3
+already states ("Ratings → rank correlation (Spearman) + MAE vs the
+external oracle").
 
 ---
 
