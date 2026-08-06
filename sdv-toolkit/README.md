@@ -16,6 +16,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-data-pipeline` | Producer lifecycle for -raw/-data repos: standardize, placement, scrape, build, validate, publish. |
 | `/sdv-document` | Produce documentation surface: Python returns schema, roxygen @return table, notebook, pkgdown theming. |
 | `/sdv-guide` | Callable index: what the toolkit has, when to use each part, and the rename map. |
+| `/sdv-learn` | Promote a durable session finding into the right toolkit surface, with its detection test. |
 | `/sdv-model-spine` | Oracle-gated model build loop: capture oracle, worktree, harness, TDD, gates, parity, close-out. |
 | `/sdv-port` | Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures. |
 | `/sdv-regen-docs` | Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release. |
