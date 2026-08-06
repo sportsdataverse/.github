@@ -112,38 +112,6 @@
       ]
     },
     {
-      "name": "anomaly-triage-reviewer",
-      "kind": "agent",
-      "purpose": "Use to triage a `sweep` WARN finding from the sdv-py validation harness \u2014 judge whether a null-rate spike or mean-shift vs the prior release is a real regression or an expected data change.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "extraction-semantics-reviewer",
-      "kind": "agent",
-      "purpose": "Use to triage an `extraction` WARN finding from the sdv-py validation harness \u2014 judge whether a low-coverage extracted column is a real parser bug or a legitimately-null field for that play type.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "leakage-reviewer",
-      "kind": "agent",
-      "purpose": "Use to triage a `leakage_lint` (Python/R source) or `boundary_leakage` (cumulative-non-reset) WARN finding from the sdv-py validation harness \u2014 judge whether a lag/cumulative op is a real cross-game data leak or a benign / already-grouped case.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "parity-divergence-reviewer",
-      "kind": "agent",
-      "purpose": "Use to triage a `numeric_parity` WARN finding from the sdv-py validation harness \u2014 judge whether a column's correlation below its oracle floor is a real model/producer regression or a documented, acceptable divergence.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "port-parity-reviewer",
       "kind": "agent",
       "purpose": "Use after porting a module between R and Python (either direction \u2014 nflfastR/cfbfastR/hoopR/wehoop/bigballR \u2194 sdv-py, or a TS/Scala source like the hoop-explorer port) to audit the ported code for the recurring cross-language bug classes and verify parity-test coverage.",
@@ -277,6 +245,22 @@
         "lineage",
         "oracle-join",
         "all"
+      ]
+    },
+    {
+      "name": "sdv-harness-triage",
+      "kind": "agent",
+      "purpose": "Triage a validation-harness WARN by finding_type and emit a Verdict.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ],
+      "finding_types": [
+        "sweep",
+        "extraction",
+        "leakage_lint",
+        "boundary_leakage",
+        "numeric_parity"
       ]
     }
   ]
