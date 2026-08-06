@@ -51,14 +51,20 @@ Two shapes of trigger, and they are **not equally dangerous**:
      effort "fixing" it.
    - **Self-detecting, but only if already registered**: the sdv-py loader
      itself (surface 2) does a columns-passthrough read
-     (`pl.read_parquet(..., columns=None)`), so the new column is live and
-     visible to any Python caller immediately — it is not the loader that
-     hides it. And the validation harness (surface 11)'s
-     `schema_contract.py` check emits an **ERROR finding for an unexpected
-     column** — but only for a dataset that already has a `DatasetSpec`
-     registered. An unregistered dataset gets no such error; a registered
-     one turns every future schema delta loud. That asymmetry is the
-     argument for registering surface 11 once, up front.
+     (`pl.read_parquet(..., columns=None)`, `nfl_loaders.py:130`), so the
+     new column is live and visible to any Python caller immediately — it
+     is not the loader that hides it. A loader that concatenates multiple
+     seasons with `pl.concat(..., how="vertical")` (`nfl_loaders.py:131`)
+     requires identical schemas across seasons, so a multi-season load
+     spanning the delta **raises loudly** instead of passing through
+     quietly; only a single-season load (or a loader with no cross-season
+     concat) carries the new column through silently. Either way, the
+     loader is never what hides it. And the validation harness (surface
+     11)'s `schema_contract.py` check emits an **ERROR finding for an
+     unexpected column** — but only for a dataset that already has a
+     `DatasetSpec` registered. An unregistered dataset gets no such error;
+     a registered one turns every future schema delta loud. That asymmetry
+     is the argument for registering surface 11 once, up front.
    - **Not applicable to column-level deltas**: the `sdv-db` catalog row
      (surface 7) carries `league`/`name`/`loader`/`module`/`partition_col`
      — no column list — so a new column doesn't require editing it at all.
@@ -104,14 +110,14 @@ thresholds, not a season cutoff).
 |---|---|---|---|---|
 | 1 | Release asset published | `<league>-data` (e.g. `cfbfastR-data`, `nflverse-data`, `hoopR-nba-data`, `wehoop-wnba-data`) | git commit + per-file `gh release upload`; owned by `sdv-data-pipeline` phase 6 | `gh release view <tag> --json assets` lists the file |
 | 2 | Python loader | `sdv-py` | `sportsdataverse/config.py` (URL constant) + `sportsdataverse/<league>/<league>_loaders.py` (`load_*` function) | both grep as present: `grep '<DATASET>_URL' config.py`, `grep 'def load_<dataset>' <league>_loaders.py` |
-| 3 | Loader schema | `sdv-py` | `tools/codegen/schemas/loader_schemas.yaml` — a **hand-edited source**; never hand-edit what it generates | a `load_<dataset>:` top-level key exists with a column list |
+| 3 | Loader schema | `sdv-py` | `tools/codegen/schemas/loader_schemas.yaml` — itself a **generated** artifact, rewritten wholesale by `generate.py --loader-schemas` (`refresh_loader_schemas()`, `generate.py:1405-1444`), which re-introspects each loader's live release-parquet footer over the network. Never hand-edit it; run the refresh instead. It stays "blind" on a schema delta anyway, because nothing auto-triggers that refresh, and the docs drift gate (surface 5) can't catch the staleness — the generated docs derive *from* this file, so they stay self-consistent with it even when both are stale relative to the live parquet | a `load_<dataset>:` top-level key exists with a column list matching the release parquet's current columns |
 | 4 | Returns-table descriptions | `sdv-py` | `tools/codegen/manual_column_descriptions.yaml` — **never** `schemas/**.yaml` (clobbered on re-capture) | every column from the surface-3 row has a non-empty description here |
-| 5 | Reference docs | `sdv-py` | generated `docs/docs/<sport>/reference/*` via `tools/codegen/generate.py` | `uv run python tools/codegen/generate.py --check` exits 0 |
-| 6 | R parity loader | `cfbfastR` / `hoopR` / `wehoop` / `fastRhockey` — **only if that sibling package carries the surface** | `R/cfbd_*.R` (cfbfastR), `R/load_*.R` (hoopR, wehoop); fastRhockey has no `load_*` convention (per-endpoint `R/nhl_*.R` only) — usually a legitimate skip for hockey | a same-named or documented-equivalent R function exists, or the skip is recorded |
+| 5 | Reference docs | `sdv-py` | generated `docs/docs/<sport>/reference/*` via `tools/codegen/generate.py` | `uv run python tools/codegen/generate.py --check` exits 0 — a **repo-global** drift gate; a pass or fail cannot be attributed to one dataset. Treat it as a required gate, not as per-dataset evidence — pair it with a direct look at the dataset's generated page |
+| 6 | R parity loader | `cfbfastR` / `hoopR` / `wehoop` / `fastRhockey` — **only if that sibling package covers the dataset's domain at all** | `cfbfastR-dev/cfbfastR/R/cfbd_*.R`; `hoopR-dev/hoopR/R/load_*.R`; `wehoop-dev/wehoop/R/load_*.R`; `hockey-dev/fastRhockey/R/nhl_loaders.R` + `R/pwhl_loaders.R` — the **current** checkout (v1.0.0, 52 `load_*` NAMESPACE exports). **Not** `fastRhockey-site` (a stale v0.1.0 PHF-era mirror where loaders live inside differently-named files like `nhl_pbp.R`, so a filename search finds nothing even though the exports exist) | the sibling package's `NAMESPACE` exports a `load_*` function matching the dataset — `grep -c 'export(load_<x>' NAMESPACE`. Check by **export, not filename**: a loader can be defined inside a file that doesn't match its name |
 | 7 | Catalog row | `sdv-db` | `python/src/sdv_db/catalog.py` — a `Dataset` entry in `REGISTRY` | the `(league, name)` pair is present in `REGISTRY` |
-| 8 | Postgres ETL | `sdv-db` | `python/src/sdv_db/load.py` (ingest) + `infra/postgresql/*.sql` (schema) + `systemd/sdv-db-ingest.service`/`.timer` (cron) | the table exists in the schema SQL and matches the surface-7 row's `name` |
-| 9 | API exposure | `sdv-db` — **not a separate "sdv-data" repo; the API lives inside sdv-db** | `python/src/sdv_db/api/generated/endpoints.py` (read) + `api/ingest_routes.py` (write) + `api/gen/curation.yaml` / `api/gen/schema_snapshot.json` (schema) | a generated endpoint resolves the dataset's table |
-| 10 | Platform freshness | `sdv-db` (push) + `sdv-web` (display) — a two-repo wire, not a single-repo surface | `sdv-db/python/src/sdv_db/heartbeat.py` (per-table freshness collector, POSTs to `/api/platform/db-status`) + `sdv-web/frontend/lib/platform/dbStatus.ts` + `app/api/platform/db-status/route.ts` | the table resolves under `heartbeat.py`'s `_TS_CANDIDATES`/`_ID_CANDIDATES` and appears in the platform DB tab |
+| 8 | Postgres ETL | `sdv-db` | `python/src/sdv_db/load.py` — `_create_empty_table` / `_reconcile_columns` create and self-heal every dataset table **at load time**; `infra/postgresql/*.sql` holds only the fixed `gop.*`/`platform.*` observability schemas and **never a per-dataset table** (don't look there for a dataset's DDL); `systemd/sdv-db-ingest.service`/`.timer` (cron) | the dataset has a `REGISTRY` entry (surface 7) that the ingest loop iterates over — that entry, not any hand-written SQL, is the checkable artifact. The table itself is created dynamically and only exists once the loop has actually run |
+| 9 | API exposure | `sdv-db` — **not a separate "sdv-data" repo; the API lives inside sdv-db** | Source (edit this): `api/gen/curation.yaml`. Generated output (**do not edit** — `api/generated/endpoints.py:2` header reads "AUTO-GENERATED by `scripts/gen_api.py` — DO NOT EDIT"): `api/generated/endpoints.py` (read) + `api/gen/schema_snapshot.json` (schema, committed static, read at mount time); regenerate both with `scripts/gen_api.py`. Separate hand-written write path: `api/ingest_routes.py` | the dataset appears in `curation.yaml` and the generated `endpoints.py` resolves an endpoint for it |
+| 10 | Platform freshness | `sdv-db` (push) + `sdv-web` (display) — a two-repo wire, not a single-repo surface | `sdv-db/python/src/sdv_db/heartbeat.py:36-52` (`_TS_CANDIDATES`/`_ID_CANDIDATES`), pushed via `heartbeat.py:174` `push()` | code-auditable half: the table's freshness/identity columns resolve under `_TS_CANDIDATES`/`_ID_CANDIDATES` in `heartbeat.py`. **Not code-auditable** — requires a running site + live DB: whether it actually shows in the platform DB tab (`sdv-web/frontend/lib/platform/dbStatus.ts` + `app/api/platform/db-status/route.ts`). Verify that half separately; don't fold it into a static check |
 | 11 | Validation registration | `sdv-py` harness | `tools/validation/registry.py` — a `DatasetSpec` entry — plus the coverage/correlation floors it uses from `tools/validation/thresholds.yaml` and `oracles.py` | a `DatasetSpec` with this dataset's `parquet_glob` exists in `registry.py` |
 | 12 | Model registry | `<league>-data` — **only if the dataset is a model's output** | a lineage doc (e.g. `docs/models/<model>.md`, citing the training script) + a scheduled retrain workflow (`.github/workflows/*.yml` with a `schedule:` trigger, not manual-only) | the lineage doc exists and the workflow has a cron trigger |
 
@@ -156,10 +162,10 @@ trigger: <new-tag | new-assets | schema-delta: col=<x> season=<y> dtype=<z>>
 | 3 | Loader schema | apply — done | loader_schemas.yaml:<line> |
 | 4 | Returns table | apply — done | manual_column_descriptions.yaml:<line> |
 | 5 | Reference docs | apply — done | generate.py --check exit 0 |
-| 6 | R parity loader | skip — hockey dataset, fastRhockey has no load_* convention | n/a |
+| 6 | R parity loader | skip — NFL isn't in the cfbfastR/hoopR/wehoop/fastRhockey family this surface covers (nflfastR parity is a separate mechanism) | n/a |
 | 7 | Catalog row | apply — done | sdv_db/catalog.py:<line> |
-| 8 | Postgres ETL | skip — table unchanged, ETL already covers it | n/a |
-| 9 | API exposure | apply — done | api/generated/endpoints.py:<line> |
+| 8 | Postgres ETL | skip — self-heals via `_reconcile_columns` on the next load; no manual DDL needed | n/a |
+| 9 | API exposure | apply — done | curation.yaml:<line> edited, `scripts/gen_api.py` re-run, `endpoints.py`/`schema_snapshot.json` regenerated |
 | 10 | Platform freshness | apply — done | heartbeat.py picks up updated_at |
 | 11 | Validation registration | apply — done | registry.py:<line> |
 | 12 | Model registry | skip — not a model output | n/a |
@@ -175,7 +181,7 @@ follow-up: <what would resolve it>` rather than leaving it out.
 - A schema-delta trigger where you cannot name the specific column/season/
   dtype that changed — go find that first; "something changed" doesn't scope
   Phase 2.
-- Surface 3 or 4 edited without the corresponding docs regeneration
-  (surface 5) — `generate.py --check` will fail downstream in `sdv-ship`
-  Phase 1 if you skip this.
+- Surface 3 regenerated (`--loader-schemas`) or surface 4 edited without
+  the corresponding docs regeneration (surface 5) — `generate.py --check`
+  will fail downstream in `sdv-ship` Phase 1 if you skip this.
 - A ledger with unrecorded rows — incomplete, not "good enough."
