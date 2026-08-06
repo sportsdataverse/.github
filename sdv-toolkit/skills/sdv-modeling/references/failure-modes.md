@@ -8,7 +8,7 @@ were plausible, every downstream consumer got numbers. The dataset shipped
 and sat live for two days. It was found only because someone measured the
 output" — and names three instances of the same shape in one sentence: "the
 ridge no-op itself, a `fill_null(0.0)` that is a no-op on Boolean columns, and
-a verify pass that only checked the rows it had targeted" (`checks.py:64-69`).
+a verify pass that only checked the rows it had targeted" (`checks.py:11-20`).
 
 **A description is not an entry here.** Every row below states the failure,
 how it presented (in every confirmed instance: silently, with a green run),
@@ -46,29 +46,31 @@ Shorthand used in citations:
 Every row in `reviewer.md` §4's shipped table (rows 1–7) appears below with a
 compatible assertion, plus seven more confirmed in the wider corpus (rows
 8–14) and four bonus instances (rows 15–18) found while grounding the
-required fourteen. "Confirmed" means a real commit fixes it — where I could
-not find one, §7 says so instead of inventing a citation.
+required fourteen. "Confirmed" means a real commit or repo artifact grounds
+it; all 18 rows below have one. §20 names the one place where the evidence
+is a documented hazard rather than a confirmed incident (§14's PWHL/NHL
+addendum), rather than papering over it as equally solid.
 
 | # | Failure | Assertion |
 |---|---|---|
 | 1 | ridge fit with λ applied to nothing | `corr(adjusted, raw) < 0.95` — genuine adjustment measured 0.57–0.72, the no-op 0.99 |
 | 2 | Boolean `fill_null` no-op | null count strictly decreased; rate is not pinned at exactly 1.0 |
-| 3 | release tag on the wrong commit | tag SHA == build SHA |
-| 4 | λ no-op republish (stale artifact) | `updatedAt` on the published asset moved past the fix commit's timestamp |
+| 3 | release tag on the wrong commit | `git rev-parse <tag>` == build SHA AND the version string in the tagged tree == the release version |
+| 4 | λ no-op republish (stale artifact) | `sha256(asset) != sha256(previous)`; `updatedAt` moving is a cheap pre-check only, not the assertion |
 | 5 | `through_week` treated as INCLUSIVE | the boundary week/game is absent from the training frame (see `metrics-and-gates.md` §3) |
 | 6 | schedule/season-scoped reprocess skipping units | processed count == expected unit count, per unit, not just a nonzero total |
 | 7 | build with no retry, partial write | row/asset count matches the manifest; upload failure raises instead of logging |
 | 8 | ESPN `-1` sentinel read as a real value | sentinel filtered before aggregation, on the *derived* column, not just the guard column |
-| 9 | percentile "shares" that were never rates | `pass_x + rush_x ≈ overall_x`, not `pass_x + rush_x == overall_x` (sums, not sits near) |
-| 10 | special-teams contribution 18× overstated | component magnitude checked standalone AND jointly (`incremental_value()`) |
+| 9 | percentile "shares" that were never rates | `pass_x` and `rush_x` each individually ≈ `overall_x`; `pass_x + rush_x ≈ overall_x` is the bug signature, not the healthy case |
+| 10 | special-teams contribution 18× overstated | compare components on their points-of-spread contribution (`pts_of_spread`), not raw coefficient/sd — `adj_st_epa`'s sd is 4x offense's while its `pts_of_spread` is 4.7x *smaller* |
 | 11 | simulator iterating non-FBS teams | simulated population count == the rated population, not the schedule population |
-| 12 | `group_by` without `maintain_order` discarding a prior sort | order preserved, or re-sorted after re-aggregation, and asserted |
+| 12 | `group_by` without `maintain_order` discarding a prior sort | re-run the same aggregation on a shuffled/larger probe and require byte-identical output — order-dependent results won't reproduce |
 | 13 | NaN ≠ null in polars | both checked (`is_nan() \| is_null()`), not just `is_not_null()` |
 | 14 | mixed-source ID dtypes at a join | `left.schema[k] == right.schema[k]` asserted pre-join (see `metrics-and-gates.md` §4) |
 | 15 | a feature silently absent from its own A/B arm | the two arms' input columns differ, not just their metrics |
-| 16 | `fill_null(0.0)` that doesn't no-op — it lies | null-coordinate rows routed out, not defaulted into a real-looking value |
+| 16 | `fill_null(0.0)` that doesn't no-op — it lies | no row with a null input coordinate has a non-null predicted `xG` |
 | 17 | a derived count that depends on which side you computed it from | the same entity re-derived from the other side matches exactly |
-| 18 | a cross-run leak kept on purpose to match a broken oracle | per-unit isolation re-verified before publish, independent of why the leak was tolerated in dev |
+| 18 | a cross-run leak kept on purpose to match a broken oracle | `start_event_type` for a game's first possession is identical whether that game is parsed alone or inside a multi-game frame |
 
 ---
 
@@ -107,8 +109,10 @@ that fixed the lambda in code covered pbp, `adv_*`, and season datasets, but
 statement of the general trap: "I found the dead `_RIDGE_LAMBDA = 325.0`...
 concluded the live lambda was 0.035. True of the CODE, irrelevant to the
 ARTIFACT... **A stale artifact is not a code question**"
-(`higher-order-models.md` §4c). The verify command names the real assertion —
-check the published asset's timestamp, not the source file:
+(`higher-order-models.md` §4c). The verify command below checks the
+published asset's timestamp, not the source file — but a timestamp move is
+only a **cheap pre-check**, not the assertion `reviewer.md` §4 actually
+states for this row:
 
 ```sh
 gh release view cfb_team_summaries_weekly --repo sportsdataverse/sportsdataverse-data \
@@ -116,11 +120,17 @@ gh release view cfb_team_summaries_weekly --repo sportsdataverse/sportsdataverse
 ```
 (`higher-models-HANDOFF.md`)
 
-`reviewer.md` §4 states rows 1 and 4 as ridge-coefficient and
-artifact-hash checks respectively — both are satisfied by this one incident's
-two fixes, and both must be checked, not just one: a `checks.py`-style output
-gate catches a bad fit; a timestamp check catches a good fit that never
-shipped.
+`reviewer.md` §4's row 4 assertion is **"published artifact hash changed,"**
+not "published artifact timestamp changed" — and the distinction is load-
+bearing here, not pedantic: a republish that re-uploads byte-identical output
+(the exact λ-no-op-republish shape this row names) still bumps `updatedAt`,
+so the timestamp check above would have passed on the very failure it exists
+to catch. The real assertion pairs both: `sha256(asset) != sha256(previous)`
+for content, with the timestamp move as a fast first look before paying for
+the hash. Row 1's `checks.py`-style output gate (Face 1) catches a bad fit at
+build time; row 4's content-hash check catches a good fit whose bytes never
+actually reached the release — they are complementary, not interchangeable,
+and neither substitutes for the other.
 
 ---
 
@@ -154,12 +164,34 @@ moved — check both.
 
 ## 4. Release tag on the wrong commit (#3)
 
-`reviewer.md` §4 states the assertion (`tag SHA == build SHA`) as one of the
-seven confirmed instances but is itself the only citable source for this row
-in the material read for this task — an honest attribution, not padding: no
-second independent occurrence surfaced in `higher-order-models.md`,
-`ratings-phase2-openq.md`, `t5-xg-findings.md`, or
-`possession-reconciliation.md`.
+A real, present-day instance lives in `sdv-py`'s own tag history — found by
+walking every `v0.0.*` tag and diffing its SHA against its tagged tree's
+`pyproject.toml` version string, the exact check `reviewer.md` §4 names:
+
+```sh
+for t in $(git tag -l "v0.0.*" | sort -V); do
+  sha=$(git rev-parse "$t")
+  ver=$(git show "$t:pyproject.toml" | grep '^version')
+  echo "$t $sha $ver"
+done
+```
+
+`v0.0.63` resolves to `74e37c86...` — the **same commit `v0.0.62` points
+to**, whose tree's `pyproject.toml` still says `version = "0.0.62"`. The real
+`chore(release): v0.0.63` commit that bumped the version string to
+`"0.0.63"` exists in history (`sdv-py@ab05d89c`) and is **not an ancestor**
+of the commit the tag actually points to
+(`git merge-base --is-ancestor ab05d89c 74e37c86` fails) — the tag was cut
+against the wrong commit, one that predates its own release's version bump.
+The tag SHA is real (`v0.0.62`'s legitimate build), which is exactly why
+`tag SHA == build SHA` alone would not catch this: `v0.0.63`'s SHA equals
+*a* build SHA, just the wrong one. The assertion has to be two clauses:
+`git rev-parse v0.0.63` resolves to a commit whose `pyproject.toml`
+**`version` field reads `"0.0.63"`** — it doesn't, so this instance fails
+exactly the check that would have caught it. (All later tags through
+`v0.0.75` were checked the same way and agree correctly — this appears to be
+an isolated, already-latent tag, not a recurring pattern; still real,
+reproducible today with the commands above.)
 
 ---
 
@@ -273,34 +305,72 @@ pass_success=(pl.col("epa_success") * pl.col("pass")).mean()
 pass_success=pl.col("epa_success").filter(pl.col("pass") == 1).mean()
 ```
 
-**Assertion:** `pass_x + rush_x` should sit *near* `overall_x`, not sum to
-it exactly — an exact sum across a partition is the signature of a
-share-of-all-rows computation masquerading as a within-partition rate.
+**Assertion:** each of `pass_x` and `rush_x` should individually sit *near*
+`overall_x` — both are rates over their own subplays, so each lands close to
+the whole-population rate (real 2024: pass 0.4375, rush 0.4390, overall
+0.4048). **If instead `pass_x + rush_x` sits near `overall_x`, that sum is
+the bug signature**, not the healthy case: it means each "half" is really a
+share of *all* plays (the two halves partition the same denominator as the
+whole), not a rate within its own subplay count. So the runnable check is:
+assert `pass_x` and `rush_x` are each close to `overall_x`; flag it if their
+*sum* is close to `overall_x` instead.
 
 ---
 
 ## 10. Special-teams contribution 18× overstated (#10)
 
-The CFB higher-order pregame model's special-teams composite mixed field
-goals, punting, and returns into one number "that was ~18x overstated in
-apparent size (`points_scale`)" — and collapsing three unrelated skills into
-one coefficient also buried the one genuinely useful signal (starting field
-position, a persistent team trait) under two noisy ones (FG outcomes are
-near-noise year to year) (`cfb-data@1524bc7`). Pricing them separately:
+`points_scale.py`'s own module docstring opens with the finding, in caps, in
+the commit that introduces it: **"SPECIAL TEAMS IS ~18x OVERSTATED --
+CONFIRMED."** Measured on 2021-2024, 3,056 games, against actual scoring
+margin (`cfb-data@7d2100b`, `points_scale.py:5-16`):
+
+```
+unit             sd     pts per unit   pts of spread
+adj_off_epa   0.1331          71.06           11.57
+adj_def_epa   0.1163         -73.97           10.50
+adj_st_epa    0.5223            3.39            2.48
+```
+
+`adj_st_epa`'s raw magnitude (`sd 0.5223`) is **~4x larger** than offense's
+(`sd 0.1331`) — it *looks* like the biggest-swinging rating in the frame —
+while its actual predictive worth (`pts of spread 2.48`) is **~4.7x smaller**
+than offense's (`11.57`). `4 × 4.7 ≈ 18.8`: the mismatch between how large a
+component's raw coefficient looks and how much it actually predicts, not a
+single measured ratio. Root cause, structural rather than a fitting error:
+`adj_st_epa` sums three per-unit centered mean EPA/play (field goal, punt,
+kick return) without weighting by play share (special teams is ~5-8% of
+snaps), and its "true EPA units" label is exactly what made it look
+commensurable with offensive EPA/play when it never was
+(`cfb-data@7d2100b`).
+
+**The assertion: compare components on `pts_of_spread` (regress each on
+actual margin, in points), never on raw coefficient or standard deviation** —
+a component whose raw-unit magnitude is large while its points-of-spread
+contribution is disproportionately small is the overstatement signature.
+`points_scale.py` exists specifically to stop the raw-unit comparison: "every
+rating is expressed in POINTS — the only scale on which 'how much does this
+matter' is a well-posed question" (`cfb-data@7d2100b`).
+
+A follow-up commit acts on the same finding from a different angle —
+splitting the ST composite into its persistent-trait part (starting field
+position) versus its noisy part (FG/punt/return outcomes), pricing each
+`pts_alone` (standalone) against `pts_joint` (alongside off/def ratings):
 
 ```
 component                pts_alone  pts_joint  spread_joint   corr
 start_position_margin        0.419      0.279          2.25  0.165
 on top of off/def/st ratings:  MAE 14.385 -> 14.289  (+0.096)
 ```
+(`cfb-data@1524bc7`)
 
-**The assertion is `incremental_value()` itself** — the module exists
-specifically "to force that distinction: a field-position metric always
-looks respectable standalone, and the only question worth asking is what it
-adds once offence and defence are already in the model" (`cfb-data@1524bc7`).
-A component magnitude checked only in isolation (`pts_alone`) cannot catch
-an overstatement that only appears once it's priced jointly with what it's
-correlated with.
+This is a related but distinct check, worth citing separately rather than
+conflating with the 18x number above: `incremental_value()` exists "to force
+that distinction: a field-position metric always looks respectable
+standalone, and the only question worth asking is what it adds once offence
+and defence are already in the model" (`cfb-data@1524bc7`) — a component
+magnitude checked only in isolation (`pts_alone`) cannot catch redundancy
+with what the model already has, which is a companion failure mode to the
+raw-vs-points-scale mismatch above, not the same measurement.
 
 ---
 
@@ -338,19 +408,30 @@ over-eager filter is that it must never silently zero the frame either.
 
 ## 12. `group_by` without `maintain_order` discarding a prior sort (#12)
 
-No confirmed production instance of this specific shape surfaced in
-`higher-order-models.md`, `ratings-phase2-openq.md`, `t5-xg-findings.md`,
-`possession-reconciliation.md`, or a targeted git-log search of `sdv-py` and
-`cfbfastR-cfb-data` for commits mentioning `maintain_order` or a discarded
-sort. `reviewer.md` §4 names it as one of the seven confirmed rows, so it is
-carried here for compatibility, but this file has no second, independent
-citation to offer beyond the agent table itself — an honest gap, not a
-fabricated one. The assertion the row states is still actionable without a
-named incident: after any `group_by` whose input was sorted for a reason
-(e.g. `sort("game_seconds")` before segmenting possessions, the exact shape
-`possession-reconciliation.md` §1c's chain state machine depends on), assert
-the output order matches the expected order, or pass `maintain_order=True`
-and assert that flag is actually set at the call site.
+Confirmed in `sdv-py` review, found by the exact search the fix should always
+start with — `git log --grep="maintain_order" -i`. `nba_player_identity`'s
+primary-team pick and its `teams` ordering both rested on `group_by`
+preserving an earlier sort. **polars only guarantees order preservation with
+`maintain_order`, so this was undocumented behaviour that happened to hold**
+— and it "did not reproduce on a 300-player probe, which is exactly what
+makes it dangerous" (`sdv-py@927385f4`). The fix doesn't add the missing
+flag; it removes the dependency on group order entirely: both now sort
+*inside* the aggregation via `sort_by(...).first()`, "which is correct
+regardless of group ordering," and a 200-player regression test pins it —
+deliberately constructed so the high-minutes team carries the **lower**
+`team_id`, so an id-ordered fallback would fail if the fix silently
+regressed to one (`sdv-py@927385f4`).
+
+**Assertion, taken directly from the same commit's own test design:** don't
+just check output order on the current input size — re-run the aggregation
+on an input large enough to plausibly reorder (the commit's probe needed
+300 players; a smaller one silently agreed with the buggy assumption) and
+construct at least one case where the "convenient" wrong answer (lowest
+`team_id`, first-seen order) would differ from the correct one. An assertion
+that only checks a small, order-friendly fixture is the same vacuous-gate
+shape `metrics-and-gates.md` §2 warns about for a different check —
+"order preserved on the fixture I happen to have" is not "order-independent
+by construction."
 
 ---
 
@@ -429,17 +510,20 @@ metrics are compared** — diff the schemas, not just the scores.
 
 ## 16. Bonus: `fill_null(0.0)` that doesn't no-op — it actively lies
 
-The inverse failure to #2 and #16's row above: `PwhlCoordXGModel.predict`
-does `shot_distance.fill_null(0.0)`, so a shot with a **null coordinate**
+The inverse failure to #2: `PwhlCoordXGModel.predict` does
+`shot_distance.fill_null(0.0)`, so a shot with a **null coordinate**
 (missing/unparsed geometry) becomes distance `0.0` — point-blank — and scores
 `xG ≫ 0.5`, the opposite of "unknown." The ratings pipeline masks this with a
 separate `fallback_rate`, but calling `predict()` directly is a footgun the
 test file documents but does not close (`t5-xg-findings.md` §W9,
-`test_pwhl_xg_proxy_oracle.py:216-219`). Assertion: null-geometry rows must
-be **routed out** of the prediction (excluded, or scored by the fallback
-rate explicitly), never defaulted into a coordinate that looks like real
-data — a `fill_null(0.0)` in a geometry column is a correctness bug even when
-it doesn't raise and doesn't produce an obviously-impossible number.
+`test_pwhl_xg_proxy_oracle.py:216-219`). **Assertion:** `predict(df)` where
+`df["shot_distance"].is_null().any()` must never return a non-null `xG` for
+those rows — `assert result.filter(df["shot_distance"].is_null())["xG"].is_null().all()`.
+Passing that means null-geometry rows were routed out (excluded, or scored
+by the fallback rate explicitly) rather than defaulted into a coordinate
+that looks like real data — a `fill_null(0.0)` in a geometry column is a
+correctness bug even when it doesn't raise and doesn't produce an
+obviously-impossible number.
 
 ---
 
@@ -480,11 +564,16 @@ inherits `game 6470186`'s **last** event. "Parity is a fine reason for a
 test; it is **not** a fine reason for a published dataset"
 (`possession-reconciliation.md` BUG-4) — every game's opening possession in a
 multi-game publish run silently carries state from whichever game happened
-to precede it in that batch. Assertion: **publish per-game, or add
-`.over("game_id")` behind an explicit flag** — a leak tolerated for oracle
-parity in a dev/test harness must never reach a multi-unit publish path
-unguarded, and the guard must be re-verified at publish time independent of
-why the leak existed in dev.
+to precede it in that batch. **Assertion, the runnable form already sitting
+in the evidence above:** parse the same game alone and again inside a
+multi-game frame, and require `start_event_type` for its first possession to
+match — `assert parse(game_alone)["start_event_type"][0] ==
+parse(games_batch).filter(pl.col("game_id") == g)["start_event_type"][0]`.
+A leak tolerated for oracle parity in a dev/test harness must never reach a
+multi-unit publish path unguarded (publish per-game, or add
+`.over("game_id")` behind an explicit flag), and this per-game-vs-batch
+comparison is what verifies the guard actually holds at publish time,
+independent of why the leak existed in dev.
 
 ---
 
@@ -540,11 +629,6 @@ every other removal cost ≤0.05 (`higher-models-HANDOFF.md`).
 
 ## 20. Honest gaps
 
-- **`group_by` without `maintain_order` (#12)** has no independent
-  confirmed-instance citation in this file — see §12. Carried for
-  `reviewer.md` compatibility, not padded with an invented incident.
-- **Release tag on the wrong commit (#3)** likewise has no second source
-  beyond `reviewer.md` itself in the material read for this task — see §4.
 - **Mixed-source PWHL/NHL `game_id` dtype (#14 addendum, §14)** is a
   documented hazard, not yet a confirmed incident — no cross-league join
   exists in the corpus read for this task that has actually tripped over it.
