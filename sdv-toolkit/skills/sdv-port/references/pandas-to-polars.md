@@ -1,19 +1,12 @@
----
-name: sdv-pandas-to-polars
-description: Use when converting pandas DataFrame/Series code to polars 1.2+ in a SportsDataverse repo — translating a `df.loc`/`np.select`/`df.assign`/`groupby().transform`/`merge` block, reconciling a pandas fix from the sdv-py `0.36-live` branch into polars `main`, or modernizing a pandas-flavored parser/loader. Invoke for "convert this pandas to polars", "rewrite with polars", "translate pandas df.loc/np.where to polars", "port the 0.36-live pandas code", or "make this use polars instead of pandas".
----
+# Direction: pandas → polars 1.x
 
-# Convert pandas → polars 1.2+
+Source is pandas/numpy code (a live pandas parser/loader, or the sdv-py `0.36-live` branch);
+target is polars 1.x `main`. This direction is entirely inside sdv-py, so the review gate is
+`sdv-python-reviewer` with the `polars` lens plus `sdv-parity-reviewer`.
 
-Translate pandas code into **idiomatic, correct polars 1.2+** that already satisfies the
-SportsDataverse conventions (1.x surface only, no regex lookaround, ID-dtype discipline).
-The recurring failure this prevents: a translation that *looks* right but diverges
-downstream — a null where pandas had `NaN`, a row dropped by an index misalignment, an
-unordered `group_by` — surfacing only at a join, a model rebuild, or a season compile.
-
-> **Sibling skills — don't reach for this one if:** the source is **R** (use
-> `sdv-port-r-to-python`), or the code is already polars but on the **0.18 API** (that's a
-> version migration — run the `polars-1x-reviewer` agent, not a pandas conversion).
+> **Sibling directions — don't reach for this file if:** the source is **R** (use
+> `r-to-python.md`), or the code is already polars but on the **0.18 API** (that's a version
+> migration — run the `polars-1x-reviewer` agent, not a pandas conversion).
 
 ## The three mental-model shifts (most bugs live here)
 
@@ -21,16 +14,16 @@ unordered `group_by` — surfacing only at a join, a model rebuild, or a season 
    `reset_index` / `.loc[label]` have no equivalent — promote the would-be index to a real
    column and join/sort/filter on it. Two frames line up by an explicit `join`, never by
    "same index".
-2. **Expressions, not in-place mutation.** You never assign into a frame
-   (`df["c"] = ...`). You build a new frame with `df.with_columns((expr).alias("c"))`.
-   A conditional write (`df.loc[mask, "c"] = v`) becomes
+2. **Expressions, not in-place mutation.** You never assign into a frame (`df["c"] = ...`).
+   You build a new frame with `df.with_columns((expr).alias("c"))`. A conditional write
+   (`df.loc[mask, "c"] = v`) becomes
    `with_columns(pl.when(mask).then(v).otherwise(pl.col("c")).alias("c"))`.
 3. **null ≠ NaN.** pandas conflates missing and NaN; polars separates **null** (missing)
    from **NaN** (a float value). `fillna`/`isna`/`dropna` split into `fill_null`/`is_null`/
    `drop_nulls` **and** `fill_nan`/`is_nan`. Translating only the null half is the single
    most common silent bug.
 
-## Translation reference (pandas → polars 1.x)
+## Idiom map (pandas → polars 1.x)
 
 ### Select / filter / sort
 | pandas | polars 1.x |
@@ -119,44 +112,47 @@ unordered `group_by` — surfacing only at a join, a model rebuild, or a season 
 | `df["x"].sum()` (scalar) | `df.select(pl.col("x").sum()).item()` (or `df["x"].sum()` on a Series) |
 | `df.to_pandas()` / `pl.from_pandas(pdf)` | interop both directions |
 
-## SDV conventions the polars output MUST satisfy
+## Bug-class table (the high-frequency port bugs, pandas → polars)
 
-These are the project rules from sdv-py `CLAUDE.md` — a conversion that ignores them is a
-bug even if it runs. After converting, **run the `polars-1x-reviewer` agent** to catch them
-mechanically.
-
-- **1.x surface only.** No `groupby` / `with_row_count` / `.apply(` / `pl.count()` /
-  `cumsum` / `set_at_idx` / `how="outer"` / `str.strip` / `shift_and_fill`. (Full table:
-  the `polars-1x-reviewer` agent.)
-- **No regex lookaround.** `(?=)` `(?!)` `(?<=)` `(?<!)` raise `ComputeError`. Stop a
+- **ID-dtype discipline / int-vs-str mismatches at join boundaries.** Pick one canonical
+  dtype per join key at the boundary and keep it. Never `cast(Utf8)` a float-origin id
+  (`123.0` ≠ `"123"`) — cast the raw integer. Assert `left.schema[key] == right.schema[key]`
+  before a join.
+- **NaN ids surviving an `is not None` filter.** pandas represents a missing *numeric* id as
+  a float `NaN`, not `None`. Code that filtered rows with `df["id"].notnull()` correctly
+  drops NaN ids, but a scalar-level guard translated as `if id is not None` does not — `NaN
+  is not None` is `True` in Python, so the bad id sails through. Translate the boundary check
+  to `pl.col("id").is_not_null() & pl.col("id").is_not_nan()`, not an identity comparison.
+- **Fillna/isna translated only as the null half.** `fillna`/`isna`/`dropna` split into TWO
+  polars pairs — `fill_null`/`is_null`/`drop_nulls` **and** `fill_nan`/`is_nan`. Porting only
+  the null half silently leaves float NaNs untouched (see mental-model shift #3).
+- **`sum`/`max` over an all-missing group inverts silently.** pandas `sum()` with default
+  `skipna=True` returns `0.0` for an all-NaN group; polars `sum()` over an all-null group
+  returns `null`, not `0`. If downstream code (a join, a `fill_null(0)`, a comparison)
+  assumed pandas' zero, the polars port needs an explicit `.fill_null(0)` after the
+  aggregation, or the "empty group" case silently becomes null-propagating instead of zero.
+- **No regex lookaround.** `(?=)` `(?!)` `(?<=)` `(?<!)` raise `ComputeError` in Rust/polars
+  regex even though Python's `re` (which pandas `.str` methods use) supports it. Stop a
   capture at a stopword with the inline case toggle: `(?i)prefix(?-i: NAMES)`.
 - **Explicit boolean masks.** `pl.col("c") == True`, never bare `pl.col("c")` / `~pl.col(...)`.
-- **ID-dtype discipline.** Pick one canonical dtype per join key at the boundary and keep
-  it. Never `cast(Utf8)` a float-origin id (`123.0` ≠ `"123"`) — cast the raw integer.
-  Assert `left.schema[key] == right.schema[key]` before a join.
+- **1.x surface only.** No `groupby` / `with_row_count` / `.apply(` / `pl.count()` /
+  `cumsum` / `set_at_idx` / `how="outer"` / `str.strip` / `shift_and_fill`.
 - **Float64 model outputs.** Cast explicitly; a `pl.Series(numpy_f32)` silently downcasts.
 - **Scalar from numpy** is `pl.lit(np_array).first()`, not `pl.lit(np_array)` (1.x no longer
   auto-broadcasts).
 - **snake_case output columns** via `sportsdataverse.dl_utils.underscore`.
 
+Indexing base (1-based vs 0-based) is **not** a bug class in this direction — pandas and
+polars are both 0-indexed. It only matters when R is on one side of the port
+(`r-to-python.md` / `python-to-r.md`).
+
 ## Converting a real pipeline function (not a greenfield snippet)
 
 When the pandas code is live pipeline logic (e.g. a `0.36-live` → `main` reconciliation),
-the divergence-surfaces-downstream failure is real — make it a **failing parity test before
-the conversion**, mirroring `sdv-port-r-to-python`:
-
-1. Run the pandas function on a small representative input; persist its output (the columns
-   you'll assert on + the join keys) as a golden fixture under `tests/fixtures/` (or `dev/`
-   for a one-off reconciliation).
-2. Write a parity test that loads the fixture and asserts the not-yet-written polars output
-   matches — exact equality for id/categorical columns, a closeness threshold (state it +
-   why) for float model columns. Run it; confirm it fails for the right reason.
-3. Translate using the tables above; go green.
-4. Gate: `uv run ruff format <f> && uv run ruff check <f>`, the `polars-1x-reviewer` agent,
-   then `/sdv-preflight` (scoped) before `/sdv-ship`.
-
-Don't merge `0.36-live` wholesale — it's pandas-flavored and would undo the polars
-migration. Port semantic fixes by translation and record the reconciliation in `dev/`.
+follow the shared spine in `SKILL.md` (capture fixture → failing parity test → translate
+using the tables above → green → gate). Don't merge `0.36-live` wholesale — it's
+pandas-flavored and would undo the polars migration. Port semantic fixes by translation and
+record the reconciliation in `dev/`.
 
 ## Common mistakes
 
@@ -166,12 +162,7 @@ migration. Port semantic fixes by translation and record the reconciliation in `
   order.
 - `df.pivot(columns=...)` (pre-1.0) or `df.melt(...)` instead of `pivot(on=...)` /
   `unpivot(...)`.
-- `pd.merge(how="outer")` → `how="outer"` (a 0.18 token) instead of `how="full", coalesce=True`.
+- `pd.merge(how="outer")` → `how="outer"` (a 0.18 token) instead of `how="full",
+  coalesce=True`.
 - A row-wise `df.apply(fn, axis=1)` ported to `map_elements` when a vectorized `pl.when` /
   arithmetic expression exists — keep it vectorized; `map_elements` is the slow last resort.
-
-## See also
-
-- `sdv-port-r-to-python` — the R→polars sibling (parity-test-first; shares the gate).
-- `polars-1x-reviewer` agent — the post-conversion mechanical check for 0.18-era API.
-- sdv-py `CLAUDE.md` "Polars version" + "ID column types" — the authoritative idiom/dtype reference.

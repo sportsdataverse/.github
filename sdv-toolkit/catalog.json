@@ -98,14 +98,6 @@
       ]
     },
     {
-      "name": "sdv-pandas-to-polars",
-      "kind": "skill",
-      "purpose": "Use when converting pandas DataFrame/Series code to polars 1.2+ in a SportsDataverse repo \u2014 translating a `df.loc`/`np.select`/`df.assign`/`groupby().transform`/`merge` block, reconciling a pandas fix from the sdv-py `0.36-live` branch into polars `main`, or modernizing a pandas-flavored parser/loader.",
-      "archetypes": [
-        "all"
-      ]
-    },
-    {
       "name": "sdv-pipeline-layout",
       "kind": "skill",
       "purpose": "Use BEFORE creating any new script in an SDV `-raw`/`-data`/`-db` repo, and when naming/placing pipeline stages, ops tools, one-offs, or model training/publish code \u2014 the placement-decides-lifecycle rules, canonical stage numbering, idempotency contract, and model-registry requirements from the 2026-08-02 pipeline audit.",
@@ -122,19 +114,27 @@
       ]
     },
     {
-      "name": "sdv-port-python-to-r",
+      "name": "sdv-port",
       "kind": "skill",
-      "purpose": "Use when porting Python logic from the SportsDataverse Python package (sdv-py) into a SportsDataverse R package \u2014 cfbfastR, hoopR, wehoop, baseballr, fastRhockey, softballR, etc.",
+      "purpose": "Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures.",
       "archetypes": [
-        "all"
-      ]
-    },
-    {
-      "name": "sdv-port-r-to-python",
-      "kind": "skill",
-      "purpose": "Use when porting R logic into the Python SportsDataverse package (sdv-py) \u2014 e.g. translating an nflfastR / cfbfastR / cfbscrapR / baseballr / hoopR R function, reconciling a fix from the pandas `0.36-live` branch into polars `main`, or re-implementing a modeling recipe (EP/WP/QBR/CPOE) from R.",
-      "archetypes": [
-        "all"
+        "sdv-py",
+        "r-package",
+        "data"
+      ],
+      "phases": [
+        "capture-fixture",
+        "failing-parity-test",
+        "port",
+        "green",
+        "review"
+      ],
+      "dispatches": [
+        "sdv-parity-reviewer",
+        "sdv-python-reviewer"
+      ],
+      "hands_off_to": [
+        "sdv-ship"
       ]
     },
     {
