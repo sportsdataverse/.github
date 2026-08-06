@@ -1,0 +1,330 @@
+{
+  "version": "0.4.0",
+  "entries": [
+    {
+      "name": "sdv-data-pipeline",
+      "kind": "skill",
+      "purpose": "Producer lifecycle for -raw/-data repos: standardize, placement, scrape, build, validate, publish.",
+      "archetypes": [
+        "raw",
+        "data"
+      ],
+      "phases": [
+        "standardize",
+        "placement",
+        "scrape",
+        "build",
+        "validate",
+        "publish"
+      ],
+      "dispatches": [
+        "sdv-python-reviewer",
+        "sdv-harness-triage"
+      ],
+      "hands_off_to": [
+        "sdv-ship"
+      ]
+    },
+    {
+      "name": "sdv-model-spine",
+      "kind": "skill",
+      "purpose": "Oracle-gated model build loop: capture oracle, worktree, harness, TDD, gates, parity, close-out.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ],
+      "phases": [
+        "capture-oracle",
+        "worktree-baseline",
+        "oracle-harness",
+        "tdd-tasks",
+        "gates",
+        "shim-parity",
+        "closeout",
+        "review"
+      ],
+      "dispatches": [
+        "sdv-model-reviewer",
+        "sdv-parity-reviewer"
+      ],
+      "hands_off_to": [
+        "sdv-ship"
+      ]
+    },
+    {
+      "name": "sdv-port",
+      "kind": "skill",
+      "purpose": "Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures.",
+      "archetypes": [
+        "sdv-py",
+        "r-package",
+        "data"
+      ],
+      "phases": [
+        "capture-fixture",
+        "failing-parity-test",
+        "port",
+        "green",
+        "review"
+      ],
+      "dispatches": [
+        "sdv-parity-reviewer",
+        "sdv-python-reviewer"
+      ],
+      "hands_off_to": [
+        "sdv-ship"
+      ]
+    },
+    {
+      "name": "sdv-regen-docs",
+      "kind": "skill",
+      "purpose": "Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release.",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-ship",
+      "kind": "skill",
+      "purpose": "Land a change: regen docs, preflight, commit, push, bot-triage, codegen gate, merge, stack retarget, release.",
+      "archetypes": [
+        "sdv-py",
+        "raw",
+        "data",
+        "r-package",
+        "toolkit"
+      ],
+      "phases": [
+        "regen-docs",
+        "preflight",
+        "commit",
+        "push",
+        "bot-triage",
+        "ci-gate",
+        "merge",
+        "stack-retarget",
+        "release"
+      ],
+      "dispatches": [
+        "sdv-python-reviewer",
+        "sdv-r-reviewer",
+        "sdv-docs-reviewer"
+      ]
+    },
+    {
+      "name": "sdv-add-source",
+      "kind": "skill",
+      "purpose": "Add a league/sport/endpoint/provider to sdv-py: capture, catalog, returns doc, scaffold, fixtures, drift gate.",
+      "archetypes": [
+        "sdv-py"
+      ],
+      "phases": [
+        "capture",
+        "catalog",
+        "returns-doc",
+        "scaffold",
+        "fixtures",
+        "drift-gate"
+      ],
+      "dispatches": [
+        "sdv-python-reviewer",
+        "sdv-docs-reviewer"
+      ],
+      "hands_off_to": [
+        "sdv-document",
+        "sdv-regen-docs",
+        "sdv-ship"
+      ]
+    },
+    {
+      "name": "sdv-document",
+      "kind": "skill",
+      "purpose": "Produce documentation surface: Python returns schema, roxygen @return table, notebook, pkgdown theming.",
+      "archetypes": [
+        "sdv-py",
+        "r-package"
+      ],
+      "phases": [
+        "returns-schema-py",
+        "returns-table-r",
+        "notebook",
+        "pkgdown"
+      ],
+      "dispatches": [
+        "sdv-docs-reviewer",
+        "sdv-r-reviewer"
+      ],
+      "hands_off_to": [
+        "sdv-regen-docs",
+        "sdv-ship"
+      ]
+    },
+    {
+      "name": "sdv-python-reviewer",
+      "kind": "agent",
+      "purpose": "Python review by lens: polars | http | parser-contract | docstring.",
+      "archetypes": [
+        "sdv-py",
+        "raw",
+        "data"
+      ],
+      "lenses": [
+        "polars",
+        "http",
+        "parser-contract",
+        "docstring",
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-r-reviewer",
+      "kind": "agent",
+      "purpose": "R review by lens; owns roxygen/pkgdown/parity, routes general R concerns upstream.",
+      "archetypes": [
+        "r-package"
+      ],
+      "lenses": [
+        "roxygen",
+        "tidy-idiom",
+        "metaprogramming",
+        "style",
+        "package-structure",
+        "cran",
+        "performance",
+        "parity",
+        "all"
+      ],
+      "pulls": [
+        "r-skills:tidyverse-patterns",
+        "r-skills:rlang-patterns",
+        "r-skills:r-style-guide",
+        "r-skills:r-package-development",
+        "r-lib:testing-r-packages",
+        "r-lib:cran-extrachecks",
+        "r-skills:r-performance"
+      ]
+    },
+    {
+      "name": "sdv-model-reviewer",
+      "kind": "agent",
+      "purpose": "Audit new model/validation code: gates, leakage boundary, metric fit, silent no-op, sklearn contract, lineage, oracle joins.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ],
+      "lenses": [
+        "gate-integrity",
+        "leakage-boundary",
+        "metric-fit",
+        "silent-no-op",
+        "sklearn-contract",
+        "lineage",
+        "oracle-join",
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-harness-triage",
+      "kind": "agent",
+      "purpose": "Triage a validation-harness WARN by finding_type and emit a Verdict.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ],
+      "finding_types": [
+        "sweep",
+        "extraction",
+        "leakage_lint",
+        "boundary_leakage",
+        "numeric_parity"
+      ]
+    },
+    {
+      "name": "sdv-parity-reviewer",
+      "kind": "agent",
+      "purpose": "Audit a cross-language port for ID-dtype, regex, indexing, null-semantics, and numeric-fidelity bug classes.",
+      "archetypes": [
+        "sdv-py",
+        "r-package",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-docs-reviewer",
+      "kind": "agent",
+      "purpose": "Audit or produce the three-column returns table, Python or R; map a provider payload into documentation.",
+      "archetypes": [
+        "sdv-py",
+        "r-package"
+      ],
+      "modes": [
+        "audit",
+        "map"
+      ]
+    },
+    {
+      "name": "sdv-conventions",
+      "kind": "skill",
+      "purpose": "Archetype convention packs; the router points here.",
+      "archetypes": [
+        "sdv-py",
+        "raw",
+        "data",
+        "r-package",
+        "toolkit"
+      ]
+    },
+    {
+      "name": "sdv-guide",
+      "kind": "skill",
+      "purpose": "Callable index: what the toolkit has, when to use each part, and the rename map.",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-learn",
+      "kind": "skill",
+      "purpose": "Promote a durable session finding into the right toolkit surface, with its detection test.",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
+      "name": "sdv-triage",
+      "kind": "skill",
+      "purpose": "Sweep open issues and PRs across the org, classify each, act on tiers 0-1, propose tiers 2-4.",
+      "archetypes": [
+        "all"
+      ],
+      "phases": [
+        "auth-check",
+        "sweep",
+        "classify",
+        "tier-0-1-act",
+        "propose"
+      ],
+      "dispatches": [
+        "sdv-issue-triage",
+        "sdv-python-reviewer",
+        "sdv-r-reviewer"
+      ]
+    },
+    {
+      "name": "sdv-issue-triage",
+      "kind": "agent",
+      "purpose": "Classify one open issue or PR into one of six verdicts, read-only, with evidence.",
+      "archetypes": [
+        "all"
+      ],
+      "verdicts": [
+        "actionable-now",
+        "already-fixed",
+        "needs-info",
+        "real-but-large",
+        "out-of-scope",
+        "bot-noise"
+      ]
+    }
+  ]
+}

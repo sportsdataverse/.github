@@ -1,0 +1,31 @@
+name: sdv-toolkit catalog
+
+on:
+  push:
+    paths:
+      - 'sdv-toolkit/**'
+      - '.claude-plugin/**'
+      - '.github/workflows/sdv-toolkit-catalog.yml'
+  pull_request:
+    paths:
+      - 'sdv-toolkit/**'
+      - '.claude-plugin/**'
+      - '.github/workflows/sdv-toolkit-catalog.yml'
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests
+        working-directory: sdv-toolkit
+        run: python -m unittest discover -s tools -p 'test_*.py' -v
+      - name: Catalog is bound to the tree
+        working-directory: sdv-toolkit
+        run: python tools/check_catalog.py .
+      - name: Rendered surfaces are current
+        working-directory: sdv-toolkit
+        run: python tools/render.py --check
