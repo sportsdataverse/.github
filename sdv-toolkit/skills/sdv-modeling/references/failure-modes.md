@@ -64,7 +64,7 @@ addendum), rather than papering over it as equally solid.
 | 9 | percentile "shares" that were never rates | `pass_x` and `rush_x` each individually ≈ `overall_x`; `pass_x + rush_x ≈ overall_x` is the bug signature, not the healthy case |
 | 10 | special-teams contribution 18× overstated | compare components on their points-of-spread contribution (`pts_of_spread`), not raw coefficient/sd — `adj_st_epa`'s sd is 4x offense's while its `pts_of_spread` is 4.7x *smaller* |
 | 11 | simulator iterating non-FBS teams | simulated population count == the rated population, not the schedule population |
-| 12 | `group_by` without `maintain_order` discarding a prior sort | re-run the same aggregation on a shuffled/larger probe and require byte-identical output — order-dependent results won't reproduce |
+| 12 | `group_by` without `maintain_order` discarding a prior sort | construct a fixture where the correct answer differs from the id-ordered/first-seen fallback (e.g. the true highest-minutes team has the numerically LOWER id) and assert the aggregation still picks the correct one — a bigger probe alone does not catch this |
 | 13 | NaN ≠ null in polars | both checked (`is_nan() \| is_null()`), not just `is_not_null()` |
 | 14 | mixed-source ID dtypes at a join | `left.schema[k] == right.schema[k]` asserted pre-join (see `metrics-and-gates.md` §4) |
 | 15 | a feature silently absent from its own A/B arm | the two arms' input columns differ, not just their metrics |
@@ -188,10 +188,12 @@ The tag SHA is real (`v0.0.62`'s legitimate build), which is exactly why
 *a* build SHA, just the wrong one. The assertion has to be two clauses:
 `git rev-parse v0.0.63` resolves to a commit whose `pyproject.toml`
 **`version` field reads `"0.0.63"`** — it doesn't, so this instance fails
-exactly the check that would have caught it. (All later tags through
-`v0.0.75` were checked the same way and agree correctly — this appears to be
-an isolated, already-latent tag, not a recurring pattern; still real,
-reproducible today with the commands above.)
+exactly the check that would have caught it. (Every other tag that exists
+from `v0.0.65` through `v0.0.75` was checked the same way and agrees
+correctly — note `v0.0.64` was never cut as a tag at all, so it isn't part
+of that swept set, just absent. This appears to be an isolated, already-
+latent tag, not a recurring pattern; still real, reproducible today with the
+commands above.)
 
 ---
 
@@ -422,16 +424,20 @@ deliberately constructed so the high-minutes team carries the **lower**
 `team_id`, so an id-ordered fallback would fail if the fix silently
 regressed to one (`sdv-py@927385f4`).
 
-**Assertion, taken directly from the same commit's own test design:** don't
-just check output order on the current input size — re-run the aggregation
-on an input large enough to plausibly reorder (the commit's probe needed
-300 players; a smaller one silently agreed with the buggy assumption) and
-construct at least one case where the "convenient" wrong answer (lowest
-`team_id`, first-seen order) would differ from the correct one. An assertion
-that only checks a small, order-friendly fixture is the same vacuous-gate
-shape `metrics-and-gates.md` §2 warns about for a different check —
-"order preserved on the fixture I happen to have" is not "order-independent
-by construction."
+**Assertion, taken directly from the same commit's own test design — and the
+lever is construction, not size.** The 300-player probe is the one that
+*agreed* with the buggy assumption; that is the whole point of the quote
+above — bigger input is not what exposes this bug, and re-running on a
+larger or shuffled probe can pass every time the underlying order still
+happens to hold. What actually catches it is **adversarially constructing**
+a case where the convenient wrong answer and the correct answer differ: the
+200-player regression test deliberately gives the true highest-minutes team
+the numerically **lower** `team_id`, so an id-ordered or first-seen fallback
+computes a *different*, wrong result — and only a fix that is genuinely
+order-independent (`sort_by(...).first()` inside the aggregation, not a
+`maintain_order=True` flag hoping the caller remembers it) passes. Assert
+the correct answer against a fixture built this way, not against a bigger
+one.
 
 ---
 
@@ -516,13 +522,25 @@ The inverse failure to #2: `PwhlCoordXGModel.predict` does
 `xG ≫ 0.5`, the opposite of "unknown." The ratings pipeline masks this with a
 separate `fallback_rate`, but calling `predict()` directly is a footgun the
 test file documents but does not close (`t5-xg-findings.md` §W9,
-`test_pwhl_xg_proxy_oracle.py:216-219`). **Assertion:** `predict(df)` where
-`df["shot_distance"].is_null().any()` must never return a non-null `xG` for
-those rows — `assert result.filter(df["shot_distance"].is_null())["xG"].is_null().all()`.
-Passing that means null-geometry rows were routed out (excluded, or scored
-by the fallback rate explicitly) rather than defaulted into a coordinate
-that looks like real data — a `fill_null(0.0)` in a geometry column is a
-correctness bug even when it doesn't raise and doesn't produce an
+`test_pwhl_xg_proxy_oracle.py:216-219`). **Assertion — assumes the remedy is
+"propagate the null," i.e. `predict()` returns a frame aligned 1:1 with its
+input rather than dropping or defaulting them:**
+
+```python
+result = model.predict(df)  # same row count/order as df
+assert result["xG"].filter(df["shot_distance"].is_null()).is_null().all()
+```
+
+That holds specifically for a fix that leaves null-geometry rows in place
+with a null `xG`. It does **not** hold for either of the other two valid
+remedies named above — a fix that filters null-geometry rows *out* of
+`result` before returning (shorter than `df`, needs a row-count check
+instead) or one that routes them through the explicit `fallback_rate` (`xG`
+is legitimately non-null there, by design). Whichever remedy a given
+caller takes, the shared requirement is the same: null-geometry rows must
+never receive `predict()`'s *default* geometry-based estimate, because that
+estimate is a `fill_null(0.0)` in a geometry column — a correctness bug even
+when it doesn't raise and doesn't produce an
 obviously-impossible number.
 
 ---
