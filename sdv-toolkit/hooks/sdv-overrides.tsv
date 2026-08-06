@@ -1,0 +1,6 @@
+hoopR-data	ARCHIVE - read-only; do not build here
+wehoop-data	ARCHIVE - read-only; do not build here
+fastRhockey-data	ARCHIVE - read-only; do not build here
+hoopR-nba-stats-data	Python twin = league-binding shim; pins sdv-py@main, re-lock after each sdv-py merge
+wehoop-wnba-stats-data	same shim contract as hoopR-nba-stats-data
+sdv-internal-refs	docs/captures only - no package code
