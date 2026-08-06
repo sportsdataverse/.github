@@ -338,6 +338,18 @@
         "sdv-model-spine",
         "sdv-sklearn"
       ]
+    },
+    {
+      "name": "sdv-sklearn",
+      "kind": "skill",
+      "purpose": "scikit-learn and XGBoost failures specific to panel-sports data, each with its detection test.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ],
+      "hands_off_to": [
+        "sdv-model-spine"
+      ]
     }
   ]
 }
