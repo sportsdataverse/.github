@@ -476,6 +476,13 @@ the build, `sdv-harness-triage` on any WARN the validation run surfaces.
 
 ## Phase 6 — Publish
 
+> **Before running ANY R stage, read the publish + manifest rules in
+> `sdv-conventions` → `references/data.md`.** Two things there are
+> incident-grade, not style: an `R/espn_<lg>_*_creation.R` stage publishes to
+> the LIVE release with no dry-run gate (running one locally overwrote three
+> WNBA tags on 2026-08-07), and the in-tree manifests are append LOGS that
+> `publish` collapses — deduplicating them destroys intended history.
+
 Two mirrors, both required when the repo uses both:
 
 - **git commit** of the data tree (batch, conventional message);
