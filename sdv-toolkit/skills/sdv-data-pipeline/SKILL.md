@@ -37,8 +37,12 @@ Do not substitute `general-purpose`.
 
 Authoritative spec: `ClaudeCowork/specs/2026-08-01-data-raw-repo-standardization-design.md`
 (decisions D1–D43 + lessons §12.5–12.7). This phase is the executed ORDER with
-the traps inlined, from pilots 1–6 (wehoop-wbb pair, hoopR-nba-stats pair,
-wehoop-wnba-stats pair). Work on `main` via small verified commits (or PRs per
+the traps inlined, from pilots 1–10 (wehoop-wbb pair, hoopR-nba-stats pair,
+wehoop-wnba-stats pair, the NCAA campaign pilots) plus the ESPN `-data`
+fan-out. A multi-repo standardization needs an **execution ledger** — one
+roadmap doc listing every repo × every decision with its verified state;
+`ClaudeCowork/plans/2026-08-07-standardization-completion-roadmap.md` is the
+worked example. Work on `main` via small verified commits (or PRs per
 repo protection); the pilots proved 20-file PRs get real bot reviews and
 2,000-file ones get silently skipped — split accordingly.
 
@@ -98,7 +102,10 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
 - **Verification must name the ref it verifies.** `ahead=$(git rev-list
   origin/main..main)` says nothing while on a feature branch — this masked an
   unmerged fix TWICE. Print `HEAD=$(rev-parse --short HEAD)
-  origin/main=$(rev-parse --short origin/main)` instead.
+  origin/main=$(rev-parse --short origin/main)` instead. Same rule for a
+  brief's "known broken" claim: check it against git BEFORE fixing it — one
+  fan-out repo's CI fix was already landed and a stale brief nearly caused
+  duplicate work.
 - **Check `git status` AFTER committing.** A failed pathspec inside
   `git add -A -- a b c` silently drops the rest; a pilot shipped a workflow
   invoking a script deleted in the same "commit".
@@ -109,6 +116,33 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
   command lines, and a `CommandLine -match` filter matches the checking shell
   itself. Judge liveness by log growth or an explicit watched PID
   (`commit_loop.sh <pid>` pattern), never by process-name counts.
+- **GATE-0 quiescence is TWO-channel** (before standardizing a repo another
+  session may be capturing into): a process filter on the COMMAND LINE, AND
+  capture-tree mtimes compared across two snapshots ~30s apart. Either channel
+  alone reports a busy repo idle.
+- **Read `docs/SCRAPING_NOTES.md` in full before touching a stats.ncaa repo** —
+  it is normative for that family (transport, pacing, solve-proof), not
+  background reading.
+- **A guard's refusal rc MUST be distinguishable from a capture-failure rc.**
+  A stale `MAX_SEASON=2025` refused season 2026 with rc=2, the range driver
+  read that as a capture hard-stop, and an entire WBB pbp campaign captured
+  ZERO bundles while discovery looked healthy. Bump the season guard in the
+  same commit as the crosswalk-season bump.
+- **Census by rows, not by counts.** A full-tree deep parse (99,240 bundles:
+  0 corrupt, 0 bm-verify artifacts persisted as captures) is the only honest
+  completion claim; the residual 797 contests vs discovery resolved to
+  documented skips + pageless games, which a count-only check would have
+  reported as loss.
+- **Diff-port byte-sibling twins** (MBB→WBB) instead of re-deriving the change
+  — see Phase 2's twin-repo rule.
+- **A cross-repo rename (D33) goes reader-side-WITH-FALLBACK first** when the
+  writer lives in another repo: accept both names on read now, land the writer
+  rename + fallback drop as a tracked follow-up.
+- **CRLF in `.sh` files fails GitHub runners' syntax gate** — one repo's tests
+  were red on `main` for days from this alone. `bash -n` locally on Git Bash
+  will not catch it.
+- **`uv sync --frozen` in CI, and nothing after it that re-resolves** — an
+  `--upgrade-package` step defeats the lock the gate exists to enforce.
 - **Kill by CIM + command-line filter, never by process name** — blanket
   `Stop-Process python` would have killed another session's 25-worker
   campaign.
@@ -123,13 +157,38 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
   `sdv-internal-refs/nba/API_NOTES.md` + `ENDPOINT_DECISIONS.md` — those are
   provider-specific and normative there.
 
-### Deferred-by-design (don't scope-creep into step 2)
+### Step 9 — the fan-out phase (docs, schemas, models)
 
-Numbered thin builders, docs.py + column-description stores (author per
-league, NEVER borrow by column name), pydantic models from built parquets,
-schedule-master artifacts (D34). These are their own phase, gated on a tested
-build package existing; the stats pair's phase is tracked in the plan
-close-out.
+Numbered thin builders, `docs.py` + column-description stores, pydantic
+models, schedule-master artifacts (D34). Still **don't scope-creep these into
+step 2** — they are gated on a tested build package existing. Executed
+2026-08-07 across the ESPN `-data` fan-out; the dominant bug class was
+**drift gates that pass locally and would red every PR**.
+
+- **Verify a docs `--check` drift gate with the data payload ABSENT** —
+  physically move the payload dir aside to simulate CI's sparse checkout,
+  then run the gate. Two repos shipped gates that would have reddened every
+  PR: one's sparse checkout omitted `docs`/`README.md`/`CLAUDE.md` so the
+  generated files did not exist on the runner; the other's coverage tables
+  derive from `*_in_data_repo.csv` manifests deliberately outside the
+  checkout, so a CI-side regen always diverged. Fix = add the doc paths to
+  the sparse checkout AND exclude payload-derived sections (seasons-built
+  line, coverage table) from the drift comparison.
+- **When the sparse checkout genuinely cannot see the data the docs derive
+  from, do NOT wire `--check` into CI** — document why in the module
+  docstring. A permanently-red gate is worse than no gate.
+- **Column descriptions: leave EMPTY when no description store exists.** An
+  empty cell is an honest TODO; an invented or cross-league-borrowed sentence
+  is a defect. (Never borrow by column name across leagues.)
+- **Preserve each file's existing line-ending convention** when regenerating
+  marker blocks — a naive LF rewrite turned a ~20-line diff into 144.
+- **Pydantic dataset models are generated from the LATEST PUBLISHED or
+  COMMITTED parquet** — never invented, never borrowed from the twin league.
+  An unpublished release tag gets NO model until first publish.
+- **Loader-schema cross-check fixtures are VENDORED** into the repo with a
+  documented refresh command; never read a sibling checkout at CI time.
+- **A repo with no dataset registry skips D40/D43** — state the reason in the
+  ledger rather than inventing a registry to satisfy the decision.
 
 ---
 
