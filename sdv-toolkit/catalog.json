@@ -1,5 +1,5 @@
 {
-  "version": "0.5.0",
+  "version": "0.6.0",
   "entries": [
     {
       "name": "sdv-data-pipeline",
@@ -381,6 +381,96 @@
       "archetypes": [
         "data",
         "sdv-py"
+      ]
+    },
+    {
+      "name": "sdv-evaluating-ml-models",
+      "kind": "skill",
+      "purpose": "Model evaluation and validation: cross-validation strategies, metrics selection, hyperparameter tuning, experiment tracking, and model comparison.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-engineering-ml-features",
+      "kind": "skill",
+      "purpose": "Feature engineering for machine learning: encoding, scaling, datetime/text transforms, and leakage-safe preprocessing pipelines.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-ml-pipeline",
+      "kind": "skill",
+      "purpose": "Production ML pipeline infrastructure: experiment tracking, Kubeflow/Airflow DAGs, feature stores, model registries, and retraining automation.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-data-scientist",
+      "kind": "skill",
+      "purpose": "Advanced analytics, ML modeling, and statistical analysis for data-driven insights and business intelligence.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-assuring-data-pipelines",
+      "kind": "skill",
+      "purpose": "Data quality validation and observability for pipelines via Great Expectations/Pandera plus OpenTelemetry/Prometheus monitoring.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-polars",
+      "kind": "skill",
+      "purpose": "High-performance polars DataFrame patterns for ETL and analytics -- lazy queries, streaming, and Arrow interop.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-python-performance-optimization",
+      "kind": "skill",
+      "purpose": "Profile and optimize Python code with cProfile and memory profilers to find and fix performance bottlenecks.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-working-in-notebooks",
+      "kind": "skill",
+      "purpose": "Reproducible Jupyter/JupyterLab/marimo/Colab notebook workflows for exploration, analysis, documentation, and teaching.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-analyzing-data",
+      "kind": "skill",
+      "purpose": "Exploratory data analysis: dataset profiling, chart selection, statistical tests, and insight-communicating visualizations.",
+      "archetypes": [
+        "sdv-py",
+        "data"
+      ]
+    },
+    {
+      "name": "sdv-building-data-pipelines",
+      "kind": "skill",
+      "purpose": "Production batch data pipelines with Polars, DuckDB, and PyArrow -- ETL patterns, medallion architecture, and partitioning.",
+      "archetypes": [
+        "sdv-py",
+        "data"
       ]
     }
   ]
