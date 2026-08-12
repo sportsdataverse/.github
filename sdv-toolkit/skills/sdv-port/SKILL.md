@@ -48,6 +48,12 @@ before the fixture is written. When a captured column is provably wrong-by-const
 the oracle columns (strict / promoted / invariant-covered) and say so in the test docstring.
 Your reference file has the direction-specific version of this failure mode.
 
+**A committed golden also ages — re-run the oracle live before calling a delta a
+regression.** Upstream renames and data revisions accumulate as calendar time and read
+exactly like a port bug (a WBB crosswalk's 46-row `exact_name` "regression" was two months
+of ESPN renames; a fresh `wehoop::` run matched the Python byte-for-byte). Record the
+capture date beside the fixture so the staleness question is answerable without a re-run.
+
 ## 3. Write the failing parity test FIRST
 
 Before porting, add a test that loads the golden fixture and asserts the (not-yet-written)

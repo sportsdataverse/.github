@@ -177,6 +177,12 @@ step 2** — they are gated on a tested build package existing. Executed
 - **When the sparse checkout genuinely cannot see the data the docs derive
   from, do NOT wire `--check` into CI** — document why in the module
   docstring. A permanently-red gate is worse than no gate.
+- **The sections `--check` excludes are the ones an offline regen destroys.**
+  A `--no-live` docs regen blanked 14 real "Last published" dates to em dashes,
+  and because the status block is deliberately outside the drift comparison the
+  gate would have passed over the wipe. Offline regen is a read-only debugging
+  mode: `git diff` the excluded sections and restore them before staging, or
+  don't commit an offline run at all.
 - **Column descriptions: leave EMPTY when no description store exists.** An
   empty cell is an honest TODO; an invented or cross-league-borrowed sentence
   is a defect. (Never borrow by column name across leagues.)
@@ -394,6 +400,7 @@ echo "EXIT=$?" | tee -a "$LOG"   # grep-able completion marker; do NOT trust a
 | `stats.nba.com` / `stats.wnba.com` | TLS/JA3-blocks plain `requests` (silent HANG, not an error) → `curl_cffi` `impersonate="chrome"`. Datacenter/cloud IPs also hang — run from a residential IP only. Gate live tests with `SDV_PY_NBA_STATS_LIVE=1`, not the generic live gate. |
 | `stats.ncaa.org` | Unfriendly to direct traffic — route through the proven proxy client; keep parallelism at 1–2. |
 | ESPN Core v2 | 403s under aggressive parallelism; Site v2 is more forgiving. Keep workers low and never re-scrape already-captured games. |
+| ESPN Site v2 | **Soft-throttles as HTTP 200 with the payload array absent** — no exception, so a per-item `except` logs nothing and the run reports success. An instrumented sweep returned 239/362 rosters empty with zero errors; paced, 0. Assert the expected array is PRESENT per response, count the misses, and treat a nonzero count as throttling — not as a roster gap. |
 | All | Bound ATTEMPTS, not saves — an id-walk without an attempt cap can 404-flood (the CBS incident: 8,400+ wasted requests). |
 
 ### Assistant-side conduct while the job runs

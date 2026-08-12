@@ -48,5 +48,36 @@ vacuously, which reads greener than before while testing less. Whenever you
 add a selector, add the assertion that fails when it selects nothing — or
 selects too little.
 
+### Positive control before absence
+
+Those three cover a number that is wrong. The inverse is worse: **a null, empty,
+or absent result is not evidence of absence until a known-positive case proves
+the pipeline works in the same session.** Absence raises no error and reads as a
+clean answer, so nothing prompts you to check. Four shapes, all 2026-08-12:
+
+| Absence read as fact | What a control showed |
+|---|---|
+| `stats.nba.com` returned nothing for `drafthistory` | it **hangs** rather than errors, so a timeout and "no data" are the same bytes; a `franchisehistory` call in the same session proved the transport healthy and exposed a wrong `"barren"` catalog label that had blocked a wrapper → discovery → capture → dataset → model chain for years |
+| 239 of 362 ESPN roster fetches came back empty | ESPN soft-throttles rapid sequential calls with **HTTP 200 and the `athletes` array simply absent** — zero exceptions, so no per-item `except` could have logged it; a paced re-run returned 0 empty |
+| two NBA Finals games "missing from the raw store" | they were never played — the control was a demonstrably-played game in the same bracket also reading `0-0`, proving a pre-series snapshot |
+| `remote_assets()` returned `{}` | it returns `{}` for BOTH "release absent" and "release empty", so a dry run planned uploads against a nonexistent tag and aborted mid-publish |
+
+Cheapest form: one call whose answer you already know, through the same
+transport, in the same session — run BEFORE reporting the absence, not after
+someone doubts it.
+
+## Universal — shared checkouts have no author affordance
+
+Every agent commits as the same author, so `git log` cannot tell them apart.
+Five agents in one checkout produced a reverted mid-flight edit, a test run that
+passed **only because it started before the revert**, and four rounds of mutual
+misattribution. Per-worktree reflogs (`.git/worktrees/<name>/logs/HEAD`) localize
+WHERE a change came from; nothing localizes WHO.
+
+- Work in your own worktree. Concurrency in one checkout is the whole problem.
+- Never infer an author from commit adjacency — say "an agent I can't identify."
+- A green run is evidence only about the tree as it stood when the run STARTED.
+  Re-run after any concurrent write, and record the HEAD you tested.
+
 For the full producer lifecycle (not just the differing rules), see
 `sdv-data-pipeline`. For documentation surface, see `sdv-document`.

@@ -49,6 +49,15 @@ speculating.
   "confirmed" costs more than an honest "uncertain" that a human then checks, and a false
   "dismissed" ships a real bug.
 
+**Absence is never self-evidencing.** When the finding's evidence is a null, empty, or
+zero-row result, you may NOT return `dismissed` on "legitimately absent for this
+play type / season / league" unless the cited producer path is shown working on a
+known-positive case — another column, game, or season that DOES populate through the
+same code. From the absence alone, a silently-hanging transport, a soft-throttled
+HTTP 200 with the payload array missing, an event that never happened, and a genuinely
+null field are indistinguishable. With no positive control available to you, the status
+is `uncertain` and the rationale names the control that would settle it.
+
 **Confidence.** `0.0`–`1.0`, your certainty in the status — not the severity of the
 underlying issue. Prefer a well-calibrated **uncertain** over a low-confidence guess at
 confirmed/dismissed.

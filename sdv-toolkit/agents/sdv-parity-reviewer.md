@@ -97,6 +97,14 @@ but when it applies, these are invisible until a handful of cells fail parity.
   its name claims) and a rendered DataTable re-sorts rows. If the oracle was
   browser-captured, flag it; a static capture over the same bytes the Python test parses
   is the trustworthy form.
+- **A committed golden measures calendar time, not correctness.** A frozen fixture drifts
+  as the source data changes underneath it, so a parity delta against it is not a
+  regression until the oracle has been **re-run live** on the same inputs. Flag (a) any
+  parity fixture whose README/header carries no capture date, and (b) any "the port
+  regressed" conclusion drawn from a committed golden alone. Real case: a WBB player
+  crosswalk read as a 46-row `exact_name` regression; a fresh `wehoop::` run was
+  byte-identical to the Python output across all 17 columns — the entire delta was two
+  months of upstream ESPN renames.
 - **Bug-matching a known-wrong oracle is a finding.** When the source is provably wrong
   (a stale fork's clock math, a corrupted capture column), the port must FIX it, document
   the divergence in-module, and partition the parity assertions —

@@ -52,6 +52,15 @@ are starting at, then proceed forward from there.
    If `--check` is non-zero, the generated tree drifted — regenerate and stage
    the result. The same gate runs in CI and the `sdv-codegen` pre-commit hook.
 
+   **The CI job is `--check` PLUS the codegen tests.** `tests/codegen/` runs
+   inside that same gate, so it travels with the regen even when Phase 2 is
+   otherwise scoping tests to changed files — a hardcoded wrapper-count
+   assertion in `tests/codegen/` reddened CI after a perfectly clean `--check`:
+
+   ```sh
+   uv run pytest tests/codegen/ -q
+   ```
+
    **Branch head, not per-task.** On a multi-commit / multi-task branch, re-run
    the gate at the FINAL branch head even if it passed mid-branch — later
    commits that add exports or docstrings silently invalidate an earlier
