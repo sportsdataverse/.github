@@ -152,6 +152,11 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
 - **Bot review economics**: CodeRabbit skips >100 files, Sourcery >300 and
   has a weekly diff budget a purge PR can exhaust for the whole org. Put the
   reviewable logic in the small PR; note the skip in the bulk one.
+- **A rate-limited review bot reports a GREEN check while performing no
+  review.** CodeRabbit ("Review rate limited" / "you've reached your PR review
+  limit") and Sourcery ("weekly rate limit of 500000 diff characters") both did
+  this repeatedly on 2026-08-13; several PRs merged bot-unreviewed behind a
+  passing tick. Read the check's status DESCRIPTION, not its conclusion.
 - For `-raw` capture semantics (write guards, zero-row vs `{}`, floors,
   measure domains, poisoned defaults), defer to
   `sdv-internal-refs/nba/API_NOTES.md` + `ENDPOINT_DECISIONS.md` — those are
@@ -419,7 +424,7 @@ echo "EXIT=$?" | tee -a "$LOG"   # grep-able completion marker; do NOT trust a
 |---|---|---|---|
 | `nflverse-dev/nfl-data` | `nfl-raw` `nfl/raw/{season}/{game_id}.json` | `python/{nfl_data_ingest, native_pbp, nfl_model_publish, model_training}` | `sportsdataverse-data` releases (`nfl_model_pbp`, `nfl_model_artifacts`, `nfl_4th_down_models`) |
 | `cfbfastR-dev/cfbfastR-cfb-data` | `cfbfastR-cfb-raw` `cfb/{json,…}` | `python/{cfb_data_ingest, cfb_data_build, cfb_model_pbp, cfb_model_publish, cfb_model_reports}` + R producer | `espn_cfb_*` releases (14 public datasets; R is the released producer — python builders must parity-match) |
-| `hoopR-dev/hoopR-nba-stats-data` | `hoopR-nba-stats-raw` | `python/nba_data_build` | git commit + `sportsdataverse-data` release tags (e.g. `nba_stats_pbpv3`, `possessions_v3`, `lineups_v3`) |
+| `hoopR-dev/hoopR-nba-stats-data` | `hoopR-nba-stats-raw` | `python/nba_data_build` | git commit + `sportsdataverse-data` release tags (e.g. `nba_stats_pbp`, `nba_stats_possessions`, `nba_stats_game_lineups`) |
 | `hoopR-dev/hoopR-{mbb,nba}-data`, `wehoop-dev/wehoop-*-data`, `hockey-dev/fastRhockey-*-data` | family `-raw` mirror | family-shaped | family releases |
 
 Cron entry point: `scripts/daily_<family>_processor.sh` (data side) mirrors
@@ -511,6 +516,27 @@ logging conventions (unbuffered, timestamped, `EXIT=$?`).
 dataset, that's a separate consumer-side PR (cached loader + returns
 schema); note it as follow-up rather than bundling it into the producer
 change.
+
+### Gotchas
+
+- **Publishing the data and publishing the artifact that DESCRIBES the data
+  are separate steps — usually only the first is wired.** Three instances in
+  one night (2026-08-13): per-tag release `README.md` assets stayed stale after
+  the docs PR merged (needed a cutover re-run); sdv-db's API surface is
+  generated from a committed DB snapshot, so it lags its catalog; and per-tag
+  `<tag>_in_data_repo.csv` manifests were never written by the Python publish
+  path at all — the R→Python port dropped the step, leaving manifests declaring
+  1 season while 30 were published. The fix that worked: a read-only `check`
+  that compares the tag's ACTUAL asset seasons against the manifest and exits
+  non-zero on disagreement — **compare the SET, not the count** (a count-only
+  check passes while the seasons are wrong).
+- **Don't cut a parallel `_v3`-style tag — widen the production one.** A
+  parallel tag accumulates consumers and becomes hard to retire.
+  `nba_stats_pbpv3` / `possessions_v3` / `lineups_v3` ran beside production
+  until the pipeline was widened to admit every NBA season type, which made
+  them a strict subset (`v3_not_in_prod = 0`); they were deleted 2026-08-13,
+  but only after a consumer-repoint sweep. If a parallel tag is unavoidable,
+  name its retirement condition when you cut it.
 
 Hand off to `/sdv-ship` for the PR/merge flow once the dataset is committed
 and published.
