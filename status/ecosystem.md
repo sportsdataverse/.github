@@ -1,29 +1,28 @@
-# SportsDataverse ecosystem status — 2026-08-19T15:31Z
+# SportsDataverse ecosystem status — 2026-08-19T15:35Z
 
-_83 repos · regenerated nightly by `.github/workflows/ecosystem-status.yml`. Machine-readable twin: `ecosystem.json`._
+_73 repos · regenerated nightly by `.github/workflows/ecosystem-status.yml`. Machine-readable twin: `ecosystem.json`._
 
 ## Red default-branch workflows
 
 | repo | workflow | conclusion | last run | age (d) |
 |---|---|---|---|---|
-| sportsdataverse/baseballr-data | Update NCAA Baseball Data | failure | [run](https://github.com/sportsdataverse/baseballr-data/actions/runs/30698726326) | 18.1 |
+| sportsdataverse/baseballr-data | Update NCAA Baseball Data | failure | [run](https://github.com/sportsdataverse/baseballr-data/actions/runs/30698726326) | 18.2 |
 | sportsdataverse/cfbfastR-cfb-data | Skeet Post-Week Content | failure | [run](https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/32042012102) | 2.0 |
 | sportsdataverse/cfbfastR-cfb-data | Update CFB Data | failure | [run](https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/32247528360) | 0.2 |
-| sportsdataverse/fastRhockey-nhl-data | tests | failure | [run](https://github.com/sportsdataverse/fastRhockey-nhl-data/actions/runs/32223776266) | 0.4 |
+| sportsdataverse/fastRhockey-nhl-data | tests | failure | [run](https://github.com/sportsdataverse/fastRhockey-nhl-data/actions/runs/31054197531) | 13.7 |
+| sportsdataverse/hoopR | : Manually run by saiemgilani | cancelled | [run](https://github.com/sportsdataverse/hoopR/actions/runs/27192006294) | 71.3 |
+| sportsdataverse/hoopR | R-CMD-check | failure | [run](https://github.com/sportsdataverse/hoopR/actions/runs/30639797889) | 19.0 |
 | sportsdataverse/hoopR-kp-data | .github/workflows/update_kenpom.yml | failure | [run](https://github.com/sportsdataverse/hoopR-kp-data/actions/runs/26648295309) | 82.0 |
 | sportsdataverse/hoopR-nba-stats-raw | orphan-scripts | failure | [run](https://github.com/sportsdataverse/hoopR-nba-stats-raw/actions/runs/32236173416) | 0.3 |
 | sportsdataverse/ncaa-wbb-hoops-raw | orphan-scripts | failure | [run](https://github.com/sportsdataverse/ncaa-wbb-hoops-raw/actions/runs/32223828833) | 0.4 |
-| sportsdataverse/odds-data | Snapshot Football Odds | failure | [run](https://github.com/sportsdataverse/odds-data/actions/runs/32265758418) | 0.0 |
+| sportsdataverse/oddsapiR | : Manually run by saiemgilani | cancelled | [run](https://github.com/sportsdataverse/oddsapiR/actions/runs/27192946903) | 71.3 |
 | sportsdataverse/recruitR | R-CMD-check | failure | [run](https://github.com/sportsdataverse/recruitR/actions/runs/27456558592) | 67.5 |
 | sportsdataverse/softballR-data | update_ncaa_playerbox | failure | [run](https://github.com/sportsdataverse/softballR-data/actions/runs/16562093849) | 387.4 |
 | sportsdataverse/sportsdataverse-py | live-tests-cron | failure | [run](https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/32035717624) | 2.1 |
 | sportsdataverse/sportsdataverse-py | tests | failure | [run](https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/32241504100) | 0.2 |
-| sportsdataverse/sportsdataverse-web | Auto merge | failure | [run](https://github.com/sportsdataverse/sportsdataverse-web/actions/runs/32223969341) | 0.4 |
-| sportsdataverse/sportsdataverse-web | Update data | failure | [run](https://github.com/sportsdataverse/sportsdataverse-web/actions/runs/32215728647) | 0.5 |
-| sportsdataverse/wehoop-wbb-data | Update WBB Data | failure | [run](https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/32204757070) | 0.6 |
-| sportsdataverse/wehoop-wbb-data | Weekly R/Python Output Parity | failure | [run](https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/32031097394) | 2.1 |
-| sportsdataverse/wehoop-wbb-data | Weekly WBB Rosters Refresh | failure | [run](https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/31931344977) | 3.4 |
-| sportsdataverse/wehoop-wbb-data | tests | failure | [run](https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/32223843297) | 0.4 |
+| sportsdataverse/sportsdataverse-web | Auto merge | failure | [run](https://github.com/sportsdataverse/sportsdataverse-web/actions/runs/29646472432) | 32.1 |
+| sportsdataverse/sportsdataverse-web | Update data | failure | [run](https://github.com/sportsdataverse/sportsdataverse-web/actions/runs/30687527336) | 18.4 |
+| sportsdataverse/wehoop-wbb-data | Update WBB Data | failure | [run](https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/29207989834) | 37.8 |
 | sportsdataverse/wehoop-wnba-stats-data | orphan-scripts | failure | [run](https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/runs/32223858189) | 0.4 |
 
 ## Open PRs (most idle first)
@@ -59,7 +58,6 @@ _83 repos · regenerated nightly by `.github/workflows/ecosystem-status.yml`. Ma
 | sportsdataverse/sportsdataverse-data | 4 | 4 |
 | sportsdataverse/fastRhockey-data | 4 | 3 |
 | sportsdataverse/wehoop-wnba-data | 5 | 3 |
-| sportsdataverse/sdvplotR | 2 | 2 |
 | sportsdataverse/hoopR-nba-stats-data | 2 | 2 |
 | sportsdataverse/cfbfastR-cfb-data | 2 | 2 |
 | sportsdataverse/sportsdataverse-js | 1 | 1 |
@@ -77,7 +75,6 @@ _83 repos · regenerated nightly by `.github/workflows/ecosystem-status.yml`. Ma
 | repo | latest tag | releases | newest asset | age (d) | last push (d) |
 |---|---|---|---|---|---|
 | sportsdataverse/sportsdataverse-data | wnba_stats_possessions | 214 | 2026-08-19T13:36 | 0.1 | 1.4 |
-| sportsdataverse/wehoop-wnba-stats-raw | wnba-stats-raw-json | 1 | 2026-07-29T21:35 | 20.7 | 0.3 |
 | sportsdataverse/hoopR-nba-stats-raw | nba-stats-raw-json | 1 | 2026-07-28T06:34 | 22.4 | 0.3 |
 | sportsdataverse/amf-location-data | amf_tracking_parquet | 2 | 2024-11-18T08:20 | 639.3 | 869.9 |
 | sportsdataverse/cfbfastR-cfb-data | espn_cfb_team_box | 19 |  | None | 0.1 |
@@ -131,7 +128,7 @@ _83 repos · regenerated nightly by `.github/workflows/ecosystem-status.yml`. Ma
 | espn_cfb_linescores | 44 | 2026-07-18T13:43 | 32.1 |
 | espn_cfb_rosters | 68 | 2026-07-18T13:49 | 32.1 |
 | nhl_rosters | 55 | 2026-07-22T02:05 | 28.6 |
-| nhl_schedules | 61 | 2026-07-22T02:21 | 28.5 |
+| nhl_schedules | 61 | 2026-07-22T02:21 | 28.6 |
 | pwhl_pbp | 14 | 2026-07-22T21:39 | 27.7 |
 | pwhl_shifts | 13 | 2026-07-22T21:39 | 27.7 |
 | pwhl_skater_boxscores | 13 | 2026-07-22T21:39 | 27.7 |
@@ -209,7 +206,7 @@ _83 repos · regenerated nightly by `.github/workflows/ecosystem-status.yml`. Ma
 | espn_nba_officials | 80 | 2026-08-12T06:02 | 7.4 |
 | espn_mens_college_basketball_player_core | 72 | 2026-08-12T06:56 | 7.4 |
 | espn_mens_college_basketball_shots | 71 | 2026-08-12T06:57 | 7.4 |
-| espn_mens_college_basketball_team_boxscores | 76 | 2026-08-12T07:09 | 7.3 |
+| espn_mens_college_basketball_team_boxscores | 76 | 2026-08-12T07:09 | 7.4 |
 | espn_mens_college_basketball_player_boxscores | 76 | 2026-08-12T07:13 | 7.3 |
 | espn_mens_college_basketball_player_season_stats | 12 | 2026-08-12T07:16 | 7.3 |
 | espn_mens_college_basketball_team_season_stats | 78 | 2026-08-12T07:17 | 7.3 |
@@ -268,7 +265,7 @@ _83 repos · regenerated nightly by `.github/workflows/ecosystem-status.yml`. Ma
 | ncaa_wbb_matchup_stints | 51 | 2026-08-18T12:49 | 1.1 |
 | ncaa_wbb_possessions | 51 | 2026-08-18T12:49 | 1.1 |
 | ncaa_wbb_pbp | 51 | 2026-08-18T13:02 | 1.1 |
-| ncaa_wbb_team_rosters | 51 | 2026-08-18T14:21 | 1.0 |
+| ncaa_wbb_team_rosters | 51 | 2026-08-18T14:21 | 1.1 |
 | nba_crosswalk | 25 | 2026-08-19T01:34 | 0.6 |
 | espn_womens_college_basketball_rosters | 11 | 2026-08-19T01:46 | 0.6 |
 | cfb_recruits | 25 | 2026-08-19T02:13 | 0.6 |
@@ -307,7 +304,7 @@ _83 repos · regenerated nightly by `.github/workflows/ecosystem-status.yml`. Ma
 |---|---|---|---|
 | sportsdataverse/cfbfastR | v2.0.0 | 2025-09-09 | 0.0 |
 | sportsdataverse/fastRhockey | v0.4.0 | 2022-10-25 | 31.9 |
-| sportsdataverse/hoopR | v1.0.4 | 2021-05-21 | 13.5 |
+| sportsdataverse/hoopR | v3.0.0 | 2026-03-26 | 13.5 |
 | sportsdataverse/oddsapiR | v0.0.3 | 2023-03-19 | 56.5 |
 | sportsdataverse/sportsdataverse-js | v3.0.0 | 2026-06-17 | 0.4 |
 | sportsdataverse/sportsdataverse-py | v0.0.75 | 2026-08-02 | 0.0 |
