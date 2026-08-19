@@ -27,7 +27,7 @@ jobs:
       # Shallow + sparse: the callers include -raw repos carrying 175k+ captured
       # payloads, and a full checkout there ran for over ten minutes before this.
       # The gate reads only driver scripts and the docs that may reference them.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 1
           sparse-checkout: |
