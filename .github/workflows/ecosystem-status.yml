@@ -1,0 +1,34 @@
+# Nightly org-wide status snapshot -> status/ecosystem.{json,md}.
+# Read by the chief-of-staff cloud routines (no api.github.com access there) and
+# by humans who want one page of PR / CI / release-freshness state.
+name: ecosystem-status
+on:
+  schedule:
+    - cron: "30 9 * * *"   # 09:30 UTC, before the 11:00 UTC CoS daily brief
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+  issues: read
+  pull-requests: read
+concurrency: ecosystem-status
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build snapshot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/ecosystem_status.py
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status/
+          git diff --cached --quiet && { echo "no change"; exit 0; }
+          git commit -m "chore(status): ecosystem snapshot $(date -u +%F) [skip ci]"
+          git push
