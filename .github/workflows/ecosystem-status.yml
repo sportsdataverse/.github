@@ -31,4 +31,5 @@ jobs:
           git add status/
           git diff --cached --quiet && { echo "no change"; exit 0; }
           git commit -m "chore(status): ecosystem snapshot $(date -u +%F) [skip ci]"
+          git pull --rebase -X theirs origin main
           git push
