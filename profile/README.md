@@ -44,7 +44,7 @@ loads" src="https://img.shields.io/pypi/dm/sportsdataverse?style=for-the-badge">
 - [collegebaseball](https://collegebaseball.readthedocs.io/en/latest/) - College baseball data and analysis (Data sources: NCAA, Boyd's World)
 - [nwslpy](https://github.com/nwslR/nwslpy) - National Women's Soccer League data in Python
 
-## Node.js modules <a href="https://nodejs.org" target="_blank">
+## <a href="https://nodejs.org" target="_blank">Node.js modules</a>
 
 <a href='https://www.npmjs.com/package/sportsdataverse'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-js.png' style="float:center;margin:20px"  width="18%" min-width="100px"/></a>
 
