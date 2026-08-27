@@ -464,10 +464,17 @@ Cron entry point: `scripts/daily_<family>_processor.sh` (data side) mirrors
 the raw side's `daily_<family>_scraper.sh`. The target repo's `CLAUDE.md` +
 existing package layout govern over this table — read them first.
 
-1. **Ingest** — read the sibling `-raw` checkout directly from disk (it's a
-   sibling under `GitHub-Data/`; never re-scrape or clone). Path via the
-   repo's config/env (e.g. `SDV_VALIDATION_*_DATA_ROOT` patterns), not
-   hardcoded absolute paths. Put reading logic in `<x>_data_ingest/`.
+1. **Ingest** — read the sibling `-raw` tree; never re-scrape it. Two ways, and
+   the size of the sibling decides which: a local sibling checkout under
+   `GitHub-Data/` when one exists, otherwise **over HTTP from
+   `raw.githubusercontent.com`**. The HTTP path is not a shortcut — cfb-raw is
+   71 GB, and `daily_cfb.yml` records that even
+   `--filter=blob:none --depth 1` did not finish inside 10 minutes while the
+   direct download of the one file it needed took ~2s. Fetch the specific
+   artifact, not the tree. Either way the path comes from the repo's config/env
+   (e.g. `SDV_VALIDATION_*_DATA_ROOT`, `CFB_RAW_ROOT`), never a hardcoded
+   absolute path, and a missing input must degrade to "that dataset skipped",
+   never a hard failure of the whole run. Put reading logic in `<x>_data_ingest/`.
 2. **Build** — a builder module per dataset in `<x>_data_build/` (mirror the
    existing builders' signature/CLI), following Phase 2's stage-numbering and
    idempotency contract. polars 1.x; snake_case columns; one canonical dtype

@@ -1,7 +1,6 @@
 # `-data` producer conventions
 
-- Reads the sibling `-raw` repo directly off disk (sibling checkout under
-  `GitHub-Data/`) — never re-scrape or clone it.
+- Reads the sibling `-raw` repo directly via HTTP GH `-raw` repo — never re-scrape or clone.
 - `NN_` stage numbering is intended build order, not run order — a stage's
   number reflects its place in the dependency chain, not the sequence the
   daily driver happens to invoke it in (drivers may parallelize/reorder).
