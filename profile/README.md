@@ -14,16 +14,14 @@
 - [{baseballr}](https://BillPetti.github.io/baseballr/) - Provides numerous utilities for acquiring and analyzing
     baseball data from online sources (Data sources: Baseball Reference, FanGraphs, MLB Stats API, NCAA)
 - [{fastRhockey}](https://fastrhockey.sportsdataverse.org/) - A utility to scrape and load hockey play-by-play data and statistics (Data sources: NHL, PWHL)
-- [{worldfootballR}](https://jaseziv.github.io/worldfootballR/) - allow users to extract various world football results and player statistics from popular football (soccer) data sites (Data sources: FB Reference, Transfermarkt, Understat, Fotmob)
 - [{sportyR}](https://sportyr.sportsdataverse.org/) - Create scaled 'ggplot' representations of playing surfaces. Playing surfaces are drawn pursuant to rule-book specifications.
 - [{ggshakeR}](https://abhiamishra.github.io/ggshakeR/) - Analysis and visualization R package that works with publically available soccer data (Compatible data sources: FB Reference, StatsBomb, Understat)
 - [{soccerAnimate}](https://github.com/Dato-Futbol/soccerAnimate) - Create 2D animations of soccer tracking data (Compatible data sources: Metrica Sports, Catapult)
 - [{oddsapiR}](https://oddsapir.sportsdataverse.org/) - Access sports odds from the Odds API (Data sources: The Odds API)
-- [{hockeyR}](https://hockeyr.netlify.app/) - Various functions to scrape hockey play-by-play data (Data sources: NHL, Hockey Reference)
-- [{gamezoneR}](https://jacklich10.github.io/gamezoneR/) - Package for working with NCAA Men’s Basketball play-by-play data (Data sources: STATS LLC’s GameZone)
 - [{mlbplotR}](https://camdenk.github.io/mlbplotR/) - Create 'ggplot2' and 'gt' Visuals with Major League Baseball Logos
 - [{cfbplotR}](https://cfbplotr.sportsdataverse.org/) - A set of functions to visualize college football teams in 'ggplot2'
 - [{cfb4th}](http://cfb4th.sportsdataverse.org/) - A set of functions to analyze NCAA Football 4th Downs
+- [{cfbseedR}](https://cfbseedR.sportsdataverse.org/) - Simulate and evaluate college football seasons: conference tiebreakers, CFP seeding and season simulations (Data sources: cfbfastR, CollegeFootballData)
 - [{softballR}](https://github.com/sportsdataverse/softballR) - Scrapes and cleans college softball data (Data sources: NCAA, ESPN)
 - [{nwslR}](https://github.com/nwslR/nwslR) - Compiles dataset for the National Women's Soccer League (NWSL)
 - [{usfootballR}](https://usfootballr.sportsdataverse.org/) - MLS and NWSL play-by-play data (Data sources: ESPN)
@@ -40,6 +38,11 @@
 loads" src="https://img.shields.io/pypi/dm/sportsdataverse?style=for-the-badge"></a>
 
 [**Documentation**](https://py.sportsdataverse.org/)
+
+- [sportsdataverse](https://py.sportsdataverse.org/) - The Python package covering 29 leagues across ESPN, NBA/WNBA Stats, HockeyTech, stats.ncaa.org, MLB Statcast and more
+- [sportypy](https://sportypy.sportsdataverse.org/) - Draw regulation playing surfaces in Python, the companion to sportyR
+- [collegebaseball](https://collegebaseball.readthedocs.io/en/latest/) - College baseball data and analysis (Data sources: NCAA, Boyd's World)
+- [nwslpy](https://github.com/nwslR/nwslpy) - National Women's Soccer League data in Python
 
 ## Node.js modules <a href="https://nodejs.org" target="_blank">
 
@@ -76,8 +79,6 @@ The conference materials can be found here:
 
 <h3 align="left">Connect with us:</h3>
 <a href="https://x.com/sportsdataverse" target="blank"><img src="https://img.shields.io/twitter/follow/sportsdataverse?color=blue&label=%40sportsdataverse&logo=x&style=for-the-badge" alt="sportsdataverse" /></a> <a href="https://x.com/cfbfastR" target="blank"><img src="https://img.shields.io/twitter/follow/cfbfastR?color=blue&label=%40cfbfastR&logo=x&style=for-the-badge" alt="cfbfastR" /></a> <a href="https://x.com/saiemgilani" target="blank"><img src="https://img.shields.io/twitter/follow/saiemgilani?color=blue&label=%40saiemgilani&logo=x&style=for-the-badge" alt="saiemgilani" /></a>
-
-[![](https://visitcount.itsvg.in/api?id=sportsdataverse&label=Profile%20Views&color=12&icon=3&pretty=false)](https://visitcount.itsvg.in)
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G0KJ588)
 
