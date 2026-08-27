@@ -78,7 +78,13 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
    JSON superseded by the `-raw` sibling — but "superseded" is a PER-FILE
    claim: diff game-id sets first and copy anything only-here into the raw
    store (pilot 4 found 85 preseason games per family that the sweep's
-   season-type scope never captures). `.qs` + `.csv.gz` per D30.
+   season-type scope never captures). When the claim is "already published",
+   resolve the tag from **`publish.py:PUBLISH_REPOS`**, not from the repo you are
+   standing in: cfb-data's own `espn_cfb_*` tags carry 0 assets and are
+   vestigial, while the real assets live on `sportsdataverse-data`. Checking the
+   wrong repo — and a wrong tag name (`espn_cfb_team_boxscores` vs
+   `espn_cfb_team_box`) — read as "unpublished, do not delete" for a tree that
+   was fully published. `.qs` + `.csv.gz` per D30.
 7. **R/Python dual-pipeline parity** (`-data`) — **DO NOT retire the R chain.**
    Python is the PRIMARY pipeline and gets the work; R is maintained
    alongside it as a methodological/language equivalent. Two R chains were
@@ -86,8 +92,8 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
    (`hoopR-nba-stats-data` 645 lines, `nfl-data` 251) — if a repo has no R
    twin, that is a gap to fill, not a state to preserve. See Phase 5 for the
    full dataset-level parity policy (what counts as parity, who's
-   authoritative, the `cfb-data` exception) — this step is only about NOT
-   deleting the R side while standardizing. Workflows may still be
+   authoritative, and why `cfb-data` is no longer the exception it used to be)
+   — this step is only about NOT deleting the R side while standardizing. Workflows may still be
    Python-only — restoring the twin preserves the METHOD in a second
    language, it does not re-schedule R. When rewriting a workflow: uv, raw
    store over `raw.githubusercontent.com`, season default computed in bash
@@ -138,6 +144,25 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
 - **A cross-repo rename (D33) goes reader-side-WITH-FALLBACK first** when the
   writer lives in another repo: accept both names on read now, land the writer
   rename + fallback drop as a tracked follow-up.
+- **A package move is not done when the imports compile.** Rewriting import
+  STATEMENTS in `.py` files leaves Python embedded in shell and YAML strings
+  pointing at the old path, and nothing type-checks or imports those. Moving
+  cfb-raw's utils into a package (2026-08-27) left three
+  `python -c "... from _cfb_raw_utils import ..."` one-liners behind — two in
+  drivers and one in `.github/workflows/*.yml` that computed the DAILY SCRAPE's
+  season default. It would have raised `ModuleNotFoundError` on the next
+  scheduled run, two days before week 1. After ANY module move, grep the old
+  name across `*.sh` + `*.yml` + `*.R`, not just `*.py`, and RUN one of the
+  one-liners.
+- **Rename only import CONTEXTS, never bare words.** In the same move, a
+  quoted-dotted pattern meant for monkeypatch targets rewrote the DATA string
+  `"rb_eval.md"` — a generated report filename — into
+  `"cfb_model_build.rb_eval.md"`. Package names are frequently also column names
+  (`cpoe` and `rb_eval` both are), so anchor every pattern to `from X`,
+  `import X`, `-m X`. Two more shapes a naive regex misses: subprocess list form
+  `["-m", "rb_eval"]` keeps the module in its own literal, and `import X` ->
+  `import pkg.X` REBINDS the local name to `pkg`, so every later `X.foo` is a
+  NameError unless you add `as X`.
 - **CRLF in `.sh` files fails GitHub runners' syntax gate** — one repo's tests
   were red on `main` for days from this alone. `bash -n` locally on Git Bash
   will not catch it.
@@ -264,7 +289,15 @@ or reorder independent stages).
    parseable) — bare `path.exists` let 3,347 empty `{}` payloads block
    refetch. Presence is not validity: a "captured" flag or file existing on
    disk must still be rejected if it's empty/unparseable. Never persist an
-   empty payload. (This applies to scrape checkpoints in Phase 3 too — same
+   empty payload. **Validity is not completeness either**: a summary fetched
+   before kickoff is large, well-formed and parseable with zero plays. A
+   full-history reprocess run during PRESEASON banked one for all 946 unplayed
+   2026 CFB games; the existence-only resume then skipped every one, and the
+   season would have scraped ZERO play-by-play while every run reported green
+   (fixed 2026-08-27). Refuse to bank a final while the provider still reports
+   the game as pre-game, and make the resume test "no rows AND still pre-game" —
+   NOT "no rows", or a finished game that legitimately has no play-by-play gets
+   re-scraped every day forever. (This applies to scrape checkpoints in Phase 3 too — same
    rule, same failure mode.)
 3. Atomic writes (tmp+rename); never overwrite a complete artifact with a
    partial; masters upsert by game_id, never wholesale clobber.
@@ -423,7 +456,7 @@ echo "EXIT=$?" | tee -a "$LOG"   # grep-able completion marker; do NOT trust a
 | Data repo | Reads from | Package layout | Publishes to |
 |---|---|---|---|
 | `nflverse-dev/nfl-data` | `nfl-raw` `nfl/raw/{season}/{game_id}.json` | `python/{nfl_data_ingest, native_pbp, nfl_model_publish, model_training}` | `sportsdataverse-data` releases (`nfl_model_pbp`, `nfl_model_artifacts`, `nfl_4th_down_models`) |
-| `cfbfastR-dev/cfbfastR-cfb-data` | `cfbfastR-cfb-raw` `cfb/{json,…}` | `python/{cfb_data_ingest, cfb_data_build, cfb_model_pbp, cfb_model_publish, cfb_model_reports}` + R producer | `espn_cfb_*` releases (14 public datasets; R is the released producer — python builders must parity-match) |
+| `cfbfastR-dev/cfbfastR-cfb-data` | `cfbfastR-cfb-raw` `cfb/{json,…}` | `python/{cfb_data_ingest, cfb_data_build, cfb_model_build/*}` + the retained R twin | `espn_cfb_*` tags on **`sportsdataverse-data`** (NOT the repo's own tags — those are vestigial, 0 assets; `publish.py:PUBLISH_REPOS` is the truth). **Python is the released producer** (2026-08-27) |
 | `hoopR-dev/hoopR-nba-stats-data` | `hoopR-nba-stats-raw` | `python/nba_data_build` | git commit + `sportsdataverse-data` release tags (e.g. `nba_stats_pbp`, `nba_stats_possessions`, `nba_stats_game_lineups`) |
 | `hoopR-dev/hoopR-{mbb,nba}-data`, `wehoop-dev/wehoop-*-data`, `hockey-dev/fastRhockey-*-data` | family `-raw` mirror | family-shaped | family releases |
 
@@ -476,9 +509,17 @@ publish}.py`) with datasets as `config.REGISTRY` rows. Before publishing a
 dataset, confirm the other language still produces it; a dataset that
 exists on only one side is a parity gap to close, not a simplification.
 **Neither side is automatically authoritative** — a divergence is a review
-item, decided on which is methodologically right. The one codified
-exception is `cfb-data`, where R is the released producer and python
-builders must parity-match its parquet.
+item, decided on which is methodologically right.
+
+`cfb-data` USED to be a codified exception where R was the released producer
+and python had to parity-match. **That is no longer true (verified
+2026-08-27):** `scripts/daily_cfb_processor.sh` is itself the port of
+`espn_cfb_01..15`, its header records that the last R producer
+(`team_summaries`) was retired, and `daily_cfb.yml` runs the PYTHON processor —
+only `run_summary.R` still executes. Python is the producer; the R chain is
+retained under D20 as the unscheduled methodological twin, which is the normal
+state, not an exception. Do not resolve a CFB parity dispute in R's favour on
+the strength of the old rule.
 
 Dispatch the mandatory Review agents (top of this file) before moving to
 Phase 6 — `sdv-python-reviewer` on any dataframe/HTTP code touched during
