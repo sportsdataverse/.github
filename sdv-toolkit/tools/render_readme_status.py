@@ -56,6 +56,16 @@ from typing import Any
 BEGIN = "<!-- BEGIN GENERATED: status -->"
 END = "<!-- END GENERATED: status -->"
 
+#: Day-of-week numbers for rendering a cron dow field in words. Cron accepts
+#: both 0 and 7 for Sunday.
+_DOW = {0: "Sun", 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun"}
+
+#: Full names, used when a single day is named -- "Saturdays" reads; "Sats" does not.
+_DOW_FULL = {
+    0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday",
+    4: "Thursday", 5: "Friday", 6: "Saturday", 7: "Sunday",
+}
+
 #: Month numbers for rendering a cron month field in words.
 _MONTHS = {
     1: "Jan",
@@ -176,15 +186,88 @@ def describe_cron(expr: str) -> str:
         else:
             months = ", ".join(_MONTHS[n] for n in nums)
 
-    if dom == "*":
-        days = "daily"
-    elif "-" in dom:
-        days = f"days {dom}"
-    else:
-        days = f"day {dom}"
+    # A dow restriction is NOT decoration: `0 14 * 9-11 6` fires on Saturdays
+    # only, and rendering it "daily ... dow 6" states the opposite of the truth
+    # for six of every seven days. When dom is unrestricted the dow field IS the
+    # day description, so it replaces "daily" rather than trailing after it.
+    dow_words = _describe_dow(dow)
 
-    tail = "" if dow == "*" else f", dow {dow}"
-    return f"{days} {when} in {months}{tail}"
+    if dom != "*":
+        days = f"days {dom}" if "-" in dom or "," in dom else f"day {dom}"
+        tail = "" if dow_words is None else f", {dow_words}"
+    else:
+        days = "daily" if dow_words is None else dow_words
+        tail = ""
+    where = "" if months == "year-round" else f" in {months}"
+    return f"{days} {when}{where}{tail}"
+
+
+def _describe_dow(dow: str) -> str | None:
+    """Render a cron day-of-week field in words, or ``None`` when unrestricted.
+
+    Args:
+        dow: The fifth cron field.
+
+    Returns:
+        A phrase such as ``"Saturdays"`` or ``"weekdays"``, ``None`` when the
+        field is ``*`` (no restriction), or the raw field when it does not parse
+        -- never a guess.
+    """
+    if dow in ("*", "?"):
+        return None
+    if dow == "1-5":
+        return "weekdays"
+    if dow in ("6,0", "0,6", "6,7", "0-1", "6-7"):
+        return "weekends"
+    nums: list[int] = []
+    for piece in dow.split(","):
+        if "-" in piece:
+            lo, hi = piece.split("-", 1)
+            if not (lo.isdigit() and hi.isdigit()):
+                return f"dow {dow}"
+            nums.extend(range(int(lo), int(hi) + 1))
+        elif piece.isdigit():
+            nums.append(int(piece))
+        else:
+            return f"dow {dow}"
+    names = [_DOW[n] for n in dict.fromkeys(nums) if n in _DOW]
+    if not names:
+        return f"dow {dow}"
+    if len(names) == 1:
+        return f"{_DOW_FULL[nums[0]]}s"  # "Saturdays", not "Sats"
+    return "/".join(names)
+
+
+def _describe_triggers(text: str) -> str:
+    """Name the triggers a workflow actually declares.
+
+    This used to return a hardcoded ``"on push / PR / dispatch"`` for every
+    cron-less workflow, which asserted three triggers regardless of what the file
+    said. Several repos have push-only workflows that the README then documented
+    as PR-triggered -- a reader debugging "why didn't this run on my PR" was sent
+    the wrong way by generated text.
+
+    Args:
+        text: Raw workflow YAML.
+
+    Returns:
+        A phrase such as ``"on push / dispatch"``, or a bare ``"on demand"`` when
+        no recognised trigger is declared.
+    """
+    known = [
+        ("push", "push"),
+        ("pull_request", "PR"),
+        ("workflow_dispatch", "dispatch"),
+        ("repository_dispatch", "repo dispatch"),
+        ("workflow_call", "call"),
+        ("release", "release"),
+        ("issues", "issues"),
+    ]
+    # Trigger keys sit under `on:` at one indent level. Matching them anywhere in
+    # the file would count a `push` that appears in a run step; requiring the
+    # leading indent and trailing colon keeps it to YAML keys.
+    found = [label for key, label in known if re.search(rf"^\s{{1,4}}{key}:", text, re.M)]
+    return "on " + " / ".join(found) if found else "on demand"
 
 
 def workflow_rows(repo: str, wf_dir: Path) -> list[str]:
@@ -204,7 +287,7 @@ def workflow_rows(repo: str, wf_dir: Path) -> list[str]:
     for wf in sorted(wf_dir.glob("*.yml")) + sorted(wf_dir.glob("*.yaml")):
         text = wf.read_text(encoding="utf-8")
         crons = re.findall(r"^\s*-\s*cron:\s*['\"]?([^'\"#\n]+)", text, re.M)
-        schedule = "; ".join(describe_cron(c.strip()) for c in crons) if crons else "on push / PR / dispatch"
+        schedule = "; ".join(describe_cron(c.strip()) for c in crons) if crons else _describe_triggers(text)
 
         badge = f"[![{wf.name}](https://github.com/{repo}/actions/workflows/{wf.name}/badge.svg)](https://github.com/{repo}/actions/workflows/{wf.name})"
         try:
