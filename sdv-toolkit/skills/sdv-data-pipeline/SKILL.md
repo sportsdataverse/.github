@@ -1,6 +1,6 @@
 ---
 name: sdv-data-pipeline
-description: Use for the full producer lifecycle in an SDV -raw / -data / -db repo. Phases — (1) standardize the repo onto the template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, R-chain retirement), (2) decide placement BEFORE creating any script — the placement-decides-lifecycle rules, canonical NN_ stage numbering (numbers are intended build order, not run order), idempotency contract, and model-registry requirements, (3) set up a scraping or backfill job expected to run more than ~3 minutes with a user-executable runbook, unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, (4) build — read the sibling -raw tree and write tidy parquet, (5) validate, (6) publish via git commit plus per-file gh release upload. Invoke for "standardize this repo", "bring this repo onto the template", "where does this script go", "add a script to the raw repo", "new pipeline stage", "one-off driver", "set up a scrape", "backfill season X", "long scraping job", "scraper runbook", "build the dataset", "add a data-repo builder", "publish to the release", "reshape raw to data", or "daily processor".
+description: Use for the full producer lifecycle in an SDV -raw / -data / -db repo. Phases — (1) standardize the repo onto the template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, R-chain retirement), (2) decide placement BEFORE creating any script — the placement-decides-lifecycle rules, canonical NN_ stage numbering (numbers are intended build order, not run order), idempotency contract, and model-registry requirements, (3) set up a scraping or backfill job expected to run more than ~3 minutes with a user-executable runbook, unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, (4) build — fetch individual game JSON from the sibling -raw repo over HTTP with a read-through cache (never clone/checkout it on CI) and write tidy parquet, (5) validate, (6) publish via git commit plus per-file gh release upload. Invoke for "standardize this repo", "bring this repo onto the template", "where does this script go", "add a script to the raw repo", "new pipeline stage", "one-off driver", "set up a scrape", "backfill season X", "long scraping job", "scraper runbook", "build the dataset", "add a data-repo builder", "publish to the release", "reshape raw to data", or "daily processor".
 ---
 
 # Data pipeline — the producer lifecycle for `-raw` / `-data` / `-db` repos
@@ -223,6 +223,97 @@ step 2** — they are gated on a tested build package existing. Executed
   An unpublished release tag gets NO model until first publish.
 - **Loader-schema cross-check fixtures are VENDORED** into the repo with a
   documented refresh command; never read a sibling checkout at CI time.
+### Step 9a — `-raw` data must be reachable without a clone
+
+A `-raw` repo is not standardized until its sibling can read it from a runner
+that cannot check it out. For the normal case this costs the raw side NOTHING:
+per-game JSON is already committed, and `raw.githubusercontent.com` already
+serves it per file. There is no publish step to add and no prerequisite to wait
+on.
+
+What the raw side DOES owe the consumer:
+
+- **Stable, predictable per-game paths.** `cfb/json/final/{game_id}.json`,
+  `nfl/raw/{season}/{game_id}.json`. A consumer builds the URL from the schedule;
+  renaming a path silently breaks every downstream build.
+- **A schedule/manifest readable on its own** (`cfb_schedule_master.parquet`) so
+  the consumer can enumerate game ids without listing a directory it cannot
+  clone.
+
+**Season bundles are the EXCEPTION, not the rule.** `hoopR-nba-stats-raw`'s
+`nba-stats-raw-json` tag (31 tarballs, 5-37 MB each) exists because that store is
+whole-season sweeps of a stats API rather than per-game files. Add bundles only
+when a consumer genuinely needs the entire season at once; do not make every raw
+repo publish them, and never let a missing bundle block a per-file consumer.
+
+### Step 9b — the README contract (diagrams, reports, automation status)
+
+Measured 2026-08-28 across all 43 `*-raw`/`*-data` repos: **14 have mermaid
+diagrams, 29 do not**; `nfl-raw` has no README at all, and `gp-cfb-raw`,
+`nba-stats-data`, `softballR-data`, `usfootballR-data` are empty. The generated
+block that DOES exist is only the datasets table -- **no repo has a
+reports/explainers section or an automation-status block**. A standardized repo
+is not done until its README answers three questions a newcomer actually asks.
+
+**1. Which repo writes what?** Two mermaid diagrams, the
+`fastRhockey-nhl-data` / `hoopR-nba-data` convention:
+
+- `graph LR` -- upstream `-raw` -> this repo -> each release tag.
+- `flowchart TB` with one subgraph per repo, naming **real script paths**
+  (`R/espn_nba_01_pbp_creation.R`), so a reader goes from picture to file
+  without asking. A diagram naming only datasets is decoration; one naming
+  scripts is documentation.
+
+**2. Where are the models explained?** A `## Reports & explainers` table
+linking to model reports, cards, dataset docs and validation output. Link OUT,
+do not inline: `fastRhockey-nhl-data` embeds a full xG write-up, ~875 lines of a
+1,039-line README -- excellent content, unfindable from any other repo, and it
+buries the operational sections. `cfbfastR-cfb-data` is the opposite failure:
+`cfb_model_reports` generates `docs/models/` on every run and NOTHING links to
+it.
+
+**3. Is the automation actually running?** An `## Automation & status` block --
+the section this template was missing entirely:
+
+| column | source | why |
+|---|---|---|
+| workflow badge | `https://github.com/<org>/<repo>/actions/workflows/<file>/badge.svg` | red badge = the pipeline is down, visible without opening Actions |
+| schedule | the `cron:` in each workflow, rendered in words | "daily 09:00 UTC in-season" beats `0 9 * 8 *` |
+| last run | Actions API `workflow_runs[0].updated_at` | a green badge on a workflow that has not fired in three months is still a dead pipeline |
+| release tag + last publish | Releases API `published_at` per tag | the datasets table already carries this; keep ONE source |
+| assets / size | Releases API asset count + bytes | catches a publish that "succeeded" and uploaded nothing |
+
+Generate it between BEGIN/END markers like the datasets table, from the Actions
+and Releases APIs plus the workflow `cron:` lines -- release tags, publish dates,
+script order and sibling links are all derivable. Only the one-line summary,
+coverage span and report links need authoring.
+
+**Traps, from the pilots and the 2026-08-28 survey:**
+
+- **A status block is live data and MUST sit outside the `--check` drift
+  comparison** -- otherwise every run that publishes reddens the gate. But that
+  exclusion is exactly what makes the next rule load-bearing.
+- **An offline regen must PRESERVE the live block or REFUSE to write it -- never
+  emit placeholders.** The two rules above combine into a trap: because the gate
+  deliberately ignores the status block, a regen run without Actions/Releases API
+  access blanks real dates to em dashes, `--check` passes, and the damaged README
+  commits clean. This already happened once: an offline docs regen wiped 14 real
+  "Last published" dates and the gate passed over it. Implement one of:
+  re-read the committed block and carry it forward when the APIs are unreachable,
+  or fail with "cannot refresh status offline". A generator that silently
+  substitutes `—` for live data is worse than one that errors, because the gate
+  designed to catch drift is blind to precisely this field.
+- **A badge proves the workflow ran, not that it published.** Pair it with last
+  publish + asset count; the "GREEN job that published nothing" failure mode is
+  documented in `daily_cfb_processor.sh` and is exactly what a badge alone hides.
+- **Do not hand-write 29 READMEs.** They will drift into 29 shapes within a
+  quarter. One renderer + a `--check` gate, same shape as sdv-py's codegen drift
+  gate. `hoopR-nba-stats-data` already proves the marker pattern works
+  (`python/nba_data_build/docs.py`).
+- **An archived repo says so in the first line.** `hoopR-data` (11 lines) and
+  `wehoop-data` (17) are archives; a thin README that does not say "archived"
+  reads as neglect rather than intent.
+
 - **A repo with no dataset registry skips D40/D43** — state the reason in the
   ledger rather than inventing a registry to satisfy the decision.
 
@@ -319,13 +410,65 @@ or reorder independent stages).
 ### Models are pipelines too
 
 Stage order: ingest → features → train → evaluate/gate → package → publish →
-integrate. Every published artifact gets a **Model registry row** in CLAUDE.md
-(model | artifact(s) | release tag | training data | fitting script | gates at
-publish | last retrain | cadence — `frozen` is valid but must be explicit;
-unknown cells are `TODO`, never fabricated). A retrain recipe referenced by
-nothing is the `retrain_xg_models.R` stranding failure. Gates sit upstream of
-publish and are never lowered; `feature_names` verified at package AND consume
-time. Training experiments are born in `dev/` like any other one-off.
+integrate. Every published artifact gets a **Model registry row** in
+`models/REGISTRY.md` (model | artifact(s) | release tag | training data |
+fitting script | gates at publish | last retrain | cadence — `frozen` is valid
+but must be explicit; unknown cells are `TODO`, never fabricated). A retrain
+recipe referenced by nothing is the `retrain_xg_models.R` stranding failure.
+Gates sit upstream of publish and are never lowered; `feature_names` verified at
+package AND consume time. Training experiments are born in `dev/` like any other
+one-off.
+
+**The registry lives in `models/REGISTRY.md`, not CLAUDE.md** (moved
+2026-08-28, cfbfastR-cfb-data#51). A table a test parses is repository data, not
+agent instructions. Do NOT put it in `docs/models/` — report generators
+regenerate that directory and overwrite its `README.md`, so a hand-maintained
+file there is silently clobbered.
+
+#### Operability: the monolith is usually in the WORKFLOW, not the code
+
+Surveyed on `cfbfastR-cfb-data` 2026-08-28 (103 files, 13.1k LOC): every
+subpackage already had a working `cli.py` with per-model subcommands, so one
+model could already be trained from a shell. What did not exist was any way to
+express that in CI — the workflow was **one job with ~15 hardcoded sequential
+steps and three coarse booleans**. Before proposing a modeling refactor, check
+which of the two you actually have; the fix for a workflow monolith is an
+orchestration layer, not a rewrite of the training code.
+
+- **Fingerprints are the highest-value single change.** Each stage writes
+  `hash(code subtree, input digests, feature set, hyperparameters)` beside its
+  output and skips when unchanged unless `--force`. That one mechanism buys
+  restart-from-any-step, per-feature-set iteration, and honest caching. Without
+  it there is no resume, and every experiment re-derives its inputs.
+- **One model = one CI job.** A matrix over a stage manifest plus a
+  `stages: train-ep` dispatch input, so a single retrain does not drag the other
+  seven with it.
+- **The stage list must have ONE home.** When it lives in the CLI subparsers, the
+  workflow steps AND the registry table, it drifts — which is why these repos end
+  up needing a registry↔stage correspondence test at all.
+- **Know what that test actually guarantees.** `cfbfastR-cfb-data`'s matches on
+  PACKAGE names, not per-model rows: deleting the `ep` row still passed, because
+  sibling rows mention `model_training`. "Every stage is mentioned somewhere" is
+  weaker than "rows are mandatory" implies. Verify by deleting a row before
+  trusting it.
+
+#### The ledger field nobody tracks: did the feature reach published data?
+
+A feature can be trained, gated, promoted, committed and released, and still not
+be in the published dataset — reaching it requires the reprocess (20,698 games
+for CFB). Record `in_published_data` (null until a reprocess ships it, then that
+run's id) per ledger row, alongside `delta_vs_champion` and a **required note on
+promotion**. The scientific unit is the delta against the incumbent, not the raw
+metric. A promoted-but-never-shipped backlog is invisible without this column.
+
+#### Committing model artifacts
+
+Commit **promoted models only**, never sweep output, and only after the ledger
+exists — otherwise binaries land with no card, no fingerprint and no reason. CFB's
+full artifact set is 27.5 MB across 22 assets, which is affordable against a 1.4 GB
+repo a few times a year and ruinous nightly; git keeps every version forever.
+Check the outlier first (`fd_model.ubj` alone is 15.2 MB) before it becomes
+permanent history. Releases stay the archive for superseded versions.
 
 ### Twin repos
 
@@ -464,17 +607,45 @@ Cron entry point: `scripts/daily_<family>_processor.sh` (data side) mirrors
 the raw side's `daily_<family>_scraper.sh`. The target repo's `CLAUDE.md` +
 existing package layout govern over this table — read them first.
 
-1. **Ingest** — read the sibling `-raw` tree; never re-scrape it. Two ways, and
-   the size of the sibling decides which: a local sibling checkout under
-   `GitHub-Data/` when one exists, otherwise **over HTTP from
-   `raw.githubusercontent.com`**. The HTTP path is not a shortcut — cfb-raw is
-   71 GB, and `daily_cfb.yml` records that even
-   `--filter=blob:none --depth 1` did not finish inside 10 minutes while the
-   direct download of the one file it needed took ~2s. Fetch the specific
-   artifact, not the tree. Either way the path comes from the repo's config/env
-   (e.g. `SDV_VALIDATION_*_DATA_ROOT`, `CFB_RAW_ROOT`), never a hardcoded
-   absolute path, and a missing input must degrade to "that dataset skipped",
-   never a hard failure of the whole run. Put reading logic in `<x>_data_ingest/`.
+1. **Ingest** — read the sibling `-raw` data; never re-scrape it, and **on CI
+   never clone or check it out.** A `-data` job fetches **individual game JSON
+   files over HTTP** — that is the normal shape, not a fallback.
+
+   Why it is a hard rule: cfb-raw is **17.4 GB** on the API (71 GB on disk);
+   `daily_cfb.yml` records that even `--filter=blob:none --depth 1` did not
+   finish inside 10 minutes while downloading the one needed file took ~2s; and
+   on 2026-08-27 an `actions/checkout` of the 1.4 GB `cfb-data` repo sat **45
+   minutes** before being cancelled. A clone that works today is a timeout
+   waiting for the season that adds enough games.
+
+   **The canonical implementation already exists** —
+   `cfb_data_ingest/fetch.py::fetch_final`. Copy its shape rather than inventing
+   one; every element earns its place:
+
+   - **URL per game from the schedule**: `{RAW_BASE}/json/final/{game_id}.json`,
+     with ids from `season_game_ids()` reading the schedule master over the same
+     HTTP base. Never list a remote directory.
+   - **Read-through disk cache** keyed `cache_dir/{game_id}.json`, so a re-run
+     or a resumed build refetches nothing. This is what makes a 20,698-game
+     season tolerable.
+   - **Corrupt-cache guard**: `json.loads` the cached file before trusting it and
+     re-fetch once on failure. A half-written cache entry from an interrupted run
+     is otherwise indistinguishable from a good one, and poisons every later run.
+   - **Fail-soft per game** with fetched/skipped/missing counters. One missing
+     game must never abort the season; the counters are what make "we got 19,900
+     of 20,698" visible instead of silent.
+   - **Fetch through `dl_utils.download`** for the pooled session and
+     retry/backoff — and bound it in CI with `SDV_PY_HTTP_RETRIES` /
+     `SDV_PY_HTTP_TIMEOUT`, because at 20k requests the default 15 retries x 30s
+     is a hang, not resilience.
+   - **Injectable `downloader=`** so tests run fully offline.
+
+   Bundles (whole-season tarballs) are the exception — see Step 9a. Unpacking one
+   on a Windows path needs `tar --force-local`. Either way the base comes from
+   config/env (`SDV_VALIDATION_*_DATA_ROOT`, `CFB_RAW_ROOT`, a raw-store URL
+   root), never a hardcoded absolute path, and reading logic lives in
+   `<x>_data_ingest/`.
+
 2. **Build** — a builder module per dataset in `<x>_data_build/` (mirror the
    existing builders' signature/CLI), following Phase 2's stage-numbering and
    idempotency contract. polars 1.x; snake_case columns; one canonical dtype

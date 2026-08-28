@@ -200,7 +200,7 @@ Re-run the same oracle gates on the sibling's fixtures at identical thresholds.
    docs — `uv run python tools/codegen/generate.py` then `--check` clean.
 3. Reviewer pass: see Phase 7 below.
 4. **Publish operability** (if the spine publishes artifacts): add/update the
-   owning repo's CLAUDE.md **Model registry row** (model | artifact(s) | release
+   owning repo's `models/REGISTRY.md` **Model registry row** (model | artifact(s) | release
    tag | training data | fitting script | gates at publish | last retrain |
    cadence — `frozen` valid but explicit; unknown cells `TODO`, never
    fabricated). The retrain path must pass the orphan test — wired into a
