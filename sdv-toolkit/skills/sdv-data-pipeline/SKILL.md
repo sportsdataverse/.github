@@ -291,9 +291,18 @@ coverage span and report links need authoring.
 **Traps, from the pilots and the 2026-08-28 survey:**
 
 - **A status block is live data and MUST sit outside the `--check` drift
-  comparison** -- otherwise every run that publishes reddens the gate. Step 9's
-  existing warning applies doubly here: an offline regen blanks these to em
-  dashes and the gate will not catch it.
+  comparison** -- otherwise every run that publishes reddens the gate. But that
+  exclusion is exactly what makes the next rule load-bearing.
+- **An offline regen must PRESERVE the live block or REFUSE to write it -- never
+  emit placeholders.** The two rules above combine into a trap: because the gate
+  deliberately ignores the status block, a regen run without Actions/Releases API
+  access blanks real dates to em dashes, `--check` passes, and the damaged README
+  commits clean. This already happened once: an offline docs regen wiped 14 real
+  "Last published" dates and the gate passed over it. Implement one of:
+  re-read the committed block and carry it forward when the APIs are unreachable,
+  or fail with "cannot refresh status offline". A generator that silently
+  substitutes `—` for live data is worse than one that errors, because the gate
+  designed to catch drift is blind to precisely this field.
 - **A badge proves the workflow ran, not that it published.** Pair it with last
   publish + asset count; the "GREEN job that published nothing" failure mode is
   documented in `daily_cfb_processor.sh` and is exactly what a badge alone hides.
