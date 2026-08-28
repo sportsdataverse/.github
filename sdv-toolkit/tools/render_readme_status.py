@@ -145,13 +145,22 @@ def describe_cron(expr: str) -> str:
             if "/" in piece:
                 piece, _, raw_step = piece.partition("/")
                 step = int(raw_step) if raw_step.isdigit() and int(raw_step) > 0 else 1
-            if piece == "*":
-                nums.extend(range(1, 13)[::step])
-            elif "-" in piece:
-                lo, hi = piece.split("-")
-                nums.extend(range(int(lo), int(hi) + 1)[::step])
-            elif piece.isdigit():
-                nums.append(int(piece))
+            # int() on a malformed range (`1-foo`) raises, and this runs over
+            # every workflow in the repo -- one bad schedule would abort the whole
+            # render. The docstring promises the raw expression as the fallback;
+            # honour it.
+            try:
+                if piece == "*":
+                    nums.extend(range(1, 13)[::step])
+                elif "-" in piece:
+                    lo, hi = piece.split("-")
+                    nums.extend(range(int(lo), int(hi) + 1)[::step])
+                elif piece.isdigit():
+                    nums.append(int(piece))
+                else:
+                    return f"`{expr}`"
+            except (ValueError, KeyError):
+                return f"`{expr}`"
         if not nums:
             return f"`{expr}`"
         # Only abbreviate to a RANGE when the set is actually contiguous. A
@@ -266,8 +275,25 @@ def render(repo: str, wf_dir: Path, release_repo: str, tags: list[str]) -> str:
     return "\n".join(out)
 
 
+class MalformedMarkersError(RuntimeError):
+    """The README carries one status marker but not its pair."""
+
+
 def splice(readme: str, block: str) -> str:
-    """Replace the marker block, or append it when the markers are absent."""
+    """Replace the marker block, or append it when BOTH markers are absent.
+
+    Raises:
+        MalformedMarkersError: When exactly one marker is present. Appending a
+            second block there would leave an orphan marker behind, and every
+            later ``committed_block`` / ``--check`` would parse the wrong span --
+            corruption that compounds silently.
+    """
+    if (BEGIN in readme) != (END in readme):
+        present, missing = (BEGIN, END) if BEGIN in readme else (END, BEGIN)
+        raise MalformedMarkersError(
+            f"README has {present} but not {missing}. Refusing to append a second "
+            "block; fix the markers by hand first."
+        )
     if BEGIN in readme and END in readme:
         head = readme[: readme.index(BEGIN)]
         tail = readme[readme.index(END) + len(END) :]
@@ -326,7 +352,12 @@ def main(argv: list[str] | None = None) -> int:
         if "|---|" not in block.replace(" ", ""):
             print(f"{args.readme}: status block has no table delimiter row", file=sys.stderr)
             return 1
-        if re.search(r"\|\s*—\s*\|\s*—\s*\|", block):
+        # Only a row whose FIRST cell is an em dash indicates a wipe. The renderer
+        # legitimately emits `| _none_ | — | — |` (no workflows) and
+        # `| **no release** | — | — |` (tag not published yet); an "adjacent em
+        # dashes" test flagged both, so --check rejected blocks this very script
+        # had just produced.
+        if re.search(r"^\|\s*—\s*\|", block, re.M):
             print(
                 f"{args.readme}: status block looks BLANKED (em-dash placeholders). "
                 "An offline regen probably wiped live values; restore from git.",
