@@ -60,6 +60,9 @@ END = "<!-- END GENERATED: status -->"
 #: both 0 and 7 for Sunday.
 _DOW = {0: "Sun", 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun"}
 
+#: Cron also accepts three-letter day names, and GitHub Actions documents them.
+_DOW_NAMES = {"sun": 0, "mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6}
+
 #: Full names, used when a single day is named -- "Saturdays" reads; "Sats" does not.
 _DOW_FULL = {
     0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday",
@@ -194,7 +197,13 @@ def describe_cron(expr: str) -> str:
 
     if dom != "*":
         days = f"days {dom}" if "-" in dom or "," in dom else f"day {dom}"
-        tail = "" if dow_words is None else f", {dow_words}"
+        # POSIX cron ORs a restricted day-of-month with a restricted day-of-week
+        # -- `0 1 5 * 1-5` fires on the 5th AND on every weekday, not only on a
+        # 5th that falls on a weekday. Rendering it as a comma-joined qualifier
+        # read as an intersection, which understates how often the job runs.
+        if dow_words is not None:
+            days = f"{days} or {dow_words}"
+        tail = ""
     else:
         days = "daily" if dow_words is None else dow_words
         tail = ""
@@ -210,32 +219,73 @@ def _describe_dow(dow: str) -> str | None:
 
     Returns:
         A phrase such as ``"Saturdays"`` or ``"weekdays"``, ``None`` when the
-        field is ``*`` (no restriction), or the raw field when it does not parse
-        -- never a guess.
+        field is ``*`` (no restriction), or ``"dow <raw>"`` when it does not
+        parse -- never a guess.
     """
     if dow in ("*", "?"):
         return None
-    if dow == "1-5":
-        return "weekdays"
-    if dow in ("6,0", "0,6", "6,7", "0-1", "6-7"):
-        return "weekends"
+
     nums: list[int] = []
     for piece in dow.split(","):
-        if "-" in piece:
-            lo, hi = piece.split("-", 1)
-            if not (lo.isdigit() and hi.isdigit()):
+        step = 1
+        if "/" in piece:
+            piece, _, raw_step = piece.partition("/")
+            if not (raw_step.isdigit() and int(raw_step) > 0):
                 return f"dow {dow}"
-            nums.extend(range(int(lo), int(hi) + 1))
-        elif piece.isdigit():
-            nums.append(int(piece))
-        else:
+            step = int(raw_step)
+        piece = piece.strip().lower()
+        try:
+            if piece in ("*", ""):
+                lo, hi = 0, 6
+            elif "-" in piece:
+                raw_lo, _, raw_hi = piece.partition("-")
+                lo, hi = _dow_num(raw_lo), _dow_num(raw_hi)
+            else:
+                lo = hi = _dow_num(piece)
+        except KeyError:
             return f"dow {dow}"
-    names = [_DOW[n] for n in dict.fromkeys(nums) if n in _DOW]
-    if not names:
+        if lo > hi:
+            # A wrapping range (`fri-mon`) is legal in some crons but ambiguous
+            # to render; the raw field is honest and short.
+            return f"dow {dow}"
+        nums.extend(range(lo, hi + 1)[::step])
+
+    # Every value must be in range BEFORE any lookup. Filtering invalid values
+    # while still indexing the unfiltered first one turned `8,6` into a KeyError
+    # instead of the documented fallback. 7 and 0 both mean Sunday, so fold
+    # before comparing and `6,7` and `6,0` become the same set.
+    if not nums or any(n not in _DOW for n in nums):
         return f"dow {dow}"
-    if len(names) == 1:
-        return f"{_DOW_FULL[nums[0]]}s"  # "Saturdays", not "Sats"
-    return "/".join(names)
+    days = sorted({0 if n == 7 else n for n in nums})
+
+    if days == [1, 2, 3, 4, 5]:
+        return "weekdays"
+    if days == [0, 6]:
+        return "weekends"
+    if len(days) == 1:
+        return f"{_DOW_FULL[days[0]]}s"  # "Saturdays", not "Sats"
+    if len(days) == 7:
+        return None
+    return "/".join(_DOW[n] for n in days)
+
+
+def _dow_num(token: str) -> int:
+    """Resolve one day-of-week token (``"6"`` or ``"sat"``) to its number.
+
+    Args:
+        token: A single cron day-of-week value.
+
+    Returns:
+        The day number, 0-7.
+
+    Raises:
+        KeyError: When the token is neither a number nor a known day name. The
+            caller turns that into the raw-field fallback.
+    """
+    token = token.strip().lower()
+    if token.isdigit():
+        return int(token)
+    return _DOW_NAMES[token[:3]]
 
 
 def _describe_triggers(text: str) -> str:
@@ -254,20 +304,70 @@ def _describe_triggers(text: str) -> str:
         A phrase such as ``"on push / dispatch"``, or a bare ``"on demand"`` when
         no recognised trigger is declared.
     """
-    known = [
-        ("push", "push"),
-        ("pull_request", "PR"),
-        ("workflow_dispatch", "dispatch"),
-        ("repository_dispatch", "repo dispatch"),
-        ("workflow_call", "call"),
-        ("release", "release"),
-        ("issues", "issues"),
-    ]
-    # Trigger keys sit under `on:` at one indent level. Matching them anywhere in
-    # the file would count a `push` that appears in a run step; requiring the
-    # leading indent and trailing colon keeps it to YAML keys.
-    found = [label for key, label in known if re.search(rf"^\s{{1,4}}{key}:", text, re.M)]
+    labels = {
+        "push": "push",
+        "pull_request": "PR",
+        "pull_request_target": "PR target",
+        "workflow_dispatch": "dispatch",
+        "repository_dispatch": "repo dispatch",
+        "workflow_call": "call",
+        "release": "release",
+        "issues": "issues",
+        "issue_comment": "issue comment",
+        "schedule": "schedule",
+    }
+    # An unrecognised event is still a real trigger; naming it beats dropping it
+    # and reporting a workflow as narrower than it is.
+    found = [labels.get(e, e.replace("_", " ")) for e in _on_events(text)]
     return "on " + " / ".join(found) if found else "on demand"
+
+
+def _on_events(text: str) -> list[str]:
+    """Enumerate the events declared by a workflow's top-level ``on``.
+
+    Scoping to the ``on`` block matters in both directions: a job named ``push``
+    would otherwise be counted as a push trigger, and a workflow written
+    ``on: [push, fork]`` or ``on: push`` would report no triggers at all.
+
+    ``on`` is quoted in some repos because YAML 1.1 reads a bare ``on`` as the
+    boolean true, so both spellings are accepted.
+
+    Args:
+        text: Raw workflow YAML.
+
+    Returns:
+        Event names in declaration order.
+    """
+    quotes = "'\""
+    m = re.search(r"^['\"]?on['\"]?:(.*)$", text, re.M)
+    if not m:
+        return []
+    inline = m.group(1).split("#", 1)[0].strip()
+    if inline.startswith("[") and inline.endswith("]"):
+        return [e.strip().strip(quotes) for e in inline[1:-1].split(",") if e.strip()]
+    if inline:
+        return [inline.strip(quotes)]
+
+    # Block form. Take the indent from the first child line rather than assuming
+    # two spaces, then stop at the first line indented less than that.
+    events: list[str] = []
+    indent = None
+    for line in text[m.end() :].splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        cur = len(line) - len(line.lstrip())
+        if indent is None:
+            if cur == 0:
+                break
+            indent = cur
+        if cur < indent:
+            break
+        if cur > indent:
+            continue  # a nested key such as `paths:` under `push:`
+        token = line.strip().lstrip("- ").split(":", 1)[0].strip().strip(quotes)
+        if token:
+            events.append(token)
+    return events
 
 
 def workflow_rows(repo: str, wf_dir: Path) -> list[str]:
@@ -471,7 +571,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.write and args.readme:
         original = args.readme.read_text(encoding="utf-8") if args.readme.exists() else ""
-        args.readme.write_text(splice(original, block), encoding="utf-8", newline="\n")
+        try:
+            spliced = splice(original, block)
+        except MalformedMarkersError as exc:
+            # splice() refuses a half-marked README rather than guessing where
+            # the block belongs; without this the CLI answered with a traceback.
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        args.readme.write_text(spliced, encoding="utf-8", newline="\n")
         print(f"wrote status block to {args.readme}")
     else:
         print(block)
