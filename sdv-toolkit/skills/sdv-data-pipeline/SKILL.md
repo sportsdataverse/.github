@@ -1,6 +1,6 @@
 ---
 name: sdv-data-pipeline
-description: Use for the full producer lifecycle in an SDV -raw / -data / -db repo. Phases — (1) standardize the repo onto the template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, R-chain retirement), (2) decide placement BEFORE creating any script — the placement-decides-lifecycle rules, canonical NN_ stage numbering (numbers are intended build order, not run order), idempotency contract, and model-registry requirements, (3) set up a scraping or backfill job expected to run more than ~3 minutes with a user-executable runbook, unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, (4) build — read the sibling -raw tree and write tidy parquet, (5) validate, (6) publish via git commit plus per-file gh release upload. Invoke for "standardize this repo", "bring this repo onto the template", "where does this script go", "add a script to the raw repo", "new pipeline stage", "one-off driver", "set up a scrape", "backfill season X", "long scraping job", "scraper runbook", "build the dataset", "add a data-repo builder", "publish to the release", "reshape raw to data", or "daily processor".
+description: Use for the full producer lifecycle in an SDV -raw / -data / -db repo. Phases — (1) standardize the repo onto the template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, R-chain retirement), (2) decide placement BEFORE creating any script — the placement-decides-lifecycle rules, canonical NN_ stage numbering (numbers are intended build order, not run order), idempotency contract, and model-registry requirements, (3) set up a scraping or backfill job expected to run more than ~3 minutes with a user-executable runbook, unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, (4) build — DOWNLOAD the sibling -raw data over HTTP (never clone/checkout it on CI) and write tidy parquet, (5) validate, (6) publish via git commit plus per-file gh release upload. Invoke for "standardize this repo", "bring this repo onto the template", "where does this script go", "add a script to the raw repo", "new pipeline stage", "one-off driver", "set up a scrape", "backfill season X", "long scraping job", "scraper runbook", "build the dataset", "add a data-repo builder", "publish to the release", "reshape raw to data", or "daily processor".
 ---
 
 # Data pipeline — the producer lifecycle for `-raw` / `-data` / `-db` repos
@@ -223,6 +223,25 @@ step 2** — they are gated on a tested build package existing. Executed
   An unpublished release tag gets NO model until first publish.
 - **Loader-schema cross-check fixtures are VENDORED** into the repo with a
   documented refresh command; never read a sibling checkout at CI time.
+### Step 9a — `-raw` repos publish downloadable bundles
+
+A `-raw` repo is not standardized until its data is reachable WITHOUT a clone.
+Its `-data` sibling runs on a CI runner that cannot check the repo out, so the
+raw side owes the consumer a download path.
+
+- **Publish per-season bundles as release assets** under a dedicated tag
+  (`hoopR-nba-stats-raw`'s `nba-stats-raw-json` is the worked example: 31
+  tarballs, 1.44 GB total, 5-37 MB per season). Per-season, not one archive —
+  a rebuild should fetch only the seasons it touches.
+- **Keep the committed tree readable per-file** over
+  `raw.githubusercontent.com` for stages that need a handful of known paths
+  (schedule masters, reference JSON). Both modes coexist; they serve different
+  read shapes.
+- **Publishing bundles is a PREREQUISITE for converting the consumer.** As of
+  2026-08-28 only 1 of 6 surveyed `-raw` repos publishes anything at all, which
+  is the whole reason their `-data` siblings still clone. Converting a consumer
+  before its producer publishes just moves the failure.
+
 ### Step 9b — the README contract (diagrams, reports, automation status)
 
 Measured 2026-08-28 across all 43 `*-raw`/`*-data` repos: **14 have mermaid
@@ -575,17 +594,50 @@ Cron entry point: `scripts/daily_<family>_processor.sh` (data side) mirrors
 the raw side's `daily_<family>_scraper.sh`. The target repo's `CLAUDE.md` +
 existing package layout govern over this table — read them first.
 
-1. **Ingest** — read the sibling `-raw` tree; never re-scrape it. Two ways, and
-   the size of the sibling decides which: a local sibling checkout under
-   `GitHub-Data/` when one exists, otherwise **over HTTP from
-   `raw.githubusercontent.com`**. The HTTP path is not a shortcut — cfb-raw is
-   71 GB, and `daily_cfb.yml` records that even
-   `--filter=blob:none --depth 1` did not finish inside 10 minutes while the
-   direct download of the one file it needed took ~2s. Fetch the specific
-   artifact, not the tree. Either way the path comes from the repo's config/env
-   (e.g. `SDV_VALIDATION_*_DATA_ROOT`, `CFB_RAW_ROOT`), never a hardcoded
-   absolute path, and a missing input must degrade to "that dataset skipped",
-   never a hard failure of the whole run. Put reading logic in `<x>_data_ingest/`.
+1. **Ingest** — read the sibling `-raw` data; never re-scrape it, and **on CI
+   never clone or check it out.** A `-data` job DOWNLOADS what it needs over
+   HTTP. This is a hard rule, not a preference: the `-raw` repos are far past
+   what a runner can check out, and every attempt fails slowly and confusingly
+   rather than fast and clearly.
+
+   The evidence, all measured: cfb-raw is **17.4 GB** on the API (71 GB
+   on disk); `daily_cfb.yml` records that even `--filter=blob:none --depth 1`
+   did not finish inside 10 minutes while downloading the ONE file it needed took
+   ~2s; and on 2026-08-27 an `actions/checkout` of the 1.4 GB `cfb-data` repo sat
+   for **45 minutes** before being cancelled. A clone that "works" today is a
+   timeout waiting for the season that adds enough games.
+
+   **Two download modes — pick by how much you need:**
+
+   - **Per-file HTTP** for selective reads:
+     `https://raw.githubusercontent.com/<org>/<repo>/main/<path>`. Already in
+     production — `cfb_data_ingest/__init__.py` defines `RAW_BASE` this way and
+     `season_game_ids()` reads the schedule master straight from it. Best when a
+     stage needs a handful of known paths.
+   - **Season bundles as release assets** for bulk. Proven by
+     `hoopR-nba-stats-raw`'s `nba-stats-raw-json` tag: **31 per-season tarballs,
+     1.44 GB total, 5–37 MB each** — so a one-season build downloads ~20 MB
+     instead of cloning the whole store. sdv-py's raw-store layer already
+     supports a URL backend for exactly this (`_through_raw_store`; a URL root is
+     offline-by-construction and a miss returns `{}` so a partial tree still
+     compiles).
+
+   **This is a TWO-SIDED change, and the producer side is mostly missing.**
+   Surveyed 2026-08-28: of `cfbfastR-cfb-raw`, `hoopR-nba-raw`,
+   `hoopR-nba-stats-raw`, `wehoop-wnba-raw`, `ncaa-mbb-hoops-raw` and
+   `fastRhockey-nhl-raw`, **only `hoopR-nba-stats-raw` publishes bundles at all**
+   — the rest have ZERO releases. That is precisely why their `-data` siblings
+   still clone: there is nothing to download yet. Adding the bundle-publish step
+   to a `-raw` repo is the prerequisite, not an afterthought; do it before
+   converting the consumer.
+
+   Gotchas: unpacking a bundle on a Windows path needs `tar --force-local`
+   (a `C:/...` path is otherwise read as a remote host). Bundles are per-season
+   so a rebuild fetches only the seasons it touches. Either mode takes its base
+   from config/env (`SDV_VALIDATION_*_DATA_ROOT`, `CFB_RAW_ROOT`, a raw-store URL
+   root), never a hardcoded absolute path, and a missing input degrades to "that
+   dataset skipped", never a hard failure of the whole run. Reading logic lives
+   in `<x>_data_ingest/`.
 2. **Build** — a builder module per dataset in `<x>_data_build/` (mirror the
    existing builders' signature/CLI), following Phase 2's stage-numbering and
    idempotency contract. polars 1.x; snake_case columns; one canonical dtype
