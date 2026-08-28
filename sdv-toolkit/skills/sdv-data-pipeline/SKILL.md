@@ -223,6 +223,65 @@ step 2** — they are gated on a tested build package existing. Executed
   An unpublished release tag gets NO model until first publish.
 - **Loader-schema cross-check fixtures are VENDORED** into the repo with a
   documented refresh command; never read a sibling checkout at CI time.
+### Step 9b — the README contract (diagrams, reports, automation status)
+
+Measured 2026-08-28 across all 43 `*-raw`/`*-data` repos: **14 have mermaid
+diagrams, 29 do not**; `nfl-raw` has no README at all, and `gp-cfb-raw`,
+`nba-stats-data`, `softballR-data`, `usfootballR-data` are empty. The generated
+block that DOES exist is only the datasets table -- **no repo has a
+reports/explainers section or an automation-status block**. A standardized repo
+is not done until its README answers three questions a newcomer actually asks.
+
+**1. Which repo writes what?** Two mermaid diagrams, the
+`fastRhockey-nhl-data` / `hoopR-nba-data` convention:
+
+- `graph LR` -- upstream `-raw` -> this repo -> each release tag.
+- `flowchart TB` with one subgraph per repo, naming **real script paths**
+  (`R/espn_nba_01_pbp_creation.R`), so a reader goes from picture to file
+  without asking. A diagram naming only datasets is decoration; one naming
+  scripts is documentation.
+
+**2. Where are the models explained?** A `## Reports & explainers` table
+linking to model reports, cards, dataset docs and validation output. Link OUT,
+do not inline: `fastRhockey-nhl-data` embeds a full xG write-up, ~875 lines of a
+1,039-line README -- excellent content, unfindable from any other repo, and it
+buries the operational sections. `cfbfastR-cfb-data` is the opposite failure:
+`cfb_model_reports` generates `docs/models/` on every run and NOTHING links to
+it.
+
+**3. Is the automation actually running?** An `## Automation & status` block --
+the section this template was missing entirely:
+
+| column | source | why |
+|---|---|---|
+| workflow badge | `https://github.com/<org>/<repo>/actions/workflows/<file>/badge.svg` | red badge = the pipeline is down, visible without opening Actions |
+| schedule | the `cron:` in each workflow, rendered in words | "daily 09:00 UTC in-season" beats `0 9 * 8 *` |
+| last run | Actions API `workflow_runs[0].updated_at` | a green badge on a workflow that has not fired in three months is still a dead pipeline |
+| release tag + last publish | Releases API `published_at` per tag | the datasets table already carries this; keep ONE source |
+| assets / size | Releases API asset count + bytes | catches a publish that "succeeded" and uploaded nothing |
+
+Generate it between BEGIN/END markers like the datasets table, from the Actions
+and Releases APIs plus the workflow `cron:` lines -- release tags, publish dates,
+script order and sibling links are all derivable. Only the one-line summary,
+coverage span and report links need authoring.
+
+**Traps, from the pilots and the 2026-08-28 survey:**
+
+- **A status block is live data and MUST sit outside the `--check` drift
+  comparison** -- otherwise every run that publishes reddens the gate. Step 9's
+  existing warning applies doubly here: an offline regen blanks these to em
+  dashes and the gate will not catch it.
+- **A badge proves the workflow ran, not that it published.** Pair it with last
+  publish + asset count; the "GREEN job that published nothing" failure mode is
+  documented in `daily_cfb_processor.sh` and is exactly what a badge alone hides.
+- **Do not hand-write 29 READMEs.** They will drift into 29 shapes within a
+  quarter. One renderer + a `--check` gate, same shape as sdv-py's codegen drift
+  gate. `hoopR-nba-stats-data` already proves the marker pattern works
+  (`python/nba_data_build/docs.py`).
+- **An archived repo says so in the first line.** `hoopR-data` (11 lines) and
+  `wehoop-data` (17) are archives; a thin README that does not say "archived"
+  reads as neglect rather than intent.
+
 - **A repo with no dataset registry skips D40/D43** — state the reason in the
   ledger rather than inventing a registry to satisfy the decision.
 
@@ -319,13 +378,65 @@ or reorder independent stages).
 ### Models are pipelines too
 
 Stage order: ingest → features → train → evaluate/gate → package → publish →
-integrate. Every published artifact gets a **Model registry row** in CLAUDE.md
-(model | artifact(s) | release tag | training data | fitting script | gates at
-publish | last retrain | cadence — `frozen` is valid but must be explicit;
-unknown cells are `TODO`, never fabricated). A retrain recipe referenced by
-nothing is the `retrain_xg_models.R` stranding failure. Gates sit upstream of
-publish and are never lowered; `feature_names` verified at package AND consume
-time. Training experiments are born in `dev/` like any other one-off.
+integrate. Every published artifact gets a **Model registry row** in
+`models/REGISTRY.md` (model | artifact(s) | release tag | training data |
+fitting script | gates at publish | last retrain | cadence — `frozen` is valid
+but must be explicit; unknown cells are `TODO`, never fabricated). A retrain
+recipe referenced by nothing is the `retrain_xg_models.R` stranding failure.
+Gates sit upstream of publish and are never lowered; `feature_names` verified at
+package AND consume time. Training experiments are born in `dev/` like any other
+one-off.
+
+**The registry lives in `models/REGISTRY.md`, not CLAUDE.md** (moved
+2026-08-28, cfbfastR-cfb-data#51). A table a test parses is repository data, not
+agent instructions. Do NOT put it in `docs/models/` — report generators
+regenerate that directory and overwrite its `README.md`, so a hand-maintained
+file there is silently clobbered.
+
+#### Operability: the monolith is usually in the WORKFLOW, not the code
+
+Surveyed on `cfbfastR-cfb-data` 2026-08-28 (103 files, 13.1k LOC): every
+subpackage already had a working `cli.py` with per-model subcommands, so one
+model could already be trained from a shell. What did not exist was any way to
+express that in CI — the workflow was **one job with ~15 hardcoded sequential
+steps and three coarse booleans**. Before proposing a modeling refactor, check
+which of the two you actually have; the fix for a workflow monolith is an
+orchestration layer, not a rewrite of the training code.
+
+- **Fingerprints are the highest-value single change.** Each stage writes
+  `hash(code subtree, input digests, feature set, hyperparameters)` beside its
+  output and skips when unchanged unless `--force`. That one mechanism buys
+  restart-from-any-step, per-feature-set iteration, and honest caching. Without
+  it there is no resume, and every experiment re-derives its inputs.
+- **One model = one CI job.** A matrix over a stage manifest plus a
+  `stages: train-ep` dispatch input, so a single retrain does not drag the other
+  seven with it.
+- **The stage list must have ONE home.** When it lives in the CLI subparsers, the
+  workflow steps AND the registry table, it drifts — which is why these repos end
+  up needing a registry↔stage correspondence test at all.
+- **Know what that test actually guarantees.** `cfbfastR-cfb-data`'s matches on
+  PACKAGE names, not per-model rows: deleting the `ep` row still passed, because
+  sibling rows mention `model_training`. "Every stage is mentioned somewhere" is
+  weaker than "rows are mandatory" implies. Verify by deleting a row before
+  trusting it.
+
+#### The ledger field nobody tracks: did the feature reach published data?
+
+A feature can be trained, gated, promoted, committed and released, and still not
+be in the published dataset — reaching it requires the reprocess (20,698 games
+for CFB). Record `in_published_data` (null until a reprocess ships it, then that
+run's id) per ledger row, alongside `delta_vs_champion` and a **required note on
+promotion**. The scientific unit is the delta against the incumbent, not the raw
+metric. A promoted-but-never-shipped backlog is invisible without this column.
+
+#### Committing model artifacts
+
+Commit **promoted models only**, never sweep output, and only after the ledger
+exists — otherwise binaries land with no card, no fingerprint and no reason. CFB's
+full artifact set is 27.5 MB across 22 assets, which is affordable against a 1.4 GB
+repo a few times a year and ruinous nightly; git keeps every version forever.
+Check the outlier first (`fd_model.ubj` alone is 15.2 MB) before it becomes
+permanent history. Releases stay the archive for superseded versions.
 
 ### Twin repos
 
