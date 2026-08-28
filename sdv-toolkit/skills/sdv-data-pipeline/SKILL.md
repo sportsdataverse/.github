@@ -280,7 +280,7 @@ the section this template was missing entirely:
 | workflow badge | `https://github.com/<org>/<repo>/actions/workflows/<file>/badge.svg` | red badge = the pipeline is down, visible without opening Actions |
 | schedule | the `cron:` in each workflow, rendered in words | "daily 09:00 UTC in-season" beats `0 9 * 8 *` |
 | last run | Actions API `workflow_runs[0].updated_at` | a green badge on a workflow that has not fired in three months is still a dead pipeline |
-| release tag + last publish | Releases API `published_at` per tag | the datasets table already carries this; keep ONE source |
+| release tag + last publish | Releases API, the NEWEST **asset** timestamp -- NOT `published_at` | `published_at` is when the TAG was created, and these tags are rolling: assets are replaced in place. `espn_cfb_pbp` reads 2023-05-04 by that field while its assets were re-uploaded 2026-08-03. With zero assets emit an em dash -- nothing was published, whatever the release says |
 | assets / size | Releases API asset count + bytes | catches a publish that "succeeded" and uploaded nothing |
 
 Generate it between BEGIN/END markers like the datasets table, from the Actions

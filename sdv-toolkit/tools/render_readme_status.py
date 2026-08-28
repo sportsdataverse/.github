@@ -138,18 +138,34 @@ def describe_cron(expr: str) -> str:
     else:
         nums: list[int] = []
         for piece in month.split(","):
-            if "-" in piece:
+            # Cron permits step values (`1-12/2`, `*/6`); ignoring the step
+            # silently rendered "Jan-Dec" for a schedule that fires every other
+            # month, which is a worse lie than printing the raw expression.
+            step = 1
+            if "/" in piece:
+                piece, _, raw_step = piece.partition("/")
+                step = int(raw_step) if raw_step.isdigit() and int(raw_step) > 0 else 1
+            if piece == "*":
+                nums.extend(range(1, 13)[::step])
+            elif "-" in piece:
                 lo, hi = piece.split("-")
-                nums.extend(range(int(lo), int(hi) + 1))
+                nums.extend(range(int(lo), int(hi) + 1)[::step])
             elif piece.isdigit():
                 nums.append(int(piece))
-        months = (
-            "-".join(_MONTHS[n] for n in (nums[0], nums[-1]))
-            if len(nums) > 1
-            else _MONTHS.get(nums[0], month)
-            if nums
-            else month
-        )
+        if not nums:
+            return f"`{expr}`"
+        # Only abbreviate to a RANGE when the set is actually contiguous. A
+        # stepped schedule (`1-12/2`) rendered as "Jan-Nov" reads as every month
+        # from January to November when it really fires six times, every other
+        # month -- a readable lie, which is worse than the raw expression.
+        nums = sorted(set(nums))
+        contiguous = len(nums) > 1 and nums == list(range(nums[0], nums[-1] + 1))
+        if len(nums) == 1:
+            months = _MONTHS.get(nums[0], month)
+        elif contiguous:
+            months = f"{_MONTHS[nums[0]]}-{_MONTHS[nums[-1]]}"
+        else:
+            months = ", ".join(_MONTHS[n] for n in nums)
 
     if dom == "*":
         days = "daily"
@@ -210,7 +226,14 @@ def release_rows(release_repo: str, tags: list[str]) -> list[str]:
     for tag in tags:
         try:
             rel = gh_api(f"repos/{release_repo}/releases/tags/{tag}")
-        except OfflineError:
+        except OfflineError as exc:
+            # A tag that does not exist is a FACT about this repo, not an outage.
+            # Treating it as one made a single typo abort the whole render and
+            # report "offline", which is both wrong and unactionable.
+            if "404" in str(exc) or "Not Found" in str(exc):
+                url = f"https://github.com/{release_repo}/releases/tag/{tag}"
+                rows.append(f"| [`{tag}`]({url}) | **no release** | — | — |")
+                continue
             raise
         assets = rel.get("assets", []) if isinstance(rel, dict) else []
         size_mb = sum(a.get("size", 0) for a in assets) / 1048576
@@ -222,7 +245,11 @@ def release_rows(release_repo: str, tags: list[str]) -> list[str]:
         # number this table exists to show.
         stamps = [a.get("updated_at") or a.get("created_at") or "" for a in assets]
         newest = max((t for t in stamps if t), default="")
-        published = (newest or rel.get("published_at") or "")[:10] or "—"
+        # No assets means nothing was published, whatever the release says. Falling
+        # back to `published_at` here would print a confident date for a tag that
+        # shipped nothing -- the "GREEN job that published nothing" mode this table
+        # exists to expose.
+        published = newest[:10] if newest else "—"
         url = f"https://github.com/{release_repo}/releases/tag/{tag}"
         rows.append(f"| [`{tag}`]({url}) | {len(assets)} | {size_mb:,.1f} MB | {published} |")
     return rows
@@ -287,8 +314,17 @@ def main(argv: list[str] | None = None) -> int:
         if block is None:
             print(f"{args.readme}: missing {BEGIN} / {END} markers", file=sys.stderr)
             return 1
-        if "|" not in block:
-            print(f"{args.readme}: status block has no table rows", file=sys.stderr)
+        # Structure, not just "contains a pipe": a block holding `| arbitrary |`
+        # would otherwise pass and the gate would certify a table that is not one.
+        if "| workflow | schedule | last run |" not in block:
+            print(
+                f"{args.readme}: status block is missing the workflow table header "
+                "(| workflow | schedule | last run |)",
+                file=sys.stderr,
+            )
+            return 1
+        if "|---|" not in block.replace(" ", ""):
+            print(f"{args.readme}: status block has no table delimiter row", file=sys.stderr)
             return 1
         if re.search(r"\|\s*—\s*\|\s*—\s*\|", block):
             print(
