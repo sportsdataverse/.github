@@ -179,6 +179,10 @@ Grep: `grep -nE "re\.search.*\\\\d\{[0-9]" <file>`
 **8. Pooling and backoff present for new fetchers** — new scripts doing bulk fetches must use connection pooling (`requests.Session`, `httpx.Client`, or equivalent) and exponential backoff (or delegate to `download()`). Flag any `requests.get(` call outside a session or without retry logic.
 Grep: `grep -nE "requests\.get\(" <file>`
 
+**9. A full page is never banked as a complete answer** — a collection response whose row count EQUALS the requested `limit` (or the host default, 25 on ESPN Core v2) is a truncated page, not a complete collection. It errors nothing, parses cleanly, and is a plausible size. Flag any save/return path that neither pages on `len(items) == limit` nor compares against the envelope's own `count`. Core v2 states `count` independently of what it returned, so `count > len(items)` is a free detector; `common/v3` (rosters) ships NO count at all, so the equality test is the only guard there — ESPN returned Alabama's 120-man squad, Auburn's 113 and LSU's 108 all at exactly 100 (2026-08-29). Grep: `grep -nE "limit=|params=\{[^}]*limit" <file>`, then confirm a page loop or a `count` comparison exists on the save path.
+
+**10. A scoping query param is proven, not assumed** — a host can accept a param and ignore it. ESPN's `/athletes/{id}/stats?season=` returns identical bodies for 2023, 2024 and no season at all, so anything filed by that param is mislabelled. Flag a fetcher that passes a scoping param (`season`, `week`, `type`) and writes the result under that value without ever checking the payload agrees — the payload usually states its own season. Prefer a route carrying the scope in the PATH: a wrong value 404s instead of returning a plausible body for the wrong year.
+
 ### Report format
 
 For each issue found:
