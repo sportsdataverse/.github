@@ -1,5 +1,5 @@
 {
-  "version": "0.8.0",
+  "version": "0.9.0",
   "entries": [
     {
       "name": "sdv-data-pipeline",
@@ -329,7 +329,7 @@
     {
       "name": "sdv-modeling",
       "kind": "skill",
-      "purpose": "The single modeling reference: which method fits, what data feeds it, what was already tried, how to write the fit without a silent panel-data failure, how to engineer the features, which metric gates it, and what the literature says. Absorbed sdv-sklearn, sdv-evaluating-ml-models, sdv-engineering-ml-features, sdv-ml-pipeline, sdv-data-scientist and sdv-analyzing-data in 0.8.0.",
+      "purpose": "The single modeling reference, 9.3k lines across 16 reference files: which method fits, what data feeds it, what was tried, how to write the fit, which learner to pick, how to explain it, how to put an honest interval on it, how to pool across entities, and what the literature says.",
       "archetypes": [
         "sdv-py",
         "data"

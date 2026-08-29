@@ -93,11 +93,39 @@ ship and the reference files above name them.
 | Retired 2026-08-28 | Went to |
 |---|---|
 | `sdv-sklearn` (first-party, 1,201 lines) | `references/sklearn-xgboost.md`, unchanged plus §A2 purged CV and §B2 sparse solvers |
-| `sdv-evaluating-ml-models` | `metrics-and-gates.md` §1b (splitter choice, tuning discipline, error analysis); its three reference files kept under `generic/` |
-| `sdv-engineering-ml-features` | `references/feature-engineering.md`, SDV-rewritten; its four reference files kept under `generic/` |
-| `sdv-ml-pipeline` | `generic/model-validation.md`, `generic/training-pipelines.md`, `generic/feature-engineering-patterns.md` (2,391 lines kept); `metrics-and-gates.md` §1b "our stack is not MLflow" — the MLflow/Kubeflow/Feast templates were dropped, not carried; the operational half is `sdv-data-pipeline` |
+| `sdv-evaluating-ml-models` | `metrics-and-gates.md` §1b (splitter choice, tuning discipline including Optuna, error analysis) |
+| `sdv-engineering-ml-features` | `references/feature-engineering.md`, SDV-rewritten -- including its feature-selection content, now with cluster-aware stability selection |
+| `sdv-ml-pipeline` | `metrics-and-gates.md` §1b "our stack is not MLflow" — the MLflow/Kubeflow/Feast templates were dropped, not carried; the operational half is `sdv-data-pipeline` |
 | `sdv-data-scientist` | nothing — persona and capability boilerplate with no SDV content |
-| `sdv-analyzing-data` | the three non-viz references (`statistical-tests`, `large-dataset-eda`, `profiling-automation`) kept under `generic/`; the nine visualization files delegated to the external `dataviz` skill; five files were byte-identical or near-identical duplicates of the ML skills' and were dropped as dupes |
+| `sdv-analyzing-data` | `statistical-tests` became `resampling.md` §5b, rewritten around why classical tests do not hold on play-level data; the visualization files delegated to the external `dataviz` skill; the duplicates dropped |
 
 `sdv-model-spine` was **renamed** `sdv-model-build` in the same change. Same
 content; "spine" was internal jargon that did not say the skill runs a build.
+
+---
+
+## The `generic/` tier is gone (0.9.0)
+
+0.8.0 kept 3,712 lines of unadapted technique under `references/generic/` rather
+than delete them outright. 0.9.0 dissolves it: the SDV-adapted files written for
+the gap closure supersede most of it, and what remained useful was **graduated**
+rather than left in a tier labelled "not adapted to our data".
+
+| generic file | outcome |
+|---|---|
+| `feature-selection.md` | **graduated** -> `feature-engineering.md` §4, rewritten with Boruta and cluster-aware stability selection (measured: 5/5 real + 1 noise, vs 5/5 + 15 for a single L1 fit) |
+| `hyperparameter-tuning.md` | **graduated** -> `metrics-and-gates.md` §1b (Optuna, HalvingRandomSearchCV, and the rule that the tuner takes the group-aware splitter) |
+| `statistical-tests.md` | **graduated** -> `resampling.md` §5b, rewritten as *why* t-tests and chi-square do not hold on play-level data and what to do instead |
+| `cross-validation.md` | superseded and actively wrong for us -- it led with plain K-Fold. `sklearn-xgboost.md` §A, §A2 |
+| `metrics-guide.md` | superseded by `metrics-and-gates.md` §1 |
+| `categorical-encoding.md`, `datetime-features.md` | superseded by `feature-engineering.md` §1-§2 and `model-families.md` §3 |
+| `model-validation.md` (978 lines) | dropped -- A/B testing and shadow deployment. Product-ML concerns; we validate against an external oracle, not a traffic split |
+| `training-pipelines.md` (782) | dropped -- PyTorch loops, distributed training, resource management. We fit XGBoost on one machine |
+| `feature-engineering-patterns.md` (631) | dropped -- Feast feature store, Great Expectations. Not our stack, same reason the MLflow content went |
+| `text-features.md`, `large-dataset-eda.md`, `profiling-automation.md` | dropped -- TF-IDF/embedding recipes for documents, sampling strategies that break clusters, and profiling tools that do not know about panel structure |
+
+**One idea worth recording before it disappears with `text-features.md`:** play
+descriptions *are* text, and our CFB/NFL parsers are regex over them. Learned
+representations of play text (rather than hand-written patterns) is an
+unexplored direction, not a dead one -- see `literature.md` for where that would
+sit.

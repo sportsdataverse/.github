@@ -278,6 +278,51 @@ player rating and measure empirical coverage").
 
 ---
 
+
+#### Simulator hygiene — three cheap things we do none of
+
+**Common random numbers.** Two scenarios compared with independent RNG streams
+differ by sampling noise as well as by the change you made. Seed each scenario
+identically so the *same* draws drive both, and the difference is the effect.
+Nearly free, and it is what makes "playoff odds moved 3 points" a claim rather
+than a coincidence.
+
+```python
+base = simulate(season, rng=np.random.default_rng(20260828))
+alt  = simulate(season_with_injury, rng=np.random.default_rng(20260828))  # SAME seed
+```
+
+**A shared seed pairs the draws only while both runs consume randomness in the
+same order.** If the alternative scenario branches differently or draws a
+different number of values, everything after that point is misaligned and the
+comparison silently reverts to independent streams. Make the pairing structural —
+pre-generate a draw per game and index into it, so a scenario change cannot shift
+the stream:
+
+```python
+draws = np.random.default_rng(20260828).random((n_sims, n_games))   # fixed grid
+```
+
+**Antithetic variates.** Pair each draw `u` with `1-u`. For a monotone response
+this guarantees non-positive covariance between the paired estimates, so it
+**can** reduce variance — sometimes substantially, sometimes barely. "Halves the
+variance" is a shorthand, not a guarantee, and a playoff-odds sum is not monotone
+in every underlying draw. Measure the reduction on your own simulator.
+
+**CRPS, not just calibration slope.** A calibration slope says the probabilities
+are honest; it says nothing about whether the *shape* of the simulated
+distribution is right. CRPS is the proper scoring rule for a full predictive
+distribution and reduces to MAE for a point forecast. Verified: a correct
+ensemble scored 0.5804, the same ensemble shifted by 1.0 scored 0.8055.
+
+```python
+import properscoring as ps
+ps.crps_ensemble(observed, draws)      # (n,) observed vs (n, m) simulated
+```
+
+Full treatment of distributional targets and their scoring:
+`count-survival-ordinal.md`.
+
 ---
 
 ## 1b. Choosing the evaluation itself
@@ -312,6 +357,10 @@ the oracle. Three rules that are specific to us:
 - **A tuning run that improves the metric by less than its own fold-to-fold
   spread has found nothing.** Report the spread alongside the point estimate,
   or a re-run with a different seed will "beat" the champion.
+- **Tooling.** `optuna` (TPE, pruning) is the practical default and `sklearn`'s
+  `HalvingRandomSearchCV` needs no extra dependency. Whichever you use, pass the
+  **group-aware splitter** into the search's `cv=` — a tuner with a shuffled
+  split optimizes the leak, which is worse than not tuning at all.
 - **Search the feature set before the hyperparameters.** CFB pregame went
   15.14 → 12.97 MAE against a 12.27 market ceiling, and the finding was that
   60 features beat 244 — the substrate is roughly one-dimensional

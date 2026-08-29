@@ -102,18 +102,80 @@ other fold. That is `sklearn-xgboost.md` §A2.
 
 ## 4. Feature selection: the substrate is usually low-dimensional
 
-Measured, on our own data: CFB pregame went 15.14 → 12.97 MAE against a 12.27
+Measured, on our own data: CFB pregame went 15.14 -> 12.97 MAE against a 12.27
 market ceiling, and **60 features beat 244** — the predictive substrate is
 roughly one-dimensional (`prior-art.md`, CFB higher-order models). Special
 teams, added as 18 separate columns, turned out to be overstated 18x.
 
-Practical consequence: reach for selection *before* a hyperparameter search,
-and prefer the cheap filters. Mutual information and L1 both work; recursive
-elimination rarely earns its cost at our feature counts. The honest check is
-whether a smaller set holds up against the oracle, not whether it holds up in
-CV — CV rewards the larger set for exactly the leakage this file is about.
+So selection is not housekeeping here; it is where the gain came from. Reach for
+it **before** a hyperparameter search.
 
----
+### Three families, and which to use
+
+| family | how | when |
+|---|---|---|
+| **filter** | mutual information, correlation with the target | a fast first cut on hundreds of candidates |
+| **embedded** | L1 (lasso) or a tree's own gain | the usual default — selection happens during the fit |
+| **wrapper** | recursive elimination, Boruta | rarely earns its cost at our feature counts |
+
+**Boruta** deserves a mention because it answers a different question: it adds
+*shadow* features (each real column, shuffled) and keeps only columns that beat
+the best shadow. That is a principled "is this better than noise" test rather
+than a ranking. Useful when you must justify a cut to a domain reader.
+
+### Stability selection — the one that survives clustering
+
+A single L1 fit on a play-level frame selects whatever the noise favored in that
+one sample. **Refit on repeated subsamples and keep only the features selected
+often** — and subsample *games*, not rows, for the reason in `resampling.md`.
+
+```python
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+
+def stability_selection(X, y, groups, n_boot=60, frac=0.5, C=0.05, seed=0):
+    """Fraction of cluster-subsampled fits in which each feature survives L1.
+
+    Args:
+        X: Standardized design matrix -- L1 is scale-sensitive.
+        y: Target.
+        groups: Cluster label per row (`game_id`). Subsampling ROWS here would
+            leak game context across the subsamples and inflate every frequency.
+        frac: Fraction of clusters drawn per replicate.
+        C: Inverse regularization strength; smaller selects fewer features.
+
+    Returns:
+        Per-feature selection frequency in [0, 1]. Keep features above ~0.8.
+    """
+    rng = np.random.default_rng(seed)
+    groups = np.asarray(groups)
+    keys = np.unique(groups)
+    members = {k: np.flatnonzero(groups == k) for k in keys}
+    selected = np.zeros(X.shape[1])
+    for _ in range(n_boot):
+        picked = rng.choice(keys, int(len(keys) * frac), replace=False)
+        idx = np.concatenate([members[k] for k in picked])
+        model = LogisticRegression(penalty="l1", solver="liblinear", C=C).fit(X[idx], y[idx])
+        # `liblinear` fits one-vs-rest, so coef_ has one row per class on a
+        # multiclass target; coef_[0] would count only the first class.
+        selected += (np.abs(model.coef_) > 1e-8).any(axis=0)
+    return selected / n_boot
+```
+
+**Measured** on 300 games x 30 plays with 5 real features and 25 pure noise:
+
+| method | features kept | real kept | noise kept |
+|---|---:|---:|---:|
+| single L1 fit | 20 | 5/5 | **15** |
+| **stability selection @ 0.8** | **6** | **5/5** | **1** |
+
+Same real features, fifteen fewer false positives. On a problem where the honest
+answer is ~60 features out of 244, that difference is the whole exercise.
+
+**Validate the cut against the oracle, not against CV.** CV rewards the larger
+feature set for exactly the leakage this file is about; the external comparison
+does not.
 
 ## 5. Naming and dtype discipline
 
