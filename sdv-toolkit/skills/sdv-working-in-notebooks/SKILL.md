@@ -25,10 +25,10 @@ Use a different skill for these related but distinct tasks:
 |---------------|----------------|------------|
 | Building a stakeholder-facing dashboard | `building-data-apps` | Apps are for external users; notebooks are for analysts/developers |
 | Creating interactive data explorers for non-technical users | `building-data-apps` | Streamlit, Panel, Gradio are purpose-built for this |
-| Exploratory data analysis patterns | `sdv-modeling` (`references/data-sources.md`) for what to explore; the external `dataviz` skill for how to show it | `sdv-analyzing-data` was retired in 0.8.0 |
+| Exploratory data analysis patterns | `sdv-modeling` (`references/data-sources.md`) for what to explore; the external `dataviz` skill for how to show it | `sdv-modeling` / the external `dataviz` skill was retired in 0.8.0 |
 | Visualization library selection | the external `dataviz` skill | Chart choice, palettes and accessibility live there |
-| Production ML feature engineering | `sdv-engineering-ml-features` | Feature engineering logic is domain-specific |
-| Model evaluation and cross-validation | `sdv-evaluating-ml-models` | Model comparison and metrics belong there |
+| Production ML feature engineering | `sdv-modeling` (`references/feature-engineering.md`) | Feature engineering logic is domain-specific |
+| Model evaluation and cross-validation | `sdv-modeling` (`references/metrics-and-gates.md`) | Metric choice, splitter choice and the gate rule belong there |
 
 ### Quick boundary check
 
@@ -163,7 +163,7 @@ Before considering a notebook "done":
 
 ### Testing notebook code
 
-See `../sdv-analyzing-data/references/notebook-testing.md` for:
+See `../sdv-modeling/references/notebook-testing.md` for:
 - Unit tests for notebook code
 - nbval for output validation
 - Papermill for parameterized execution
@@ -178,8 +178,8 @@ See `../sdv-analyzing-data/references/notebook-testing.md` for:
 
 ### Related references (in other skills)
 
-- `../sdv-analyzing-data/references/notebook-testing.md` — Unit tests, nbval, Papermill for notebook validation
-- `../sdv-analyzing-data/references/sharing-publishing.md` — nbconvert, Quarto, Voilà for publishing notebooks
+- `../sdv-modeling/references/notebook-testing.md` — Unit tests, nbval, Papermill for notebook validation
+- `../sdv-modeling/references/sharing-publishing.md` — nbconvert, Quarto, Voilà for publishing notebooks
 
 ### External resources
 
@@ -248,10 +248,10 @@ print(f"numpy: {np.__version__}")
 
 | Skill | Relationship | When to use |
 |-------|--------------|-------------|
-| `sdv-analyzing-data` | Complementary | EDA patterns, profiling, statistical tests—use with notebooks |
+| `sdv-modeling` / the external `dataviz` skill | Complementary | EDA patterns, profiling, statistical tests—use with notebooks |
 | `building-data-apps` | Distinct boundary | Building stakeholder-facing dashboards—**not** this skill |
-| `sdv-evaluating-ml-models` | Complementary | Cross-validation, metrics, experiment tracking |
-| `sdv-engineering-ml-features` | Complementary | Feature engineering patterns and transformations |
+| `sdv-modeling` | Complementary | Cross-validation, metrics, the experiment ledger -- and the fit itself |
+| `sdv-model-build` | Complementary | Running an oracle-gated build to completion |
 
 ## Migration notes
 

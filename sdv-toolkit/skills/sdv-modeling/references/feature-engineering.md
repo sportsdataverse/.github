@@ -71,10 +71,17 @@ Three requirements, all checkable:
    RAPM family already applies to ratings; see `methods.md`.
 
 **Unknown entities at predict time** are guaranteed, not exceptional — every
-season introduces freshmen and every trade deadline moves players. Configure
-`handle_unknown="infrequent_if_exist"` (or `"ignore"`) explicitly and assert
-the encoder does not raise on an unseen id; `sklearn-xgboost.md` §E is the full
-treatment.
+season introduces freshmen and every trade deadline moves players. **Which knob
+you need depends on the encoder, and they do not share one:**
+
+| encoder | unknown-category handling |
+|---|---|
+| `TargetEncoder` | **no `handle_unknown` parameter at all** (verified, sklearn 1.9.0: its params are `categories`, `target_type`, `smooth`, `cv`, `shuffle`, `random_state`). Unseen categories fall back to the target mean automatically. Passing `handle_unknown=` raises `TypeError` at construction. |
+| `OneHotEncoder` | `handle_unknown="infrequent_if_exist"` or `"ignore"` |
+| `OrdinalEncoder` | `handle_unknown="use_encoded_value"` plus `unknown_value=` |
+
+Whichever you use, assert the encoder does not raise on an unseen id rather
+than trusting the default; `sklearn-xgboost.md` §E is the full treatment.
 
 ---
 

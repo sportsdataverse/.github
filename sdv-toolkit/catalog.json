@@ -28,7 +28,7 @@
     {
       "name": "sdv-model-build",
       "kind": "skill",
-      "purpose": "Oracle-gated model build loop: capture oracle, worktree, harness, TDD, gates, parity, close-out.",
+      "purpose": "Runs an oracle-gated model build to completion: capture the oracle, worktree, harness, per-task TDD, the never-lower gates, league-shim parity, close-out. Renamed from sdv-model-spine in 0.8.0.",
       "archetypes": [
         "sdv-py",
         "data"
@@ -329,7 +329,7 @@
     {
       "name": "sdv-modeling",
       "kind": "skill",
-      "purpose": "Modeling domain reference: methods, data sources, prior art, metrics and gates, failure modes, per-sport inventories.",
+      "purpose": "The single modeling reference: which method fits, what data feeds it, what was already tried, how to write the fit without a silent panel-data failure, how to engineer the features, which metric gates it, and what the literature says. Absorbed sdv-sklearn, sdv-evaluating-ml-models, sdv-engineering-ml-features, sdv-ml-pipeline, sdv-data-scientist and sdv-analyzing-data in 0.8.0.",
       "archetypes": [
         "sdv-py",
         "data"
