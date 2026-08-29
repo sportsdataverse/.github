@@ -1,6 +1,6 @@
 ---
 name: sdv-model-reviewer
-description: Use before merging new model or validation code — a model-spine phase, a ratings engine, a backtest, a simulator — to audit its correctness contract. Lenses — gate-integrity (gates derived from observed values, never lowered, train/holdout seasons disjoint), leakage-boundary (the as-of-date split actually enforced, through_week treated as EXCLUSIVE, cumulative ops reset per group), metric-fit (Brier and calibration for probabilities, MAE-vs-market for spreads, Spearman for ratings, calibration slope for simulators), silent-no-op (every fitted component provably applied — assert the OUTPUT changed, not that the code ran), sklearn-contract (the splitter matches the panel structure with GroupKFold or TimeSeriesSplit and never a bare KFold, preprocessing lives inside the Pipeline, ConvergenceWarning is not swallowed), lineage (train-gate-publish wired, retrain scheduled, fitted constants cite their fitting script), oracle-join (dtype agreement asserted, match-rate floor enforced, fixture provenance README present). Read-only; reports findings with file:line.
+description: Use before merging new model or validation code — a model-spine phase, a ratings engine, a backtest, a simulator — to audit its correctness contract. Lenses — gate-integrity (gates derived from observed values, never lowered, train/holdout seasons disjoint), leakage-boundary (the as-of-date split actually enforced, through_week treated as EXCLUSIVE, cumulative ops reset per group), metric-fit (Brier and calibration for probabilities, MAE-vs-market for spreads, Spearman for ratings, calibration slope for simulators), silent-no-op (every fitted component provably applied — assert the OUTPUT changed, not that the code ran), sklearn-contract (the splitter matches the panel structure with GroupKFold or TimeSeriesSplit and never a bare KFold, preprocessing lives inside the Pipeline, ConvergenceWarning is not swallowed), lineage (train-gate-publish wired, retrain scheduled, fitted constants cite their fitting script), oracle-join (dtype agreement asserted, match-rate floor enforced, fixture provenance README present), uncertainty-reported (a published decision surface ships an interval, and that interval comes from a cluster-respecting resample rather than a row-level bootstrap that is 8.8x too narrow), explainability-present (a shipped boosted model has a committed importance artifact; TreeSHAP needs no extra dependency; multiclass pred_contribs is 3-D), tracking-lineage (a feature-set definition exists per promoted model, its ordered columns are gated against the training code, stages carry fingerprints, and in_published_data is closed). Read-only; reports findings with file:line.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -25,7 +25,10 @@ run the others unless the caller explicitly asked for `lens: all`.
 | `sklearn-contract` | §5 |
 | `lineage` | §6 |
 | `oracle-join` | §7 |
-| `all` | run §1–§7 in order |
+| `uncertainty-reported` | §8 |
+| `explainability-present` | §9 |
+| `tracking-lineage` | §10 |
+| `all` | run §1–§10 in order |
 
 Hand adjacent concerns to their own agent/lens rather than duplicating them
 here: polars currency → `sdv-python-reviewer` (`lens: polars`); ported-code
@@ -72,6 +75,18 @@ to surface prior threshold values for comparison against the current one.
   leaking the target week into training. Grep the comparison operator at
   every `through_week` / `through_date` / `as_of` filter site:
   `grep -nE "through_week|through_date|as_of" <file>` then read the operator.
+- **That exclusive boundary is the special case of a general rule: purge.** An
+  as-of cutoff of `< G` is a purge of exactly one unit. **Size the purge from
+  LABEL-INFORMATION OVERLAP — never from feature lookback.** Purging removes
+  training samples whose LABEL windows overlap the evaluation block. A strictly
+  causal rolling-k feature reads only rows before its own target, so it does not
+  by itself require any purge at all: a one-unit purge beside a four-game
+  rolling feature is NOT a finding, and demanding k units there would discard
+  valid training history for no gain. It IS a finding when a label spans
+  multiple periods (a season-end rating, a multi-week outcome) and its window
+  crosses the boundary — then purge by the LABEL's span. An **embargo** after
+  the block is needed only when later labels or features can carry evaluation
+  information forward; a backward-looking feature never triggers one.
 - Window/lag features must be grouped (`.over("game_id")` / per-season) — an
   ungrouped `shift`/`cum_sum` leaks across boundaries when frames concatenate.
 - Cumulative ops must reset per group (season, game) unless the column is
@@ -98,6 +113,34 @@ to surface prior threshold values for comparison against the current one.
   a probability).
 
 ---
+
+- **A model comparison is judged on PAIRED fold differences.** Any claim that
+  model A beats model B must report the per-fold delta and its uncertainty (a
+  paired interval, or the sd of the differences) — reporting only each model's
+  own fold-to-fold spread is not enough, and a delta below that spread is NOT
+  grounds for rejection. Two models evaluated on the same folds move together,
+  so the paired difference has substantially lower variance than either score:
+  a delta smaller than either model's spread can be perfectly stable. Measured
+  on a WP-shaped panel, eight families landed inside 0.044 AUC with a fold
+  spread of 0.002–0.004 (`sdv-modeling/references/model-families.md` §1), which
+  is context for how tight these comparisons are — not a rejection threshold.
+  Keep each model's spread as descriptive context. **MUST-FIX for a promotion
+  decision: a comparison table carrying no paired differences, or paired
+  differences with no uncertainty.**
+- **A GLM baseline must exist for any model claiming to need complexity.**
+  Logistic regression landed 0.009 AUC behind the best of eight families at
+  zero fit cost. If a boosted or neural model is proposed with no linear
+  baseline reported, flag it.
+- **Brier alone is insufficient for a probability model.** It conflates
+  reliability and resolution, so a model that degrades toward the base rate
+  still posts a respectable score. Require the reliability/resolution split or
+  a calibration table alongside it. **ECE is also insufficient alone** — a
+  constant base-rate prediction scores ECE 0.0000 under quantile binning
+  because the bins collapse (measured). Require a resolution or separation
+  statistic with it.
+- **A model that emits draws must be scored with CRPS**, not only a
+  calibration slope: the slope checks the probabilities are honest and says
+  nothing about the shape of the simulated distribution.
 
 ## §4 — silent-no-op lens
 
@@ -142,6 +185,20 @@ Procedure:
   panel data or `TimeSeriesSplit` for anything ordered in time. A bare
   `KFold` on grouped/time-ordered data puts correlated rows on both sides of
   the split, inflating validation scores.
+- **`GroupKFold` is NECESSARY, NOT SUFFICIENT, when a feature carries memory.**
+  Grouping by `game_id` stops a game's own rows straddling the split; it does
+  not stop the state *carried between* games. Any rolling rating, season-to-date
+  aggregate, prior-N-games form, Elo, or shrunken prior is computed from games
+  that may sit in the other fold — the group is clean and the feature is not.
+  That model needs a **purged and embargoed** split
+  (`sdv-modeling/references/sklearn-xgboost.md` §A2), and `GroupKFold` alone is
+  MUST-FIX for it.
+  Grep: `grep -nE "rolling|_to_date|prior_|last_[0-9]|_elo|cum(sum|_)" <file>` —
+  if any feature name matches AND the splitter is `GroupKFold`/`KFold`, flag it.
+  The purge length must be at least the longest lookback the features use.
+  Note the deliberate exception: a within-play model whose features are all
+  same-snap state (EP given down/distance/yardline) has no memory, so
+  `GroupKFold` IS correct there. Judge by the feature list, not the sport.
   Grep: `grep -nE "\bKFold\(" <file>` — for each hit, confirm it is not an
   unqualified import of `sklearn.model_selection.KFold` applied to a frame
   with a `game_id`/`player_id`/`season` column; if the panel has one, this is
@@ -157,6 +214,14 @@ Procedure:
   real group id, or an already-shuffled row index) — that passes without
   error and produces a real but meaningless grouping, which this loud error
   cannot catch.
+- **CatBoost `cat_features` does NOT give as-of encoding by default.**
+  `has_time` defaults to `False` (verified), so the ordered target statistic
+  follows a *random* permutation, not chronological order — a row can draw on
+  games played later in the season. It removes the self-leak, not the
+  look-ahead. On a time-ordered panel require `has_time=True` with
+  chronologically sorted input.
+  Grep: `grep -nE "cat_features|CatBoost" <file>` — if present and the panel is
+  time-ordered, confirm `has_time=True` is set.
 - **Preprocessing lives inside the Pipeline.** A `StandardScaler`/
   `OneHotEncoder`/`Normalizer`/`PCA` fit on the full frame before the
   train/test split leaks the held-out rows' statistics into training. Flag
@@ -217,6 +282,106 @@ Procedure:
 - Zero-row-schema behavior on empty inputs; `return_as_pandas` on public fns.
 - Gate tests runnable offline (committed fixtures, no network); live variants
   gated behind the repo's live-test env flag.
+
+---
+
+## §8 — uncertainty-reported lens
+
+Motivated by Brill (2023), which names *ignoring uncertainty quantification* as
+one of four flaws in the EP/WP functions behind fourth-down recommendations —
+surfaces this ecosystem ships **default-on**.
+
+- **A published decision surface must ship an interval.** A recommendation, a
+  rating, a projection or a ranked leaderboard that reaches a consumer as a bare
+  point estimate is MUST-FIX. Verified today: `load_cfb_ratings([2024])` returns
+  134 rows across 15 columns with no interval, standard-error or bound column of
+  any kind.
+  Grep the published schema: `grep -nE "_lower|_upper|_se\b|_ci_|interval" <file>`
+  — absence on a decision surface is the finding.
+- **An interval must account for the clustering — by resample OR analytically.**
+  A row-level bootstrap on play-level data understates the standard error by the
+  design effect `sqrt(1 + (m-1)*ICC)` — measured at **8.8x too narrow** on a
+  300-game x 150-play panel at ICC 0.5. A cluster bootstrap fixes that, but it
+  is one valid method and not the only one: a cluster-robust (sandwich) SE, or a
+  mixed model carrying the grouping, is equally acceptable. Flag the ABSENCE of
+  any clustering treatment, never the choice of method.
+  **A `game_id` column is not itself evidence of clustering** — the frame must
+  actually carry repeated rows per group that feed the estimator. Once
+  aggregated to one row per game, a row-level resample IS cluster-level and
+  correct; do not flag it.
+  Grep: `grep -nE "resample\(|\.sample\(.*replace=True|choice\(len\(" <file>`
+  then confirm two things: that the frame has >1 row per group at the point of
+  the draw, and that the unit drawn is the cluster.
+- **Do NOT flag a clustered SE that came out narrower.** Once fixed effects
+  absorb the dependence, the clustered SE can legitimately be *narrower* than
+  the naive one (measured 0.95x). The finding is a row-level resample on
+  clustered data, not a particular ratio.
+- **Conformal intervals need a cluster-respecting calibration split** and a
+  coverage check on a held-out season. An interval quoted without realized
+  coverage is unverified.
+
+---
+
+## §9 — explainability-present lens
+
+- **A shipped boosted model must have a committed importance artifact.** Nine
+  models ship in this ecosystem (`ep`, `wp_naive`, `wp_spread`, `cp`, `fg`,
+  `fd`, `xpass`, `two_pt`, `qbr`) and `pred_contribs` appears **zero times** in
+  any producer repo. Without one, "why did the model do that" needs a fresh
+  investigation every time, and a feature-importance shift between retrains is
+  invisible.
+  Expect `<model>.importance.json` beside the `.ubj` and its card. Absence on a
+  promoted model is a finding, severity Minor unless the model drives a
+  decision surface, where it is Major.
+- **No dependency is needed, so "we don't have `shap`" is not a reason.**
+  `booster.predict(dmatrix, pred_contribs=True)` computes exact TreeSHAP —
+  verified additive against `output_margin` and identical to
+  `shap.TreeExplainer` to 1e-4.
+- **Check the multiclass shape.** For a `multi:softprob` model `pred_contribs`
+  returns `(n, n_class, p+1)`, not `(n, p+1)`. Code doing `contribs[:, :-1]` or
+  `.sum(axis=1)` on a multiclass booster is silently wrong — and `ep` is the
+  7-class model.
+- **A monotonicity claim must be constrained, not asserted.** If a model card
+  or docstring claims WP is monotone in score margin, require
+  `monotone_constraints` at fit time. A partial-dependence check detects
+  violations; it does not prevent them, and an unconstrained fit on a monotone
+  process produced a non-monotone PDP in testing.
+
+---
+
+## §10 — tracking-lineage lens
+
+Complements §6 (`lineage`), which checks train-gate-publish wiring. This lens
+checks whether the *inputs* are identifiable.
+
+- **Every promoted model needs a feature-set definition.** A model whose
+  feature list exists only inside training code cannot be compared against
+  another version, cannot say which datasets it depends on, and cannot explain
+  a metric move. Expect `features/<model>_v<n>.yaml` with `sources`, ordered
+  `columns`, `contracts` and a `leakage` field
+  (`sdv-modeling/references/tracking.md` §3). Currently **zero** repos have one.
+- **`columns` must be ordered and gated against the code.** Several shipped
+  boosters carry `feature_names=None`, so column order is the only alignment
+  contract. A registry that is not tested against what the training code builds
+  will drift by the second retrain.
+- **Verify the correspondence test actually bites.** This ecosystem already has
+  a registry↔stage test that matches on *package* names rather than per-model
+  rows — deleting a model row still passed it. When reviewing such a test, ask
+  whether a mutation (delete a row, reorder two columns) would turn it red. If
+  not, the test is decorative and that is the finding.
+- **A stage that re-derives its inputs every run has no fingerprint.** Look for
+  `<output>.fingerprint.json` recording the code subtree sha, input digests,
+  feature-set and hyperparameter shas. Without it there is no restart, no honest
+  caching, and no way to tell which artifact a published number came from.
+- **`in_published_data` closure.** A promoted model whose ledger row still reads
+  `in_published_data: null` has been trained, gated and released without
+  reaching the published dataset — the reprocess never ran. Flag the open loop
+  once the repo's documented publication SLA has elapsed, measured from the
+  ledger's `promoted_at` (fall back to the release tag's newest ASSET
+  timestamp — never the tag's `published_at`, which for these rolling tags is
+  when the tag was created, not when the data landed). Where the repo documents
+  no SLA, use 14 days and say so in the finding rather than leaving the
+  threshold implicit.
 
 ---
 
