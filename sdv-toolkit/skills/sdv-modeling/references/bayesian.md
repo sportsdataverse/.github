@@ -19,7 +19,7 @@ is what fixes that at the model level rather than with a minimum-minutes filter.
 an observation whose noise scales as `6/sqrt(n)` — i.e. low-minute players are
 observed badly. A two-level model:
 
-```
+```text
 mu    ~ Normal(0, 5)              # league mean
 tau   ~ HalfNormal(2)             # between-player spread, FITTED not assumed
 theta ~ Normal(mu, tau)           # per-player skill
@@ -52,7 +52,7 @@ returns samples. The samples can be garbage.
 
 Measured on the model above — a fit that looks healthy on two diagnostics:
 
-```
+```text
 divergences  = 0          ok
 min ess_bulk = 1707       ok
 max r_hat    = 1.0246     FAILS  (want < 1.01)
@@ -64,8 +64,8 @@ three or you will ship the run above believing it was fine.
 | diagnostic | threshold | what it means when it fails |
 |---|---|---|
 | `r_hat` | **< 1.01** | chains disagree — the posterior you are reading is one chain's opinion. Run longer, or reparameterize. |
-| `ess_bulk` | > 400 per chain-pair | not enough independent information for the mean/sd. |
-| `ess_tail` | > 400 | the *interval* is unreliable even if the mean is fine — and intervals are what we would publish. |
+| `ess_bulk` | > 400 **pooled** | not enough independent information for the mean/sd. `az.summary` reports ESS pooled across chains and draws, so this threshold is on the pooled value, not per chain. |
+| `ess_tail` | > 400 pooled | the *interval* is unreliable even if the mean is fine — and intervals are what we would publish. |
 | divergences | **exactly 0** | the sampler could not follow the geometry. Non-zero divergences invalidate the run; they are not a warning. |
 
 ```python
@@ -77,12 +77,21 @@ def assert_mcmc_healthy(idata, rhat_max=1.01, ess_min=400):
     Call this BEFORE reading any posterior quantity. A run with divergences or
     r_hat above threshold has not estimated the thing you are about to publish.
     """
+    # Raise, do not assert: `python -O` strips assert statements, and a gate that
+    # vanishes under an optimization flag is not a gate.
     s = az.summary(idata)
     div = int(idata.sample_stats["diverging"].sum())
-    assert div == 0, f"{div} divergent transitions -- reparameterize (see section 3)"
-    assert s["r_hat"].max() < rhat_max, f"max r_hat {s['r_hat'].max():.4f} >= {rhat_max}"
-    assert s["ess_bulk"].min() > ess_min, f"min ess_bulk {s['ess_bulk'].min():.0f}"
-    assert s["ess_tail"].min() > ess_min, f"min ess_tail {s['ess_tail'].min():.0f}"
+    problems = []
+    if div:
+        problems.append(f"{div} divergent transitions -- reparameterize (section 3)")
+    if s["r_hat"].max() >= rhat_max:
+        problems.append(f"max r_hat {s['r_hat'].max():.4f} >= {rhat_max}")
+    if s["ess_bulk"].min() <= ess_min:
+        problems.append(f"min ess_bulk {s['ess_bulk'].min():.0f} <= {ess_min}")
+    if s["ess_tail"].min() <= ess_min:
+        problems.append(f"min ess_tail {s['ess_tail'].min():.0f} <= {ess_min}")
+    if problems:
+        raise RuntimeError("MCMC did not converge: " + "; ".join(problems))
 ```
 
 **ArviZ API note (1.3.0).** `az.rhat(idata).to_array()` raises
@@ -118,8 +127,10 @@ Two findings, both actionable:
   sampler cannot traverse.
 
 Our data spans both regimes *within a single model*, because possession counts
-range from 3 to 2,000. **Fit it both ways once and keep the one with the higher
-ESS** — it costs two runs and settles the question for that model's shape.
+range from 3 to 2,000. **Fit it both ways once, require BOTH to clear every gate
+in §2, and among those that pass keep the higher ESS.** Selecting on ESS alone
+would pick a run with more effective draws from a chain set that never converged
+— higher ESS with a failing r_hat is a more confident wrong answer.
 
 ```python
 # centered -- prefer when entities are well sampled

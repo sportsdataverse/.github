@@ -130,6 +130,10 @@ one sample. **Refit on repeated subsamples and keep only the features selected
 often** — and subsample *games*, not rows, for the reason in `resampling.md`.
 
 ```python
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+
 def stability_selection(X, y, groups, n_boot=60, frac=0.5, C=0.05, seed=0):
     """Fraction of cluster-subsampled fits in which each feature survives L1.
 
@@ -145,6 +149,7 @@ def stability_selection(X, y, groups, n_boot=60, frac=0.5, C=0.05, seed=0):
         Per-feature selection frequency in [0, 1]. Keep features above ~0.8.
     """
     rng = np.random.default_rng(seed)
+    groups = np.asarray(groups)
     keys = np.unique(groups)
     members = {k: np.flatnonzero(groups == k) for k in keys}
     selected = np.zeros(X.shape[1])
@@ -152,7 +157,9 @@ def stability_selection(X, y, groups, n_boot=60, frac=0.5, C=0.05, seed=0):
         picked = rng.choice(keys, int(len(keys) * frac), replace=False)
         idx = np.concatenate([members[k] for k in picked])
         model = LogisticRegression(penalty="l1", solver="liblinear", C=C).fit(X[idx], y[idx])
-        selected += np.abs(model.coef_[0]) > 1e-8
+        # `liblinear` fits one-vs-rest, so coef_ has one row per class on a
+        # multiclass target; coef_[0] would count only the first class.
+        selected += (np.abs(model.coef_) > 1e-8).any(axis=0)
     return selected / n_boot
 ```
 

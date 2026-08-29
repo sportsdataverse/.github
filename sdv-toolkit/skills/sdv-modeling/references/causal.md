@@ -42,8 +42,10 @@ anti-conservative.
 Note the second row honestly: **clustering widened the SE 2.6x and still
 rejected.** Clustering is necessary and was not sufficient here. With 60 clusters
 and strong serial correlation you also want a placebo test — run the same
-regression on pre-treatment periods only and confirm you find nothing. If the
-placebo "finds" an effect, the design is broken, not the data.
+regression on pre-treatment periods only. A placebo that "finds" an effect is
+**strong evidence against the design**; a clean placebo is only weak evidence
+for it, since the test has limited power and pre-periods are not the
+counterfactual that matters. Treat it as a screen that can condemn, not certify.
 
 **And a counterexample that keeps the rule honest:** in a second DGP where the
 correlation was a pure team-level *level* shift, adding team fixed effects
@@ -67,9 +69,13 @@ Two-way fixed effects plus a `treated × post` interaction. Recovered 1.547
 against a true 1.5 in the clean case.
 
 **The identifying assumption is parallel trends**, and it is an assumption, not
-an output. Check it: plot or regress the pre-period trends for treated and
-control and confirm they move together. If they do not, DiD is estimating the
-divergence you already had.
+an output — and it concerns the *unobserved* post-treatment counterfactual, which
+no test can reach. Pre-period checks give **compatibility evidence, not proof**:
+pre-trends that move together are consistent with the assumption; a rejection can
+come from sampling variation and a non-rejection from low power. Report the
+pre-trend evidence, and justify parallel trends on design grounds — why this
+treatment's timing is plausibly unrelated to the outcome path — not on a passing
+test.
 
 **Where this fits SDV data:** rule changes (the CFB `ERA_SEASON_CUTS` at
 2001/2005/2013/2017, the WBB halves→quarters break at 2016, NHL overtime and
@@ -106,9 +112,26 @@ iv = IV2SLS(y, exog_with_x, instruments).fit()
 through it.** That second half is untestable and is where sports IV arguments
 usually fail. Candidates that have been used in the corpus's tradition: weather
 (moves pass/run choice, plausibly nothing else), injuries to unrelated players,
-schedule quirks, and coin-flip outcomes in overtime. **Report the first-stage
-F-statistic** — below ~10 the instrument is weak and 2SLS is biased *toward* OLS
-while looking respectable.
+schedule quirks, and coin-flip outcomes in overtime.
+
+**Report the first-stage F — `IV2SLS.fit()` does not compute one.** It returns
+the second-stage result only, so run the first stage yourself and test the
+*excluded* instruments jointly:
+
+```python
+import statsmodels.api as sm
+
+first = sm.OLS(treatment, sm.add_constant(np.column_stack([controls, instruments]))).fit()
+n_ctrl = controls.shape[1] if controls.ndim > 1 else 1
+r_matrix = np.eye(first.params.size)[1 + n_ctrl:]     # rows for the instruments only
+f_stat = float(first.f_test(r_matrix).fvalue)
+if f_stat < 10:
+    raise RuntimeError(f"weak instruments: first-stage F {f_stat:.1f} < 10")
+```
+
+Below ~10 the instrument is weak and 2SLS is biased *toward* OLS while looking
+respectable — the worst case, because the bias points at the answer you were
+trying to escape.
 
 ---
 

@@ -29,7 +29,7 @@ correlation of 0.5:
 **The naive interval is 8.8× too narrow.** That matches the design-effect
 formula almost exactly:
 
-```
+```text
 design effect  =  sqrt(1 + (m - 1) * ICC)
                =  sqrt(1 + 149 * 0.5)  =  8.69x
 ```
@@ -72,10 +72,15 @@ def cluster_bootstrap(stat_fn, values, groups, n_boot=1000, seed=0):
         or its standard deviation as the standard error.
     """
     rng = np.random.default_rng(seed)
-    values = np.asarray(values)
+    values, groups = np.asarray(values), np.asarray(groups)
+    if len(groups) != len(values):
+        raise ValueError(f"groups has {len(groups)} rows, values has {len(values)}")
     keys = np.unique(groups)
-    # Index once. Rebuilding the membership per replicate is the difference
-    # between seconds and minutes on a season of plays.
+    # `groups` MUST be an array: on a plain Python list `groups == k` evaluates to
+    # a single bool, flatnonzero returns an empty or full index, and the bootstrap
+    # silently returns NaN instead of failing.
+    # Index once. Rebuilding membership per replicate is the difference between
+    # seconds and minutes on a season of plays.
     members = {k: np.flatnonzero(groups == k) for k in keys}
     out = np.empty(n_boot)
     for b in range(n_boot):
@@ -85,18 +90,35 @@ def cluster_bootstrap(stat_fn, values, groups, n_boot=1000, seed=0):
     return out
 ```
 
-**Detection test.** The assertion is not "the interval exists" — it is that
-clustering *changed* it. If the two agree, either the data has no within-cluster
-correlation (check, do not assume) or the clustering was applied to the wrong
-column.
+**Detection test.** The structural check — that `groups` is a real per-row
+cluster label and not a row index — is the one that always applies:
+
+```python
+def assert_valid_clustering(values, groups):
+    """Structural check. Always safe to run."""
+    values, groups = np.asarray(values), np.asarray(groups)
+    assert len(groups) == len(values), "groups/values length mismatch"
+    n_clusters = len(np.unique(groups))
+    assert 1 < n_clusters < len(values), (
+        f"{n_clusters} clusters for {len(values)} rows -- `groups` looks like a "
+        "row index (one cluster per row) or a constant, not a game/entity id"
+    )
+```
+
+The *empirical* check below is a *diagnostic*, not a gate. It asserts that
+clustering widened the interval, which is usually true on play-level data and
+**legitimately false** once fixed effects have absorbed the dependence — a
+measured counterexample in `causal.md` §1 gives a clustered SE 0.95x the naive
+one. Run it on data you expect to be clustered; do not put it in CI over
+arbitrary frames.
 
 ```python
 def assert_clustering_matters(values, groups, tol=1.15, seed=0):
-    """Fail if the cluster bootstrap SE is not meaningfully wider than the naive one.
+    """DIAGNOSTIC: check the cluster SE is wider than the naive one.
 
-    A cluster SE that matches the row-level SE means the grouping had no effect,
-    which on play-by-play data means the grouping is wrong -- not that the data
-    is independent.
+    Use on a fixture with known within-cluster dependence. A ratio near 1.0 means
+    either the grouping is wrong OR the dependence is genuinely absorbed already
+    (see causal.md section 1) -- so investigate, do not treat this as a gate.
     """
     rng = np.random.default_rng(seed)
     values = np.asarray(values)
@@ -109,9 +131,8 @@ def assert_clustering_matters(values, groups, tol=1.15, seed=0):
     )
 ```
 
-Would this fire? Yes — on the simulated panel above it separates 0.061 from
-0.0069. It fails when `groups` is passed a unique-per-row value, which is the
-realistic way to get this wrong.
+Would it fire? Yes — on the simulated panel above it separates 0.061 from
+0.0069, and `assert_valid_clustering` catches the per-row-groups case outright.
 
 ---
 
@@ -130,9 +151,15 @@ observations stop sharing information:
 
 **Two clusterings at once.** A team-season panel is correlated *within team* and
 *within season* — a rule change or a scheduling quirk hits every team in a year.
-The honest answer there is a two-way cluster, and the cheap approximation is to
-cluster on whichever dimension gives the **wider** interval, then say so. Never
-pick the narrower one because it looks better.
+That needs a genuine **two-way** estimator (a two-way cluster-robust variance, or
+a bootstrap that resamples both dimensions); the wider of two *one-way* intervals
+is **not** a substitute, because it ignores the joint covariance and carries no
+coverage guarantee.
+
+Taking the wider one-way interval is a **diagnostic heuristic** — it tells you
+which dimension dominates, and it is better than silently reporting the narrower
+one. Say explicitly which you did. Never pick the narrower because it looks
+better.
 
 **The block bootstrap for ordered data.** When the dependence is temporal rather
 than grouped — a rating series across weeks — resample contiguous *blocks* of
@@ -181,11 +208,22 @@ def cluster_permutation_test(stat_fn, values, groups, labels, n_perm=2000, seed=
     """
     rng = np.random.default_rng(seed)
     values, labels = np.asarray(values), np.asarray(labels)
+    groups = np.asarray(groups)
     keys = np.unique(groups)
-    # One label per cluster: the treatment is assigned at cluster level
-    # (a crew works a game; a rule applies to a season), so that is the level
-    # the permutation must respect.
-    per_key = np.array([labels[groups == k][0] for k in keys])
+    # One label per cluster: the treatment is assigned at cluster level (a crew
+    # works a game; a rule applies to a season), so that is the level the
+    # permutation must respect. Taking [0] silently would discard a caller's
+    # row-varying labels and permute a DIFFERENT assignment than they passed.
+    per_key = []
+    for k in keys:
+        vals = np.unique(labels[groups == k])
+        if len(vals) != 1:
+            raise ValueError(
+                f"cluster {k!r} has {len(vals)} distinct labels; the treatment must "
+                "be constant within a cluster for a cluster permutation test"
+            )
+        per_key.append(vals[0])
+    per_key = np.array(per_key)
     observed = stat_fn(values, np.array([dict(zip(keys, per_key))[g] for g in groups]))
     count = 0
     for _ in range(n_perm):
@@ -213,8 +251,15 @@ bootstrap.
 | check normality | Shapiro-Wilk on plays | it will reject on any real sample of this size; check the residual plot instead |
 
 The general escape hatch is **aggregate to the cluster level first**. A test on
-300 game-level means is honest; the same test on 45,000 plays is not, and its
-p-value will be smaller by roughly the design effect.
+300 game-level means removes play-level pseudoreplication, where the same test on
+45,000 plays does not — its p-value is smaller by roughly the design effect.
+
+Two caveats that keep this honest. Aggregating does **not** make the game means
+independent when teams, seasons or time blocks repeat across them, so residual
+dependence may still need clustering at that higher level. And it **changes the
+estimand** from play-weighted to game-weighted when play counts differ — fine
+when the cluster-level quantity is what you meant, wrong when it is not. Say
+which you intended.
 
 `scipy.stats` has all of these and none of them know about your groups.
 

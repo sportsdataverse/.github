@@ -17,13 +17,36 @@ stratum (`metrics-and-gates.md` §1b). These are the tools that find it.
 Every model we ship is XGBoost, and **XGBoost computes exact TreeSHAP itself**:
 
 ```python
-contribs = booster.predict(dmatrix, pred_contribs=True)   # (n_rows, n_features + 1)
+contribs = booster.predict(dmatrix, pred_contribs=True)
 ```
 
 The last column is the base value; the rest are per-feature contributions in
 **margin space** (log-odds for a binary objective, not probability). Verified:
 `contribs.sum(axis=1)` equals `booster.predict(..., output_margin=True)`, and the
 values are identical to `shap.TreeExplainer` to 1e-4.
+
+**The shape depends on the objective, and multiclass is NOT 2-D.** Measured:
+
+| objective | `pred_contribs` shape |
+|---|---|
+| `binary:logistic`, `reg:*` | `(n, p + 1)` |
+| **`multi:softprob` (7 classes)** | **`(n, 7, p + 1)`** — one attribution matrix per class |
+
+So `contribs[:, :-1]` and `contribs.sum(axis=1)` are correct only for the
+2-D case. **`ep` is the 7-class model**, and for it you must pick a class or
+aggregate deliberately:
+
+```python
+if contribs.ndim == 3:                       # multiclass
+    per_class = contribs[:, class_ix, :-1]   # attributions for one class
+    overall = np.abs(contribs[..., :-1]).mean(axis=(0, 1))  # mean |SHAP| per feature
+else:
+    per_class = contribs[:, :-1]
+```
+
+For EP the honest global summary is the mean over classes; a single class's
+attributions answer "why this class", which is usually the more useful question
+(`metrics-and-gates.md` on scoring the class mix, not just the scalar `ep`).
 
 `booster.predict(dmatrix, pred_interactions=True)` returns the
 `(n, p+1, p+1)` interaction tensor the same way.
@@ -75,6 +98,16 @@ them as a redundancy finding rather than a contradiction.**
 The toolkit already recommends `monotone_constraints` for WP in score margin and
 time remaining. Partial dependence is how you *verify* the constraint did what
 you think — and, when unconstrained, whether the model learned something absurd.
+
+`partial_dependence` needs a **scikit-learn estimator**, not a native booster.
+Our shipped `.ubj` artifacts load as `xgboost.Booster`, and passing one raises
+`InvalidParameterError: The 'estimator' parameter ... must be an object
+implementing 'fit' and 'predict'`. Wrap it first:
+
+```python
+model = xgb.XGBClassifier()
+model.load_model("cfb/models/wp_spread.ubj")   # sklearn wrapper around the booster
+```
 
 ```python
 from sklearn.inspection import partial_dependence

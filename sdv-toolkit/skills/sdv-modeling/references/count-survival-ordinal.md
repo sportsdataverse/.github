@@ -24,21 +24,38 @@ probability on a team scoring −4 points and cannot answer "what is P(exactly 2
 ```python
 import statsmodels.api as sm
 
-pois = sm.GLM(y, sm.add_constant(X), family=sm.families.Poisson()).fit()
-nb   = sm.GLM(y, sm.add_constant(X), family=sm.families.NegativeBinomial(alpha=1.0)).fit()
+Xc   = sm.add_constant(X)
+pois = sm.GLM(y, Xc, family=sm.families.Poisson()).fit()
+nb   = sm.NegativeBinomial(y, Xc).fit()   # ESTIMATES alpha; the GLM form fixes it
 ```
 
-**Poisson assumes mean = variance. Check it before assuming overdispersion.**
-Measured on genuinely Poisson data, Poisson AIC 13,239 vs negative-binomial
-14,935 — the NB is *worse* because the extra dispersion parameter buys nothing.
-Reaching for NB by reflex is as wrong as ignoring overdispersion:
+**Use `sm.NegativeBinomial`, not `GLM(family=NegativeBinomial(alpha=...))`.** The
+GLM form takes `alpha` as a *fixed* input and does not estimate dispersion, so an
+AIC comparison against it tests Poisson against one preselected variance rather
+than against the best-fitting NB. Measured on genuinely Poisson data:
+
+| fit | AIC |
+|---|---:|
+| Poisson | 13,239.3 |
+| NB, `alpha` fixed at 1.0 | 14,935.4 ← an artifact of the fixed value |
+| **NB, `alpha` estimated** | **13,241.3** (α̂ ≈ 0.00001) |
+
+With `alpha` estimated the two essentially tie and α̂ collapses to zero, which is
+the right answer: the NB *nests* Poisson and correctly finds no overdispersion.
+The dramatic "NB is worse" gap was entirely the fixed value.
+
+**Diagnose dispersion conditionally, not marginally.** `y.var() / y.mean()` is a
+marginal ratio inflated by legitimate variation in the conditional mean across
+covariates — on the Poisson data above it reads **1.335** while the model-based
+Pearson dispersion reads **0.969**:
 
 ```python
-dispersion = y.var() / y.mean()     # 1 => Poisson; > 1.5 => reach for NB
+dispersion = pois.pearson_chi2 / pois.df_resid   # ~1 => Poisson; >> 1 => overdispersed
 ```
 
-Real scoring data is usually overdispersed (blowouts fatten the tail), so NB
-often does win — but *measure it*, do not assume either way.
+On genuinely overdispersed data both flag it (marginal 2.43, Pearson 1.96) — but
+only the Pearson statistic is answering the question the model actually poses.
+Confirm with held-out predictive performance before switching families.
 
 **Zero-inflation** is for a separate process that generates structural zeros —
 a team that never attempts a two-point conversion is different from one that

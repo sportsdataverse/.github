@@ -12,9 +12,14 @@ over the survivors. This file covers that zoo **for our data specifically** —
 where the panel structure changes the answer.
 
 **The headline: an AutoML tool will hand you a leaked score on our data unless
-you pass the group.** Everything below is measured under `GroupKFold(game_id)`;
-the same numbers under a shuffled `KFold` are meaningless (`sklearn-xgboost.md`
-§A).
+you pass the group.** The §1 table is measured under `GroupKFold(game_id)`; the
+same numbers under a shuffled `KFold` are meaningless (`sklearn-xgboost.md` §A).
+
+**Scope note.** `GroupKFold(game_id)` keeps a game's rows together and nothing
+more — it does not isolate teams, players or seasons, so a score for a feature
+with entity or season memory can still be optimistic and needs the purged
+splitter (§A2). §3's encoding comparison uses a plain train/holdout split, and
+§5 is explicitly unverified.
 
 ---
 
@@ -75,9 +80,23 @@ monotone in score margin, that rules out three of the eight families.
 ## 3. CatBoost's ordered target statistics vs our leakage rule
 
 `feature-engineering.md` §2 requires that target encoding on an entity be
-computed **as-of, from prior rows only**. CatBoost's ordered boosting does that
-natively: for each row it computes the categorical's target statistic from rows
-that precede it in a random permutation, never from the row itself or later ones.
+computed **as-of, from prior rows only**. CatBoost's ordered boosting gets you
+*part* of the way, and the distinction matters:
+
+**By default (`has_time=False`, verified) CatBoost orders rows by a RANDOM
+permutation, not by time.** Each row's target statistic excludes itself, which
+prevents the self-leak that a naive full-sample encoding has — but a row can
+still draw on games played *later* in the season. That is not as-of discipline.
+
+For a time-ordered panel, set it explicitly:
+
+```python
+cb.CatBoostClassifier(cat_features=[0], has_time=True)   # respects input row order
+```
+
+with the frame **sorted chronologically** and the folds time-safe. `has_time=True`
+makes the permutation the given row order, which is what turns the ordered
+statistic into a genuine as-of encoding.
 
 Measured on a 350-level team id (4,000 rows, 3,000 train / 1,000 holdout):
 
@@ -85,7 +104,7 @@ Measured on a 350-level team id (4,000 rows, 3,000 train / 1,000 holdout):
 |---|---:|
 | naive full-sample target encoding | **0.872** ← saw the holdout rows |
 | train-only target encoding | 0.821 |
-| CatBoost `cat_features` (ordered) | 0.814 |
+| CatBoost `cat_features` (ordered, `has_time=False`) | 0.814 |
 
 **The leak is worth 5 AUC points**, and it is the exact mistake a first
 implementation makes. CatBoost's number is slightly *below* honest train-only
@@ -94,9 +113,11 @@ conservative because early rows in each permutation see fewer prior observations
 
 **Practical rule:** for a high-cardinality entity id — teams (~130 FBS, ~350
 D-I), players (~5,000/season) — pass it to CatBoost as a `cat_feature` rather
-than hand-rolling target encoding. You get the as-of discipline for free and
-cannot forget it. When you must hand-roll (XGBoost, a GLM), the expanding
-train-only mean plus shrinkage in `feature-engineering.md` §2 is the contract.
+than hand-rolling target encoding: it removes the self-leak and you cannot forget
+it. **Add `has_time=True` with chronologically sorted input** whenever the panel
+is time-ordered, which for us it always is. When you must hand-roll (XGBoost, a
+GLM), the expanding train-only mean plus shrinkage in `feature-engineering.md`
+§2 is the contract.
 
 ---
 

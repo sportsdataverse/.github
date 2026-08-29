@@ -283,18 +283,31 @@ player rating and measure empirical coverage").
 
 **Common random numbers.** Two scenarios compared with independent RNG streams
 differ by sampling noise as well as by the change you made. Seed each scenario
-identically so the *same* random draws drive both, and the difference is the
-effect. Nearly free, and it is what makes "playoff odds moved 3 points" a claim
-rather than a coincidence.
+identically so the *same* draws drive both, and the difference is the effect.
+Nearly free, and it is what makes "playoff odds moved 3 points" a claim rather
+than a coincidence.
 
 ```python
 base = simulate(season, rng=np.random.default_rng(20260828))
 alt  = simulate(season_with_injury, rng=np.random.default_rng(20260828))  # SAME seed
 ```
 
-**Antithetic variates.** Pair each draw `u` with `1-u`. Halves the variance of a
-mean for the same number of simulations on any monotone response, which a
-playoff-odds sum is.
+**A shared seed pairs the draws only while both runs consume randomness in the
+same order.** If the alternative scenario branches differently or draws a
+different number of values, everything after that point is misaligned and the
+comparison silently reverts to independent streams. Make the pairing structural —
+pre-generate a draw per game and index into it, so a scenario change cannot shift
+the stream:
+
+```python
+draws = np.random.default_rng(20260828).random((n_sims, n_games))   # fixed grid
+```
+
+**Antithetic variates.** Pair each draw `u` with `1-u`. For a monotone response
+this guarantees non-positive covariance between the paired estimates, so it
+**can** reduce variance — sometimes substantially, sometimes barely. "Halves the
+variance" is a shorthand, not a guarantee, and a playoff-odds sum is not monotone
+in every underlying draw. Measure the reduction on your own simulator.
 
 **CRPS, not just calibration slope.** A calibration slope says the probabilities
 are honest; it says nothing about whether the *shape* of the simulated

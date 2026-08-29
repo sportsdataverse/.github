@@ -58,12 +58,20 @@ work lives in exactly the small-n regime the method targets.
 | one season of NCAA tournament games | 67 |
 
 At those sizes a boosted tree overfits, a GLM is competitive (§1), and tuning
-cost dominates. That is the description of TabPFN's target regime.
+cost dominates. Row count is the *only* axis on which our problems match, though,
+and it is not sufficient.
 
-**Not verified here** — it is not installed and no SDV bake-off has been run.
-Treat this as the one deep-learning direction with a real prior for working on
-our data, and judge it by `model-families.md`'s rule: it must beat the GLM
-baseline by more than the fold spread, under a group- or season-aware split.
+**The published benchmark's scope is narrower than "small".** It covers datasets
+up to ~1,000 training rows, ~100 **purely numerical** features, no missing values,
+and up to 10 classes. Our team-season problems routinely carry categorical entity
+ids, missing values in early seasons, and grouped or temporal dependence — none
+of which that evaluation covers.
+
+**Not verified here** — it is not installed and no SDV bake-off has been run. So
+this is a *candidate regime*, not a recommendation: it needs a like-for-like
+comparison against the GLM baseline under a group- or season-aware split, judged
+by `model-families.md`'s rule that the winner must beat the baseline by more than
+the fold spread.
 
 ---
 
