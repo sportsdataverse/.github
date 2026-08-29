@@ -17,8 +17,9 @@
   standings, … 99 master. A missing dataset leaves a HOLE — never compact
   the numbers. `NN_` = intended build order, not run order.
 - Idempotency: season/date as CLI args; resume = skip-already-captured WITH
-  a validity check (presence is not validity — never persist an empty
-  payload); atomic writes (tmp+rename); boolean CLI flags use tolerant
+  a validity check (presence ≠ validity ≠ completeness ≠ finality — never
+  persist an empty payload, and derive "done" from the data: a stated `count`,
+  an `active` flag, a signing/completion date, never a marker you wrote); atomic writes (tmp+rename); boolean CLI flags use tolerant
   `str2bool` (never `argparse type=bool`).
 - Rate limits are env-only, never hardcoded (`STATS_RATE_HITS/MAX/WINDOW`
   or the family's equivalent).

@@ -97,7 +97,36 @@ For HTML-scrape providers (Yahoo, 247Sports) there is no JSON envelope to
 check — the equivalent failure is the extraction regex/selector not
 matching. Treat that the same way: skip and log, don't save a partial body.
 
-### 3. Atomic writes
+### 3. Truncation skip
+
+Same family as the error envelope, and harder to see: **refuse to bank a body
+whose row count equals the requested limit.** A full page is indistinguishable
+from a complete response — well-formed, no error, a plausible size. ESPN
+returned Alabama's 120-man squad, Auburn's 113 and LSU's 108 all at exactly 100
+(2026-08-29), and nothing anywhere reported a problem.
+
+Compare against the envelope's own `count` where the host states one — ESPN Core
+v2 does, independently of what it returned, so `count > len(items)` is a free
+detector. Where it doesn't (`common/v3` rosters ship no count at all), the
+equality test is the only guard you get. Page and accumulate, or record the
+capture as partial — never let a 100-row page become the fixture a returns-doc
+and a parser are built from.
+
+### 4. Prove a scoping param is honored — prefer a path segment
+
+**A query param can be accepted and silently ignored; a path segment cannot.**
+ESPN's `/athletes/{id}/stats?season=` returns identical bodies for `season=2023`,
+`season=2024` and no season at all — so a body filed as "2024" is whatever the
+host felt like serving. Before capturing anything scoped, fetch two values of
+the scoping param and diff the bodies; if they match, the param is decorative
+and the capture is mislabelled.
+
+Prefer the route that puts the scoping **in the path** — a wrong season then
+404s instead of returning a plausible payload for the wrong year. Verify by
+measurement, never by the parameter appearing in a spec, a doc, or a sibling's
+call.
+
+### 5. Atomic writes
 
 ```python
 import pathlib, json
@@ -161,6 +190,23 @@ tooling (`espn_capture_league.py`) and returns-doc generator are
 self-contained (see `references/espn.md`).
 
 ---
+
+**A capture-derived spec is structurally blind to request parameters.** The
+per-provider OpenAPI generators (`espn/tools/gen_espn_openapi.py`,
+`cbs/gen_napi_openapi.py`, the Fox generator) all read captured RESPONSE bodies,
+and a capture records what came back — never what could have been asked for. So
+query params do not appear in a generated spec at all unless something puts them
+there: `espn-core-v2.openapi.yaml` carried 131 paths with ZERO query parameters
+while `pageIndex`/`pageSize` appeared 57 times in its response schemas — it
+documented the pagination it returned but not how to request it, and sdv-py's
+endpoint YAMLs inherited the gap ad hoc (30 endpoints declaring `limit` with no
+`page`, 28 the reverse, 5 both).
+
+Request parameters come from `overlays/*.yaml`, or from a generator inference
+over the response envelope. **When you add captures, check the overlay too — a
+regenerated spec will not grow them on its own.** CBS is the exception worth
+copying: `GET /resource/endpoint/registry` self-documents parameter shapes, so
+query it instead of inferring.
 
 ## Phase 3 — Returns doc
 
