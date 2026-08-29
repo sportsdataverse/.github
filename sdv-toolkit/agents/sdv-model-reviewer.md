@@ -76,18 +76,17 @@ to surface prior threshold values for comparison against the current one.
   every `through_week` / `through_date` / `as_of` filter site:
   `grep -nE "through_week|through_date|as_of" <file>` then read the operator.
 - **That exclusive boundary is the special case of a general rule: purge.** An
-  as-of cutoff of `< G` is a purge of exactly one unit. When a feature looks
-  back `k` units, the training frame must exclude `k` units before the target,
-  not one — otherwise a rolling-4-game feature on the row immediately before the
-  cutoff was built from games inside the evaluation window. **Size the purge
-  from LABEL-INFORMATION OVERLAP, not from feature lookback.** Purging removes
-  training samples whose label windows overlap the evaluation block; a strictly
-  causal rolling-k feature reads only rows before its own target and does NOT by
-  itself require k units of purge, so a one-unit purge beside a four-game
-  rolling feature is not automatically a finding. It IS a finding when a label
-  spans multiple periods (a season-end rating, a multi-week outcome) and its
-  window crosses the boundary. An **embargo** after the block is needed only
-  when later labels or features can carry evaluation information forward.
+  as-of cutoff of `< G` is a purge of exactly one unit. **Size the purge from
+  LABEL-INFORMATION OVERLAP — never from feature lookback.** Purging removes
+  training samples whose LABEL windows overlap the evaluation block. A strictly
+  causal rolling-k feature reads only rows before its own target, so it does not
+  by itself require any purge at all: a one-unit purge beside a four-game
+  rolling feature is NOT a finding, and demanding k units there would discard
+  valid training history for no gain. It IS a finding when a label spans
+  multiple periods (a season-end rating, a multi-week outcome) and its window
+  crosses the boundary — then purge by the LABEL's span. An **embargo** after
+  the block is needed only when later labels or features can carry evaluation
+  information forward; a backward-looking feature never triggers one.
 - Window/lag features must be grouped (`.over("game_id")` / per-season) — an
   ungrouped `shift`/`cum_sum` leaks across boundaries when frames concatenate.
 - Cumulative ops must reset per group (season, game) unless the column is
@@ -115,20 +114,19 @@ to surface prior threshold values for comparison against the current one.
 
 ---
 
-- **A delta smaller than the fold spread is not a result.** Any claim that
-  model A beats model B must report the fold-to-fold standard deviation
-  alongside the point estimate. Measured on a WP-shaped panel, eight families
-  landed inside 0.044 AUC with a fold spread of 0.002–0.004
-  (`sdv-modeling/references/model-families.md` §1). **Judge a comparison on
-  PAIRED fold differences, not on each model's fold spread.** Two models
-  evaluated on the same folds move together, so a delta smaller than either
-  model's spread can still be stable — the paired difference has substantially
-  lower variance than either score. Require the per-fold delta and its
-  uncertainty (a paired interval or the sd of the differences); keep each
-  model's spread as descriptive context, and do NOT call a comparison invalid
-  merely because the delta is below that spread. A comparison table carrying
-  neither paired differences nor a spread column is MUST-FIX for any promotion
-  decision.
+- **A model comparison is judged on PAIRED fold differences.** Any claim that
+  model A beats model B must report the per-fold delta and its uncertainty (a
+  paired interval, or the sd of the differences) — reporting only each model's
+  own fold-to-fold spread is not enough, and a delta below that spread is NOT
+  grounds for rejection. Two models evaluated on the same folds move together,
+  so the paired difference has substantially lower variance than either score:
+  a delta smaller than either model's spread can be perfectly stable. Measured
+  on a WP-shaped panel, eight families landed inside 0.044 AUC with a fold
+  spread of 0.002–0.004 (`sdv-modeling/references/model-families.md` §1), which
+  is context for how tight these comparisons are — not a rejection threshold.
+  Keep each model's spread as descriptive context. **MUST-FIX for a promotion
+  decision: a comparison table carrying no paired differences, or paired
+  differences with no uncertainty.**
 - **A GLM baseline must exist for any model claiming to need complexity.**
   Logistic regression landed 0.009 AUC behind the best of eight families at
   zero fit cost. If a boosted or neural model is proposed with no linear
