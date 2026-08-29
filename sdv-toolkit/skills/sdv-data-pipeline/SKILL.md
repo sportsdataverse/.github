@@ -412,10 +412,34 @@ or reorder independent stages).
 ### Models are pipelines too
 
 > This section covers OPERATING a model: registering it, retraining it, and
-> shipping it. **Building and validating one is `sdv-model-spine`** -- oracle
+> shipping it. **Building and validating one is `sdv-model-build`** -- oracle
 > capture, the never-lower gate rule, leakage splits, metric fit. Reach for that
 > skill before writing model code; reach for this one once the model exists and
 > has to run on a schedule.
+
+#### Who owns which step
+
+The stage order below (`ingest -> features -> train -> evaluate/gate -> package
+-> publish -> integrate`) is the *shape of the pipeline*, not a claim that this
+skill owns every step. Two skills touch it and the split is by **first vs
+recurring**:
+
+| Step | First time it is built | Every scheduled run after |
+|---|---|---|
+| choose the method, the features, the metric | `sdv-modeling` | unchanged |
+| ingest, features | `sdv-model-build` | this skill (a fingerprinted stage) |
+| train | `sdv-model-build` | this skill (a fingerprinted stage) |
+| evaluate / gate | **`sdv-model-build` owns the gate DEFINITION** -- what it measures and the floor, set below the value observed at gate time | this skill RUNS that gate unchanged and fails the job on it; it never redefines or relaxes it |
+| package | `sdv-model-build` | this skill |
+| **registry row** | `sdv-model-build` writes the first row when it publishes | this skill updates `last retrain` and the gate values on every run |
+| **publish** | `sdv-model-build` for the initial release | this skill thereafter |
+| **retrain wiring** | this skill, always -- a model that ships without a scheduled retrain is the `retrain_xg_models.R` stranding failure | this skill |
+| `in_published_data` ledger field | neither, until a reprocess ships it | this skill, when the reprocess runs |
+
+The one rule that resolves any remaining ambiguity: **`sdv-model-build` decides
+what "correct" means; this skill keeps it running and never changes that
+definition.** If a scheduled run wants a lower gate, that is a model change and
+belongs back in `sdv-model-build`, not a threshold edit in a workflow file.
 
 Stage order: ingest → features → train → evaluate/gate → package → publish →
 integrate. Every published artifact gets a **Model registry row** in
