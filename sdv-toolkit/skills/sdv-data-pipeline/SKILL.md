@@ -1,6 +1,6 @@
 ---
 name: sdv-data-pipeline
-description: Use for the full producer lifecycle in an SDV -raw / -data / -db repo. Phases — (1) standardize the repo onto the template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, R-chain retirement), (2) decide placement BEFORE creating any script — the placement-decides-lifecycle rules, canonical NN_ stage numbering (numbers are intended build order, not run order), idempotency contract, and model-registry requirements, (3) set up a scraping or backfill job expected to run more than ~3 minutes with a user-executable runbook, unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, (4) build — fetch individual game JSON from the sibling -raw repo over HTTP with a read-through cache (never clone/checkout it on CI) and write tidy parquet, (5) validate, (6) publish via git commit plus per-file gh release upload. Also owns two cross-cutting contracts: the README contract (two mermaid diagrams, a generated automation-status block rendered by tools/render_readme_status.py, and a Reports & explainers section linking model reports out of docs/), and model-pipeline OPERABILITY -- the models/REGISTRY.md location, stage fingerprints for restart-from-any-step, one-model-one-CI-job, and the experiment ledger with in_published_data. Building and gating a model correctly belongs to sdv-model-build; this skill covers registering, operating and publishing it. Invoke for "standardize this repo", "bring this repo onto the template", "where does this script go", "add a script to the raw repo", "new pipeline stage", "one-off driver", "set up a scrape", "backfill season X", "long scraping job", "scraper runbook", "build the dataset", "add a data-repo builder", "publish to the release", "reshape raw to data", "daily processor", "standardize this README", "add the status block", "add the diagrams", "link the model reports", "refactor the model pipeline", "make the models restartable", "one job per model", "add a model registry row", or "the model ledger".
+description: Use for the full producer lifecycle in an SDV -raw / -data / -db repo. Phases — (1) standardize the repo onto the template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, R-chain retirement), (2) decide placement BEFORE creating any script — the placement-decides-lifecycle rules, canonical NN_ stage numbering (numbers are intended build order, not run order), idempotency contract, and model-registry requirements, (3) set up a scraping or backfill job expected to run more than ~3 minutes with a user-executable runbook, unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, (4) build — fetch individual game JSON from the sibling -raw repo over HTTP with a read-through cache (never clone/checkout it on CI) and write tidy parquet, (5) validate, (6) publish via git commit plus per-file gh release upload. Also owns two cross-cutting contracts: the README contract (two mermaid diagrams, a generated automation-status block rendered by tools/render_readme_status.py, and a Reports & explainers section linking model reports out of docs/), and model-pipeline OPERABILITY -- the models/REGISTRY.md location, stage fingerprints for restart-from-any-step, one-model-one-CI-job, and the experiment ledger with in_published_data. Building and gating a model correctly belongs to sdv-model-build; this skill covers registering, operating and publishing it. Invoke for "standardize this repo", "bring this repo onto the template", "where does this script go", "add a script to the raw repo", "new pipeline stage", "one-off driver", "set up a scrape", "backfill season X", "long scraping job", "scraper runbook", "build the dataset", "add a data-repo builder", "publish to the release", "reshape raw to data", "daily processor", "standardize this README", "add the status block", "add the diagrams", "link the model reports", "refactor the model pipeline", "make the models restartable", "one job per model", "add a model registry row", "the model ledger", "feature set registry", "add a feature", "why did the metric move", "what retrains when this dataset changes", or "stand up feature tracking".
 ---
 
 # Data pipeline — the producer lifecycle for `-raw` / `-data` / `-db` repos
@@ -23,6 +23,7 @@ validating it, and publishing it.
 | "publish to the release" | Phase 6 |
 | "standardize this README", "add the status block", "link the model reports" | Phase 1, Step 9b |
 | "refactor the model pipeline", "make the models restartable", "one job per model" | Phase 1, "Models are pipelines too" |
+| "add a feature", "feature set registry", "what retrains when this dataset changes" | Phase 1, "Models are pipelines too" -> the feature-set registry step |
 
 ### Review (mandatory, before Phase 6)
 
@@ -483,6 +484,47 @@ orchestration layer, not a rewrite of the training code.
   sibling rows mention `model_training`. "Every stage is mentioned somewhere" is
   weaker than "rows are mandatory" implies. Verify by deleting a row before
   trusting it.
+
+#### Step: stand up the feature-set registry (do this before any modeling refactor)
+
+**Trigger.** Any of: "add a feature", "why did the metric move", "this dataset was
+republished, what retrains", "refactor the model pipeline", or a first pass through
+this section on a repo that trains models.
+
+**Precondition.** The repo has `models/REGISTRY.md`. If it does not, that comes
+first — the feature sets key off its rows.
+
+**Check whether it already exists** before writing anything:
+
+```sh
+ls features/*.yaml 2>/dev/null || echo "no feature-set registry in this repo"
+grep -rn "FEATURES\s*=\|_SOURCE\s*=" python/ --include=*.py | grep -v ".venv" | head
+```
+
+The second command is the important one: **it prints the feature lists that
+already exist in code.** Those are what the registry describes. Do not invent a
+list beside them.
+
+**Then follow `sdv-modeling/references/tracking.md` §3**, which carries the YAML
+shape and the three-step migration. The short version, and the order is
+load-bearing:
+
+1. **Generate** one `features/<model>_v1.yaml` per registry row, from the
+   constants the grep found. v1 must reproduce today's lists exactly — it is a
+   description of what ships, not a redesign.
+2. **Gate the equality** with a test per model: the YAML's *ordered* `columns`
+   equals the code's list. The registry is redundant at this point, which is
+   correct — it earns trust before it earns authority.
+3. **Invert the dependency**: the training code reads the YAML, the constant is
+   deleted, and the gate becomes a check against the shipped booster.
+
+**Verify the gate bites before trusting it.** Reorder two columns in a YAML and
+confirm the test goes red. This repo already has a registry↔stage test that
+matches on *package* names rather than per-model rows — deleting a model row
+still passed it. A correspondence test that cannot fail is decorative.
+
+**Do not do this as a side effect of another task.** It touches every training
+entry point; it is its own PR.
 
 #### The ledger field nobody tracks: did the feature reach published data?
 

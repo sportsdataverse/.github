@@ -67,51 +67,102 @@ exactly the case that must invalidate.
 
 ---
 
-## 3. The feature-set registry — the missing component
+## 3. The feature-set registry — the missing component, and how to build one
 
 Today a model's feature list lives inside the training code. That makes three
 things impossible: comparing two feature sets, knowing which datasets a model
 depends on, and answering "what changed" when a metric moves.
 
-A feature set is a **named, versioned artifact**:
+### 3.1 The shape
 
 ```yaml
-# features/ep_v3.yaml
-name: ep_v3
-version: 3
-description: Start-of-play game state for the EP model.
+# features/ep_v1.yaml
+name: ep_v1
+version: 1
+description: Start-of-play game state for the CFB expected-points model.
+model: ep                       # the models/REGISTRY.md row this serves
 sources:                        # which published datasets this needs
   - dataset: espn_cfb_pbp
-    columns: [down, distance, yardline_100, period, clock_seconds, ...]
-  - dataset: cfb_team_talent
-    columns: [talent_rating]
-    join: {on: [season, team_id], how: left, match_rate_floor: 0.95}
-columns:                        # what this feature set EMITS
-  - {name: down, dtype: Int64, transform: passthrough}
-  - {name: clock_sin, dtype: Float64, transform: "cyclical(clock_seconds, 3600)"}
-  - {name: team_epa_prior, dtype: Float64, transform: "as_of_mean(epa, by=team_id)",
-     leakage: as_of, purge_units: 1}
+    columns: [TimeSecsRem, yards_to_goal, distance, down_1, down_2, down_3,
+              down_4, pos_score_diff_start]
+columns:                        # what this feature set EMITS, IN ORDER
+  - {name: TimeSecsRem,         dtype: Float64, transform: passthrough}
+  - {name: yards_to_goal,       dtype: Float64, transform: passthrough}
+  - {name: distance,            dtype: Float64, transform: passthrough}
+  - {name: down_1,              dtype: Int64,   transform: onehot(down, 1)}
+  - {name: down_2,              dtype: Int64,   transform: onehot(down, 2)}
+  - {name: down_3,              dtype: Int64,   transform: onehot(down, 3)}
+  - {name: down_4,              dtype: Int64,   transform: onehot(down, 4)}
+  - {name: pos_score_diff_start, dtype: Float64, transform: passthrough}
 contracts:
-  - no_nulls: [down, distance, yardline_100]
-  - id_dtype: {team_id: Utf8}
+  - no_nulls: [down_1, down_2, down_3, down_4, yards_to_goal]
+  - id_dtype: {game_id: Utf8}
+leakage: none                   # all same-snap state; GroupKFold(game_id) suffices
 ```
 
 Four fields carry the weight:
 
 - **`sources`** makes lineage derivable — a model's dataset dependencies are the
   union of its feature set's sources. That is component 6, for free.
-- **`match_rate_floor`** turns the join discipline in `feature-engineering.md` §5
-  into a checked contract rather than a convention.
-- **`leakage: as_of` + `purge_units`** tells the splitter what purge this feature
-  needs (`sklearn-xgboost.md` §A2). Right now that knowledge lives in whoever
-  wrote the CV.
-- **`contracts`** is where `sdv-assuring-data-pipelines`' validation attaches —
-  see §6.
+- **`columns` is ORDERED**, because XGBoost validates `feature_names` alignment
+  only when the booster carries them, and several shipped boosters have
+  `feature_names=None` (`sklearn-xgboost.md` §J). The order *is* the contract.
+- **`leakage`** tells the splitter what purge this feature set needs. `none` for
+  same-snap state; `as_of` with `purge_units` for anything carrying season memory
+  (`sklearn-xgboost.md` §A2). Right now that knowledge lives in whoever wrote the CV.
+- **`contracts`** is where `sdv-assuring-data-pipelines`' validation attaches (§6).
 
-**The version is not decoration.** `ep_v3` vs `ep_v4` is what makes a ledger row
-comparable: "12.97 MAE on `cfb_pregame_v2`" means something; "12.97 MAE" does not.
+### 3.2 Build it by DERIVING it, never by authoring it
 
----
+**The feature list already exists.** In `cfbfastR-cfb-data` it is
+`EP_SOURCE`, `WP_SOURCE`, `FG_FEATURES`, `XPASS_FEATURES`, `QBR_FEATURES` and
+`TWO_PT_FEATURES` in `model_training/constants.py`. Hand-writing YAML beside
+those constants creates a second source of truth that drifts by the second
+retrain.
+
+Do it in this order, and do not skip step 3:
+
+1. **Generate.** Walk the existing constants and emit one YAML per model. The
+   first version must reproduce the current lists *exactly* — this is a
+   description of what ships today, not a redesign.
+2. **Gate the equality.** A test asserts, per model, that the YAML's ordered
+   `columns` equals the code's list. At this point the YAML is redundant, which
+   is correct: it earns trust before it earns authority.
+3. **Invert the dependency.** Change the training code to read the YAML and
+   delete the constant. *Now* the YAML is the source of truth and the gate in
+   step 2 becomes a check on the booster instead.
+
+Skipping to step 3 means a hand-written list silently disagrees with a shipped
+model. Stopping at step 1 means a decorative file nobody trusts.
+
+### 3.3 The gate has to actually bite
+
+**Verify by deletion before trusting it.** `cfbfastR-cfb-data`'s existing
+registry↔stage correspondence test matches on **package** names, not per-model
+rows — deleting the `ep` row still passed, because sibling rows mention
+`model_training`. "Every stage is mentioned somewhere" is much weaker than
+"rows are mandatory" sounds.
+
+So the feature-set gate must assert three things, each verified by breaking it:
+
+| assertion | break it by |
+|---|---|
+| every model in `REGISTRY.md` has a feature set | deleting a YAML |
+| the YAML's ordered columns equal what the training code builds | reordering two columns |
+| every `sources.dataset` resolves to a real release tag / loader | renaming a source |
+
+If a mutation does not turn the test red, the test is decorative — the same
+finding as the registry test above.
+
+### 3.4 What it unlocks immediately
+
+- **"This dataset was republished — what needs retraining?"** Every model whose
+  feature set names it in `sources`. That is the CFB parser-fix → reprocess chain
+  we have hit repeatedly, answerable by grep instead of by memory.
+- **"Why did the metric move?"** Diff two feature-set YAMLs. That is a reviewable
+  PR diff rather than an archaeology exercise across training code.
+- **The right purge, automatically.** `leakage: as_of` selects the purged
+  splitter; `none` selects `GroupKFold`. The CV stops depending on whoever wrote it.
 
 ## 4. The experiment ledger
 
