@@ -1,6 +1,6 @@
 ---
 name: sdv-data-pipeline
-description: Use for the full producer lifecycle in an SDV -raw / -data / -db repo. Phases — (1) standardize the repo onto the template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, R-chain retirement), (2) decide placement BEFORE creating any script — the placement-decides-lifecycle rules, canonical NN_ stage numbering (numbers are intended build order, not run order), idempotency contract, and model-registry requirements, (3) set up a scraping or backfill job expected to run more than ~3 minutes with a user-executable runbook, unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, (4) build — fetch individual game JSON from the sibling -raw repo over HTTP with a read-through cache (never clone/checkout it on CI) and write tidy parquet, (5) validate, (6) publish via git commit plus per-file gh release upload. Invoke for "standardize this repo", "bring this repo onto the template", "where does this script go", "add a script to the raw repo", "new pipeline stage", "one-off driver", "set up a scrape", "backfill season X", "long scraping job", "scraper runbook", "build the dataset", "add a data-repo builder", "publish to the release", "reshape raw to data", or "daily processor".
+description: Use for the full producer lifecycle in an SDV -raw / -data / -db repo. Phases — (1) standardize the repo onto the template (root pyproject/uv.lock, python/ + tests/ split, bash-only scripts/, CI, R-chain retirement), (2) decide placement BEFORE creating any script — the placement-decides-lifecycle rules, canonical NN_ stage numbering (numbers are intended build order, not run order), idempotency contract, and model-registry requirements, (3) set up a scraping or backfill job expected to run more than ~3 minutes with a user-executable runbook, unbuffered timestamped logging, a live watch command, resumable checkpoints, and env-only rate tuning, (4) build — fetch individual game JSON from the sibling -raw repo over HTTP with a read-through cache (never clone/checkout it on CI) and write tidy parquet, (5) validate, (6) publish via git commit plus per-file gh release upload. Also owns two cross-cutting contracts: the README contract (two mermaid diagrams, a generated automation-status block rendered by tools/render_readme_status.py, and a Reports & explainers section linking model reports out of docs/), and model-pipeline OPERABILITY -- the models/REGISTRY.md location, stage fingerprints for restart-from-any-step, one-model-one-CI-job, and the experiment ledger with in_published_data. Building and gating a model correctly belongs to sdv-model-spine; this skill covers registering, operating and publishing it. Invoke for "standardize this repo", "bring this repo onto the template", "where does this script go", "add a script to the raw repo", "new pipeline stage", "one-off driver", "set up a scrape", "backfill season X", "long scraping job", "scraper runbook", "build the dataset", "add a data-repo builder", "publish to the release", "reshape raw to data", "daily processor", "standardize this README", "add the status block", "add the diagrams", "link the model reports", "refactor the model pipeline", "make the models restartable", "one job per model", "add a model registry row", or "the model ledger".
 ---
 
 # Data pipeline — the producer lifecycle for `-raw` / `-data` / `-db` repos
@@ -21,6 +21,8 @@ validating it, and publishing it.
 | "set up a scrape", "backfill season X" | Phase 3 |
 | "build the dataset", "reshape raw to data" | Phase 4 |
 | "publish to the release" | Phase 6 |
+| "standardize this README", "add the status block", "link the model reports" | Phase 1, Step 9b |
+| "refactor the model pipeline", "make the models restartable", "one job per model" | Phase 1, "Models are pipelines too" |
 
 ### Review (mandatory, before Phase 6)
 
@@ -408,6 +410,36 @@ or reorder independent stages).
    commit, the run exits RED at the end.
 
 ### Models are pipelines too
+
+> This section covers OPERATING a model: registering it, retraining it, and
+> shipping it. **Building and validating one is `sdv-model-build`** -- oracle
+> capture, the never-lower gate rule, leakage splits, metric fit. Reach for that
+> skill before writing model code; reach for this one once the model exists and
+> has to run on a schedule.
+
+#### Who owns which step
+
+The stage order below (`ingest -> features -> train -> evaluate/gate -> package
+-> publish -> integrate`) is the *shape of the pipeline*, not a claim that this
+skill owns every step. Two skills touch it and the split is by **first vs
+recurring**:
+
+| Step | First time it is built | Every scheduled run after |
+|---|---|---|
+| choose the method, the features, the metric | `sdv-modeling` | unchanged |
+| ingest, features | `sdv-model-build` | this skill (a fingerprinted stage) |
+| train | `sdv-model-build` | this skill (a fingerprinted stage) |
+| evaluate / gate | **`sdv-model-build` owns the gate DEFINITION** -- what it measures and the floor, set below the value observed at gate time | this skill RUNS that gate unchanged and fails the job on it; it never redefines or relaxes it |
+| package | `sdv-model-build` | this skill |
+| **registry row** | `sdv-model-build` writes the first row when it publishes | this skill updates `last retrain` and the gate values on every run |
+| **publish** | `sdv-model-build` for the initial release | this skill thereafter |
+| **retrain wiring** | this skill, always -- a model that ships without a scheduled retrain is the `retrain_xg_models.R` stranding failure | this skill |
+| `in_published_data` ledger field | neither, until a reprocess ships it | this skill, when the reprocess runs |
+
+The one rule that resolves any remaining ambiguity: **`sdv-model-build` decides
+what "correct" means; this skill keeps it running and never changes that
+definition.** If a scheduled run wants a lower gate, that is a model change and
+belongs back in `sdv-model-build`, not a threshold edit in a workflow file.
 
 Stage order: ingest → features → train → evaluate/gate → package → publish →
 integrate. Every published artifact gets a **Model registry row** in
