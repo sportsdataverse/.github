@@ -21,7 +21,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-guide` | Callable index: what the toolkit has, when to use each part, and the rename map. |
 | `/sdv-learn` | Promote a durable session finding into the right toolkit surface, with its detection test. |
 | `/sdv-model-build` | Runs an oracle-gated model build to completion: capture the oracle, worktree, harness, per-task TDD, the never-lower gates, league-shim parity, close-out. Renamed from sdv-model-spine in 0.8.0. |
-| `/sdv-modeling` | The single modeling reference: which method fits, what data feeds it, what was already tried, how to write the fit without a silent panel-data failure, how to engineer the features, which metric gates it, and what the literature says. Absorbed sdv-sklearn, sdv-evaluating-ml-models, sdv-engineering-ml-features, sdv-ml-pipeline, sdv-data-scientist and sdv-analyzing-data in 0.8.0. |
+| `/sdv-modeling` | The single modeling reference, 9.3k lines across 16 reference files: which method fits, what data feeds it, what was tried, how to write the fit, which learner to pick, how to explain it, how to put an honest interval on it, how to pool across entities, and what the literature says. |
 | `/sdv-polars` | High-performance polars DataFrame patterns for ETL and analytics -- lazy queries, streaming, and Arrow interop. |
 | `/sdv-port` | Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures. |
 | `/sdv-python-performance-optimization` | Profile and optimize Python code with cProfile and memory profilers to find and fix performance bottlenecks. |

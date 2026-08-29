@@ -278,6 +278,38 @@ player rating and measure empirical coverage").
 
 ---
 
+
+#### Simulator hygiene — three cheap things we do none of
+
+**Common random numbers.** Two scenarios compared with independent RNG streams
+differ by sampling noise as well as by the change you made. Seed each scenario
+identically so the *same* random draws drive both, and the difference is the
+effect. Nearly free, and it is what makes "playoff odds moved 3 points" a claim
+rather than a coincidence.
+
+```python
+base = simulate(season, rng=np.random.default_rng(20260828))
+alt  = simulate(season_with_injury, rng=np.random.default_rng(20260828))  # SAME seed
+```
+
+**Antithetic variates.** Pair each draw `u` with `1-u`. Halves the variance of a
+mean for the same number of simulations on any monotone response, which a
+playoff-odds sum is.
+
+**CRPS, not just calibration slope.** A calibration slope says the probabilities
+are honest; it says nothing about whether the *shape* of the simulated
+distribution is right. CRPS is the proper scoring rule for a full predictive
+distribution and reduces to MAE for a point forecast. Verified: a correct
+ensemble scored 0.5804, the same ensemble shifted by 1.0 scored 0.8055.
+
+```python
+import properscoring as ps
+ps.crps_ensemble(observed, draws)      # (n,) observed vs (n, m) simulated
+```
+
+Full treatment of distributional targets and their scoring:
+`count-survival-ordinal.md`.
+
 ---
 
 ## 1b. Choosing the evaluation itself
