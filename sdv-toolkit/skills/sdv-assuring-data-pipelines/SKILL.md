@@ -589,3 +589,16 @@ def quality_assured_pipeline(df):
 - [Grafana Dashboarding](https://grafana.com/docs/grafana/latest/dashboards/)
 - `@sdv-building-data-pipelines` - Pipeline patterns with validation
 - `@orchestrating-data-pipelines` (external skill, not bundled in sdv-toolkit) - Prefect/Dagster observability features
+
+## Applying this to model inputs, not just published datasets
+
+Everything above validates **published datasets**. The same machinery belongs on
+**feature sets and the frame handed to `.fit()`**, which is where the failures
+originate: a join that silently matched 60% of rows, a season that read zero rows
+and reported success, an id that stringified as `"123.0"`.
+
+`sdv-modeling`'s `references/tracking.md` §6 defines where those contracts attach
+(the `contracts:` block of a feature-set definition) and names two SDV-specific
+expectations worth writing once: `expect_column_pair_dtypes_to_match` before a
+join, and `expect_season_coverage_to_be_complete` so a row count of zero is an
+error rather than a state.
