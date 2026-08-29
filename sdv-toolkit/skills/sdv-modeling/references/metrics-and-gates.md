@@ -344,6 +344,10 @@ the oracle. Three rules that are specific to us:
 - **A tuning run that improves the metric by less than its own fold-to-fold
   spread has found nothing.** Report the spread alongside the point estimate,
   or a re-run with a different seed will "beat" the champion.
+- **Tooling.** `optuna` (TPE, pruning) is the practical default and `sklearn`'s
+  `HalvingRandomSearchCV` needs no extra dependency. Whichever you use, pass the
+  **group-aware splitter** into the search's `cv=` — a tuner with a shuffled
+  split optimizes the leak, which is worse than not tuning at all.
 - **Search the feature set before the hyperparameters.** CFB pregame went
   15.14 → 12.97 MAE against a 12.27 market ceiling, and the finding was that
   60 features beat 244 — the substrate is roughly one-dimensional

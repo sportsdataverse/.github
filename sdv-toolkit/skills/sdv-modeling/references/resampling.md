@@ -198,6 +198,28 @@ def cluster_permutation_test(stat_fn, values, groups, labels, n_perm=2000, seed=
 
 ---
 
+## 5b. Classical tests, and why they mostly do not apply here
+
+A t-test, a chi-square, a Pearson or Spearman significance test, a Shapiro-Wilk —
+every one of them assumes independent observations. On play-level data none of
+them hold, and each is anti-conservative in the same direction as the row-level
+bootstrap.
+
+| you want | do NOT | do |
+|---|---|---|
+| compare two groups of plays | `ttest_ind` | cluster bootstrap the difference in means (§2) |
+| test an association | `pearsonr` p-value | cluster permutation test (§5) |
+| compare a rate across eras | chi-square on plays | aggregate to game or season, then test |
+| check normality | Shapiro-Wilk on plays | it will reject on any real sample of this size; check the residual plot instead |
+
+The general escape hatch is **aggregate to the cluster level first**. A test on
+300 game-level means is honest; the same test on 45,000 plays is not, and its
+p-value will be smaller by roughly the design effect.
+
+`scipy.stats` has all of these and none of them know about your groups.
+
+---
+
 ## 6. Where this composes with the rest of the skill
 
 - **Conformal intervals** (`metrics-and-gates.md` §1) need a calibration split

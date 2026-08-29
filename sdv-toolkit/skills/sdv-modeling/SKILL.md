@@ -43,7 +43,6 @@ artifact nobody can retrain.
 | `references/failure-modes.md` | Why is my model silently wrong — components that report success while doing nothing, with a detection assertion for each? |
 | `references/literature.md` | What has been PUBLISHED on this family — keyed to the 685-paper corpus already on disk at `Sports-Research-Papers/md/`, plus verified external anchors. |
 | `references/upstream-skills.md` | Is there an existing skill for this instead of reinventing it here? |
-| `references/generic/` | Generic technique with no SDV adaptation — model validation, CV, metrics, tuning, encoders, selection, EDA. **Read the SDV tier above first**; `generic/README.md` lists the five places this tier is actively wrong for panel-sports data. |
 | `references/sports/<sport>.md` | What is specific to this sport — `cfb`, `nfl`, `nba-wnba`, `mbb-wbb`, `hockey`, `mlb`, `soccer`? |
 
 ## Decision tree
@@ -62,7 +61,6 @@ artifact nobody can retrain.
 - **Why is it wrong?** → `failure-modes.md`.
 - **What does the literature say?** → `literature.md` (the corpus is local; search it before the web).
 - **Is there a library or skill for this?** → `upstream-skills.md`.
-- **Need the generic technique, not the SDV rule?** → `generic/`, after reading its README.
 
 ## The one rule that outranks everything else here
 
