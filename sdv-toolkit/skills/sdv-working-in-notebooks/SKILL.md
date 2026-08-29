@@ -25,8 +25,8 @@ Use a different skill for these related but distinct tasks:
 |---------------|----------------|------------|
 | Building a stakeholder-facing dashboard | `building-data-apps` | Apps are for external users; notebooks are for analysts/developers |
 | Creating interactive data explorers for non-technical users | `building-data-apps` | Streamlit, Panel, Gradio are purpose-built for this |
-| Exploratory data analysis patterns | `sdv-analyzing-data` | EDA patterns (profiling, statistical tests) belong there |
-| Visualization library selection | `sdv-analyzing-data` | Chart types and library comparison is covered there |
+| Exploratory data analysis patterns | `sdv-modeling` (`references/data-sources.md`) for what to explore; the external `dataviz` skill for how to show it | `sdv-analyzing-data` was retired in 0.8.0 |
+| Visualization library selection | the external `dataviz` skill | Chart choice, palettes and accessibility live there |
 | Production ML feature engineering | `sdv-engineering-ml-features` | Feature engineering logic is domain-specific |
 | Model evaluation and cross-validation | `sdv-evaluating-ml-models` | Model comparison and metrics belong there |
 

@@ -60,7 +60,7 @@ files already on disk — don't hand-maintain a second copy of any of it.
 | `sdv-preflight`, `sdv-address-bot-reviews`, `sdv-stack`, `sdv-release` | `/sdv-ship` (phase menu) |
 | `sdv-port-r-to-python`, `sdv-port-python-to-r`, `sdv-pandas-to-polars` | `/sdv-port` (direction) |
 | `sdv-pipeline-layout`, `sdv-scrape-job`, `sdv-build-data`, `sdv-standardize-repo` | `/sdv-data-pipeline` |
-| `sdv-capture-oracle` | `/sdv-model-spine` phase 0 |
+| `sdv-capture-oracle` | `/sdv-model-build` phase 0 |
 | the six `sdv-add-*`, `sdv-capture-endpoint` | `/sdv-add-source` |
 | `sdv-gen-returns-schema`, `sdv-r-returns-table`, `sdv-new-example-notebook`, `sdv-pkgdown-personalize` | `/sdv-document` |
 | `polars-1x-reviewer`, `http-layer-reviewer`, `espn-parser-contract-reviewer`, `docstring-auditor` | `sdv-python-reviewer` (lens) |

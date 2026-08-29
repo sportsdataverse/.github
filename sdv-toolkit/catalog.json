@@ -1,5 +1,5 @@
 {
-  "version": "0.6.4",
+  "version": "0.8.0",
   "entries": [
     {
       "name": "sdv-data-pipeline",
@@ -26,7 +26,7 @@
       ]
     },
     {
-      "name": "sdv-model-spine",
+      "name": "sdv-model-build",
       "kind": "skill",
       "purpose": "Oracle-gated model build loop: capture oracle, worktree, harness, TDD, gates, parity, close-out.",
       "archetypes": [
@@ -335,20 +335,7 @@
         "data"
       ],
       "hands_off_to": [
-        "sdv-model-spine",
-        "sdv-sklearn"
-      ]
-    },
-    {
-      "name": "sdv-sklearn",
-      "kind": "skill",
-      "purpose": "scikit-learn and XGBoost modeling failures specific to panel-sports data, each with its detection test.",
-      "archetypes": [
-        "sdv-py",
-        "data"
-      ],
-      "hands_off_to": [
-        "sdv-model-spine"
+        "sdv-model-build"
       ]
     },
     {
@@ -384,42 +371,6 @@
       ]
     },
     {
-      "name": "sdv-evaluating-ml-models",
-      "kind": "skill",
-      "purpose": "Model evaluation and validation: cross-validation strategies, metrics selection, hyperparameter tuning, experiment tracking, and model comparison.",
-      "archetypes": [
-        "sdv-py",
-        "data"
-      ]
-    },
-    {
-      "name": "sdv-engineering-ml-features",
-      "kind": "skill",
-      "purpose": "Feature engineering for machine learning: encoding, scaling, datetime/text transforms, and leakage-safe preprocessing pipelines.",
-      "archetypes": [
-        "sdv-py",
-        "data"
-      ]
-    },
-    {
-      "name": "sdv-ml-pipeline",
-      "kind": "skill",
-      "purpose": "Production ML pipeline infrastructure: experiment tracking, Kubeflow/Airflow DAGs, feature stores, model registries, and retraining automation.",
-      "archetypes": [
-        "sdv-py",
-        "data"
-      ]
-    },
-    {
-      "name": "sdv-data-scientist",
-      "kind": "skill",
-      "purpose": "Advanced analytics, ML modeling, and statistical analysis for data-driven insights and business intelligence.",
-      "archetypes": [
-        "sdv-py",
-        "data"
-      ]
-    },
-    {
       "name": "sdv-assuring-data-pipelines",
       "kind": "skill",
       "purpose": "Data quality validation and observability for pipelines via Great Expectations/Pandera plus OpenTelemetry/Prometheus monitoring.",
@@ -450,15 +401,6 @@
       "name": "sdv-working-in-notebooks",
       "kind": "skill",
       "purpose": "Reproducible Jupyter/JupyterLab/marimo/Colab notebook workflows for exploration, analysis, documentation, and teaching.",
-      "archetypes": [
-        "sdv-py",
-        "data"
-      ]
-    },
-    {
-      "name": "sdv-analyzing-data",
-      "kind": "skill",
-      "purpose": "Exploratory data analysis: dataset profiling, chart selection, statistical tests, and insight-communicating visualizations.",
       "archetypes": [
         "sdv-py",
         "data"
