@@ -79,10 +79,15 @@ to surface prior threshold values for comparison against the current one.
   as-of cutoff of `< G` is a purge of exactly one unit. When a feature looks
   back `k` units, the training frame must exclude `k` units before the target,
   not one — otherwise a rolling-4-game feature on the row immediately before the
-  cutoff was built from games inside the evaluation window. Confirm the purge
-  length matches the longest feature lookback; a one-unit purge with a
-  four-game rolling feature is MUST-FIX. An **embargo** after the block is
-  needed too when a label can propagate forward into later training rows.
+  cutoff was built from games inside the evaluation window. **Size the purge
+  from LABEL-INFORMATION OVERLAP, not from feature lookback.** Purging removes
+  training samples whose label windows overlap the evaluation block; a strictly
+  causal rolling-k feature reads only rows before its own target and does NOT by
+  itself require k units of purge, so a one-unit purge beside a four-game
+  rolling feature is not automatically a finding. It IS a finding when a label
+  spans multiple periods (a season-end rating, a multi-week outcome) and its
+  window crosses the boundary. An **embargo** after the block is needed only
+  when later labels or features can carry evaluation information forward.
 - Window/lag features must be grouped (`.over("game_id")` / per-season) — an
   ungrouped `shift`/`cum_sum` leaks across boundaries when frames concatenate.
 - Cumulative ops must reset per group (season, game) unless the column is
@@ -114,9 +119,16 @@ to surface prior threshold values for comparison against the current one.
   model A beats model B must report the fold-to-fold standard deviation
   alongside the point estimate. Measured on a WP-shaped panel, eight families
   landed inside 0.044 AUC with a fold spread of 0.002–0.004
-  (`sdv-modeling/references/model-families.md` §1) — a 0.005 "win" there is
-  noise. A comparison table with no spread column is MUST-FIX for any
-  promotion decision.
+  (`sdv-modeling/references/model-families.md` §1). **Judge a comparison on
+  PAIRED fold differences, not on each model's fold spread.** Two models
+  evaluated on the same folds move together, so a delta smaller than either
+  model's spread can still be stable — the paired difference has substantially
+  lower variance than either score. Require the per-fold delta and its
+  uncertainty (a paired interval or the sd of the differences); keep each
+  model's spread as descriptive context, and do NOT call a comparison invalid
+  merely because the delta is below that spread. A comparison table carrying
+  neither paired differences nor a spread column is MUST-FIX for any promotion
+  decision.
 - **A GLM baseline must exist for any model claiming to need complexity.**
   Logistic regression landed 0.009 AUC behind the best of eight families at
   zero fit cost. If a boosted or neural model is proposed with no linear
@@ -288,14 +300,20 @@ surfaces this ecosystem ships **default-on**.
   any kind.
   Grep the published schema: `grep -nE "_lower|_upper|_se\b|_ci_|interval" <file>`
   — absence on a decision surface is the finding.
-- **An interval must come from a resample that respects the clustering.** A
-  row-level bootstrap on play-level data understates the standard error by the
+- **An interval must account for the clustering — by resample OR analytically.**
+  A row-level bootstrap on play-level data understates the standard error by the
   design effect `sqrt(1 + (m-1)*ICC)` — measured at **8.8x too narrow** on a
-  300-game x 150-play panel at ICC 0.5. Flag any `np.random.choice(len(df))`,
-  `df.sample(frac=1, replace=True)` or `resample(` that draws ROWS on a frame
-  with a `game_id`.
+  300-game x 150-play panel at ICC 0.5. A cluster bootstrap fixes that, but it
+  is one valid method and not the only one: a cluster-robust (sandwich) SE, or a
+  mixed model carrying the grouping, is equally acceptable. Flag the ABSENCE of
+  any clustering treatment, never the choice of method.
+  **A `game_id` column is not itself evidence of clustering** — the frame must
+  actually carry repeated rows per group that feed the estimator. Once
+  aggregated to one row per game, a row-level resample IS cluster-level and
+  correct; do not flag it.
   Grep: `grep -nE "resample\(|\.sample\(.*replace=True|choice\(len\(" <file>`
-  then confirm the unit drawn is the cluster, not the row.
+  then confirm two things: that the frame has >1 row per group at the point of
+  the draw, and that the unit drawn is the cluster.
 - **Do NOT flag a clustered SE that came out narrower.** Once fixed effects
   absorb the dependence, the clustered SE can legitimately be *narrower* than
   the naive one (measured 0.95x). The finding is a row-level resample on
@@ -358,9 +376,14 @@ checks whether the *inputs* are identifiable.
   feature-set and hyperparameter shas. Without it there is no restart, no honest
   caching, and no way to tell which artifact a published number came from.
 - **`in_published_data` closure.** A promoted model whose ledger row still reads
-  `in_published_data: null` after N days has been trained, gated and released
-  without reaching the published dataset — the reprocess never ran. Flag the
-  open loop.
+  `in_published_data: null` has been trained, gated and released without
+  reaching the published dataset — the reprocess never ran. Flag the open loop
+  once the repo's documented publication SLA has elapsed, measured from the
+  ledger's `promoted_at` (fall back to the release tag's newest ASSET
+  timestamp — never the tag's `published_at`, which for these rolling tags is
+  when the tag was created, not when the data landed). Where the repo documents
+  no SLA, use 14 days and say so in the finding rather than leaving the
+  threshold implicit.
 
 ---
 
