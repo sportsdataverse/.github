@@ -46,7 +46,8 @@ than through fold hygiene. None of that survives a generic restatement.
 | Feature engineering — cyclical encoding, as-of target encoding, selection, id dtypes | `references/feature-engineering.md` |
 | Which method fits the problem | `references/methods.md` |
 | Which dataset and loader feeds it | `references/data-sources.md` |
-| Whether it has been tried already | `references/prior-art.md` |
+| Whether it has been tried already **here** | `references/prior-art.md` |
+| What has been PUBLISHED on it | `references/literature.md` — the 685-paper corpus is on disk at `Sports-Research-Papers/md/`; grep it before searching the web |
 | Why a component that ran without error still produced a wrong result | `references/failure-modes.md` |
 
 ### Delegated — the concern is general, or lives in another SDV skill
