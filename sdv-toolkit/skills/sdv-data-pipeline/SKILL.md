@@ -143,7 +143,14 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
   documented skips + pageless games, which a count-only check would have
   reported as loss.
 - **Diff-port byte-sibling twins** (MBB→WBB) instead of re-deriving the change
-  — see Phase 2's twin-repo rule.
+  — see Phase 2's twin-repo rule. **Port the shape; re-probe the endpoint.**
+  Four `-raw` siblings' `player_stats`/`team_stats`/`player_core` stages ported
+  in hours and carried two hard-won facts forward — but the basketball
+  `team_stats` endpoint **404s for college football**, and the CFB
+  player-boxscores release the MBB stage reads **does not exist**. A sibling
+  proves the stage's structure, never its inputs: probe every endpoint and every
+  upstream release asset for YOUR league before wiring it in. (Same rule as
+  `-data`'s measured join keys, `sdv-conventions/references/data.md`.)
 - **A cross-repo rename (D33) goes reader-side-WITH-FALLBACK first** when the
   writer lives in another repo: accept both names on read now, land the writer
   rename + fallback drop as a tracked follow-up.
@@ -166,9 +173,13 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
   `["-m", "rb_eval"]` keeps the module in its own literal, and `import X` ->
   `import pkg.X` REBINDS the local name to `pkg`, so every later `X.foo` is a
   NameError unless you add `as X`.
-- **CRLF in `.sh` files fails GitHub runners' syntax gate** — one repo's tests
-  were red on `main` for days from this alone. `bash -n` locally on Git Bash
-  will not catch it.
+- **`bash -n` has two blind spots, both of which shipped.** CRLF line endings
+  in `.sh` fail GitHub runners' syntax gate while Git Bash's `bash -n` passes —
+  one repo's tests were red on `main` for days from this alone. And an edit that
+  collapses a line-continuation into the two literal characters `\` + `n` also
+  passes `-n`, then runs `n` as a command at runtime. Neither is a syntax error.
+  The only check that catches both is dry-running the invocation with the
+  payload stubbed (`PY=echo bash -c '…'`) and READING what it prints.
 - **`uv sync --frozen` in CI, and nothing after it that re-resolves** — an
   `--upgrade-package` step defeats the lock the gate exists to enforce.
 - **Kill by CIM + command-line filter, never by process name** — blanket
@@ -391,8 +402,27 @@ or reorder independent stages).
    (fixed 2026-08-27). Refuse to bank a final while the provider still reports
    the game as pre-game, and make the resume test "no rows AND still pre-game" —
    NOT "no rows", or a finished game that legitimately has no play-by-play gets
-   re-scraped every day forever. (This applies to scrape checkpoints in Phase 3 too — same
+   re-scraped every day forever. **And completeness is not finality.** A payload
+   can be non-empty, well-formed and complete *as of the fetch* while the thing
+   it describes is still open: ESPN serves CURRENT cumulative standings, so a
+   mid-season fetch is a snapshot that freezes the season if banked; a
+   career-stats payload GROWS while the athlete keeps playing; a recruiting
+   class keeps signing, and 247's 2027 class froze at 4,779 rows against
+   5,678–5,952 for signed classes because the resume test was "a
+   `_manifest.json` exists" (2026-08-29). **The finality test is DERIVED FROM
+   THE DATA — a stated `count`, an `active`/status flag, a signing or
+   completion date — never from a marker your own scraper wrote, which records
+   only that a fetch happened.** And count ROWS, not scaffolding: a team-stats
+   body can ship every category with an empty `stats` list, which a
+   category-count check scores as success. (This applies to scrape checkpoints in Phase 3 too — same
    rule, same failure mode.)
+
+   **Before tightening a resume rule, count what it would REJECT on disk.** A
+   stricter test carried from a new producer to an old one (`rows == expected`)
+   would have invalidated all 26 banked recruit classes — their manifests carry
+   `expected: null`, a field that postdates them. Reading the actual manifests
+   first turned a 26-class re-scrape into a 1-class refresh. A guard is a schema
+   change to the corpus it guards; run it against the banked data before shipping it.
 3. Atomic writes (tmp+rename); never overwrite a complete artifact with a
    partial; masters upsert by game_id, never wholesale clobber.
 4. Boolean flags: the tolerant house `str2bool` (unknown → False, never raises —
