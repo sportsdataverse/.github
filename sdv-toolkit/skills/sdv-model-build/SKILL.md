@@ -1,5 +1,5 @@
 ---
-name: sdv-model-spine
+name: sdv-model-build
 description: Use when executing a model-spine implementation plan or building any oracle-gated analytics module in an SDV repo — prediction stacks, ratings engines, projection and impact models, simulators, backtests. Phases — (0) capture the external oracle/validation corpus into committed fixtures (Torvik/KenPom ratings, ESPN BPI/predictor/odds, market closing lines, MoneyPuck, published RAPM/EPM) with column contracts, Utf8-id discipline, and a provenance README, (1) isolated worktree plus baseline, (2) Phase-0 oracle harness — metrics, constants, leakage split, fixtures, (3) per-task TDD with verified commits, (4) oracle gates under the never-lower rule, (5) league-shim parity, (6) mypy and codegen close-out, (7) reviewer pass, (8) session restart prompt. Invoke for "implement T<x>", "start the model spine", "continue the prediction stack", "build the ratings engine", "capture the oracle", "capture a validation corpus", "add oracle fixtures", or any multi-phase model build.
 ---
 

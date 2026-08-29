@@ -76,6 +76,161 @@ both bin on predicted-*probability*, not on time/clock-bucket, so treat
 them as calibration-slope instances, not as evidence the per-time-bucket
 rule is already satisfied.
 
+
+#### Brier alone hides which half is broken
+
+A Brier score is a sum of three terms (Murphy 1973), and reporting only the
+scalar throws away the part that says *what to fix*:
+
+```
+Brier = reliability - resolution + uncertainty
+        (lower better) (higher better) (fixed by the data)
+```
+
+- **Reliability** — are predicted 0.7s actually 70% winners? This is what
+  recalibration fixes, cheaply, without retraining.
+- **Resolution** — does the model separate outcomes at all, or does it predict
+  the base rate every time? A model that always answers "0.52" has *perfect*
+  reliability and zero resolution, and its Brier looks respectable.
+- **Uncertainty** — the base rate's own variance. Not a property of the model,
+  so it must not move between a champion and a challenger evaluated on the same
+  holdout; if it does, the holdouts differ and the comparison is invalid.
+
+The failure this catches: a WP model that degrades to near-base-rate still
+posts a passable Brier, and a Brier-only gate lets it through. Gate reliability
+and resolution separately, or gate Brier *and* a separation statistic.
+
+#### Expected calibration error — the scalar to pair with the table
+
+The calibration table (`metrics.py:107-143`) is the honest artifact; ECE is its
+one-number summary, useful as a gate threshold where a table cannot be:
+
+```python
+import numpy as np
+
+
+def expected_calibration_error(y_true, y_prob, n_bins=10, strategy="quantile"):
+    """Weighted mean |accuracy - confidence| across probability bins.
+
+    Args:
+        y_true: Binary outcomes, 0/1.
+        y_prob: Predicted probability of the positive class.
+        n_bins: Number of bins.
+        strategy: "quantile" for equal-count bins (default -- equal-WIDTH bins
+            leave the extreme bins nearly empty on a WP model, where most mass
+            sits near 0 and 1, and a bin of 3 plays dominates the average),
+            or "uniform" for equal-width.
+
+    Returns:
+        ECE in probability units, comparable across models on the same holdout.
+    """
+    y_true, y_prob = np.asarray(y_true), np.asarray(y_prob)
+    if strategy == "quantile":
+        edges = np.quantile(y_prob, np.linspace(0, 1, n_bins + 1))
+        edges = np.unique(edges)
+    else:
+        edges = np.linspace(0, 1, n_bins + 1)
+    idx = np.clip(np.digitize(y_prob, edges[1:-1]), 0, len(edges) - 2)
+    ece = 0.0
+    for b in range(len(edges) - 1):
+        m = idx == b
+        if not m.any():
+            continue
+        ece += m.mean() * abs(y_true[m].mean() - y_prob[m].mean())
+    return float(ece)
+```
+
+**Use quantile bins.** Equal-width binning on an in-game WP model puts almost
+every play in the first and last bin and computes the middle eight from a
+handful of rows — the resulting ECE is dominated by noise and moves between
+runs on the same model.
+
+**Report ECE next to the table, never instead of it.** ECE is a mean of
+absolute deviations, so a model that is 10 points over-confident at the top and
+10 points under-confident at the bottom scores the same as one that is
+uniformly 10 points off — and only the table shows which.
+
+**ECE reads 0.000 for a model that predicts the base rate every play.** Measured
+on the function above: 20,000 rows, a constant 0.5 prediction against a 50%
+base rate, quantile binning — `ECE = 0.0000`, a perfect score for a model with
+no resolution whatsoever. Quantile edges on a near-constant predictor collapse
+to a single bin, and one bin is trivially well-calibrated. This is the same hole
+as the Brier decomposition above, and it is why **ECE can never be the only
+probability gate**. Pair it with a resolution or separation statistic (AUC, the
+calibration-table row count actually populated, or the variance of the
+predictions), and assert that the bin count did not degenerate:
+
+```python
+assert len(np.unique(np.quantile(y_prob, np.linspace(0, 1, n_bins + 1)))) > 3, (
+    "predictions too concentrated to bin -- ECE is meaningless here"
+)
+```
+
+#### Multiclass targets — EP is seven classes, not one
+
+Every calibration note above is binary-framed, but `ep_model` emits a 7-class
+softprob vector (TD, FG, safety, and the defensive mirrors, plus no-score) and
+`ep` is the dot product of that vector with `_EP_POINT_VALUES`
+(`sdv-py/sportsdataverse/nfl/model_vars.py`). Two consequences:
+
+- **Score the vector, not just the derived scalar.** A multiclass Brier
+  (`sum over classes of (p_k - y_k)^2`, averaged) or the multinomial log loss
+  catches a model whose class *mix* is wrong in a way that cancels in the
+  point-value dot product. Two probability vectors with very different shapes
+  can produce the same `ep`.
+- **Calibrate per class, one-vs-rest.** A single reliability curve on `ep`
+  cannot tell you that the safety class is systematically over-predicted; a
+  per-class curve can, and safety is exactly the low-frequency class where a
+  boosted model drifts.
+
+Gate the scalar `ep` against the oracle **and** the class mix against the
+empirical class frequencies on the holdout. The oracle correlation for `ep`
+is 0.996 (`sdv-py/CLAUDE.md`, NFL section) and that number is compatible with
+a materially wrong class mix.
+
+#### Intervals — conformal prediction for ratings and projections
+
+Ratings, projections, and pregame margins publish as point estimates with no
+interval anywhere in the ecosystem. Split conformal is the cheapest honest fix:
+it is distribution-free, wraps any fitted estimator, and needs only a held-out
+calibration split.
+
+```python
+import numpy as np
+
+
+def split_conformal_interval(residuals_cal, alpha=0.1):
+    """Half-width of a (1 - alpha) prediction interval from calibration residuals.
+
+    Args:
+        residuals_cal: |y - yhat| on a calibration split the model never saw.
+            For a season model this MUST be a later-season split, not a random
+            one -- a random split reuses carried state and reports an interval
+            that is too narrow.
+        alpha: Miscoverage rate; 0.1 gives a 90% interval.
+
+    Returns:
+        The half-width q. The interval is yhat +/- q, with finite-sample
+        coverage at least 1 - alpha under exchangeability.
+    """
+    n = len(residuals_cal)
+    # The (1-alpha)(n+1)/n quantile, not the (1-alpha) quantile -- the finite-
+    # sample correction is what makes the coverage guarantee hold at small n,
+    # and a season's worth of teams IS small n.
+    q_level = min(1.0, np.ceil((n + 1) * (1 - alpha)) / n)
+    return float(np.quantile(residuals_cal, q_level, method="higher"))
+```
+
+**The exchangeability caveat is the whole game for us.** Conformal guarantees
+coverage when calibration and test points are exchangeable. Across a season
+they are not — teams improve, rosters turn over, the rule set changes. Use a
+*late-season* calibration split and validate coverage on the following season
+before quoting the interval; if realized coverage on a held-out season is far
+below `1 - alpha`, the non-exchangeability is real and the interval is
+decoration. `mapie` implements this and its cross-conformal variants against
+the sklearn API if you want more than the split method above.
+
+
 ### Spreads/totals → MAE vs the closing market line
 
 `mae(a, b)` is the shared helper (`metrics.py:87-104`). Sign convention must
@@ -122,6 +277,79 @@ Oracle ④, "For models with a `posterior`, form credible intervals per
 player rating and measure empirical coverage").
 
 ---
+
+---
+
+## 1b. Choosing the evaluation itself
+
+Merged from the retired `sdv-evaluating-ml-models` skill on 2026-08-28 and
+rewritten against this ecosystem's shapes. The generic advice ("use
+`cross_val_score`, tune with Optuna, log to MLflow") is correct and mostly
+irrelevant here, because our constraint is never the tuner — it is that the
+rows are not exchangeable and the ground truth is an external oracle.
+
+### Pick the splitter from the feature memory, not from habit
+
+| model shape | splitter | why |
+|---|---|---|
+| within-play, memoryless (EP, CP, xG on same-snap state) | `GroupKFold(groups=game_id)` | rows correlate within a game, nothing carries across games |
+| in-game WP | `GroupKFold(groups=game_id)` | same, but gate calibration per time bucket, not just overall |
+| pregame WP, ratings, projections | **purged + embargoed** time split | features carry season-to-date state; see `sklearn-xgboost.md` §A2 |
+| anything reported per season | `TimeSeriesSplit` on season, or leave-one-season-out | a season is the unit a consumer trusts |
+| player-level impact (RAPM, EPM shape) | leave-one-season-out | within-season folds share the same stint design |
+
+The single question that picks the row: **does any feature look backwards past
+the current game?** If yes, `GroupKFold` is not enough.
+
+### Hyperparameter search: bound it by the gate, not by the budget
+
+Tune on a validation split; report on a holdout the tuner never saw; gate on
+the oracle. Three rules that are specific to us:
+
+- **The oracle is not a validation set.** Tuning against the Torvik/FPI/market
+  comparison until the correlation clears the floor is fitting the gate. The
+  oracle is the acceptance test, used once per candidate.
+- **A tuning run that improves the metric by less than its own fold-to-fold
+  spread has found nothing.** Report the spread alongside the point estimate,
+  or a re-run with a different seed will "beat" the champion.
+- **Search the feature set before the hyperparameters.** CFB pregame went
+  15.14 → 12.97 MAE against a 12.27 market ceiling, and the finding was that
+  60 features beat 244 — the substrate is roughly one-dimensional
+  (`prior-art.md`, CFB higher-order models). No hyperparameter search recovers
+  that.
+
+### Error analysis by segment is where the real defects surface
+
+An aggregate metric is the last place a sports-model bug shows up, because the
+bug usually lives in a stratum. Slice every candidate at least by: season, week
+(early vs late), conference or division tier, home/away/neutral, favorite vs
+underdog, and score-margin bucket. Real examples this would have caught faster:
+
+- Special-teams EPA overstated 18x, invisible in the pooled number
+  (`prior-art.md`, CFB).
+- A WBB quarters model silently emptying six pre-2016 seasons that are played
+  in halves — 0 rows read as "no data", not as an error
+  (`failure-modes.md`).
+- Pre-2005 WNBA team logs that were garbage in aggregate but fine per player.
+
+### Experiment tracking: our stack is not MLflow
+
+The retired `sdv-ml-pipeline` skill's MLflow/Kubeflow/Feast templates do not
+map onto this ecosystem and were dropped rather than carried over. The
+equivalents here:
+
+| generic MLOps concept | what we actually use |
+|---|---|
+| experiment tracking | `models/ledger.jsonl` -> `models/LEDGER.md`, one row per stage run |
+| model registry | `models/REGISTRY.md` in the owning `-data` repo |
+| artifact store | the release tag on `sportsdataverse/sportsdataverse-data` |
+| run reproducibility | stage fingerprints (code subtree + input digests + feature set + hparams) |
+| deployment | the loader in `sdv-py` that reads the published parquet |
+
+All five are specified in `sdv-data-pipeline` ("Models are pipelines too").
+Reach for that skill for the operational half; this file covers only whether
+the model is *correct*.
+
 
 ## 2. The never-lower gate rule
 

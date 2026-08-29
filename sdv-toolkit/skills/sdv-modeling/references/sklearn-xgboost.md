@@ -1,9 +1,10 @@
----
-name: sdv-sklearn
-description: Use before fitting, tuning, persisting, or debugging any scikit-learn or XGBoost model on SportsDataverse data — the parts of those APIs that silently produce a WRONG sports model rather than erroring. Generic scikit-learn guidance teaches the API; this catalogs the panel-sports-shaped failures it will not flag, because generically they look fine. Ten failure families, each entry carrying its detection test - A splitting and leakage (a bare KFold shuffling across games within a season is leakage; GroupKFold on game_id, TimeSeriesSplit on season), B Ridge and RAPM (alpha scale vs standardization, fit_intercept, sparse solvers, sample_weight, and the confirmed lambda-applied-to-nothing no-op), C Pipeline and ColumnTransformer (preprocessing outside the Pipeline leaks through CV; feature-name ordering), D calibration (LogisticRegression regularizes by default unlike statsmodels), E unseen entities (players and teams absent from the training season), F silent failure (swallowed ConvergenceWarning), G determinism, H persistence (why models ship as XGBoost .ubj not pickles), I performance (sparse densification), J XGBoost interop. Invoke for "fit a model", "set up cross-validation", "why is my model wrong but not erroring", "RAPM", "ridge", "calibrate probabilities", "save/load a model", or before any sdv-model-spine fitting phase.
----
-
 # scikit-learn / XGBoost on panel-sports data
+
+> Reference file of the `sdv-modeling` skill. Was the standalone
+> `sdv-sklearn` skill until 2026-08-28; folded in because it answers one of
+> this skill's own questions ("how do I write the fit?") and was competing
+> with it for the router.
+
 
 A generic sklearn tutorial is correct about sklearn and wrong about your data.
 `KFold` is a perfectly good splitter — for i.i.d. rows. A play-by-play frame
@@ -143,6 +144,97 @@ Would this fire? Yes — with `shuffle=True` and repeated `game_id` values,
 row-level shuffling scatters a game's rows across folds almost certainly once
 there are more distinct games than folds; `GroupKFold` keeps every row for a
 given group on one side by construction, so the same assertion passes on it.
+
+
+### A2. Purged and embargoed splits — when `GroupKFold` is not enough
+
+**Trap.** `GroupKFold(groups=game_id)` stops a game's own rows straddling the
+split. It does **not** stop the *state carried between* games. Any feature with
+memory — a rolling team rating, a season-to-date EPA, a QB's prior-N-games
+form, an Elo carried forward, a shrunk player prior — is computed from games
+that may sit in the other fold. The group is clean; the feature is not.
+
+**Why invisible.** Nothing errors and nothing looks odd: every row is in
+exactly one fold, `groups=` was passed correctly, and the reviewer's
+`sklearn-contract` lens passes. The score is optimistic in proportion to how
+much of the signal lives in the carried state, which for a ratings or
+projection model is most of it.
+
+**Fix — purge, then embargo.** Both come from López de Prado's *Advances in
+Financial Machine Learning* (ch. 7), and the mapping to our panel is direct
+because the problem is identical: overlapping information windows in ordered
+data.
+
+- **Purge**: drop from the *training* fold every observation whose feature
+  window overlaps the test fold's span. For a rolling-`k`-game feature, that
+  is the `k` games before each test game.
+- **Embargo**: additionally drop a gap *after* the test fold, because the
+  label of a test observation can leak forward into training rows computed
+  immediately afterwards. A week is the natural unit for CFB/NFL; a small
+  fraction of the season for basketball and hockey.
+
+```python
+import numpy as np
+
+
+def purged_time_series_split(order, n_splits=5, purge=1, embargo=1):
+    """Time-ordered folds with a purge before and an embargo after each test block.
+
+    Args:
+        order: 1-D array of the ordering key per row -- week index, game date
+            ordinal, or season-game number. NOT the row index: rows are not
+            unique in the key, and that is the point (many rows per game).
+        n_splits: Number of folds.
+        purge: Units of `order` to drop from train BEFORE each test block --
+            set to the longest feature lookback (a 4-game rolling mean is 4).
+        embargo: Units to drop from train AFTER each test block.
+
+    Yields:
+        (train_idx, test_idx) index arrays, train always disjoint in `order`
+        from [test_lo - purge, test_hi + embargo].
+    """
+    order = np.asarray(order)
+    uniq = np.unique(order)
+    for block in np.array_split(uniq, n_splits):
+        lo, hi = block[0], block[-1]
+        test = np.flatnonzero((order >= lo) & (order <= hi))
+        train = np.flatnonzero((order < lo - purge) | (order > hi + embargo))
+        yield train, test
+```
+
+**Detection test.** The assertion is about the *feature window*, not the row.
+A test that only checks group disjointness passes on the bug.
+
+```python
+def assert_purged(order, purge, embargo, splits):
+    """Fail if any training row's feature window reaches into the test block."""
+    order = np.asarray(order)
+    for train, test in splits:
+        lo, hi = order[test].min(), order[test].max()
+        reach = order[train]
+        # A training row at `t` was built from data back to `t - purge`; if that
+        # window touches [lo, hi], the row saw the test block.
+        assert not ((reach >= lo - purge) & (reach <= hi + embargo)).any(), (
+            f"training rows within the purge/embargo band of test block [{lo}, {hi}]"
+        )
+```
+
+Would this fire? Yes — a plain `TimeSeriesSplit` puts training rows
+immediately adjacent to the test block by construction, so the band is
+non-empty and the assertion fails on it; the purged splitter leaves the band
+empty and it passes.
+
+**When to reach for it.** Ratings, projections, pregame win probability,
+anything with a `rolling_`, `_to_date`, `prior_`, `_last_n`, `elo`, or
+carried-prior feature. **Not** needed for a within-play model whose features
+are all same-snap state (EP given down/distance/yardline has no memory), which
+is why `GroupKFold` alone is right for EP and not right for pregame WP.
+
+**Related.** `through_week` treated as EXCLUSIVE
+(`sdv-model-reviewer.md` §2, `leakage-boundary` lens) is the special case of
+this rule that we already encode as a project convention: a purge of one week
+at the as-of boundary. This section is the general form.
+
 
 ---
 
@@ -401,6 +493,55 @@ between the **derived output value** (adjusted vs. raw EPA) and its
 input, not between two coefficient vectors from the same design — that
 assertion is `failure-modes.md` §2's, verified there, not re-derived
 (incorrectly) here.
+
+
+### B2. Solver choice on a wide sparse design (the RAPM shape)
+
+**Trap.** A league-season RAPM design is tall and very wide — one column per
+player (or two, offense and defense) and one row per stint — and it is
+overwhelmingly zero. `Ridge()` defaults to `solver="auto"`, which for a sparse
+input picks `sparse_cg` or `sag` depending on shape and `fit_intercept`. The
+default is usually reasonable; the failure is reaching for `solver="cholesky"`
+or `solver="svd"` (or letting a dense `numpy` array in at all), which forms a
+p x p matrix. At NCAA scale — ~5,000 players per season, both ends — that is a
+10,000 x 10,000 dense solve inside a loop over alphas.
+
+**Why invisible.** It is not wrong, it is *slow*, which reads as "RAPM is
+expensive" rather than as a bug — and slowness silently shapes the science: an
+alpha grid gets shortened, a season gets dropped, a leave-one-season-out
+validation quietly becomes a single split. The model that ships is worse
+because the solver made the honest experiment unaffordable.
+
+| solver | use when |
+|---|---|
+| `sparse_cg` | the default reach for a sparse design; iterative, never densifies |
+| `lsqr` | `scipy.sparse.linalg` directly, when you want the residual norm and iteration count back for diagnostics |
+| `lsmr` | like `lsqr`, better conditioned on very ill-conditioned designs — a season with many low-minute players |
+| `cholesky` / `svd` | **only** on a dense design with p in the hundreds |
+
+**Detection test.** Assert the matrix never densifies — the failure is a memory
+and time blowup, so test the type, not the timing.
+
+```python
+import scipy.sparse as sp
+
+
+def assert_stays_sparse(X):
+    """Fail if the design matrix is dense, or dense enough that sparsity is a lie."""
+    assert sp.issparse(X), f"design densified to {type(X).__name__}"
+    density = X.nnz / (X.shape[0] * X.shape[1])
+    assert density < 0.05, f"design is {density:.1%} dense -- sparse solvers will not help"
+```
+
+Would this fire? Yes — `Ridge(solver="cholesky").fit(X_sparse, y)` densifies
+internally, and the common upstream mistake, `X.toarray()` before the fit,
+trips the first assertion immediately.
+
+**Related.** Family B above is about the *penalty scale* being wrong (the
+confirmed lambda-applied-to-nothing no-op); this section is about the *solver*
+making the right penalty unaffordable to search. Both bite the same family.
+See `methods.md` "Adjusted plus-minus family" for which variant is fitted where.
+
 
 ---
 
