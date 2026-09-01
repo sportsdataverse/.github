@@ -331,8 +331,8 @@ surfaces this ecosystem ships **default-on**.
   investigation every time, and a feature-importance shift between retrains is
   invisible.
   Expect `<model>.importance.json` beside the `.ubj` and its card. Absence on a
-  promoted model is a finding, severity Minor unless the model drives a
-  decision surface, where it is Major.
+  promoted model is a finding, severity ADVISORY unless the model drives a
+  decision surface, where it is IMPORTANT.
 - **No dependency is needed, so "we don't have `shap`" is not a reason.**
   `booster.predict(dmatrix, pred_contribs=True)` computes exact TreeSHAP —
   verified additive against `output_margin` and identical to
