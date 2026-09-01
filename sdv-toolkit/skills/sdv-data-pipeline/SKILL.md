@@ -345,6 +345,29 @@ coverage span and report links need authoring.
 - **A badge proves the workflow ran, not that it published.** Pair it with last
   publish + asset count; the "GREEN job that published nothing" failure mode is
   documented in `daily_cfb_processor.sh` and is exactly what a badge alone hides.
+- **Converting a hand-written section to a generated one must PRESERVE its
+  prose.** These sections are not only their artifact: `nfl-raw`'s `## Layout`
+  carried a "Two stages, not one" explanation under the table that exists
+  nowhere else. Replacing the whole section — heading to next `##` — silently
+  deleted it. Swap ONLY the structural artifact (the first fenced block or
+  markdown table) and leave every other line alone; where the section is prose
+  with no artifact, put the generated block ABOVE the prose and keep it. Diff
+  size is the tell: a section insert that reports 178 insertions / 168
+  deletions did not insert a section.
+- **Preserve the file's line endings when writing a block.** Reading with
+  universal newlines and writing back with `newline=""` rewrites a CRLF README
+  end-to-end, turning a one-section edit into a whole-file diff nobody can
+  review. Detect the file's own convention (`"\r\n" if "\r\n" in raw`) and
+  restore it on write. Note `Path.read_text()` only grew a `newline=` parameter
+  in **3.13** and the workflow runs 3.12 — go through `Path.open()`, which has
+  always accepted it. A 3.13 dev box will not reproduce that failure.
+- **A test file that CI collects is not a test file CI runs.** The catalog
+  workflow invokes `python -m unittest`, which collects ONLY `TestCase`
+  subclasses. A pytest-style module of bare functions taking `tmp_path` /
+  `monkeypatch` is discovered, skipped in silence, and contributes a green.
+  `test_render_reports_explainers.py` sat in exactly that state: nine tests for
+  the renderer rolled out to 29 repos, executed zero times. Verify the RUN
+  COUNT changes when you add a suite, not just that the job is green.
 - **Do not hand-write 29 READMEs.** They will drift into 29 shapes within a
   quarter. One renderer + a `--check` gate, same shape as sdv-py's codegen drift
   gate. `hoopR-nba-stats-data` already proves the marker pattern works
