@@ -497,13 +497,13 @@ file there is silently clobbered.
 #### Operability: numbered per-model pipelines (directive 2026-09-01)
 
 **Every model gets its OWN numbered pipeline script** —
-`python/<lg>_model_build/<lg>_model_NN_<model>.py` — plus a bash driver
+`python/<lg>_model_NN_<model>.py` — FLAT in the top-level `python/` dir (directive 2026-09-01), beside the numbered data stages; shared helpers (`_stage.py`, `fingerprint.py`) live in the existing library package — plus a bash driver
 (`scripts/<lg>_models.sh`) that runs any subset by number or model name.
 Numbering is intended build order. The stages are THIN: training logic stays in
 the shared trainer package (one implementation); each stage owns only its
 model's operability — argparse, fingerprint skip/`--force`, gate rc, ledger
 append. Data pipelines get the same treatment as a sibling family
-(`python/<lg>_data_build/<lg>_data_NN_<stage>.py` + `scripts/<lg>_data.sh`,
+(flat `python/<lg>_data_NN_<stage>.py` + `scripts/<lg>_data.sh`,
 thin passthroughs to the library CLIs) so the repo's lifecycle is enumerable
 from the tree — "Option A, numbered domain packages": library packages stay
 put, no import strings move. Worked exemplar: `nfl-data`
