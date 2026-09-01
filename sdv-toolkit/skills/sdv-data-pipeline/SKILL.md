@@ -22,6 +22,7 @@ validating it, and publishing it.
 | "build the dataset", "reshape raw to data" | Phase 4 |
 | "publish to the release" | Phase 6 |
 | "standardize this README", "add the status block", "link the model reports" | Phase 1, Step 9b |
+| "model writeup", "reproducible report", "qmd for this model", "model card with SHAP" | Phase 1, Step 9c |
 | "refactor the model pipeline", "make the models restartable", "one job per model" | Phase 1, "Models are pipelines too" |
 | "add a feature", "feature set registry", "what retrains when this dataset changes" | Phase 1, "Models are pipelines too" -> the feature-set registry step |
 
@@ -163,7 +164,11 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
   season default. It would have raised `ModuleNotFoundError` on the next
   scheduled run, two days before week 1. After ANY module move, grep the old
   name across `*.sh` + `*.yml` + `*.R`, not just `*.py`, and RUN one of the
-  one-liners.
+  one-liners. **And grep the SIBLING repos that check this repo out**: cfb-data's
+  `cfb_model_pipeline.yml` sparse-checkouts cfb-raw as `_raw` and invoked its QBR
+  scraper by path — packaging the module (2026-09-01) broke the cross-repo caller
+  silently (a `::warning`-and-skip, not a failure). The callers to grep live in
+  every workflow that names this repo in a `checkout` step.
 - **Rename only import CONTEXTS, never bare words.** In the same move, a
   quoted-dotted pattern meant for monkeypatch targets rewrote the DATA string
   `"rb_eval.md"` — a generated report filename — into
@@ -350,6 +355,59 @@ coverage span and report links need authoring.
 
 - **A repo with no dataset registry skips D40/D43** — state the reason in the
   ledger rather than inventing a registry to satisfy the decision.
+
+### Step 9c — reproducible model writeups (Quarto → committed GFM)
+
+Every model in a `-data` repo gets a COMPILED writeup: `docs/models/{model}.qmd`
+(Quarto, jupyter engine) rendered to a committed `{model}.md` + `{model}_files/`
+figures by `scripts/render_model_docs.sh`. Rolled out 2026-09-01 across all 11
+model-bearing repos (31 writeups); the per-repo pattern:
+
+- **Driver**: `QUARTO_PYTHON` pinned to the repo `.venv`; `QUARTO_BIN` fallback
+  `$LOCALAPPDATA/Programs/Quarto/bin/quarto.cmd`. **If `docs/models/` carries a
+  `_quarto.yml` website project, a bare render hijacks output into `_site/` AND
+  deletes the committed sibling md** — render with `--output-dir .`.
+- **Deps** live in a `docs` dependency-group: plotnine, great-tables, ipykernel,
+  nbformat, nbclient (`uv add --group docs …`). SHAP needs NO extra dep:
+  xgboost `predict(pred_contribs=True)` is exact TreeSHAP (3-D for multiclass —
+  aggregate |contribution| across class margins and say so); for a logistic
+  model `coef × (x − mean)` is the exact linear Shapley.
+- **Section contract**: ≥ ~600 words of substantive analysis BEFORE the
+  Provenance and "Avenues for improvement & open issues" closers; trained-on
+  seasons/data stated explicitly; EDA; feature importance; train/test/eval
+  metrics; SHAP; calibration/eval visuals; player/team results as great_tables
+  with human-readable names + headshots/logos (`fmt_markdown` on prebuilt
+  `<img>` columns survives GitHub's style-stripping).
+- **Honest eval labeling**: a committed booster + a corpus that grew since the
+  fit ⇒ a reproduced split is a *near*-holdout — label it and quote the frozen
+  train-time gates separately. Corollary for trainers: persist the split ids +
+  a meta sidecar so the exact test set stays reproducible.
+- **Anomaly-reproduced-live**: a flagged data defect gets RECOMPUTED in the qmd
+  every render (with an out-of-band flag column) so it cannot silently go
+  stale — and the page proves the fix when the republish lands.
+- **Scale gates**: rank-based oracle gates (Spearman) are SCALE-BLIND — the
+  2026-09 MLB incident shipped seasons with league-mean xwOBA of .44–.73 past
+  a 0.95 Spearman gate. Every published rate surface needs an absolute
+  league-mean band gate beside the rank gate.
+- **Release caches**: qmds needing release data cache to `docs/models/.cache/`
+  (gitignored) with an exists-check — incremental, offline-after-first-run.
+  Analysis code obeys the same join-key dtype discipline as pipelines.
+- **Headshot/logo CDNs**: PWHL `assets.leaguestat.com/pwhl/240x240/{id}.jpg`;
+  NHL `assets.nhle.com/mugs/nhl/latest/{id}.png`; NBA
+  `cdn.nba.com/headshots/nba/latest/260x190/{id}.png`; WNBA
+  `cdn.wnba.com/headshots/wnba/latest/1040x760/{id}.png`; MLB
+  `img.mlbstatic.com/mlb-photos/image/upload/w_180,q_100/v1/people/{id}/headshot/67/current`
+  (names via one batched `statsapi.mlb.com/api/v1/people?personIds=` call);
+  ESPN `a.espncdn.com/i/headshots/{sport-slug}/players/full/{id}.png`, team
+  logos `a.espncdn.com/i/teamlogos/{ncaa|nfl}/500/{id-or-abbr}.png`; NFL
+  headshots come from the `nfl_rosters` release (`headshot_url` + gsis/espn ids).
+- **Generator-owned cards coexist**: where a reports generator owns the
+  per-model stems (cfb-data), keep it as the compiler and add a Quarto
+  `deepdive.qmd` companion under a stem it does not own — never fight the
+  generator for its files. A README rendered from README.Rmd
+  (`README_files/figure-gfm/` present) must never be hand-edited either.
+- Do NOT wire a CI drift gate on renders needing network/data — document the
+  manual rebuild command in the doc's Provenance section instead.
 
 ---
 
