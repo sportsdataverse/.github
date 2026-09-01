@@ -266,7 +266,7 @@ Measured 2026-08-28 across all 43 `*-raw`/`*-data` repos, then rolled out
 through 2026-09-01: the automation-status block, the two-diagram convention AND
 the reports section now ship from renderers (31/34 in-scope repos done; the
 ledger `ClaudeCowork/ledgers/2026-08-28-repo-standardization-status.md` tracks
-the remainder). A standardized repo is not done until its README answers three
+the remainder). A standardized repo is not done until its README answers four
 questions a newcomer actually asks.
 
 **1. Which repo writes what?** Two mermaid diagrams, the
@@ -292,7 +292,21 @@ buries the operational sections. `cfbfastR-cfb-data` is the opposite failure:
 `cfb_model_reports` generates `docs/models/` on every run and NOTHING links to
 it.
 
-**3. Is the automation actually running?** An `## Automation & status` block --
+**3. Where do I look?** A `## Repository layout` section -- a two-level
+directory tree between `BEGIN/END GENERATED: layout` markers, rendered by
+`sdv-toolkit/tools/render_readme_layout.py`. Code directories (`python/`, `R/`,
+`scripts/`, `tools/`, `src/`, `tests/`, `ops/`) list their stage FILES, because
+the numbered scripts are the documentation; every other directory lists only its
+child directories, since a season tree's files are thousands of per-game
+payloads. A shared glossary annotates the common names so `logs/` reads the same
+in all 34 repos. Like the reports block, `--check` verifies markers only -- a
+sparse or blobless checkout legitimately omits directories, and a gate that
+failed on that would redden every partial clone. The section replaced three
+competing shapes found in the fleet (`## Layout` + a path table, `## Structure` +
+an ASCII tree, `## Repository layout` + an indented tree) across three different
+headings; one heading, one form, one renderer.
+
+**4. Is the automation actually running?** An `## Automation & status` block --
 the section this template was missing entirely:
 
 | column | source | why |
