@@ -262,12 +262,12 @@ repo publish them, and never let a missing bundle block a per-file consumer.
 
 ### Step 9b — the README contract (diagrams, reports, automation status)
 
-Measured 2026-08-28 across all 43 `*-raw`/`*-data` repos: **14 have mermaid
-diagrams, 29 do not**; `nfl-raw` has no README at all, and `gp-cfb-raw`,
-`nba-stats-data`, `softballR-data`, `usfootballR-data` are empty. The generated
-block that DOES exist is only the datasets table -- **no repo has a
-reports/explainers section or an automation-status block**. A standardized repo
-is not done until its README answers three questions a newcomer actually asks.
+Measured 2026-08-28 across all 43 `*-raw`/`*-data` repos, then rolled out
+through 2026-09-01: the automation-status block, the two-diagram convention AND
+the reports section now ship from renderers (31/34 in-scope repos done; the
+ledger `ClaudeCowork/ledgers/2026-08-28-repo-standardization-status.md` tracks
+the remainder). A standardized repo is not done until its README answers three
+questions a newcomer actually asks.
 
 **1. Which repo writes what?** Two mermaid diagrams, the
 `fastRhockey-nhl-data` / `hoopR-nba-data` convention:
@@ -279,7 +279,13 @@ is not done until its README answers three questions a newcomer actually asks.
   scripts is documentation.
 
 **2. Where are the models explained?** A `## Reports & explainers` table
-linking to model reports, cards, dataset docs and validation output. Link OUT,
+linking to model reports, cards, dataset docs and validation output — generated
+between `BEGIN/END GENERATED: reports` markers by
+`sdv-toolkit/tools/render_reports_explainers.py` (one collapsed row per
+generated `docs/{models,datasets,validation}` family, an itemized row per
+hand-written top-level `docs/*.md` and `models/REGISTRY.md`; its `--check`
+verifies markers only, because the listing derives from docs trees a sparse
+checkout may omit). Link OUT,
 do not inline: `fastRhockey-nhl-data` embeds a full xG write-up, ~875 lines of a
 1,039-line README -- excellent content, unfindable from any other repo, and it
 buries the operational sections. `cfbfastR-cfb-data` is the opposite failure:
