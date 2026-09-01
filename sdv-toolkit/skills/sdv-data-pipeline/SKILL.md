@@ -494,32 +494,47 @@ agent instructions. Do NOT put it in `docs/models/` — report generators
 regenerate that directory and overwrite its `README.md`, so a hand-maintained
 file there is silently clobbered.
 
-#### Operability: the monolith is usually in the WORKFLOW, not the code
+#### Operability: numbered per-model pipelines (directive 2026-09-01)
 
-Surveyed on `cfbfastR-cfb-data` 2026-08-28 (103 files, 13.1k LOC): every
-subpackage already had a working `cli.py` with per-model subcommands, so one
-model could already be trained from a shell. What did not exist was any way to
-express that in CI — the workflow was **one job with ~15 hardcoded sequential
-steps and three coarse booleans**. Before proposing a modeling refactor, check
-which of the two you actually have; the fix for a workflow monolith is an
-orchestration layer, not a rewrite of the training code.
+**Every model gets its OWN numbered pipeline script** —
+`python/<lg>_model_build/<lg>_model_NN_<model>.py` — plus a bash driver
+(`scripts/<lg>_models.sh`) that runs any subset by number or model name.
+Numbering is intended build order. The stages are THIN: training logic stays in
+the shared trainer package (one implementation); each stage owns only its
+model's operability — argparse, fingerprint skip/`--force`, gate rc, ledger
+append. Data pipelines get the same treatment as a sibling family
+(`python/<lg>_data_build/<lg>_data_NN_<stage>.py` + `scripts/<lg>_data.sh`,
+thin passthroughs to the library CLIs) so the repo's lifecycle is enumerable
+from the tree — "Option A, numbered domain packages": library packages stay
+put, no import strings move. Worked exemplar: `nfl-data`
+(`nfl_model_01_ep` … `nfl_model_11_punt` over `model_training`, plus
+`nfl_data_01_ingest` … `nfl_data_05_ratings_weekly`; commits b3499f2 +
+1e1dd87).
 
-- **Fingerprints are the highest-value single change.** Each stage writes
-  `hash(code subtree, input digests, feature set, hyperparameters)` beside its
-  output and skips when unchanged unless `--force`. That one mechanism buys
-  restart-from-any-step, per-feature-set iteration, and honest caching. Without
-  it there is no resume, and every experiment re-derives its inputs.
-- **One model = one CI job.** A matrix over a stage manifest plus a
-  `stages: train-ep` dispatch input, so a single retrain does not drag the other
-  seven with it.
-- **The stage list must have ONE home.** When it lives in the CLI subparsers, the
-  workflow steps AND the registry table, it drifts — which is why these repos end
-  up needing a registry↔stage correspondence test at all.
-- **Know what that test actually guarantees.** `cfbfastR-cfb-data`'s matches on
-  PACKAGE names, not per-model rows: deleting the `ep` row still passed, because
-  sibling rows mention `model_training`. "Every stage is mentioned somewhere" is
-  weaker than "rows are mandatory" implies. Verify by deleting a row before
-  trusting it.
+- **Fingerprints are the highest-value single change (models only).** Each model
+  stage writes `hash(code subtree, config)` beside its output
+  (`.fingerprints.json`) and skips when unchanged unless `--force` — feature
+  lists and hyperparams live in the code subtree, so they are inside the digest
+  for free. DATA stages do NOT fingerprint-skip: they are refresh jobs whose
+  inputs change upstream without a code change, and a skip there is silent
+  staleness.
+- **One model = one CI job.** The workflow matrix enumerates the stage scripts;
+  a `stages` dispatch input selects a subset (match number/name in env-passed
+  bash — never `${{ }}`-interpolated into the script body, that is a
+  shell-injection surface).
+- **The stage list has ONE home: `models/manifest.yaml`** (both families). A
+  per-row guard test keeps manifest ↔ `REGISTRY.md` rows ↔ stage files ↔
+  publish routing maps in lockstep, bidirectionally; artifacts trained
+  elsewhere sit in an explicit `EXTERNAL_ARTIFACTS` exclusion, never silently.
+- **Ledger: `models/ledger.jsonl`** appends one line per trained model
+  (fingerprint, config, gates, `delta_vs_champion`, `in_published_data: false`
+  until a reprocess actually ships the scores). When the retrain workflow is
+  `contents: read`, CI ledger lines travel in the uploaded run artifact and
+  local retrains commit theirs.
+- **Know what a guard actually guarantees.** `cfbfastR-cfb-data`'s old test
+  matched on PACKAGE names, not per-model rows: deleting the `ep` row still
+  passed. Verify by deleting a row (and reordering two feature columns) before
+  trusting any of these gates.
 
 #### Step: stand up the feature-set registry (do this before any modeling refactor)
 
