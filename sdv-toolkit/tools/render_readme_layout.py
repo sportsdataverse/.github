@@ -222,7 +222,10 @@ def main(argv: list[str] | None = None) -> int:
     # newlines and writing back with newline="" silently converts a CRLF README
     # end-to-end, turning a one-section edit into a whole-file diff nobody can
     # review.
-    raw = args.readme.read_text(encoding="utf-8", newline="")
+    # Path.read_text() only grew a newline= parameter in 3.13; the workflow runs
+    # 3.12, so go through Path.open(), which has accepted it all along.
+    with args.readme.open(encoding="utf-8", newline="") as fh:
+        raw = fh.read()
     eol = "\r\n" if "\r\n" in raw else "\n"
     text = raw.replace("\r\n", "\n")
 
