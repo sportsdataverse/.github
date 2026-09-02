@@ -29,10 +29,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qiE 'co-authored-by:[[:space:]]*.*(claude|copilot|gpt|gemini|cursor)|generated with \\[?claude|generated with claude' && { echo 'BLOCKED: AI co-author/attribution trailer detected. SDV rule: the human is the sole attributable contributor -- omit all Co-Authored-By / generated-with-AI trailers on commits and PRs.' >&2; exit 2; }; true"
-          },
-          {
-            "type": "command",
             "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qiE 'espn_capture_league|gen_returns_doc|crawl|for [a-z_]+ in .*(scoreboard|teams|summary)' && ! printf '%s' \"$c\" | grep -qE 'limit|--max|--bound|head -|range\\(' && echo 'NOTE: capture/crawl without a visible attempt bound -- cap attempts (not saves) to avoid a 404 flood (the CBS recruiting incident wasted 8,400+ requests).' >&2; true"
           },
           {
