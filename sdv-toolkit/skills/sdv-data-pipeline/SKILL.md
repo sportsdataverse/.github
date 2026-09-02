@@ -22,6 +22,7 @@ validating it, and publishing it.
 | "build the dataset", "reshape raw to data" | Phase 4 |
 | "publish to the release" | Phase 6 |
 | "standardize this README", "add the status block", "link the model reports" | Phase 1, Step 9b |
+| "add the repository layout tree", "render the layout block", "stage inventory" | Phase 1, Step 9b, question 3 |
 | "model writeup", "reproducible report", "qmd for this model", "model card with SHAP" | Phase 1, Step 9c |
 | "refactor the model pipeline", "make the models restartable", "one job per model" | Phase 1, "Models are pipelines too" |
 | "add a feature", "feature set registry", "what retrains when this dataset changes" | Phase 1, "Models are pipelines too" -> the feature-set registry step |
@@ -318,6 +319,17 @@ failed on that would redden every partial clone. The section replaced three
 competing shapes found in the fleet (`## Layout` + a path table, `## Structure` +
 an ASCII tree, `## Repository layout` + an indented tree) across three different
 headings; one heading, one form, one renderer.
+
+Two further sections are on all 27 standardized repos as of 2026-09-01 but
+HAND-maintained: `## Consumers` (the R package + docs site and the Python
+module + py.sportsdataverse.org that read this repo's releases) and
+`## Stage inventory` (the numbered `python/*_NN_*.py` stages plus the model
+tags from the manifest). Treat both as part of the contract. The open
+follow-up is folding `Stage inventory` into `render_readme_layout.py` (whose
+code-directory listing already carries the stage files) so it stops being
+typed. And before ANY README edit: a README rendered from `README.Rmd`
+(`README_files/figure-gfm/` present) is generated output — edit the Rmd and
+knit, never the md.
 
 **4. Is the automation actually running?** An `## Automation & status` block --
 the section this template was missing entirely:

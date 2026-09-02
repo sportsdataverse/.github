@@ -207,8 +207,22 @@ Re-run the same oracle gates on the sibling's fixtures at identical thresholds.
    workflow (dispatch-only is fine) or the runbook, never a stranded script
    (`retrain_xg_models.R` failure class). Verify artifact
    `feature_names == *_FEATURES` at package time; consumers re-verify on load.
-5. Append the SDD ledger / session note (what shipped, gate results, follow-ups).
-6. **Write the restart prompt** so the next session resumes cold:
+5. **Persist the fit's identity.** The trainer writes `<model>_partition.parquet`
+   (game_id, split) and `<model>_meta.json` (ordered feature names,
+   hyperparameters, train/test seasons, train-time metrics, fitted constants such
+   as a decay exponent) at fit time; commit both WITH the artifact
+   (`sdv-modeling/references/tracking.md` §2.1). Without them the writeup's
+   holdout is a *near*-holdout forever and the applier can disagree with the
+   trainer about a constant with nothing to assert against.
+6. **Compile the writeup.** `docs/models/<model>.qmd` per `sdv-data-pipeline`
+   Step 9c — trained-on seasons stated, EDA, importance, SHAP via
+   `pred_contribs` (3-D for multiclass; `coef*(x-mean)` for linear heads),
+   calibration, results with human-readable names/headshots, >= ~600 words
+   before Provenance and Avenues — rendered by `scripts/render_model_docs.sh`
+   and committed as GFM + figures. **Every number in it comes from a code
+   cell**; a typed metric is a reviewer finding (`sdv-model-reviewer` §10).
+7. Append the SDD ledger / session note (what shipped, gate results, follow-ups).
+8. **Write the restart prompt** so the next session resumes cold:
 
    ```text
    Continue <spine> in <repo> — <next phase>, inline execution (executing-plans, TDD).
@@ -228,7 +242,7 @@ Re-run the same oracle gates on the sibling's fixtures at identical thresholds.
    DO-NOT-REDO list with gate numbers, and the gotchas that cost time this
    session. Hand it to the user at the stopping point.
 
-7. When merging: hand off to `/sdv-ship` (it owns the PR/CI/bot-review/merge flow).
+9. When merging: hand off to `/sdv-ship` (it owns the PR/CI/bot-review/merge flow).
 
 ### Phase 7 — Review (mandatory)
 
