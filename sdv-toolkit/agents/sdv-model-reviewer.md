@@ -1,6 +1,6 @@
 ---
 name: sdv-model-reviewer
-description: Use before merging new model or validation code — a model-spine phase, a ratings engine, a backtest, a simulator — to audit its correctness contract. Lenses — gate-integrity (gates derived from observed values, never lowered, train/holdout seasons disjoint), leakage-boundary (the as-of-date split actually enforced, through_week treated as EXCLUSIVE, cumulative ops reset per group), metric-fit (Brier and calibration for probabilities, MAE-vs-market for spreads, Spearman for ratings, calibration slope for simulators), silent-no-op (every fitted component provably applied — assert the OUTPUT changed, not that the code ran), sklearn-contract (the splitter matches the panel structure with GroupKFold or TimeSeriesSplit and never a bare KFold, preprocessing lives inside the Pipeline, ConvergenceWarning is not swallowed), lineage (train-gate-publish wired, retrain scheduled, fitted constants cite their fitting script), oracle-join (dtype agreement asserted, match-rate floor enforced, fixture provenance README present), uncertainty-reported (a published decision surface ships an interval, and that interval comes from a cluster-respecting resample rather than a row-level bootstrap that is 8.8x too narrow), explainability-present (a shipped boosted model has a committed importance artifact; TreeSHAP needs no extra dependency; multiclass pred_contribs is 3-D), tracking-lineage (a feature-set definition exists per promoted model, its ordered columns are gated against the training code, stages carry fingerprints, and in_published_data is closed). Read-only; reports findings with file:line.
+description: Use before merging new model or validation code — a model-spine phase, a ratings engine, a backtest, a simulator — to audit its correctness contract. Lenses — gate-integrity (gates derived from observed values, never lowered, train/holdout seasons disjoint), leakage-boundary (the as-of-date split actually enforced, through_week treated as EXCLUSIVE, cumulative ops reset per group), metric-fit (Brier and calibration for probabilities, MAE-vs-market for spreads, Spearman for ratings, calibration slope for simulators), silent-no-op (every fitted component provably applied — assert the OUTPUT changed, not that the code ran), sklearn-contract (the splitter matches the panel structure with GroupKFold or TimeSeriesSplit and never a bare KFold, preprocessing lives inside the Pipeline, ConvergenceWarning is not swallowed), lineage (train-gate-publish wired, retrain scheduled, fitted constants cite their fitting script), oracle-join (dtype agreement asserted, match-rate floor enforced, fixture provenance README present), uncertainty-reported (a published decision surface ships an interval, and that interval comes from a cluster-respecting resample rather than a row-level bootstrap that is 8.8x too narrow), explainability-present (a shipped boosted model has a committed importance artifact; TreeSHAP needs no extra dependency; multiclass pred_contribs is 3-D), tracking-lineage (a feature-set definition exists per promoted model, its ordered columns are gated against the training code, stages carry fingerprints, and in_published_data is closed; the fit's train/test partition + meta sidecar are committed so the exact holdout is reproducible — a render-time re-split of a grown corpus must be labelled near-holdout — and every model-card number is computed by a committed qmd, never hand-typed). Read-only; reports findings with file:line.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -382,6 +382,22 @@ checks whether the *inputs* are identifiable.
   when the tag was created, not when the data landed). Where the repo documents
   no SLA, use 14 days and say so in the finding rather than leaving the
   threshold implicit.
+- **The exact holdout must be reproducible.** Expect a committed
+  `<model>_partition.parquet` (game_id, split) and `<model>_meta.json` (ordered
+  feature names, hyperparameters, seasons, train-time metrics, fitted constants)
+  beside every promoted artifact (`tracking.md` §2.1). A writeup that re-splits
+  TODAY's corpus to evaluate a committed booster is measuring a *near-holdout*
+  (training games can sit in the "test" side once the corpus has grown): it must
+  say so in the title/caption and quote the frozen train-time metric beside it.
+  An unlabelled "holdout" over a grown corpus is IMPORTANT; a missing partition
+  on a model promoted after 2026-09-01 is MUST-FIX (`failure-modes.md` §22).
+- **Model documentation is compiled, not typed.** A metric in a model card,
+  README or qmd with no code cell computing it cannot be regenerated and goes
+  stale silently. Expect `docs/models/<model>.qmd` + the rendered md +
+  `scripts/render_model_docs.sh` (`sdv-data-pipeline` Step 9c); a hand-typed
+  number is IMPORTANT, and a hand-EDITED rendered md (diff against a fresh
+  render) is MUST-FIX. Flagged anomalies must be computed cells that re-run
+  every render, never a sentence (`failure-modes.md` §21).
 
 ---
 

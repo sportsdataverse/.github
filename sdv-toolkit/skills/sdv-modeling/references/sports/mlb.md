@@ -29,11 +29,17 @@ is parametric/compute-on-demand by policy (`pitching-design.md` §3.2).
 
 ## Data feed
 
-**MLB has zero release datasets** — every `load_mlb_*` is a stub
-(`data-sources.md` §2, §5). The whole spine self-collects live via
-`mlb_statcast_search`; `mlb_pitch_features.py` is the single Savant consumer
-for the pitching family so every model reads one shared per-pitch frame
-(`pitching-design.md` §3.3).
+**Correction (2026-09-01):** MLB now HAS release datasets — `baseballr-data`
+publishes four model tags (`mlb_game_state`, `mlb_hitting_models`,
+`mlb_pitching_models`, `mlb_fielding_models`; per-season parquet + csv + rds,
+see its `models/REGISTRY.md`) and sdv-py ships real loaders
+(`load_mlb_expected_stats`, `load_mlb_expected_hr`, `load_mlb_batter_projection`,
+`load_mlb_stuff_plus`, `load_mlb_command_plus`, `load_mlb_oaa`,
+`load_mlb_catcher_framing`, `load_mlb_re`). The TRAINING substrate is still
+self-collected live via `mlb_statcast_search` into per-season caches
+(`SDV_MLB_STATCAST_CACHE`); `mlb_pitch_features.py` is the single Savant
+consumer for the pitching family so every model reads one shared per-pitch
+frame (`pitching-design.md` §3.3).
 
 ## Gotchas
 
@@ -51,6 +57,26 @@ for the pitching family so every model reads one shared per-pitch frame
   plan itself had wrong (`mlb-scoping.md`). As-of-date leakage is enforced
   via `as_of_seasons_split`/`as_of_split` — season *Y* only sees `season <
   Y` (`mlb_batter_projection.py:1-8`).
+
+- **PA-ender discipline (2026-09-01, `sportsdataverse-py#421`).** Every
+  hitter count is gated by `events` non-null/non-empty: `pa` = PA-ending rows,
+  `ab` excludes walks/HBP/sacrifices/catcher's interference, the wOBA
+  denominator excludes intentional walks, sac bunts and catcher's interference,
+  and walk/HBP wOBA values default to `.69`/`.72` when the cache vintage lacks
+  `woba_value`. The bug that motivated it counted raw PITCH rows as PA and
+  published league-mean "xwOBA" of .44–.73 (`failure-modes.md` §21).
+- **Cache vintages are heterogeneous.** Seasons under `SDV_MLB_STATCAST_CACHE`
+  were captured at different times; `woba_denom`/`woba_value` and other derived
+  columns are null in older vintages. Derive denominators from `events`; never
+  trust a cached derived column across seasons without a null-rate check.
+- **Rank gates are scale-blind here too.** The publish gates were Spearman vs
+  Savant leaderboards and stayed green through a 2x scale error; the level band
+  (`pa >= 100`, `n >= 50`, xwOBA `[.26, .38]`, xBA `[.18, .30]`) in
+  `baseballr-data python/mlb_model_publish/computes.py` is publish-blocking and
+  must stay beside the rank gate (`metrics-and-gates.md` §6).
+- **xERA ≡ x_wOBA is BY DESIGN** — `mlb_pitch_era` is a documented affine
+  wOBA→runs conversion; a render-time identity check guards the recipe, it is
+  not a bug. Differentiating xERA (batted-ball mix, park) is a new model.
 
 ## Oracle
 

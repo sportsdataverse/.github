@@ -647,6 +647,44 @@ Spearman — never Spearman alone**, which is exactly what `reviewer.md` §3
 already states ("Ratings → rank correlation (Spearman) + MAE vs the
 external oracle").
 
+**Second confirmed instance — MLB expected stats (2026-09-01).** The
+`mlb_hitting_models` publish gates were rank-based (Spearman against Savant
+leaderboards) and stayed green while the PUBLISHED league-mean "xwOBA" sat at
+.44–.73 in several seasons (the wOBA scale is ≈ .310–.330): the builder
+counted raw pitch rows as PA/AB, and older Statcast cache vintages carried null
+`woba_denom` columns (`sportsdataverse-py#421`; `failure-modes.md` §21). The fix
+paired the rank gate with an absolute **league-mean band on the qualified
+population** — `pa >= 100`, `n >= 50`, xwOBA in `[.26, .38]`, xBA in
+`[.18, .30]` — publish-blocking in `baseballr-data
+python/mlb_model_publish/computes.py`. General rule, now with two instances:
+**every published rate or rating needs a level check on a population whose
+true level is known, beside whatever rank gate it has.** Set the band from the
+observed league distribution (wide enough for real seasons, tight enough that a
+2x scale error fails), and state the observation that set it.
+
+---
+
+## 6b. A reproduced holdout is a *near*-holdout unless the partition was persisted
+
+A writeup that re-splits the corpus at render time to evaluate a COMMITTED
+booster is not measuring the holdout the model was gated on: the corpus has
+grown since the fit, seasons the booster trained on can land in the "test"
+side, and the number drifts every render. Three rules, all enforced in the
+2026-09-01 writeup campaign (`sdv-data-pipeline` Step 9c):
+
+- **Label it.** Call a render-time re-split a *near-holdout* in the section
+  title and the table caption, and quote the FROZEN train-time gate from the
+  model's meta sidecar beside it. An unlabelled "holdout" is a reviewer finding.
+- **Persist the partition at fit time.** The trainer writes the train/test
+  game-id partition and a meta sidecar (ordered feature names, hyperparameters,
+  seasons, train-time metrics, fitted constants) next to the artifact and
+  commits them (`tracking.md` §2.1). With those, the writeup reproduces the
+  EXACT test set forever; without them it cannot — the NHL xG model committed
+  only the R-era `.rds` meta and its writeup is stuck at near-holdout.
+- **Re-run the honest gate as seasons land.** A season the booster never saw
+  is the one clean holdout a grown corpus offers; render it as its own
+  calibration panel rather than blending it into the contaminated split.
+
 ---
 
 ## 7. Honest gaps

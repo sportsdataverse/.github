@@ -47,7 +47,9 @@ Every row in `reviewer.md` §4's shipped table (rows 1–7) appears below with a
 compatible assertion, plus seven more confirmed in the wider corpus (rows
 8–14) and four bonus instances (rows 15–18) found while grounding the
 required fourteen. "Confirmed" means a real commit or repo artifact grounds
-it; all 18 rows below have one. §20 names the one place where the evidence
+it; all 20 rows below have one (rows 19–20 were added 2026-09-01 and are
+written up in §21–22 so the earlier section numbers stay stable). §20 names
+the one place where the evidence
 is a documented hazard rather than a confirmed incident (§14's PWHL/NHL
 addendum), rather than papering over it as equally solid.
 
@@ -71,6 +73,8 @@ addendum), rather than papering over it as equally solid.
 | 16 | `fill_null(0.0)` that doesn't no-op — it lies | no row with a null input coordinate has a non-null predicted `xG` |
 | 17 | a derived count that depends on which side you computed it from | the same entity re-derived from the other side matches exactly |
 | 18 | a cross-run leak kept on purpose to match a broken oracle | `start_event_type` for a game's first possession is identical whether that game is parsed alone or inside a multi-game frame |
+| 19 | a denominator that counted ROWS, not events (MLB `pa`/`ab` = raw pitch rows) | `pa == count(events is not null)`, never `pl.len()`; and the published rate's league mean on the qualified population sits inside a known-level band (xwOBA `[.26, .38]`) — a rank gate alone stayed green through a 2x scale error |
+| 20 | a render-time "holdout" evaluated on a corpus that grew after the fit | the evaluation partition is read from the persisted train-time game-id file; otherwise the number is labelled *near-holdout* and the frozen train-time metric is quoted beside it |
 
 ---
 
@@ -655,3 +659,60 @@ every other removal cost ≤0.05 (`higher-models-HANDOFF.md`).
   was scoped from had already misattributed a source once; the number above
   was re-derived from `cfb-data@6bd24e4`'s own commit body, not copied from
   a downstream summary of it.
+
+---
+
+## 21. A denominator that counted rows, not events (#19)
+
+**What shipped.** `mlb_expected_stats` aggregated the per-pitch Statcast frame
+with `pl.len()` for `pa` and a batted-ball-row count for `ab`, so a hitter's
+"plate appearances" were his PITCHES seen. The published `mlb_hitting_models`
+assets carried league-mean "xwOBA" of .44–.73 in several seasons and a
+NEGATIVE xwOBA↔xBA correlation — impossible on the wOBA scale — while the
+rank-based publish gates stayed green (rank order survives a constant
+mis-scaling; `metrics-and-gates.md` §6). A second mechanism hid inside the
+first: seasons cached at different times (`SDV_MLB_STATCAST_CACHE` vintages)
+had NULL `woba_denom`/`woba_value` columns, so a denominator read from the
+cache was silently zero for some seasons and present for others.
+
+**The fix** (`sportsdataverse-py#421`, 2026-09-01): a PA-ender mask
+(`events` non-null and non-empty) gates EVERY count; `pa` = PA-ending rows
+(batted-ball + non-batted-ball), `ab` excludes walks/HBP/sacrifices/catcher's
+interference, the wOBA denominator excludes intentional walks, sac bunts and
+catcher's interference, and the walk/HBP wOBA values default to `.69`/`.72`
+when the vintage lacks them. The denominators are DERIVED from `events`, never
+read from a cached column.
+
+**Assertions.**
+
+- `pa == (events.is_not_null() & (events != "")).sum()` per hitter-season; a
+  batted-ball row with a null `events` (a foul, a no-result pitch) is ignored
+  everywhere, not just in `pa`.
+- League mean of the published rate on the qualified population (`pa >= 100`,
+  `n >= 50`) inside a known-level band — xwOBA `[.26, .38]`, xBA `[.18, .30]` —
+  as a PUBLISH-BLOCKING gate beside the rank gate.
+- Cross-column sign: `corr(xwOBA, xBA) > 0` on the published frame.
+- **Anomaly reproduced live.** The writeup (`baseballr-data
+  docs/models/hitting.qmd`) recomputes the league-mean band and the sign check
+  on every render and prints the flag, so the finding cannot go stale in prose
+  while the data quietly changes. Adopt this for any flagged anomaly: the flag
+  is a computed cell, never a typed sentence.
+
+## 22. A render-time "holdout" on a corpus that grew after the fit (#20)
+
+**What shipped.** `fastRhockey-nhl-data`'s xG booster is committed with only
+the R-era `.rds` meta; the writeup evaluates it by re-splitting TODAY's
+corpus by season. Seasons added since the fit make the split a *near-holdout*
+(training games can sit in the "test" side), and the number moves every render.
+The same shape appears wherever a committed artifact meets a growing corpus.
+
+**Assertions.**
+
+- A committed `<model>_partition.parquet` (game_id, split) and
+  `<model>_meta.json` (ordered feature names, hyperparameters, train/test
+  seasons, train-time metrics, fitted constants) exist beside the artifact, and
+  the writeup's holdout cell READS the partition (`tracking.md` §2.1).
+- Absent those, the section title says *near-holdout* and the frozen train-time
+  metric from the meta sidecar is quoted in the same table — an unlabelled
+  "holdout" is the finding (`metrics-and-gates.md` §6b).
+

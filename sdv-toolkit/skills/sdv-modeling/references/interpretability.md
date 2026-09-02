@@ -58,6 +58,14 @@ attributions answer "why this class", which is usually the more useful question
 | a model-agnostic answer (non-tree, or a pipeline) | `sklearn.inspection.permutation_importance` | **none — sklearn only** |
 | the shape of a relationship | `sklearn.inspection.partial_dependence` | **none — sklearn only** |
 
+| exact attributions for a logistic / linear head | `coef_j * (x_ij - mean_j)` — the exact Shapley value on the logit for an additive model | **none — numpy** |
+
+The last row is how the PWHL/NHL xG logistic heads and every ridge/SPM
+coefficient vector get a SHAP-style panel in their writeups: for an additive
+model the Shapley value of feature *j* on row *i* is exactly
+`coef_j * (x_ij - mean_j)` (mean over the reference frame), so the global
+importance is `mean(|coef_j * (x_j - mean_j)|)` — no sampling, no package.
+
 **Prefer the dependency-free route** for anything that runs in a producer
 pipeline. `shap` is worth installing for interactive investigation, not for a
 scheduled job.

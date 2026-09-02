@@ -67,6 +67,26 @@ exactly the case that must invalidate.
 
 ---
 
+### 2.1 The fit's own identity: partition + meta sidecar
+
+A fingerprint says whether an OUTPUT is current. Two small files say what a
+FIT was, and they are the cheapest tracking win in the repo:
+
+```text
+models/<model>_partition.parquet   # game_id, split in {train, test}  (+ season)
+models/<model>_meta.json           # feature_names (ordered), hyperparameters,
+                                   # train/test seasons, train-time metrics,
+                                   # fitted constants (e.g. spread_time exponent)
+```
+
+Written by the trainer at fit time, committed with the artifact, read by the
+writeup and by the applier. Without the partition the exact test set is gone
+the moment the corpus grows (`failure-modes.md` §22 — the NHL xG writeup can
+only report a *near-holdout*); without the meta the applier and the trainer
+can disagree about a fitted constant with nothing to assert against
+(`nfl` `spread_time` exponent frozen in `model_vars.py`). Both exist for the
+duration of a run in every trainer already — the change is to COMMIT them.
+
 ## 3. The feature-set registry — the missing component, and how to build one
 
 Today a model's feature list lives inside the training code. That makes three
@@ -247,6 +267,8 @@ encode failures that already happened here:
 The order matters, and one sequence is actively wrong:
 
 1. **Fingerprints** (§2). Highest value alone: restart, iteration and caching.
+   **Partition + meta sidecar** (§2.1) in the same step — two files per fit,
+   and the writeup's holdout becomes exact instead of *near*.
 2. **Feature-set registry** (§3). Makes lineage derivable and turns leakage and
    join rules into checked data.
 3. **Ledger with `fold_spread` and `in_published_data`** (§4).
