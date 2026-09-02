@@ -203,6 +203,18 @@ regularly outlives a 2-minute foreground tool timeout — run it
 `run_in_background` and confirm the remote head afterwards
 (`git ls-remote origin <branch>`).
 
+**"files were modified by this hook" push failures (2026-09-01, both shipped):**
+the pre-push hooks run `uv run …`, so anything that makes `uv run` rewrite a
+file fails the push even when the check itself passes. Two real causes:
+(a) a release bumped `pyproject.toml`'s version WITHOUT committing the
+re-locked `uv.lock` — every later `uv run` re-wrote the lock's own `version`
+line until someone committed it; (b) a stray pull-merge polluted the branch so
+the hook's regen produced drift. Diagnose by reading which hook says
+"files were modified", `git diff` the file it touched, and commit the
+legitimate change (a 1-line lock sync is a fix, not noise) — never bypass with
+`--no-verify`. The tree must be CLEAN immediately after commit for the push to
+survive the hooks.
+
 ## Phase 5 — Bot triage
 
 CodeRabbit (login `coderabbitai` / `coderabbitai[bot]`) and Copilot
@@ -336,10 +348,14 @@ gh pr checks
    without blocking on them. Distinguish real failures from known repo flakes
    (0-second Vercel previews; live-test timeout races) — call out a flake
    explicitly rather than silently ignoring it.
-3. **Two watcher gotchas** carried over from prior incidents: a check run
+3. **Three watcher gotchas** carried over from prior incidents: a check run
    started before a re-push can reflect the OLD head (re-fetch after any
-   push), and after any merge the PR-branch run is superseded — the
-   definitive signal is **main's post-merge run** (`gh run list --branch main`).
+   push); after any merge the PR-branch run is superseded — the definitive
+   signal is **main's post-merge run** (`gh run list --branch main`); and a
+   settle condition of `gh pr checks | grep -qv pending` fires when ANY line
+   is non-pending (a `skipping` live-test row settles it instantly, 2026-09-01)
+   — loop until the count of `pending` rows is ZERO instead:
+   `pend=$(gh pr checks N | grep -c $'\tpending\t'); [ "$pend" -eq 0 ] && break`.
 
 If the codegen gate fails, report the failure and stop — do not silently
 retry or merge past a red gate.
@@ -481,6 +497,12 @@ e.g. 0.0.66 → 0.0.69).
 
    (There is no `setup.py` / `__version__` duplicate — `pyproject.toml` is the
    single source of truth.)
+
+   **Then immediately `uv lock` and commit `uv.lock` WITH the bump.** The
+   lockfile records the package's own version; 0.1.4 shipped without the
+   re-lock, and for the next day every `uv run` rewrote `uv.lock`'s version
+   line — which made every pre-push hook fail with "files were modified by
+   this hook" (2026-09-01). The bump and its lock travel in one commit.
 
 3. **Write the CHANGELOG entry.** Add a new section at the **top** of
    `CHANGELOG.md` (immediately below the doctoc TOC comment block), matching the

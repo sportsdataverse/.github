@@ -62,7 +62,15 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
    nested `python/pyproject.toml`); package-dir stays `python/`; `tests/` to
    root; kill `requirements.txt`; pinned ruff rule set (`E4 E7 E9 F I`,
    ignore `E712`); pytest `testpaths`/`pythonpath` + an `archive` marker;
-   `sportsdataverse` pinned to git main via `[tool.uv.sources]`; `.Rproj`
+   `sportsdataverse` pinned to git main via `[tool.uv.sources]` — **and know
+   that this pin resolves at LOCK time, not build time**: the lock freezes one
+   commit, and nothing refreshes it when sdv-py's main moves. baseballr-data
+   published MLB models for months from a v0.0.75 lock while sdv-py was at
+   0.1.4 (discovered 2026-09-01; a plausible source of the per-season vintage
+   heterogeneity in its published assets). After any sdv-py merge that a
+   consumer repo depends on, `uv lock --upgrade-package sportsdataverse` +
+   commit in that repo — and consider a CI staleness warning that compares the
+   locked sha's age against sdv-py main; `.Rproj`
    beside `DESCRIPTION`; template gitignore block (bare AND `**/` nested).
    Annotate any deliberately-tracked dir that looks like build output
    (`.bundles/`) IN the gitignore, or someone will "fix" it.
