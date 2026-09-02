@@ -42,6 +42,14 @@ harness WARN finding (as opposed to design-time review of new code) →
 
 ## §1 — gate-integrity lens
 
+- **A rank gate is scale-blind — require a LEVEL assertion too.** Spearman and
+  any other rank correlation are invariant to scale, so a metric can be shifted or
+  rescaled arbitrarily and still pass. sdv-py #421 shipped MLB expected stats with
+  league means of .34-.72 (xBA .2026 where it should be ~.2519) straight past its
+  Spearman gates, and the error reached published assets. Any gate on a published
+  metric must ALSO assert a level: the league mean inside a stated band, or the
+  per-season distribution against known values. Copy the baseballr-data scale gate
+  (`75d29ddbc5`). Flag any model gate whose only assertion is a correlation.
 - Gate floors/ceilings must be **derived from observed values** and documented
   in the test docstring with the observed number ("observed 2.785; ceiling 3.5").
   Flag any threshold with no provenance.

@@ -896,6 +896,39 @@ existing package layout govern over this table — read them first.
 Validation is Phase 5; publishing is Phase 6 — don't skip either on the way
 from a built frame to a release.
 
+### Publish exactly what THIS run produced — never a directory glob
+
+A publisher must upload the explicit set of assets the run just wrote, keyed by
+what the build returned. Do **not** glob the staging directory.
+
+The failure is not hypothetical and it is not rare — CodeRabbit found it in two
+independently written producers on the same day (2026-09-02):
+
+* `hoopR-nba-stats-data#35` — the staging dir could hand `upload_artifacts` an
+  asset left by an earlier run.
+* `cfbfastR-cfb-data#58` — `_publish` globbed the tag dir while
+  `sportsdataverse_upload` defaults to `overwrite=True`, so a stale local
+  parquet would **replace a good release asset**.
+
+Why it keeps happening: an empty-frame guard stops you **writing** a bad asset,
+and everyone stops there. It does nothing about **uploading** an old one, so the
+guard reads as complete while the back door is open. A season the build skipped
+this time — because the payload is now empty, or unreadable — still has last
+week's file sitting in the staging directory.
+
+Two acceptable shapes:
+
+1. Upload the recorded paths (`written` keyed `"<tag>/<asset>"`), or
+2. Clear the staging dir for the seasons being rebuilt, **once per build**, so
+   the directory and the run's output are the same set.
+
+If you take (2), hoist the clear ABOVE the endpoint loop. A tag can carry
+several endpoints (NBA matchups two, draft combine five) and clearing per
+endpoint deletes the previous endpoint's freshly written assets, leaving only
+the last — a bug introduced while fixing this very issue.
+
+Pin it with a test: a stale file in the tag directory must not be uploaded.
+
 ### Gotchas
 
 - **Raw/data boundary is one-way** — see Phase 2; data repos read raw trees,
