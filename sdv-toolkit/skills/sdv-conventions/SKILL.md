@@ -85,9 +85,18 @@ WHERE a change came from; nothing localizes WHO.
    collided on one stocktake item under *different* branch names, so nothing
    keyed on branch naming or worktree state caught it; one had built a complete
    implementation before finding the PR opened three minutes earlier.
-   `gh pr list --state open --search "<the item's subject>"` across the target
-   repos is the whole check. On finding one, **verify it and contribute the
-   missing half** — do not duplicate it.
+   One search per target repo is the whole check — `gh pr list` defaults to the
+   *current* repo, so `--repo` is required, and the item usually spans siblings:
+
+   ```sh
+   for r in sportsdataverse/sportsdataverse-py sportsdataverse/<sibling>; do
+     gh pr list --repo "$r" --state open --search "<the item's subject>" \
+       --json number,title,url
+   done
+   ```
+
+   On finding one, **verify it and contribute the missing half** — do not
+   duplicate it.
 2. **Rebase and drop your superseded commits — never force-push.** When another
    session lands on your branch first, keep their work and drop the commits of
    yours that are equivalent-but-second, keeping only what they missed. Also

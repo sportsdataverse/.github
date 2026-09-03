@@ -200,9 +200,16 @@ gh pr create --fill        # or: gh pr view --web  to edit
 
 The pre-push hook re-runs the codegen drift gate (~3-5 min), so a push
 regularly outlives a 2-minute foreground tool timeout — run it
-`run_in_background` and confirm the remote head afterwards
-(`git ls-remote origin <branch>`). **`git ls-remote` is the only evidence — a
-backgrounded push's own stdout is not.** With many worktrees sharing one
+`run_in_background` and confirm the remote head afterwards. **A backgrounded
+push's own stdout is not evidence — and neither is the mere existence of the
+remote ref.** `git ls-remote` proves a ref exists, which a prior or concurrent
+push also satisfies; compare its SHA against the commit you meant to push:
+
+```sh
+expected=$(git rev-parse HEAD)
+remote=$(git ls-remote origin "refs/heads/<branch>" | awk 'NR==1{print $1}')
+test "$remote" = "$expected" && echo "PUSHED $expected" || echo "NOT YOURS: $remote"
+``` With many worktrees sharing one
 `.git`, concurrent background pushes interleave stdout into each other's logs:
 two 2026-09-01 push logs reported *another session's* branch name at exit 0
 while the branch under push was still absent. Nothing was damaged, but the log
@@ -218,9 +225,14 @@ through `grep` hides it, costing a silently-unapplied PR body (three times in
 two days). Use REST and read the body back:
 
 ```sh
+# create — build the JSON first; --rawfile keeps markdown intact
 jq -n --rawfile b body.md '{title:"...",head:"...",base:"main",body:$b}' > pr.json
-gh api -X POST  repos/{owner}/{repo}/pulls --input pr.json
-gh api -X PATCH repos/{owner}/{repo}/pulls/<N> --input body.json
+gh api -X POST repos/{owner}/{repo}/pulls --input pr.json --jq '{number,url:.html_url}'
+
+# edit — same shape, then READ IT BACK; a silent no-op is the failure mode
+jq -n --rawfile b body.md '{body:$b}' > patch.json
+gh api -X PATCH repos/{owner}/{repo}/pulls/<N> --input patch.json >/dev/null
+diff <(gh api repos/{owner}/{repo}/pulls/<N> --jq '.body') body.md && echo "body OK"
 ```
 
 **"files were modified by this hook" push failures (2026-09-01, both shipped):**
@@ -272,6 +284,11 @@ gh api repos/{owner}/{repo}/pulls/<N>/reviews \
   --jq '.[] | select(.user.login|test("(?i)coderabbit|copilot|sourcery"))
        | {by:.user.login, state, at:.submitted_at, sha:.commit_id, body_len:(.body|length)}'
 ```
+
+…and the unresolved-thread count, which those two calls do NOT return — run the
+paginated `reviewThreads` query from step 2 below and count
+`isResolved == false`. A PR can pass everything above with a live finding still
+open.
 
 A PR is **reviewed** only when, for at least one bot:
 `review.commit_id == head.sha` **AND** `body_len > 0` **AND** unresolved
