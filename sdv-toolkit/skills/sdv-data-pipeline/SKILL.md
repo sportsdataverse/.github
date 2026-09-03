@@ -71,7 +71,21 @@ repo protection); the pilots proved 20-file PRs get real bot reviews and
    heterogeneity in its published assets). After any sdv-py merge that a
    consumer repo depends on, `uv lock --upgrade-package sportsdataverse` +
    commit in that repo — and consider a CI staleness warning that compares the
-   locked sha's age against sdv-py main; `.Rproj`
+   locked sha's age against sdv-py main.
+
+   **Prove the pin BEHAVIOURALLY after any bump — never from the lock text,
+   and never from a sibling PR's green CI.** Because these pins resolve at lock
+   time, a merged-green PR proves only that the OLD engine passed. Both NCAA
+   producers merged on 2026-09-02 with `uv.lock` still pinning an sdv-py commit
+   predating the engine fix their new default depended on. Run something whose
+   answer DIFFERS pre/post fix: MBB 2013's pooled σ̂² reads 12,647.0 on the fixed
+   engine and ~7,373 on a stale one (`mean(decay) = 0.583`). Two related traps —
+   a verification run fired mid-`uv sync` fails with the exact
+   `ModuleNotFoundError` signature of a stale pin, so confirm the sync has
+   EXITED first; and prefer `direct_url.json` plus a behavioural assert over a
+   bare import as the check itself.
+
+   Also: `.Rproj`
    beside `DESCRIPTION`; template gitignore block (bare AND `**/` nested).
    Annotate any deliberately-tracked dir that looks like build output
    (`.bundles/`) IN the gitignore, or someone will "fix" it.
