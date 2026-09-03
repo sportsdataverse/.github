@@ -1,6 +1,6 @@
 ---
 name: sdv-model-reviewer
-description: Use before merging new model or validation code — a model-spine phase, a ratings engine, a backtest, a simulator — to audit its correctness contract. Lenses — gate-integrity (gates derived from observed values, never lowered, train/holdout seasons disjoint), leakage-boundary (the as-of-date split actually enforced, through_week treated as EXCLUSIVE, cumulative ops reset per group), metric-fit (Brier and calibration for probabilities, MAE-vs-market for spreads, Spearman for ratings, calibration slope for simulators), silent-no-op (every fitted component provably applied — assert the OUTPUT changed, not that the code ran), sklearn-contract (the splitter matches the panel structure with GroupKFold or TimeSeriesSplit and never a bare KFold, preprocessing lives inside the Pipeline, ConvergenceWarning is not swallowed), lineage (train-gate-publish wired, retrain scheduled, fitted constants cite their fitting script), oracle-join (dtype agreement asserted, match-rate floor enforced, fixture provenance README present), uncertainty-reported (a published decision surface ships an interval, and that interval comes from a cluster-respecting resample rather than a row-level bootstrap that is 8.8x too narrow), explainability-present (a shipped boosted model has a committed importance artifact; TreeSHAP needs no extra dependency; multiclass pred_contribs is 3-D), tracking-lineage (a feature-set definition exists per promoted model, its ordered columns are gated against the training code, stages carry fingerprints, and in_published_data is closed; the fit's train/test partition + meta sidecar are committed so the exact holdout is reproducible — a render-time re-split of a grown corpus must be labelled near-holdout — and every model-card number is computed by a committed qmd, never hand-typed). Read-only; reports findings with file:line.
+description: Use before merging new model or validation code — a model-spine phase, a ratings engine, a backtest, a simulator — to audit its correctness contract. Lenses — gate-integrity (gates derived from observed values, never lowered, train/holdout seasons disjoint), leakage-boundary (the as-of-date split actually enforced, through_week treated as EXCLUSIVE, cumulative ops reset per group), metric-fit (Brier and calibration for probabilities, MAE-vs-market for spreads, Spearman for ratings, calibration slope for simulators), silent-no-op (every fitted component provably applied — assert the OUTPUT changed, not that the code ran; and ask whether the guarding test could fail at all, since a fixture holding only the rows the function reads, a dead branch with no per-branch count asserted, a `raising=False` monkeypatch, a re-implemented rather than imported gate, and a coincidentally-passing placeholder each shipped green over a live defect — the fix must be mutated out and the test seen to go red), sklearn-contract (the splitter matches the panel structure with GroupKFold or TimeSeriesSplit and never a bare KFold, preprocessing lives inside the Pipeline, ConvergenceWarning is not swallowed), lineage (train-gate-publish wired, retrain scheduled, fitted constants cite their fitting script), oracle-join (dtype agreement asserted, match-rate floor enforced, fixture provenance README present), uncertainty-reported (a published decision surface ships an interval, and that interval comes from a cluster-respecting resample rather than a row-level bootstrap that is 8.8x too narrow), explainability-present (a shipped boosted model has a committed importance artifact; TreeSHAP needs no extra dependency; multiclass pred_contribs is 3-D), tracking-lineage (a feature-set definition exists per promoted model, its ordered columns are gated against the training code, stages carry fingerprints, and in_published_data is closed; the fit's train/test partition + meta sidecar are committed so the exact holdout is reproducible — a render-time re-split of a grown corpus must be labelled near-holdout — and every model-card number is computed by a committed qmd, never hand-typed). Read-only; reports findings with file:line.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -169,6 +169,9 @@ Confirmed instances of this class in this ecosystem, each with its test:
 | `through_week` treated as INCLUSIVE | the boundary row is absent from the training frame |
 | schedule-scoped reprocess skipping games | processed count == expected game count |
 | build with no retry, partial write | row count matches the manifest |
+| a mutually-exclusive branch that never fires (an NFL OT overlay's One-FG branch was unreachable and every real-data gate still passed, because the dead behaviour is what matches the oracle) | per-branch row counts (`one_fg_rows == 0`), not the aggregate error |
+| a doc/render that re-implements a publisher gate and disagrees with it (a one-column `is_nan()` replica of a four-column `is_null() \| ~is_finite()` gate printed `pass` on a frame the publisher refuses) | the doc IMPORTS the gate; if it must re-implement, the branch order matches |
+| a "did it change?" assertion using plausible placeholder values, which the branch under test happened to return | placeholders are deliberately impossible (0.999 / 0.001) |
 
 Report a missing assertion as a finding even when the code looks correct.
 Procedure:
@@ -182,6 +185,16 @@ Procedure:
 3. Search the surrounding test/gate for an assertion on the *output having
    changed* (not merely that the call didn't raise). No such assertion —
    MUST-FIX finding, citing which row in the table above it matches.
+4. **Ask whether the guarding test could fail at all.** A green gate on a real
+   fixture proves the output matches, not that the code does what its docstring
+   says. Five shapes that pass over a live defect — a fixture holding only the
+   rows the function reads, a dead branch with no per-branch count, a
+   `raising=False` monkeypatch or a hand-written stand-in for an upstream shape,
+   a re-implemented rather than imported gate, and a coincidentally-passing
+   "did it change?" placeholder — are catalogued with their incidents and their
+   observing assertions in `sdv-modeling/references/metrics-and-gates.md` §2b.
+   The rule to apply: **the fix must be mutated out and the test seen to go
+   red** — and the mutant verified to be what you think it is.
 
 ---
 

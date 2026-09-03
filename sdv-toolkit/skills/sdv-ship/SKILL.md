@@ -1,6 +1,6 @@
 ---
 name: sdv-ship
-description: Use when landing any change in a SportsDataverse Python repo — the full ship lifecycle, enterable at any phase. Phases: (1) regenerate codegen docs, (2) preflight — ruff, the mypy ratchet, and tests scoped to changed files, (3) commit and verify it landed, (4) push, (5) triage automated review comments from CodeRabbit, Copilot, and Sourcery in parallel with CI rather than after it, (6) confirm the codegen drift gate is green — CI-green means the codegen gate only; remote test jobs are observed and reported, never waited on, (7) merge and confirm state is MERGED before any branch cleanup, (8) retarget and rebase stacked children after a squash-merge, (9) cut a release — version bump, CHANGELOG entry, docs snapshot, GitHub Release tag. Invoke for "ship this", "preflight", "quick check before commit", "lint+type+test my changes", "open the PR", "merge the PR", "land this change", "address the coderabbit comments", "resolve the bot reviews", "handle the copilot review", "merge the stack", "land these stacked PRs", "retarget after merge", "stacked PRs", "cut a release", "release 0.0.x", "ship a new version", "publish to PyPI", "bump the version and release".
+description: Use when landing any change in a SportsDataverse Python repo — the full ship lifecycle, enterable at any phase. Phases: (1) regenerate codegen docs, (2) preflight — ruff, the mypy ratchet, and tests scoped to changed files, (3) commit and verify it landed, (4) push, (5) triage automated review comments from CodeRabbit, Copilot, and Sourcery in parallel with CI rather than after it — starting by PROVING a review happened at all, since six distinct green bot signals (zero unresolved threads, a `pass` check that means rate-limited, a `skipping` Sourcery budget exhaustion, a review predating the head, an empty review shell, an unreviewed draft) each read as reviewed while nothing was; the surviving test is `review.commit_id == head.sha` AND a non-empty body AND zero unresolved threads, then reading the body for the Outside-diff-range findings that never became threads, (6) confirm the codegen drift gate is green — CI-green means the codegen gate only; remote test jobs are observed and reported, never waited on, (7) merge and confirm state is MERGED before any branch cleanup, (8) retarget and rebase stacked children after a squash-merge, (9) cut a release — version bump, CHANGELOG entry, docs snapshot, GitHub Release tag. Invoke for "ship this", "preflight", "quick check before commit", "lint+type+test my changes", "open the PR", "merge the PR", "land this change", "address the coderabbit comments", "resolve the bot reviews", "handle the copilot review", "merge the stack", "land these stacked PRs", "retarget after merge", "stacked PRs", "cut a release", "release 0.0.x", "ship a new version", "publish to PyPI", "bump the version and release".
 ---
 
 # Ship a change (sdv-py)
@@ -201,7 +201,27 @@ gh pr create --fill        # or: gh pr view --web  to edit
 The pre-push hook re-runs the codegen drift gate (~3-5 min), so a push
 regularly outlives a 2-minute foreground tool timeout — run it
 `run_in_background` and confirm the remote head afterwards
-(`git ls-remote origin <branch>`).
+(`git ls-remote origin <branch>`). **`git ls-remote` is the only evidence — a
+backgrounded push's own stdout is not.** With many worktrees sharing one
+`.git`, concurrent background pushes interleave stdout into each other's logs:
+two 2026-09-01 push logs reported *another session's* branch name at exit 0
+while the branch under push was still absent. Nothing was damaged, but the log
+described someone else's fast-forward. Relatedly, a
+`fatal: full write to remote helper failed: Broken pipe` can mean the push
+**succeeded** server-side — check `ls-remote` before retrying, or you pay
+another 5-10 min hook run and get a `reference already exists` error that
+invites exactly the wrong conclusion.
+
+**`gh pr create` / `gh pr edit --body-file` can fail on the projects-classic
+GraphQL deprecation / rate limit** while REST is fine — and piping their output
+through `grep` hides it, costing a silently-unapplied PR body (three times in
+two days). Use REST and read the body back:
+
+```sh
+jq -n --rawfile b body.md '{title:"...",head:"...",base:"main",body:$b}' > pr.json
+gh api -X POST  repos/{owner}/{repo}/pulls --input pr.json
+gh api -X PATCH repos/{owner}/{repo}/pulls/<N> --input body.json
+```
 
 **"files were modified by this hook" push failures (2026-09-01, both shipped):**
 the pre-push hooks run `uv run …`, so anything that makes `uv run` rewrite a
@@ -227,6 +247,52 @@ open, before merge.
 **Evaluate — do not auto-apply.** Both bots produce false positives, especially
 against this repo's *documented* choices. A suggestion that contradicts CLAUDE.md
 is a decline-with-citation, not a fix (see Guardrails).
+
+### Step 0 — prove a review actually happened
+
+**"Reviewed" is a claim, and every cheap signal for it lies.** On 2026-09-02 six
+distinct green signals each read as reviewed while nothing had been reviewed:
+
+| Green signal | What it actually meant |
+|---|---|
+| 0 unresolved review threads | CodeRabbit's **"Outside diff range comments"** live in the PR-level review *body* and create no thread — cfb-data #59 carried a MAJOR data-integrity finding there while `reviewThreads` returned 0 |
+| A `pass` check from CodeRabbit | body read **"Review rate limited"** — zero reviews on the PR |
+| A green Sourcery check | conclusion `skipping`: the **weekly 250,000-diff-character budget** was exhausted fleet-wide. Not red, not a pass |
+| A review object exists | it **predates the head** — #59's newest review was 18:23Z against a 18:59Z head, so "0 unresolved" meant "not re-reviewed" |
+| A review object exists, at head | an **empty shell** — a COMMENTED review with a zero-length body, posted next to the rate-limit notice |
+| Every bot check green/neutral on a draft | CodeRabbit says **"Draft PR not reviewed"** in a collapsed comment, not in a check. Un-draft first, then expect a review |
+
+**The one test that survives all six** — run it before triaging anything, and
+again before merge:
+
+```sh
+gh pr view <N> --json headRefOid,isDraft \
+  --jq '{head:.headRefOid, draft:.isDraft}'
+gh api repos/{owner}/{repo}/pulls/<N>/reviews \
+  --jq '.[] | select(.user.login|test("(?i)coderabbit|copilot|sourcery"))
+       | {by:.user.login, state, at:.submitted_at, sha:.commit_id, body_len:(.body|length)}'
+```
+
+A PR is **reviewed** only when, for at least one bot:
+`review.commit_id == head.sha` **AND** `body_len > 0` **AND** unresolved
+threads == 0. Anything short of all three is **unreviewed** — say so, don't let
+a green board stand in for it.
+
+Then read the body of every qualifying review for the findings that never
+became threads:
+
+```sh
+gh api repos/{owner}/{repo}/pulls/<N>/reviews --jq '.[].body' \
+  | grep -nE 'Outside diff range|Nitpick comments|Additional comments|Duplicate comments'
+```
+
+The headline count undercounts: a 2026-09-02 review said *"Actionable comments
+posted: 1"* and carried 2 — the hidden one was the Major.
+
+**When no real review can be obtained** (both bots were down most of
+2026-09-02): review the diff by hand, and **record that rationale as a PR
+comment** naming what you checked. Do not merge on a green board alone; do not
+block a small, tested fix indefinitely either.
 
 1. **Resolve the PR + repo coordinates.**
 
@@ -266,17 +332,32 @@ is a decline-with-citation, not a fix (see Guardrails).
      --jq '.reviews[] | select(.author.login|test("(?i)coderabbit|copilot")) | {by:.author.login,state,body}'
    ```
 
-3. **Triage each thread comment** into one of:
+3. **Enumerate the findings INSIDE each thread body before replying.** GitHub
+   renders a multi-finding comment as one thread, so a single reply plus a
+   resolve closes the *thread*, not every finding in it. hoopR-nba-stats-data
+   #35's thread on `nba_stats_synergyplaytypes.R:68` held two Majors; the
+   second stayed live in the code after the thread was resolved. **Resolving is
+   a claim about the whole thread** — answer each finding explicitly.
+
+   Two corollaries: a bot's stated *mechanism* can be wrong while its *finding*
+   is right (reproduce the shape before editing — one 2026-09-02 finding named
+   the wrong cause and the real one was live at five sites), and a bot's
+   "verified by static analysis" block is evidence of a script it ran, not of
+   its conclusion. Verify the finding against the **current head**, then grep
+   for siblings that share the pattern — a refactor landing mid-review
+   relocates and multiplies the defect.
+
+4. **Triage each thread comment** into one of:
    - **Valid** → fix in code.
    - **Convention conflict / false positive** → do NOT change; reply citing the
      CLAUDE.md rule (see Guardrails).
    - **Question** → answer in a reply.
    - **Nit** → judgment call; apply if cheap and correct.
 
-4. **Apply the valid fixes**, grouped by file, then re-run Phase 2 (ruff + mypy
+5. **Apply the valid fixes**, grouped by file, then re-run Phase 2 (ruff + mypy
    ratchet + targeted tests) so a fix doesn't introduce a regression.
 
-5. **Commit + push.** Conventional-Commit subject, **no AI co-author trailer**
+6. **Commit + push.** Conventional-Commit subject, **no AI co-author trailer**
    (the `commit-msg` hook enforces both). Pushing flips the addressed threads to
    `isOutdated`.
 
@@ -285,7 +366,7 @@ is a decline-with-citation, not a fix (see Guardrails).
    git push
    ```
 
-6. **Reply to, then resolve, each thread.** Reply first; resolve only after the
+7. **Reply to, then resolve, each thread.** Reply first; resolve only after the
    fix is pushed or the decline is justified.
 
    - Reply (github MCP `add_reply_to_pull_request_comment`, or REST):
@@ -307,10 +388,10 @@ is a decline-with-citation, not a fix (see Guardrails).
      for CodeRabbit-wide actions; use the per-thread GraphQL mutation for Copilot
      or for selective resolution.
 
-7. **Re-request review** if the changes were substantial: `@coderabbitai review`
+8. **Re-request review** if the changes were substantial: `@coderabbitai review`
    (comment) for CodeRabbit, or `request_copilot_review` (github MCP) for Copilot.
 
-8. **Report** a table: `thread | by | path:line | verdict (fixed/declined/answered) | resolved?`.
+9. **Report** a table: `thread | by | path:line | verdict (fixed/declined/answered) | resolved?`.
    Leave genuinely contentious threads unresolved and flag them for a human call.
 
 ### Guardrails — decline suggestions that fight CLAUDE.md
@@ -385,7 +466,24 @@ retry or merge past a red gate.
    **Never delete the branch before this confirmation** — a premature cleanup
    stranded work in a past session.
 
-3. **Write a session note.** Capture what shipped while the context is fresh, so
+3. **A merge can land between a review being requested and it arriving, and a
+   squash can drop a conflict resolution.** Three of four PRs in one
+   2026-09-02 batch were squash-merged mid-flight; one review with a real bug
+   arrived four minutes after its merge. Two consequences:
+
+   - **Re-check `.merged` and `.headRefOid` immediately before pushing any
+     review fix.** Pushing to a branch GitHub deleted on merge silently
+     *recreates* the ref and the fix goes nowhere. If you see `* [new branch]`
+     for a branch you believed existed, the PR merged underneath you — branch
+     off fresh `main` and open a successor PR. (A deleted base branch also
+     auto-closes its stacked child, and a force-push to the child makes that
+     close permanent — GitHub refuses `state=open` afterwards. Rebuild and
+     cross-link; do not expect to reopen.)
+   - **Re-run the suite against `origin/main` after the merge.** That is the
+     only check that covers what actually shipped — a conflict resolution is a
+     code change and a squash can silently drop it.
+
+4. **Write a session note.** Capture what shipped while the context is fresh, so
    the next session (or a compaction recovery) doesn't re-derive it:
    - If the repo has an SDD ledger (`.superpowers/sdd/progress.md`), append one
      entry there: date, branch, PR # + URL, the commit range, gates passed

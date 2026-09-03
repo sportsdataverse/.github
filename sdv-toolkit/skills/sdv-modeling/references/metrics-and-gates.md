@@ -451,6 +451,35 @@ a per-season match-rate check from running on a truncated frame
 
 ---
 
+## 2b. A test that cannot fail on the regression it guards
+
+A gate's floor being correctly derived (§2) says nothing about whether the test
+around it can *observe* a regression. Five shapes, all found in one 2026-09-01/02
+campaign, all of which passed green over a live defect:
+
+| Shape | The incident | What observes it |
+|---|---|---|
+| **The fixture contains only the rows the function reads** | An NFL OT overlay's fixture sampled only overtime rows. `enrich_nfl_pbp` does game-scoped work first (feature substitution, non-play fill, a per-game `First_Drive`), so the fixture MAE was 0.1204 where production gives 0.0209 | A fixture is **whole units of the pipeline's grouping key**, and the test calls the *pipeline*, not the step |
+| **A dead branch with no per-branch count asserted** | The same overlay's One-FG branch was unreachable (`First_Drive` scoped game-wide ⇒ `drive_diff == 0` never fired). Every gate passed, because dead-One-FG *is* the behaviour that matches the oracle | Assert the **branch selection counts** (`one_fg_rows == 0`), not just the aggregate error. When a function has mutually exclusive branches, count how often each fires on real data before believing the metric |
+| **`raising=False` / a hand-written stand-in for an upstream shape** | `monkeypatch.setattr(..., raising=False)` silently creates the attribute when the real target has been renamed; two `_publish` tests invented the key `"<tag>/injuries_2026"` where `build()` emits `"<tag>/injuries_2026.parquet"` — both green while the real handoff uploaded nothing | Drop `raising=False`. At any A→B handoff, at least one test feeds **A's real return value** into B |
+| **The gate is re-implemented rather than imported** | MBB/WBB `ratings.qmd` re-ran a one-column `is_nan()` version of the publisher's four-column `is_null() \| ~is_finite()` gate, and checked the applicability floor before finiteness — so the doc could print `pass` on a frame the publisher refuses | **Import the gate.** If a doc must re-implement it, the branch order has to match |
+| **A "did it change?" assertion passing by coincidence** | A silent-no-op test used plausible placeholders (`wp = 0.5 / vegas_wp = 0.42`); the branch under test happened to return ~0.4233, so one row moved 0.003 | Placeholders in no-op tests are **deliberately impossible** values (0.999 / 0.001), never plausible ones |
+
+**The rule that covers all five: before trusting a test, prove it fails without
+the fix.** Mutate the fix out and watch it go red.
+
+And **verify the mutant is what you think it is.** A `str.index`-based mutation
+matched an earlier function's line, cut the wrong span, and produced a mangled
+file that still raised — reading as "the test passes without the fix", i.e. as a
+weak test, when the mutation was the broken thing. If a mutation does not fail
+the test, check the mutant before concluding anything about the test.
+
+Related, and the reason this section sits next to §2: a green gate on a REAL
+fixture proves the *output matches*, not that the code does what its docstring
+says. Those are different claims and both need checking.
+
+---
+
 ## 3. The as-of-date leakage boundary
 
 `reviewer.md` §2 states the rule: every predictive backtest must rate event

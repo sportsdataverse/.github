@@ -1,6 +1,6 @@
 ---
 name: sdv-conventions
-description: Use when working in any SportsDataverse repo to load that repo archetype's binding conventions — the rules that differ between sdv-py, a -raw producer, a -data producer, and an R package, and that are the usual source of drift when moving between repos. Loaded automatically by the SessionStart router; invoke directly for "what are the conventions here", "what applies in this repo", "repo rules", or when a convention question arises mid-task. Reference files: sdv-py (polars 1.x surface, codegen is never hand-edited, manual_column_descriptions.yaml is the only place returns descriptions live, ID/join-key dtype discipline, mypy ratchet), raw (scraping-only, committed per-game JSON, rate discipline), data (NN_ stage numbering is intended build order not run order, idempotent re-runs, scripts earn scripts/ only via runbook wiring, models need registry rows), r-package (roxygen completeness, pkgdown reference coverage, tibble returns, snake_case). Also carries a UNIVERSAL rule that applies in every archetype — validate the instrument, not just the result: a measurement that drives an action must carry a control, a reconciliation, or a negative case before it is reported, and a selector that narrows silently is worse than no selector.
+description: Use when working in any SportsDataverse repo to load that repo archetype's binding conventions — the rules that differ between sdv-py, a -raw producer, a -data producer, and an R package, and that are the usual source of drift when moving between repos. Loaded automatically by the SessionStart router; invoke directly for "what are the conventions here", "what applies in this repo", "repo rules", or when a convention question arises mid-task. Reference files: sdv-py (polars 1.x surface, codegen is never hand-edited, manual_column_descriptions.yaml is the only place returns descriptions live, ID/join-key dtype discipline, mypy ratchet), raw (scraping-only, committed per-game JSON, rate discipline), data (NN_ stage numbering is intended build order not run order, idempotent re-runs, scripts earn scripts/ only via runbook wiring, models need registry rows), r-package (roxygen completeness, pkgdown reference coverage, tibble returns, snake_case). Also carries UNIVERSAL rules that apply in every archetype — validate the instrument, not just the result (a measurement that drives an action must carry a control, a reconciliation, or a negative case before it is reported, and a selector that narrows silently is worse than no selector); the shared-checkout collision protocol (gh pr list for your item before writing code, rebase-and-drop rather than force-push, never git reset --hard in a shared worktree); and the Windows file-rewrite hazards that turn a small diff into an unreviewable one (pathlib read_text/write_text flipping LF to CRLF, format-on-save reflowing untouched files, MSYS mangling leading-slash git arguments, and a pipe swallowing the exit code).
 ---
 
 # SDV conventions — archetype packs
@@ -78,6 +78,60 @@ WHERE a change came from; nothing localizes WHO.
 - Never infer an author from commit adjacency — say "an agent I can't identify."
 - A green run is evidence only about the tree as it stood when the run STARTED.
   Re-run after any concurrent write, and record the HEAD you tested.
+
+**Collision protocol** — three rules, each paid for on 2026-09-01/02:
+
+1. **`gh pr list` for your assigned item BEFORE writing any code.** Two agents
+   collided on one stocktake item under *different* branch names, so nothing
+   keyed on branch naming or worktree state caught it; one had built a complete
+   implementation before finding the PR opened three minutes earlier.
+   `gh pr list --state open --search "<the item's subject>"` across the target
+   repos is the whole check. On finding one, **verify it and contribute the
+   missing half** — do not duplicate it.
+2. **Rebase and drop your superseded commits — never force-push.** When another
+   session lands on your branch first, keep their work and drop the commits of
+   yours that are equivalent-but-second, keeping only what they missed. Also
+   re-check `git rev-parse origin/<branch>` immediately before the first edit
+   *and* again before pushing.
+3. **Never `git reset --hard` in a worktree another agent may share.** Unstaged
+   edits are unrecoverable — no stash, no reflog blob. To drop your own commit
+   use `git reset --soft/--mixed`, or `git checkout -- <your path>` for a single
+   file. Save long-lived uncommitted work as a patch beside the ledger, not only
+   in a transcript.
+
+## Universal — on Windows, the tool rewrites files you did not edit
+
+Four mechanisms turn a small change into a huge diff or a wrong command, all
+recurring across these repos. The cost is not cosmetic: a 20-line diff arriving
+as 300 lines is unreviewable, and it buries the real change.
+
+- **`pathlib.read_text()` / `write_text()` round-trips flip LF → CRLF** (reads
+  with universal newlines, writes with `os.linesep`). A 9-line qmd edit shipped
+  as a 333-line diff; a 3-line `.gitignore` addition as a 9-line one; ~120 real
+  lines as 1,650. **These repos genuinely mix conventions** — some files are
+  CRLF in the index — so "normalize everything to LF" is also wrong. Use the
+  Edit tool, or byte-level I/O that splices at a byte anchor and takes the
+  surrounding line's own EOL. Check with `git ls-files --eol <path>` first.
+- **Format-on-save and `ruff check --fix <dir>` reflow files you never
+  touched.** Scope autofix to the paths you edited, stage explicit paths, and
+  `git checkout --` the incidental churn. A `PostToolUse` formatter can also
+  silently *revert* an edit to a scratch script — verify a scratch-file edit
+  landed before consuming it, exactly as you would a commit.
+- **Git Bash MSYS mangles leading-slash arguments.** `git sparse-checkout set
+  '!/ncaa/'` became `!C:/Program Files/Git/ncaa/`, emptying the index and
+  staging ~510k deletions (cost a worktree rebuild); `git cat-file -e
+  origin/main:<path>` became `origin\main;<path>` and tested a garbage ref. Use
+  cone mode with bare directory names, or prefix `MSYS_NO_PATHCONV=1`.
+- **A pipe swallows the exit code.** `cmd | tail; echo RC=$?` reports *tail's*
+  rc — a failed push printed `PUSH=0`. Same shape as `cmd | tail || fallback`,
+  where the fallback never runs. This has silently skipped a `uv add` and a
+  push. Use `${PIPESTATUS[0]}`, or run the command unpiped. Corollary: never end
+  a verification chain with a `grep -c`, whose rc-1-means-no-matches makes
+  "clean" read as FAILED.
+
+**Before committing, read `git diff --numstat`** and flag any file whose
+deletions ≈ its line count — that is a line-ending flip or a mass reformat, not
+your change.
 
 For the full producer lifecycle (not just the differing rules), see
 `sdv-data-pipeline`. For documentation surface, see `sdv-document`.
