@@ -399,6 +399,27 @@ block a small, tested fix indefinitely either.
      gh api graphql -f query='mutation($id:ID!){ resolveReviewThread(input:{threadId:$id}){ thread{ isResolved } } }' -F id=<threadNodeId>
      ```
 
+   - **Gotchas that cost a round trip (cfb-data #83, 2026-09-15):**
+     - The per-comment REST path has NO PR number: read or edit one review
+       comment at `repos/{owner}/{repo}/pulls/comments/{databaseId}`;
+       `pulls/{N}/comments/{id}` 404s. Only the *create-reply* POST takes `{N}`.
+     - `POST pulls/{N}/requested_reviewers` with `copilot-pull-request-reviewer[bot]`
+       returns `[]` and requests nothing — use the github MCP
+       `request_copilot_review` (it works; a review landed ~10 min later).
+     - A reviewer's "join key dtype mismatch" is a probe, not a verdict: polars
+       1.4x coerces integer keys of different widths (UInt32 vs Int64) to a
+       supertype, so the raw join already scored every row. Verify with a
+       3-line join before accepting it as a crash; keep the explicit cast as
+       the repo's join-key discipline and say which of the two it is.
+     - A numbered model shim must survive a **no-argument** run: the generic
+       driver (`scripts/cfb_models.sh` and its twins) invokes every shim bare,
+       so an argparse `required=True` subcommand exits 2 in production. Give it
+       a harmless default (`status`: load + print the bundle, exit 0).
+     - Reviewer-suggested provenance (write the training frame next to the
+       artifacts) collides with `--promote`: a 1.3M-row parquet lands in the
+       tracked bundle. Persist it content-addressed in the gitignored cache and
+       record path + sha256 + rows in the meta instead.
+
    - **CodeRabbit shortcuts** (post as a top-level PR comment):
      `@coderabbitai resolve` resolves all of its own comments at once;
      `@coderabbitai review` triggers a re-review after you push fixes. Use these
