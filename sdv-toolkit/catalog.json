@@ -1,5 +1,5 @@
 {
-  "version": "0.9.6",
+  "version": "0.11.0",
   "entries": [
     {
       "name": "sdv-data-pipeline",
@@ -308,6 +308,35 @@
         "sdv-issue-triage",
         "sdv-python-reviewer",
         "sdv-r-reviewer"
+      ]
+    },
+    {
+      "name": "sdv-review-pr",
+      "kind": "skill",
+      "purpose": "Review one pull request in any SDV or saiemgilani repo: failure-path, test and environment ledgers first, then contracts, security and domain depth; verified findings with failure scenarios; posting needs confirmation.",
+      "archetypes": [
+        "all"
+      ],
+      "phases": [
+        "context",
+        "materialize-head",
+        "claims",
+        "load-references",
+        "review-passes",
+        "verify",
+        "report",
+        "post"
+      ],
+      "dispatches": [
+        "sdv-python-reviewer",
+        "sdv-r-reviewer",
+        "sdv-parity-reviewer",
+        "sdv-model-reviewer",
+        "sdv-docs-reviewer",
+        "sdv-dataset-coverage-auditor"
+      ],
+      "hands_off_to": [
+        "sdv-learn"
       ]
     },
     {
