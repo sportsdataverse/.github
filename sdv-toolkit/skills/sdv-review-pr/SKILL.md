@@ -20,7 +20,7 @@ review only after merging).
 
 | Tier | Action | Authorization |
 |---|---|---|
-| 0 | Read the PR, export the head to a scratch tree, run local gates with outward paths cut (Phase 5), write the report | Autonomous |
+| 0 | Read the PR, export the head to a scratch tree, run local gates inside the sandbox (Phase 5; maintainer PRs only), write the report | Autonomous |
 | 1 | Post a review or inline comments, request changes, approve, label, push a fix, merge | **Explicit confirmation, per PR** |
 
 Never approve your own PR (post a COMMENT review). Never push to a contributor's
@@ -108,7 +108,9 @@ Mixed PRs load the union. Load `references/false-positives.md` before Phase 6.
 Verify blocks in the references write the PR diff as `git diff origin/main...HEAD`; in
 an exported tree use `diff.patch` or `gh pr diff <N> -R <o/r> --name-only`. Run tests
 with the repo's own CI command (copy it from `tests.yml`, including markers such as
-`-m "not archive"`), prefixed `env -u VIRTUAL_ENV` so a global venv isn't picked up.
+`-m "not archive"`). Any verify command that **executes PR code** (pytest, vitest,
+`R CMD check`, a CLI, a replay script) runs through `scripts/sandbox.sh` per Phase 5;
+read-only commands (`git`, `gh api`, `grep`) do not need it.
 
 ## Phase 4 — Review passes (in this order; each fills a report section)
 
@@ -180,20 +182,34 @@ very large PRs, so nothing else will have read them.
 
 ## Phase 5 — Verify every finding
 
-**Before running any PR code — tests, mutations, replays, CLIs — cut its outward
-paths.** The droplet's `gh` is logged in and `.Renviron` holds real tokens; a
-publisher test with its fix reverted can upload to a production release tag.
+**PR code never runs with access to secrets or the network.** Reviews run as root on
+the production droplet, next to `~/.Renviron`, `/root/.sdv-*-key`,
+`/etc/sdv-db/sdv-db.env`, `gh`/ssh credentials, and a live network. Test code can
+read an absolute path or open a socket, and a publisher test with its fix reverted can
+upload to a production release. Clearing env vars or shimming `gh` stops neither.
+
+| PR author | Running its code |
+|---|---|
+| Maintainer (saiemgilani, akeaswaran, sportsdataverse members) | Only inside `scripts/sandbox.sh` |
+| Outside contributor, fork, or bot | **Never on the droplet.** Review statically; if execution is essential, ask first, then run in `docker run --rm --network none -v "$T":/w:ro …` |
 
 ```sh
-export GH_CONFIG_DIR="$(mktemp -d)" GH_TOKEN= GITHUB_TOKEN= GITHUB_PAT= SDV_GH_TOKEN=
-mkdir -p "$T/.shim" && printf '#!/bin/sh\necho "BLOCKED during review: gh $*" >&2; exit 97\n' > "$T/.shim/gh" \
-  && chmod +x "$T/.shim/gh" && export PATH="$T/.shim:$PATH"
+bash <this-skill-dir>/scripts/sandbox.sh --self-test          # once per session: must print "self-test PASSED"
+(cd "$T" && env -u VIRTUAL_ENV uv sync --frozen)              # install dependencies OUTSIDE (network needed)
+bash <this-skill-dir>/scripts/sandbox.sh "$T" -- .venv/bin/python -m pytest -q   # run INSIDE
 ```
 
-Never invoke publish, upload, push, deploy, purge, or ingest entry points, never
-source `.Renviron`, and keep live-test toggles (`SDV_PY_LIVE_TESTS`, …) unset. A test
-that fails with exit 97 or `BLOCKED` touched an outward path — that is a finding
-(U-TEST-1: tests must mock it), not a reason to lift the block.
+`sandbox.sh` (bubblewrap) cuts the network, hides `/root`, `/home`, and
+`/etc/sdv-db` behind empty mounts, re-exposes only the uv toolchain read-only, starts
+from a minimal environment (no tokens), and makes only `$T` writable. It refuses to run
+without `bwrap` — when that happens, review statically. Install dependencies before
+entering; installation itself is the one step that needs the network, so on a
+contributor PR, read `pyproject.toml`/`package.json` build hooks before installing.
+
+Inside the sandbox never invoke publish, upload, push, deploy, purge, or ingest entry
+points, and keep live-test toggles (`SDV_PY_LIVE_TESTS`, …) unset. A test that fails
+on a network or credential error touched an outward path — that is a finding
+(U-TEST-1: tests must mock it), not a reason to leave the sandbox.
 
 For each candidate:
 1. Re-read the lines at the head SHA (a finding against already-fixed code is the most

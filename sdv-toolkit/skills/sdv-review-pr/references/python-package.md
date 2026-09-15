@@ -77,9 +77,13 @@ and bot triage for your own PR → `sdv-ship`.
   explicit and non-recursive, so a bundled file in a new directory doesn't ship unless
   listed. Consumers never use `PYTHONPATH=$SDV_PY_DIR`.
 - **PY-13** `[major]` CI never exercises the 3.9 floor (`requires-python >=3.9`, jobs
-  run 3.13.2). Runtime-evaluated PEP 604/585 annotations or `match` need the
-  `from __future__ import annotations` import. **Do not** ask to remove that import —
-  bots have demanded it in ~15 PRs; the repo's own docs contradict each other.
+  run 3.13.2). PEP 604/585 syntax **in annotations** needs
+  `from __future__ import annotations` (it defers annotation evaluation — nothing
+  else); the same syntax evaluated at runtime (`isinstance(x, int | None)`, a type
+  alias assigned outside an annotation) still fails on 3.9 with the import present. A
+  `match` statement is a **syntax error on 3.9 regardless of any import** — it needs
+  3.9-compatible control flow or a raised floor. **Do not** ask to remove the future
+  import — bots have demanded it in ~15 PRs; the repo's own docs contradict each other.
 - **PY-14** `[major]` Live tests sit on the right gate: `stats.nba.com`/`stats.wnba.com`
   → `@skip_if_no_nba_stats_live` (`SDV_PY_NBA_STATS_LIVE=1`), never
   `@skip_if_no_live` (they hang the macOS job). The live job skips PRs — a

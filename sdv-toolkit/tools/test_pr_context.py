@@ -8,6 +8,7 @@ tripwire that matches house style (a setext `=======` heading, a spawn-context
 pool) teaches the reviewer to ignore it.
 """
 
+import os
 import pathlib
 import re
 import sys
@@ -402,28 +403,45 @@ class FileSignals(unittest.TestCase):
             frules([f("python/espn_proxy.py", "added")], "game-on-paper-app"),
         )
 
-    def test_toolkit_change_without_version_bump(self):
-        self.assertIn("TK-1", frules([f("sdv-toolkit/skills/sdv-ship/SKILL.md")]))
+    def test_toolkit_change_needs_an_actual_version_bump(self):
+        skill = f("sdv-toolkit/skills/sdv-ship/SKILL.md")
+        bump = dict(
+            f("sdv-toolkit/.claude-plugin/plugin.json"),
+            patch='@@ -1,3 +1,3 @@\n-  "version": "0.10.0",\n+  "version": "0.11.0",',
+        )
+        # Sourcery on dotfiles#15: a touched plugin.json is not a bump.
+        metadata_only = dict(
+            f("sdv-toolkit/.claude-plugin/plugin.json"),
+            patch='@@ -4 +4 @@\n-  "description": "a",\n+  "description": "b",',
+        )
+        self.assertIn("TK-1", frules([skill]))
+        self.assertNotIn("TK-1", frules([skill, bump]))
+        self.assertIn("TK-1", frules([skill, metadata_only]))
+
+    def test_new_skill_without_catalog_row(self):
+        new_skill = f("sdv-toolkit/skills/sdv-new/SKILL.md", "added")
+        bump = dict(
+            f("sdv-toolkit/.claude-plugin/plugin.json"), patch='+  "version": "0.12.0",'
+        )
+        self.assertIn("TK-1", frules([new_skill, bump]))
         self.assertNotIn(
-            "TK-1",
-            frules(
-                [
-                    f("sdv-toolkit/skills/sdv-ship/SKILL.md"),
-                    f("sdv-toolkit/.claude-plugin/plugin.json"),
-                ]
-            ),
+            "TK-1", frules([new_skill, bump, f("sdv-toolkit/catalog.json")])
         )
 
 
 class CallerCandidates(unittest.TestCase):
-    def test_entry_points_only_and_never_removed_files(self):
+    def test_entry_points_including_deleted_and_renamed_from_names(self):
         files = [
             f("scripts/daily_nba_stats_python_processor.sh"),
             f("python/nba_03_reshape.py"),
             f(
                 "python/nba_data_build/reshape/cli.py"
             ),  # package internals: callers are imports
-            f("scripts/old_driver.sh", "removed"),
+            f("scripts/old_driver.sh", "removed"),  # surviving callers of it dangle
+            dict(
+                f("python/nhl_data_19_publish.py", "renamed"),
+                previous_filename="python/nhl_data_03_publish.py",
+            ),
             f("R/espn_nba_01_pbp_creation.R"),
             f("README.md"),
         ]
@@ -432,15 +450,95 @@ class CallerCandidates(unittest.TestCase):
             [
                 "daily_nba_stats_python_processor.sh",
                 "nba_03_reshape.py",
+                "old_driver.sh",
+                "nhl_data_19_publish.py",
+                "nhl_data_03_publish.py",
                 "espn_nba_01_pbp_creation.R",
             ],
         )
+        self.assertIn("nhl_data_03_publish", pc.module_candidates(files))
 
-    def test_missing_checkouts_yield_no_callers_rather_than_an_error(self):
-        self.assertEqual(
-            pc.find_callers("no-such-repo", "main", ["x.sh"], sdv_root="/nonexistent"),
-            {},
+    def test_gone_paths_cover_deletions_and_renames(self):
+        files = [
+            f("scripts/a.sh", "removed"),
+            dict(f("python/new.py", "renamed"), previous_filename="python/old.py"),
+            f("python/kept.py"),
+        ]
+        self.assertEqual(pc.gone_paths(files), {"scripts/a.sh", "python/old.py"})
+
+    def test_missing_checkout_is_reported_unchecked_not_empty(self):
+        hits, unchecked = pc.find_callers(
+            "no-such-repo", "main", ["x.sh"], sdv_root="/nonexistent"
         )
+        self.assertEqual(hits, {})
+        self.assertIn("no local checkout", unchecked)
+
+
+class GitLookupFailures(unittest.TestCase):
+    """CodeRabbit on .github#27 / Sourcery on dotfiles#15: a failed git lookup must
+    read "not checked", never "none" or "no callers"."""
+
+    @classmethod
+    def setUpClass(cls):
+        import shutil, subprocess, tempfile
+
+        if not shutil.which("git"):
+            raise unittest.SkipTest("git not available")
+        cls.root = tempfile.mkdtemp()
+        repo = pathlib.Path(cls.root) / "demo-data"
+        (repo / "scripts").mkdir(parents=True)
+        (repo / "python").mkdir()
+        (repo / "python" / "demo_data_19_publish.py").write_text("print(1)\n")
+        (repo / "scripts" / "daily.sh").write_text("python -m demo_data_03_publish\n")
+        run = lambda *a: subprocess.run(
+            ["git", "-C", str(repo), *a], check=True, capture_output=True
+        )
+        run("init", "-q")
+        run("-c", "user.email=t@t", "-c", "user.name=t", "add", ".")
+        run("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "init")
+        cls.repo = repo
+        cls.git = staticmethod(run)
+
+    @classmethod
+    def tearDownClass(cls):
+        import shutil
+
+        shutil.rmtree(cls.root, ignore_errors=True)
+
+    def test_missing_base_ref_is_none_not_an_empty_result(self):
+        # No origin/main exists in this repo: ls-tree and grep both fail.
+        self.assertIsNone(
+            pc.local_module_refs("demo-data", "main", [], "", sdv_root=self.root)
+        )
+        hits, unchecked = pc.find_callers(
+            "demo-data", "main", ["daily.sh"], sdv_root=self.root
+        )
+        self.assertEqual(hits, {})
+        self.assertIn("origin/main", unchecked)
+
+    def test_available_base_ref_still_finds_the_dangling_stage(self):
+        # Positive control: with the ref present the same repo yields the finding.
+        head = subprocess_out(["git", "-C", str(self.repo), "rev-parse", "HEAD"])
+        self.git("update-ref", "refs/remotes/origin/main", head)
+        try:
+            dangling = pc.local_module_refs(
+                "demo-data", "main", [], "", sdv_root=self.root
+            )
+            self.assertEqual([d["module"] for d in dangling], ["demo_data_03_publish"])
+            hits, unchecked = pc.find_callers(
+                "demo-data", "main", ["demo_data_19_publish.py"], sdv_root=self.root
+            )
+            self.assertIsNone(unchecked)
+        finally:
+            self.git("update-ref", "-d", "refs/remotes/origin/main")
+
+
+def subprocess_out(cmd):
+    import subprocess
+
+    return subprocess.run(
+        cmd, check=True, capture_output=True, text=True
+    ).stdout.strip()
 
 
 class ModuleRefs(unittest.TestCase):
@@ -464,10 +562,14 @@ class ModuleRefs(unittest.TestCase):
     def test_module_candidates_only_package_roots(self):
         files = [
             f("python/nhl_data_build/season.py"),
-            f("tests/test_season.py"),
-            f("python/old.py", "removed"),
+            f(
+                "tests/test_season.py"
+            ),  # not under a package root: never a module candidate
+            f(
+                "python/old.py", "removed"
+            ),  # deleted: its surviving callers are the lead
         ]
-        self.assertEqual(pc.module_candidates(files), ["nhl_data_build.season"])
+        self.assertEqual(pc.module_candidates(files), ["nhl_data_build.season", "old"])
 
     def test_renamed_stage_is_dangling(self):
         # fastRhockey-nhl-data: stage 03 -> 19 rename left `-m nhl_data_03_publish` behind.
@@ -503,6 +605,44 @@ class ModuleRefs(unittest.TestCase):
             ("a.yml:5", "python -u -m nhl_data_01_fetch"),
         ]
         self.assertEqual(pc.dangling_module_refs(lines, self.TREE), [])
+
+
+class Sandbox(unittest.TestCase):
+    """scripts/sandbox.sh must stay valid, and must refuse rather than run open."""
+
+    SCRIPT = (
+        pathlib.Path(__file__).resolve().parent.parent
+        / "skills" / "sdv-review-pr" / "scripts" / "sandbox.sh"
+    )
+
+    def test_shell_syntax(self):
+        import subprocess
+
+        r = subprocess.run(["bash", "-n", str(self.SCRIPT)], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_refuses_without_bwrap_instead_of_running_unsandboxed(self):
+        import subprocess, tempfile
+
+        with tempfile.TemporaryDirectory() as empty_bin, tempfile.TemporaryDirectory() as tree:
+            # PATH with bash's own dir only via absolute bash; no bwrap reachable.
+            r = subprocess.run(
+                ["/bin/bash", str(self.SCRIPT), tree, "--", "/bin/echo", "RAN"],
+                capture_output=True, text=True, env={"PATH": empty_bin},
+            )
+        self.assertNotEqual(r.returncode, 0)
+        self.assertNotIn("RAN", r.stdout)
+
+    @unittest.skipUnless(
+        os.environ.get("SDV_SANDBOX_SELFTEST") == "1",
+        "set SDV_SANDBOX_SELFTEST=1 on a host with bwrap to run the leak probe",
+    )
+    def test_self_test_passes(self):
+        import subprocess
+
+        r = subprocess.run(["bash", str(self.SCRIPT), "--self-test"], capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("self-test PASSED", r.stdout)
 
 
 class RuleIdsResolve(unittest.TestCase):

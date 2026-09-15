@@ -387,6 +387,7 @@ SCAN_COMMENTS_TOO = {"U-SEC-1", "U-GIT-1", "U-GIT-4"}
 
 
 def scan_diff(diff_text, repo_name=None):
+    """Line signals for every added line of a unified diff (comments skip non-security rules)."""
     signals = []
     for path, ln, text in parse_diff(diff_text):
         is_comment = bool(COMMENT_LINE.match(text))
@@ -415,12 +416,34 @@ ENTRY_POINT = re.compile(
 )
 
 
-def caller_candidates(files):
-    """Basenames of changed, still-existing entry points worth a caller search."""
-    out = []
+def gone_paths(files):
+    """Paths that no longer exist at the head: deletions and the old side of renames."""
+    gone = set()
     for f in files:
-        name = f["filename"]
-        if f.get("status") == "removed" or not ENTRY_POINT.match(name):
+        if f.get("status") == "removed":
+            gone.add(f["filename"])
+        if f.get("previous_filename"):
+            gone.add(f["previous_filename"])
+    return gone
+
+
+def _touched_paths(files):
+    """Every path a caller might still reference: head names plus renamed-from names."""
+    for f in files:
+        yield f["filename"]
+        if f.get("previous_filename"):
+            yield f["previous_filename"]
+
+
+def caller_candidates(files):
+    """Basenames of changed entry points worth a caller search.
+
+    Deleted entry points and the old names of renamed ones are included on purpose:
+    a surviving caller of a name that is gone is exactly the dangling reference.
+    """
+    out = []
+    for name in _touched_paths(files):
+        if not ENTRY_POINT.match(name):
             continue
         base = pathlib.PurePosixPath(name).name
         if base not in out:
@@ -438,15 +461,32 @@ def module_name(path):
 
 
 def module_candidates(files):
-    """Dotted module names of changed Python files, for `-m` and import callers."""
+    """Dotted module names of changed Python files (incl. deleted/renamed-from names)."""
     out = []
-    for f in files:
-        if f.get("status") == "removed":
-            continue
-        mod = module_name(f["filename"])
-        if mod and re.match(r"^(python|src)/", f["filename"]) and mod not in out:
+    for name in _touched_paths(files):
+        mod = module_name(name)
+        if mod and re.match(r"^(python|src)/", name) and mod not in out:
             out.append(mod)
     return out
+
+
+def _git(local, *args, timeout=120):
+    """Run a read-only git command; stdout on success, None on failure or timeout.
+
+    `git grep` exits 1 when nothing matches -- that is a successful empty search.
+    """
+    try:
+        p = subprocess.run(
+            ["git", "-C", str(local), *args],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if p.returncode == 0 or (args[:1] == ("grep",) and p.returncode == 1):
+        return p.stdout
+    return None
 
 
 # Any interpreter-ish token: `python3`, `uv run python`, `"${PYBIN}"`, `$PY`.
@@ -482,36 +522,27 @@ def local_module_refs(repo_name, base_ref, files, diff_text, sdv_root="/mnt/sdv_
     if not (local / ".git").exists():
         return None
     ref = "origin/%s" % base_ref
-    tree = subprocess.run(
-        ["git", "-C", str(local), "ls-tree", "-r", "--name-only", ref],
-        capture_output=True,
-        text=True,
-        timeout=120,
-    ).stdout.splitlines()
-    removed = {f["filename"] for f in files if f.get("status") == "removed"}
-    paths = (set(tree) - removed) | {
+    tree = _git(local, "ls-tree", "-r", "--name-only", ref)
+    grep = _git(
+        local,
+        "grep",
+        "-n",
+        "-E",
+        r"[Pp][Yy][^ ]* .*-m ",
+        ref,
+        "--",
+        ".github/workflows",
+        "scripts",
+        "ops",
+        timeout=60,
+    )
+    if tree is None or grep is None:
+        return None  # ref missing/unfetched or git failed: "not checked", never "none"
+    paths = (set(tree.splitlines()) - gone_paths(files)) | {
         f["filename"] for f in files if f.get("status") != "removed"
     }
-    changed = {f["filename"] for f in files}
-    grep = subprocess.run(
-        [
-            "git",
-            "-C",
-            str(local),
-            "grep",
-            "-n",
-            "-E",
-            r"[Pp][Yy][^ ]* .*-m ",
-            ref,
-            "--",
-            ".github/workflows",
-            "scripts",
-            "ops",
-        ],
-        capture_output=True,
-        text=True,
-        timeout=60,
-    ).stdout.splitlines()
+    changed = set(_touched_paths(files))
+    grep = grep.splitlines()
     lines = []
     for g in grep:
         parts = g[len(ref) + 1 :].split(":", 2)
@@ -533,26 +564,33 @@ def find_callers(
     Searches origin/<base> (the callers that exist before this PR). Hits inside files
     the PR changes are skipped -- those are already in the diff. `modules` are dotted
     names, also searched under python/ so `-m pkg.mod` and imports are found.
+
+    Returns (hits, unchecked): `unchecked` names why the repo search could not run
+    (no checkout, missing base ref, git failure) so the report never reads an
+    unrun search as "no callers".
     """
     hits = {}
+    unchecked = None
     changed = set(changed)
     local = pathlib.Path(sdv_root) / repo_name
     orch = pathlib.Path(sdv_root) / "sdv-orch" / "sdv_orch" / "registry.py"
+    ref = "origin/%s" % base_ref
+    if not (local / ".git").exists():
+        unchecked = "no local checkout at %s" % local
+    elif _git(local, "rev-parse", "--verify", "--quiet", ref + "^{commit}") is None:
+        unchecked = "%s is not available in %s (fetch it)" % (ref, local)
     terms = [(c, False) for c in candidates[:25]] + [(m, True) for m in modules[:25]]
     for base, is_module in terms:
         found = []
-        if (local / ".git").exists():
-            ref = "origin/%s" % base_ref
+        if unchecked is None:
             where = [".github/workflows", "scripts", "ops", "RUNBOOK.md", "CLAUDE.md"]
             if is_module:
                 where.append("python")
-            p = subprocess.run(
-                ["git", "-C", str(local), "grep", "-n", "-F", base, ref, "--", *where],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-            for line in p.stdout.splitlines():
+            out = _git(local, "grep", "-n", "-F", base, ref, "--", *where, timeout=60)
+            if out is None:
+                unchecked = "git grep failed in %s" % local
+                out = ""
+            for line in out.splitlines():
                 parts = line[len(ref) + 1 :].split(":", 2)
                 path = parts[0]
                 if path in changed or path.endswith("/" + base) or path == base:
@@ -568,7 +606,7 @@ def find_callers(
                     )
         if found:
             hits[base] = found[:12]
-    return hits
+    return hits, unchecked
 
 
 # --------------------------------------------------------------------------- #
@@ -691,8 +729,37 @@ def file_signals(files, repo_name=""):
         )
 
     tk = changed(r"(^|/)(skills/[^/]+/|agents/[^/]+\.md$|hooks/)")
-    if tk and not changed(r"plugin\.json$"):
-        add("TK-1", "toolkit surfaces changed without a plugin.json version bump", tk)
+    if tk:
+        plugin = [
+            f
+            for f in files
+            if re.search(r"(^|/)\.claude-plugin/plugin\.json$", f["filename"])
+        ]
+        # A touched plugin.json is not a bump: require an added "version" line.
+        bumped = any(
+            re.search(r'(?m)^\+\s*"version"\s*:', f.get("patch") or "") for f in plugin
+        )
+        if not bumped:
+            add(
+                "TK-1",
+                "toolkit surfaces changed without a plugin.json version bump"
+                + (" (plugin.json touched, version line unchanged)" if plugin else ""),
+                tk,
+            )
+        new_entries = [
+            f["filename"]
+            for f in files
+            if f.get("status") == "added"
+            and re.search(
+                r"(^|/)(skills/[^/]+/SKILL\.md|agents/[^/]+\.md)$", f["filename"]
+            )
+        ]
+        if new_entries and not changed(r"(^|/)catalog\.json$"):
+            add(
+                "TK-1",
+                "new skill/agent without a catalog.json row (CI rejects it)",
+                new_entries,
+            )
 
     new_fixtures = [
         f["filename"]
@@ -778,6 +845,7 @@ def review_proof(reviews, head_sha, unresolved_threads):
 
 
 def gh(*args, check=True):
+    """Run `gh` read-only; stdout, raising on failure when `check` is set."""
     p = subprocess.run(["gh", *args], capture_output=True, text=True, timeout=180)
     if check and p.returncode != 0:
         raise RuntimeError(
@@ -787,11 +855,13 @@ def gh(*args, check=True):
 
 
 def gh_json(*args, check=True):
+    """Run `gh` and parse its stdout as JSON (None for empty output)."""
     out = gh(*args, check=check)
     return json.loads(out) if out.strip() else None
 
 
 def gh_paginated(endpoint):
+    """GET a paginated REST endpoint and flatten every page into one list."""
     out = gh("api", "--paginate", "--slurp", endpoint)
     pages = json.loads(out) if out.strip() else []
     return [item for page in pages for item in page]
@@ -803,6 +873,7 @@ nodes{isResolved isOutdated path line comments(first:1){nodes{author{login} body
 
 
 def fetch_threads(owner, name, number):
+    """All review threads on a PR via GraphQL, following pagination."""
     threads, cursor = [], None
     while True:
         args = [
@@ -828,6 +899,7 @@ def fetch_threads(owner, name, number):
 
 
 def headline(body):
+    """One-line title for a review comment (bold title first, severity prefixed)."""
     body = re.sub(r"<details>.*?</details>", " ", body or "", flags=re.S)
     body = re.sub(r"<[^>]+>", " ", body)
     severity = re.search(r"(Critical|Major|Minor|Trivial|Nitpick)", body)
@@ -845,6 +917,7 @@ def headline(body):
 
 
 def gather(repo, number):
+    """Collect everything `context.md` reports for one PR; returns (context, diff)."""
     owner, name = repo.split("/", 1)
     fields = "number,title,url,state,isDraft,author,baseRefName,headRefName,headRefOid,isCrossRepository,mergeable,mergeStateStatus,additions,deletions,changedFiles,body,reviewDecision,statusCheckRollup,mergedAt,commits,labels"
     pr = gh_json("pr", "view", str(number), "-R", repo, "--json", fields)
@@ -893,6 +966,13 @@ def gather(repo, number):
         for c in pr.get("commits", [])
     )
     trailer_hits = [ln for ln in commit_msgs.splitlines() if AI_TRAILER.search(ln)]
+    callers, callers_unchecked = find_callers(
+        name,
+        pr["baseRefName"],
+        caller_candidates(files),
+        changed=list(_touched_paths(files)),
+        modules=module_candidates(files),
+    )
 
     return {
         "repo": repo,
@@ -946,13 +1026,8 @@ def gather(repo, number):
         ],
         "commit_trailer_hits": trailer_hits,
         "caller_terms": caller_candidates(files) + module_candidates(files),
-        "callers": find_callers(
-            name,
-            pr["baseRefName"],
-            caller_candidates(files),
-            changed=[f["filename"] for f in files],
-            modules=module_candidates(files),
-        ),
+        "callers": callers,
+        "callers_unchecked": callers_unchecked,
         "dangling_module_refs": local_module_refs(name, pr["baseRefName"], files, diff),
         "file_signals": file_signals(files, name),
         "signals": [asdict(s) for s in scan_diff(diff, name)],
@@ -969,6 +1044,7 @@ def gather(repo, number):
 
 
 def render_markdown(ctx):
+    """Render the gathered context as the `context.md` a reviewer reads first."""
     p = ctx["pr"]
     rp = ctx["review_proof"]
     lines = [
@@ -1079,7 +1155,12 @@ def render_markdown(ctx):
         % (base, "\n".join("  - `%s`" % h.replace("`", "'") for h in hits))
         for base, hits in ctx.get("callers", {}).items()
     ]
-    if not ctx.get("callers"):
+    if ctx.get("callers_unchecked") and ctx.get("caller_terms"):
+        lines.append(
+            "- repo search NOT CHECKED: %s -- only the sdv-orch registry was searched"
+            % ctx["callers_unchecked"]
+        )
+    elif not ctx.get("callers"):
         if ctx.get("caller_terms"):
             lines.append(
                 "- searched `%s`: no callers outside this PR's own files. NOT an all-clear --"
@@ -1093,7 +1174,9 @@ def render_markdown(ctx):
     lines += ["", "## `python -m` targets that resolve to no module (PROD-5)", ""]
     dangling = ctx.get("dangling_module_refs")
     if dangling is None:
-        lines.append("- not checked (no local checkout)")
+        lines.append(
+            "- NOT CHECKED (no local checkout, origin/<base> unavailable, or git failed)"
+        )
     else:
         lines += [
             "- `%s` in `%s` -- `%s`"
@@ -1116,6 +1199,7 @@ def render_markdown(ctx):
 
 
 def main(argv=None):
+    """CLI entry: gather one PR's context and write context.{md,json} and diff.patch."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("pr", help="N, owner/repo#N, or a PR URL")
     ap.add_argument("-R", "--repo", help="owner/repo when pr is a bare number")
