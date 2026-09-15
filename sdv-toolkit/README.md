@@ -26,6 +26,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-port` | Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures. |
 | `/sdv-python-performance-optimization` | Profile and optimize Python code with cProfile and memory profilers to find and fix performance bottlenecks. |
 | `/sdv-regen-docs` | Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release. |
+| `/sdv-review-pr` | Review one pull request in any SDV or saiemgilani repo: failure-path, test and environment ledgers first, then contracts, security and domain depth; verified findings with failure scenarios; posting needs confirmation. |
 | `/sdv-ship` | Land a change: regen docs, preflight, commit, push, bot-triage, codegen gate, merge, stack retarget, release. |
 | `/sdv-triage` | Sweep open issues and PRs across the org, classify each, act on tiers 0-1, propose tiers 2-4. |
 | `/sdv-working-in-notebooks` | Reproducible Jupyter/JupyterLab/marimo/Colab notebook workflows for exploration, analysis, documentation, and teaching. |
