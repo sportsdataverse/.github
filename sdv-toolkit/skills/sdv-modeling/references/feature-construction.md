@@ -265,16 +265,21 @@ gain, not a p-value on one test.
 
 | | CV gain |
 |---|---|
-| best null candidate (of 55 scored) | **0.00013** |
+| best null candidate (all 165 scored) | **0.00005** |
 | `down / ydstogo` | **0.0070** |
 | `game_seconds_remaining × wp` | 0.0041 |
 | `score_differential × game_seconds_remaining` | 0.0030 |
 
-Here the winners cleared the null bar by 20–50×, and the best candidate's gain on
-the 2024 season (**0.0094**) exceeded its CV screen — real signal, not selection
-optimism. That will not always hold: **when screened gains sit within a few
-multiples of the null maximum, treat them as noise** and confirm on a later
-season before keeping anything.
+The null maximum depends on the permutation draw — 0.00005 here, 0.00013 on a
+second draw — but stays about two orders of magnitude below the useful gains. The winners
+cleared it by more than 50×, and the best candidate's gain on the 2024 season
+(**0.0094**) exceeded its CV screen: real signal, not selection optimism.
+
+**The bar screens out noise, not weak columns.** 58 of the 165 real candidates
+cleared it: 17 by at least 0.001 AUC, the other 41 by less. Many of the survivors
+share columns, so cluster them (§3) as well. Rank what survives, keep the few with material gains, and confirm
+them on a later season. When screened gains sit within a few multiples of the
+null maximum, treat them as noise.
 
 ```python
 import numpy as np
@@ -295,11 +300,13 @@ def pairwise_candidates(X, names):
     return np.column_stack(cols), labels
 
 
-def screen_against_null(score_gain, X, names, seed=0, null_every=3):
+def screen_against_null(score_gain, X, names, seed=0):
     """Keep candidates whose gain beats the best gain of permuted-input candidates.
 
     score_gain(extra_column) -> CV gain over the base set, using the grouped
-    splitter. Returns (kept [(label, gain)], null_max).
+    splitter. Returns (kept [(label, gain)], null_max). Every null candidate is
+    scored -- all three operators -- because the null maximum is only a bar if it
+    ranges over the same kinds of candidate as the real set.
     """
     rng = np.random.default_rng(seed)
     real, labels = pairwise_candidates(X, names)
@@ -307,7 +314,7 @@ def screen_against_null(score_gain, X, names, seed=0, null_every=3):
     for c in range(Xp.shape[1]):
         Xp[:, c] = rng.permutation(Xp[:, c])
     null, _ = pairwise_candidates(Xp, names)
-    null_gains = [score_gain(null[:, k]) for k in range(0, null.shape[1], null_every)]
+    null_gains = [score_gain(null[:, k]) for k in range(null.shape[1])]
     null_max = float(np.max(null_gains)) if null_gains else 0.0
     gains = [score_gain(real[:, k]) for k in range(real.shape[1])]
     kept = sorted(((labels[k], g) for k, g in enumerate(gains) if g > null_max),
@@ -387,9 +394,16 @@ def oof_upstream(make_model, X, y, groups, X_test, n_splits=5):
     return oof, test
 
 
-def assert_upstream_not_in_sample(train_score, oof_score, y, metric, max_gap=0.02):
-    """Fail when the score fed downstream is far better than its OOF counterpart."""
+def assert_upstream_not_in_sample(train_score, oof_score, y, metric, max_gap=0.02,
+                                  higher_is_better=True):
+    """Fail when the score fed downstream is far better than its OOF counterpart.
+
+    `higher_is_better=False` for losses (log loss, Brier), so an in-sample score
+    with a lower loss still registers as a positive gap.
+    """
     gap = metric(y, train_score) - metric(y, oof_score)
+    if not higher_is_better:
+        gap = -gap
     assert gap <= max_gap, (
         f"upstream score is {gap:.3f} better on training rows than out-of-fold: "
         "it was scored in-sample and will leak into the downstream fit"
@@ -485,6 +499,8 @@ real data, predict a later slice that deliberately has no history in front of it
 and assert structure before quality.
 
 ```python
+from collections import Counter
+
 import numpy as np
 
 
@@ -496,16 +512,21 @@ def assert_predict_rows_preserved(predict_fn, requested, id_col, max_ratio=3.0,
     better), compared with the cross-validated error of the same model.
     """
     ids, preds = predict_fn(requested)
-    want = requested[id_col].to_numpy()
-    missing = np.setdiff1d(want, np.asarray(ids))
-    assert len(preds) == len(want) and missing.size == 0, (
-        f"{len(want)} rows requested, {len(preds)} predictions returned; "
-        f"{missing.size} ids missing, e.g. {missing[:3].tolist()} -- "
-        "history-based features were computed on the prediction slice"
+    want = Counter(requested[id_col].to_list())
+    got = Counter(np.asarray(ids).tolist())
+    missing, extra = want - got, got - want      # multiset differences
+    assert len(ids) == len(preds) == requested.height and not missing and not extra, (
+        f"{requested.height} rows requested, {len(ids)} ids and {len(preds)} "
+        f"predictions returned; missing {list(missing.elements())[:3]}, extra "
+        f"{list(extra.elements())[:3]} -- history-based features were computed "
+        "on the prediction slice, or rows were duplicated"
     )
     preds = np.asarray(preds, float)
     assert np.isfinite(preds).all(), "non-finite predictions: a feature is NaN at predict time"
     if score_fn is not None:
+        assert y_true is not None and cv_error is not None, (
+            "score_fn needs y_true and cv_error to compare against"
+        )
         err = score_fn(y_true, preds)
         assert err <= max_ratio * cv_error, (
             f"predict-time error {err:.4f} is over {max_ratio}x the CV error "
