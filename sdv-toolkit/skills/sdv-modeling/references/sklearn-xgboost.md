@@ -1340,3 +1340,8 @@ what that looks like when it isn't caught before shipping).
 - Why a component that ran without error still produced a wrong dataset,
   outside the sklearn/XGBoost surface specifically →
   `sdv-modeling/references/failure-modes.md`.
+- Out-of-fold predictions, early stopping on an inner split rather than the
+  scored fold, stacking and blending without meta-leakage, and seed spread →
+  `sdv-modeling/references/competition.md` §3–§6. Note: on XGBoost ≥ 2
+  `early_stopping_rounds` is a **constructor** argument — verified on 3.3.0,
+  passing it to `.fit()` raises `TypeError`.
