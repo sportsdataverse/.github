@@ -233,6 +233,10 @@ the sklearn API if you want more than the split method above.
 
 ### Spreads/totals → MAE vs the closing market line
 
+> Market *probabilities* rather than lines — removing the vig, comparing a model
+> to the market on identical games, which line existed at decision time,
+> placeholder odds, closing-line value and staking — are in `betting-markets.md`.
+
 `mae(a, b)` is the shared helper (`metrics.py:87-104`). Sign convention must
 be handled explicitly, not assumed: `cfb_prediction/README.md` documents
 `close_spread_home` as the sportsbook **home** spread (negative = home

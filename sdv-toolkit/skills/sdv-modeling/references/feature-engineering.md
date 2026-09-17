@@ -9,6 +9,13 @@
 Which release dataset feeds which feature family is `data-sources.md`. This
 file is about the *transformation*, not the source.
 
+**Before trusting any feature built here, run the input signal audit in
+`competition.md` §1** — shuffled-target, single-feature leak ceiling, a non-zero
+True-count for every boolean, sources that precede the event, adversarial
+validation, and cross-fold duplicates. It applies with or without a leaderboard.
+For tracking-data features the frame-of-reference checks come first:
+`tracking-data-cv.md` §2–§3.
+
 ---
 
 ## 1. Cyclical encoding — clock, season-week, and day-of-year
@@ -101,6 +108,10 @@ other fold. That is `sklearn-xgboost.md` §A2.
 ---
 
 ## 4. Feature selection: the substrate is usually low-dimensional
+
+> Selection *mechanics* that do not lie — gain vs held-out permutation, permuting
+> one-hot blocks together, the season-constant blind spot that only ablation
+> catches, and null importance — are in `competition.md` §7.
 
 Measured, on our own data: CFB pregame went 15.14 -> 12.97 MAE against a 12.27
 market ceiling, and **60 features beat 244** — the predictive substrate is

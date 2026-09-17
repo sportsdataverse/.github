@@ -67,6 +67,28 @@ than through fold hygiene. None of that survives a generic restatement.
 | Notebook workflows (Jupyter/marimo/Colab) | `sdv-working-in-notebooks` | `sdv-toolkit:sdv-working-in-notebooks` |
 | Charts and plots — chart choice, palettes, accessibility | the `dataviz` skill (external) | `dataviz` |
 | Bayesian workflow in R — priors, pooling, diagnostics | `r-skills:r-bayes` (external) | `r-skills:r-bayes` |
+| XGBoost / LightGBM API detail — parameters, native API, categorical handling | `xgboost-lightgbm` (external, MIT) | `xgboost-lightgbm` |
+| scikit-learn API reference | `scikit-learn` (external, K-Dense, MIT) or `scikit-learn-best-practices` (external, Apache-2.0) | `scikit-learn` |
+| Kaggle *platform* operations — credentials, datasets, notebooks, submissions, discussions | `kaggle` (external, MIT) | `kaggle` |
+| Computer-vision pipeline structure — detection, tracking, NMS, batching | `computer-vision-pipeline` (external, MIT) | `computer-vision-pipeline` |
+| Roboflow deployment choice and Workflow execution | `roboflow-inference` (external, Apache-2.0) | `roboflow-inference` |
+
+**Caveats on the external ML and CV skills (surveyed 2026-09-16).** They are API
+references, not sports-modeling guidance, and each was scored against a
+twelve-point competition checklist — best external 7/12, against this skill's
+10/12 before `competition.md` was added. Where they conflict with this skill, this
+skill wins, because the conflicts are defects:
+
+- `xgboost-lightgbm`'s competition pipeline shuffles a `StratifiedKFold` (leaks
+  within-game rows across folds), early-stops on the fold it scores, and passes
+  `early_stopping_rounds` to `.fit()`, which **raises `TypeError` on XGBoost
+  3.3.0**. Its stacking recipe builds test meta-features from a full refit. Use
+  `competition.md` §3–§5.
+- `computer-vision-pipeline`'s letterbox inverse omits the padding offset
+  (**420 px** off on 1920×1080), its frame-skipping advice breaks sports tracking,
+  and it calls YOLOv8 current. Use `tracking-data-cv.md` §4 and §6.
+- `kaggle` has no modeling guidance at all; it is the right tool for the platform
+  and the wrong one for the model.
 
 ---
 
