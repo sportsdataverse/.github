@@ -72,27 +72,36 @@ join, an index that encodes the label — so the model scores well on *any* targ
 **Why invisible.** A good score is the expected outcome; nobody investigates
 success.
 
-**Detection test.** Permute the target *within groups* and rerun the exact
-validation path. With the signal destroyed the score must fall to chance. If it
-does not, the leak is in the pipeline, not the features.
+**Detection test.** Permute the target **globally** — across the whole frame —
+and rerun the exact validation path with the *original* groups. With the signal
+destroyed the score must fall to chance. If it does not, the leak is in the
+pipeline, not the features.
+
+**Permute globally, never within groups.** Within-group permutation is the
+intuitive choice and it is wrong: it preserves each group's target rate, so any
+honest group-level feature (team strength, a player's season rate) still predicts
+the permuted target, and a clean pipeline "fails". Measured on a grouped frame
+with one honest group-level feature under `GroupKFold`: real target **0.733** AUC,
+within-group permuted **0.734** (a false alarm), global permutation **0.487**
+(chance). With one row per group, within-group permutation is also a pure no-op.
 
 ```python
 import numpy as np
 
-def assert_shuffled_target_is_chance(score_fn, X, y, groups, chance, tol, seed=0):
+def assert_shuffled_target_is_chance(score_fn, X, y, groups, chance, tol,
+                                     n_repeats=3, seed=0):
     """score_fn(X, y, groups) -> validation score through the REAL pipeline.
 
-    Permutes y within each group so group-level structure survives while the
-    feature/target link is destroyed. A score that stays above chance means the
-    pipeline, not the features, is supplying the signal.
+    Permutes y GLOBALLY, destroying every feature/target link including group
+    base rates, while `groups` is passed unchanged so the splitter still runs.
+    Averages a few permutations so one lucky shuffle cannot pass or fail it.
+    A score that stays above chance means the pipeline -- not the features --
+    is supplying the signal.
     """
     rng = np.random.default_rng(seed)
-    y_perm = np.asarray(y).copy()
-    groups = np.asarray(groups)
-    for g in np.unique(groups):
-        idx = np.flatnonzero(groups == g)
-        y_perm[idx] = rng.permutation(y_perm[idx])
-    s = score_fn(X, y_perm, groups)
+    y = np.asarray(y)
+    s = float(np.mean([score_fn(X, rng.permutation(y), groups)
+                       for _ in range(n_repeats)]))
     assert abs(s - chance) <= tol, (
         f"shuffled-target score {s:.4f} is not chance ({chance}±{tol}): the "
         "pipeline leaks the label independent of the features"
@@ -167,11 +176,25 @@ that **every consumed source row's frame/timestamp precedes the target event's
 start** — on real data, not a fixture.
 
 ```python
+import polars as pl
+
 def assert_sources_precede_event(consumed, event_start, key="event_id"):
     """consumed: rows [key, source_frame] actually used to build the feature.
-    event_start: rows [key, start_frame] for the event being predicted."""
-    j = consumed.join(event_start, on=key, how="inner")
-    bad = j.filter(j["source_frame"] >= j["start_frame"])
+    event_start: rows [key, start_frame] for the event being predicted.
+
+    Checks EVERY consumed row. An inner join would silently drop rows with no
+    matching event, and a null frame makes the comparison null, which a filter
+    also drops -- either way the guard passes without verifying those rows.
+    """
+    j = consumed.join(event_start, on=key, how="left")
+    unmatched = j.filter(pl.col("start_frame").is_null())
+    assert unmatched.height == 0, (
+        f"{unmatched.height} consumed rows have no event start (missing key or "
+        "null start_frame): their ordering cannot be verified"
+    )
+    no_frame = j.filter(pl.col("source_frame").is_null())
+    assert no_frame.height == 0, f"{no_frame.height} consumed rows have a null source_frame"
+    bad = j.filter(pl.col("source_frame") >= pl.col("start_frame"))
     assert bad.height == 0, (
         f"{bad.height} feature rows consume a source at or after the event start"
     )
@@ -329,7 +352,11 @@ def oof_fit_predict(X, y, groups, X_test, params, n_splits=5, inner_frac=0.15,
                                replace=False))
         is_inner = np.isin(groups[tr], list(inner))
         fit_idx, stop_idx = tr[~is_inner], tr[is_inner]
-        model = XGBClassifier(**params, early_stopping_rounds=50, random_state=seed)
+        # Merge rather than pass twice: a caller's params containing random_state
+        # or early_stopping_rounds would otherwise raise a duplicate-keyword
+        # TypeError at construction.
+        model = XGBClassifier(**{**params, "early_stopping_rounds": 50,
+                                 "random_state": seed})
         model.fit(X[fit_idx], y[fit_idx],
                   eval_set=[(X[stop_idx], y[stop_idx])], verbose=False)
         oof[va] = model.predict_proba(X[va])[:, 1]
@@ -570,6 +597,8 @@ def sign_test(fold_deltas):
     """fold_deltas: per-fold (candidate - baseline), higher is better."""
     d = np.asarray(fold_deltas)
     wins, n = int((d > 0).sum()), int((d != 0).sum())
+    if n == 0:                      # tied on every fold: no evidence either way
+        return 0, 0, 1.0
     return wins, n, binomtest(wins, n, 0.5, alternative="greater").pvalue
 ```
 

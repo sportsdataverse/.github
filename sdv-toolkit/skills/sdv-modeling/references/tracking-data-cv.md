@@ -212,8 +212,8 @@ import cv2
 def homography_reprojection_error(img_pts, court_pts, holdout=2):
     """Fit on all but `holdout` landmarks; report error on the held-out ones.
 
-    Units are the court units (feet/metres). Rejects a fit whose held-out error
-    is not small relative to the feature it will feed.
+    Units are the court units (feet/metres). Returns the maximum held-out error;
+    the caller compares it with a tolerance chosen for the feature it will feed.
     """
     img, court = np.asarray(img_pts, np.float32), np.asarray(court_pts, np.float32)
     assert len(img) >= 4 + holdout, "need >= 4 fit landmarks plus held-out ones"
@@ -250,6 +250,8 @@ def assert_consistent_sampling(frame_times, expected_dt, max_gap_frac=0.02,
                                gap_factor=1.5):
     """frame_times: timestamps (s) for ONE track, sorted. Flags dropped frames."""
     dt = np.diff(np.asarray(frame_times, float))
+    if dt.size == 0:            # 0-1 frames: no steps to check (mean of [] is NaN)
+        return
     gaps = dt > expected_dt * gap_factor
     assert gaps.mean() <= max_gap_frac, (
         f"{gaps.mean():.1%} of steps exceed {gap_factor}x the frame interval: "
@@ -298,6 +300,8 @@ from scipy.signal import savgol_filter
 def velocity_from_positions(xy, t, window_s=0.4):
     """Smoothed velocity (units/s) for one gap-free, uniformly sampled segment."""
     xy, t = np.asarray(xy, float), np.asarray(t, float)
+    if len(xy) < 3:             # polyorder=2 needs a window of at least 3
+        raise ValueError(f"segment has {len(xy)} samples; need >= 3 for velocity")
     dt = float(np.median(np.diff(t)))
     w = max(5, int(round(window_s / dt)) | 1)          # odd, >= 5
     w = min(w, len(xy) - (1 - len(xy) % 2))            # fit inside the segment

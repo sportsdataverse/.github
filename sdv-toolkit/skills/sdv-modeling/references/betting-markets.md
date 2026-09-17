@@ -163,8 +163,17 @@ import polars as pl
 
 def assert_prices_as_of(features, prices, key="game_id",
                         decision_col="decision_ts", price_col="price_ts"):
-    """Every price joined into features must be timestamped before the decision."""
+    """Every price joined into features must be timestamped before the decision.
+
+    A null timestamp makes the comparison null, and a filter drops null rows --
+    so an unstamped price would pass silently. Require both stamps first.
+    """
     j = features.join(prices, on=key, how="inner")
+    unstamped = j.filter(pl.col(price_col).is_null() | pl.col(decision_col).is_null())
+    assert unstamped.height == 0, (
+        f"{unstamped.height} joined rows lack a price or decision timestamp: "
+        "their timing cannot be verified"
+    )
     late = j.filter(pl.col(price_col) > pl.col(decision_col))
     assert late.height == 0, (
         f"{late.height} rows use a price observed after the decision time — "
@@ -265,7 +274,8 @@ looks strong until the drawdown.
 - **Bet fractional Kelly** (a quarter to a half). The asymmetry is severe:
   under-betting costs a little growth, over-betting destroys it. Simulated with
   `kelly_growth` below — a model that says 58% on even-money bets whose true rate
-  is 53% (5 points overconfident) — median log growth per bet was **+0.0015** at
+  is 53% (5 points overconfident) — log growth per bet, median across 40 simulated
+  paths, was **+0.0015** at
   quarter Kelly, **+0.0014** at half, **−0.0036 at full Kelly**, and **−0.035 at
   double**. The overconfidence is enough to turn *full* Kelly negative.
 - **Calibrate first** (`metrics-and-gates.md`). Kelly consumes a probability, so
@@ -279,7 +289,9 @@ Simulate growth with the true probability deliberately worse than the model's.
 
 ```python
 def kelly_growth(p_true, p_model, decimal_odds, fraction, n_bets=2000, seed=0):
-    """Median log-bankroll growth per bet, betting on a model that may be wrong."""
+    """Mean log-bankroll growth per bet along ONE simulated path, betting on a
+    model that may be wrong. Take the median over seeds for a stable estimate
+    (the figures above are the median of 40 paths of 4,000 bets)."""
     rng = np.random.default_rng(seed)
     f = fraction * kelly_fraction(p_model, decimal_odds)
     wins = rng.random(n_bets) < p_true
