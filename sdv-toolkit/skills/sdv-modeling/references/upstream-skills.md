@@ -72,6 +72,11 @@ than through fold hygiene. None of that survives a generic restatement.
 | Kaggle *platform* operations — credentials, datasets, notebooks, submissions, discussions | `kaggle` (external, MIT) | `kaggle` |
 | Computer-vision pipeline structure — detection, tracking, NMS, batching | `computer-vision-pipeline` (external, MIT) | `computer-vision-pipeline` |
 | Roboflow deployment choice and Workflow execution | `roboflow-inference` (external, Apache-2.0) | `roboflow-inference` |
+| SHAP API — explainers, maskers, plots, multi-output explanations | `shap` (external, K-Dense, MIT) | `shap` |
+| statsmodels API — GLMs, discrete choice, diagnostics including VIF, time series | `statsmodels` (external, K-Dense, MIT) | `statsmodels` |
+| scikit-survival API — Cox, survival forests, competing risks, concordance/IBS | `scikit-survival` (external, K-Dense, MIT) | `scikit-survival` |
+| Bayesian model comparison — ArviZ LOO, Pareto k, stacking and pseudo-BMA weights | `model-evaluation` (external, PyMC Labs, no licence file) | `model-evaluation` |
+| scikit-learn custom estimators, nested CV, `TargetEncoder`, stacking estimators | `sklearn-advanced` (external, MIT) | `sklearn-advanced` |
 
 **Caveats on the external ML and CV skills (surveyed 2026-09-16).** They are API
 references, not sports-modeling guidance, and each was scored against a
@@ -89,6 +94,27 @@ skill wins, because the conflicts are defects:
   and it calls YOLOv8 current. Use `tracking-data-cv.md` §4 and §6.
 - `kaggle` has no modeling guidance at all; it is the right tool for the platform
   and the wrong one for the model.
+
+**Second survey (2026-09-17)** — feature construction, interactions, redundancy,
+generated features, model outputs as inputs, pipeline testing. 50 registry
+queries, 51 skills read. None covers those topics in depth;
+`feature-construction.md` was written instead, measured on NFL play-by-play.
+
+- The five rows above are API references. `sklearn-advanced`'s stacking and
+  target-encoding examples do not pass groups to the splitter — use
+  `competition.md` §5 and `feature-engineering.md` §2 for the method.
+- `model-evaluation` has no licence file in its repository: reference it, do
+  not copy from it.
+- **`probabl-ai/skills` (BSD-3, the scikit-learn/skrub maintainers) is the best
+  of the survey and is deliberately *not* installed globally.** Its
+  `build-ml-pipeline` triggers on any code that declares loaders or
+  preprocessing, requires skrub DataOps instead of `sklearn.Pipeline`, pixi, and
+  all execution through `scratch/` files — it would take over every SDV polars +
+  uv session. Its two best ideas are adapted in `feature-construction.md` §1 (the
+  fitted-statistic litmus test) and §8 (the predict-time row-count smoke test).
+  For a standalone skrub project, install it into that project only.
+- `featuretools` 1.31.0 fails to import in a fresh environment (`woodwork`
+  imports `pkg_resources`, removed in setuptools 81); pin `setuptools<81`.
 
 ---
 

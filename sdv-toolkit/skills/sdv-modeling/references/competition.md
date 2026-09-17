@@ -402,12 +402,15 @@ def early_stopping_optimism(score_fn_naive, score_fn_inner):
 
 **Trap 1 — train/test meta-feature mismatch.** Train meta-features come from
 `cross_val_predict` (out-of-fold), but test meta-features come from base models
-**refit on the full training set**. Full-refit predictions are systematically
-more confident than OOF ones, so the meta-learner is fit on one distribution and
-applied to another.
+**refit on the full training set**. The two can come from different
+distributions — a refit on more data is often more confident than a fold model —
+so the meta-learner is fit on one and applied to the other.
 
 **Fix.** Test meta-features are the **fold-averaged** predictions of the same
-fold models (§3 returns exactly that).
+fold models (§3 returns exactly that). Measured on NFL pass prediction
+(`feature-construction.md` §6), fold-averaging beat the refit (upstream 2024 AUC
+0.806 vs 0.799) even though the refit was *not* more confident there — averaging
+five models is a gain in its own right.
 
 **Trap 2 — the meta-learner scored on the rows it learned from.** Fitting the
 stacker on all OOF rows and reporting its score on those rows.
@@ -468,6 +471,10 @@ gains. It does not fix bias, leakage, or a wrong splitter.
 ---
 
 ## 7. Feature selection that does not lie
+
+> Correlated columns split importance between them (measured 5.5× on a
+> near-copy); cluster them first — `feature-construction.md` §3. Generated
+> candidates need a permuted-input null bar — §5 there.
 
 Three rules, each learned on real data. The companion detail — the low-dimensional
 substrate, why 60 features beat 244 — is in `feature-engineering.md` §4.
