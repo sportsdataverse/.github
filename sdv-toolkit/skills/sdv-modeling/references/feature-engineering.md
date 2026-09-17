@@ -16,6 +16,11 @@ validation, and cross-fold duplicates. It applies with or without a leaderboard.
 For tracking-data features the frame-of-reference checks come first:
 `tracking-data-cv.md` §2–§3.
 
+**Combining, transforming or generating columns** — which learners benefit,
+correlated columns, interactions, generated candidates against a null bar,
+model outputs as inputs, missingness and the predict-time smoke test — is
+`feature-construction.md`, measured on real NFL play-by-play.
+
 ---
 
 ## 1. Cyclical encoding — clock, season-week, and day-of-year
