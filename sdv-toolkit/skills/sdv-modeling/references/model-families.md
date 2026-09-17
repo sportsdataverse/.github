@@ -49,8 +49,14 @@ A "winner" chosen on a 0.005 gap is chosen on noise — the rule
 behind the best model at literally zero fit cost and full interpretability. On a
 sports problem where the substrate is close to one-dimensional — and CFB pregame
 already showed 60 features beating 244 (`prior-art.md`) — **the honest baseline
-is a GLM, and a boosted model must beat it by more than its own fold spread to
-justify itself.**
+is a GLM, and a boosted model must beat it by more than the PAIRED spread of
+the per-fold difference to justify itself.** Not the fold spread of either
+model's level: the folds' own difficulty is shared by both models and cancels
+in the paired delta (`metrics-and-gates.md` §1b; measured on hoopsq the level
+sd across games was 0.0262 and the paired sd 0.0054). And the GLM must be a
+*tuned* GLM: hoopsq's baseline at a fixed `C = 1` scored 0.6665 where a
+CV-tuned ridge on the same columns scored **0.6429** — trees still won by
+~0.014, but the claimed margin had been double that.
 
 Bagging families (RF, ExtraTrees) trail by 0.03–0.04. That is consistent across
 sports problems with smooth, largely monotone relationships: boosting fits the
@@ -115,9 +121,27 @@ conservative because early rows in each permutation see fewer prior observations
 D-I), players (~5,000/season) — pass it to CatBoost as a `cat_feature` rather
 than hand-rolling target encoding: it removes the self-leak and you cannot forget
 it. **Add `has_time=True` with chronologically sorted input** whenever the panel
-is time-ordered, which for us it always is. When you must hand-roll (XGBoost, a
-GLM), the expanding train-only mean plus shrinkage in `feature-engineering.md`
-§2 is the contract.
+is time-ordered. When you must hand-roll (XGBoost, a GLM), the expanding
+train-only mean plus shrinkage in `feature-engineering.md` §2 is the contract.
+
+**Two cases where the ordered statistic is not the answer:**
+
+- **Not every panel is time-ordered.** A fixed corpus of games validated by
+  leave-one-game-out (hoopsq: 10 games, 1,324 shots) has no meaningful
+  `has_time` order — the rows of a game are simultaneous for this purpose and
+  the games are exchangeable. There the group split is the contract, not the
+  row order; `has_time=True` on an arbitrary order is a random permutation
+  with a misleading name. Say which regime the panel is in.
+- **Per-entity n and an external prior.** An ordered statistic learns each
+  entity from its own in-corpus rows. With a median of a few shots per shooter
+  it learns almost nothing, and an **out-of-sample external aggregate** (a
+  season-total rate with the evaluation units removed, `sklearn-xgboost.md`
+  §A2) is the right tool instead — hoopsq's in-corpus shooter random effect
+  added 0.0000, its penalized id block scored worse than no id, and the
+  external prior was the only entity term that did not hurt (≈ 0). CatBoost
+  ordered target statistics were never run there (`one_hot_max_size` swallowed
+  the id), so the comparison is owed; the rule is: check the per-entity count
+  before choosing between an in-model encoding and an external prior.
 
 ---
 
@@ -161,16 +185,23 @@ baseline by more than the fold spread.
 
 ## 6. How to choose, in order
 
-1. **Fit the GLM first.** It is free and it sets the bar every other model must
-   clear by more than its own fold spread.
-2. **If the entity id is the feature, reach for CatBoost.** The ordered
-   statistic is the whole reason.
+1. **Fit the GLM first, and tune its penalty.** It is free and it sets the bar
+   every other model must clear by more than the paired per-fold spread (§1).
+2. **If the entity id is the feature and entities have enough rows, reach for
+   CatBoost.** The ordered statistic is the whole reason; with a handful of
+   rows per entity, an external out-of-sample prior does more (§3).
 3. **If you are sweeping, use LightGBM.** Ten sweeps at 0.1s beat one at 5.9s.
 4. **If it ships, use XGBoost** — persistence, TreeSHAP, monotone constraints
    and the objectives are all already wired into this ecosystem.
 5. **If a dependency is unacceptable, use HistGradientBoosting.**
-6. **Report the spread with the number**, always. A model that wins by less than
-   a fold standard deviation has not won.
+6. **Report the paired spread with the number**, always, seed-averaged for any
+   stochastic learner. A model that wins by less than the paired per-fold
+   standard deviation (or the seed sd) has not won — and "XGBoost wins" is
+   only a claim when the other families had the same tuning budget (hoopsq:
+   ~30 XGBoost variants against one configuration per other family; LightGBM
+   tied on the same columns, 0.6328 vs 0.6320, and beat it on another set).
+   Name the result at the level the evidence supports — "boosted trees", not
+   one library.
 
 ## See also
 

@@ -162,10 +162,55 @@ citation.
 document mentions expected points, win probability, completion probability,
 or expected yards after catch.
 
-## xG (hockey/soccer)
+## xG / shot quality (hockey, soccer, basketball xFG)
 
-**Not covered.** No source document discusses hockey or soccer expected-goals
-modeling.
+**Hockey and soccer xG** are not covered by the APM corpus this file was built
+from; the shipped NHL/PWHL xG heads and their gates live in `sports/hockey.md`,
+and the published-work anchor is `literature.md` ("xG and shot value").
+
+**Basketball xFG / shot quality** is covered, from hoopsq (SkillCorner
+tracking, 10 games, 1,324 shots, 2026-09-17 re-audit) and from the shipped
+sdv-py modules (`prior-art.md` §1). The recipe, in the order the evidence
+supports it:
+
+1. **Target and unit.** Per-shot make probability (`made` ∈ {0,1}), scored by
+   log loss with a Murphy split (`metrics-and-gates.md` §1); xPTS is
+   `p × shot value` *downstream*, field-goal only — free throws are a separate
+   expectation, and mixing them shifts every residual (+0.130 per shot).
+2. **The release frame is the boundary.** Define the shot at the release
+   frame, verify it (hoopsq: ball rising on 96.6% of shots, within 3 ft of the
+   shooter on 93.6%, identical for makes and misses), and compute every
+   feature **causally up to that frame** — forward-only smoothing, no centred
+   window, no RTS pass over the post-release flight (`tracking-data-cv.md` §7).
+3. **Features that carry signal, in order:** distance and angle (seam behind
+   the rim), closest-defender distance and closing speed *at release*, ball
+   height at release (a shot-type proxy — AUC 0.626 pooled, ≈ 0.5 within
+   distance strata, so not a leak), catch-and-shoot vs off-dribble, help
+   distance. Lags, "wait before catch" and fatigue features **lost** at this
+   n (+0.0104, +0.0043); a static Voronoi free-space feature never made a
+   winning set, and the arrival-time version (Rolland et al. 2020) is untested.
+4. **Learner.** Depth-2 boosted trees with monotone constraints built by
+   name (distance −, defender distance +, closing speed −, help distance +);
+   a CV-tuned ridge is the honest baseline (0.6429 vs trees ≈ 0.629). LightGBM
+   tied XGBoost; the claim is "boosted trees".
+5. **Shooter term.** An in-corpus random effect adds nothing at a few shots
+   per shooter; an **external season aggregate with the evaluation games
+   subtracted exactly** is the right prior, shrunk by `n / (n + k)`, and worth
+   ≈ 0 at n = 1,324 — state it as a limitation, not a feature
+   (`sklearn-xgboost.md` §A2). sdv-py's `nba_shot_value.shooter_talent` shrinks
+   a *different* quantity (make-above-expected per shooter, `k = 70.1` fitted
+   split-half); the two constants are not comparable.
+6. **Augmentation.** Court reflection in-fold with left/right vocabulary
+   swapped, **with a duplicate-without-reflection control** — reflection beyond
+   duplication ≈ −0.002 (`competition.md` §8).
+7. **Validation.** Leave-one-game-out, paired per-game deltas, seed-averaged
+   (3–5 seeds), threads pinned, sign-flip + `t_{G−1}` interval; report a model
+   confidence set, not one row (`resampling.md` §1b, `metrics-and-gates.md`
+   §1b). Shuffled-target control must fall to the constant rate.
+8. **Benchmark.** Against a vendor shot-quality feed the open model trailed by
+   0.022 log loss, all of it resolution (0.0254 vs 0.0339), none of it
+   calibration — and a local + vendor stack beat the vendor alone (0.6065 vs
+   0.6068), the same result Bajons & Harringer 2025 report for soccer xG.
 
 ## Possession engines (NBA / NCAA possession boundaries)
 

@@ -100,6 +100,36 @@ The failure this catches: a WP model that degrades to near-base-rate still
 posts a passable Brier, and a Brier-only gate lets it through. Gate reliability
 and resolution separately, or gate Brier *and* a separation statistic.
 
+**Brier plus a calibration table is still not enough when two models differ
+only in resolution.** Both can be well calibrated and the table looks the same
+for each; only the split says what the gap is made of, and therefore whether
+recalibration can close it. hoopsq (2026-09-17), open model vs the vendor
+benchmark it trailed by 0.023 log loss: reliability **0.0018 vs 0.0021**
+(both calibrated; the vendor slightly less so, over-predicting ~20 makes,
+z −1.20), resolution **0.0254 vs 0.0339**, uncertainty 0.2439 (same holdout).
+The benchmark's edge is resolution, so no recalibration of the open model
+closes it. **Report the three terms for every model in a comparison**, not
+just the one being gated.
+
+```python
+def murphy_split(y, p, n_bins=10):
+    """Brier = reliability - resolution + uncertainty, on quantile bins of p."""
+    import numpy as np
+    y, p = np.asarray(y, float), np.asarray(p, float)
+    edges = np.quantile(p, np.linspace(0, 1, n_bins + 1))
+    b = np.clip(np.searchsorted(edges, p, side="right") - 1, 0, n_bins - 1)
+    ybar = y.mean()
+    rel = res = 0.0
+    for k in range(n_bins):
+        m = b == k
+        if m.any():
+            rel += m.mean() * (p[m].mean() - y[m].mean()) ** 2
+            res += m.mean() * (y[m].mean() - ybar) ** 2
+    unc = ybar * (1 - ybar)
+    return {"reliability": rel, "resolution": res, "uncertainty": unc,
+            "brier": float(np.mean((p - y) ** 2))}
+```
+
 #### Expected calibration error — the scalar to pair with the table
 
 The calibration table (`metrics.py:107-143`) is the honest artifact; ECE is its
@@ -358,9 +388,17 @@ the oracle. Three rules that are specific to us:
 - **The oracle is not a validation set.** Tuning against the Torvik/FPI/market
   comparison until the correlation clears the floor is fitting the gate. The
   oracle is the acceptance test, used once per candidate.
-- **A tuning run that improves the metric by less than its own fold-to-fold
-  spread has found nothing.** Report the spread alongside the point estimate,
-  or a re-run with a different seed will "beat" the champion.
+- **A tuning run that improves the metric by less than its own noise has found
+  nothing — and the noise is the PAIRED spread, not the fold spread.** An
+  earlier version of this bullet said "fold-to-fold spread". Fold spread is the
+  spread of a *level* across folds and mostly reflects how the folds differ
+  from each other; two models scored on the same folds share that, and it
+  cancels in their difference. hoopsq (2026-09-17): the winner's per-game log
+  loss had sd **0.0262** across 10 games, while the paired winner-minus-reference
+  delta had sd **0.0054** — a real −0.0028 gain would be "inside the fold
+  spread" by a factor of ten and is in fact 9/10 games. Compare paired per-fold
+  deltas (`resampling.md` §1), report *their* spread and the seed spread
+  (`competition.md` §6), and let a re-run with a different seed "beat" nothing.
 - **Tooling.** `optuna` (TPE, pruning) is the practical default and `sklearn`'s
   `HalvingRandomSearchCV` needs no extra dependency. Whichever you use, pass the
   **group-aware splitter** into the search's `cv=` — a tuner with a shuffled
@@ -370,6 +408,85 @@ the oracle. Three rules that are specific to us:
   60 features beat 244 — the substrate is roughly one-dimensional
   (`prior-art.md`, CFB higher-order models). No hyperparameter search recovers
   that.
+
+### Choosing among many entries: the winner is a family, not a row
+
+A leaderboard of dozens of CV entries picks its winner with the same noise it
+scores. Three checks, all measured on hoopsq's 56 eligible entries
+(2026-09-17):
+
+- **Nest the selection.** Choose the winner on G − 1 groups and score it on
+  the held-out group, for each group. If the same entry wins every fold, the
+  selection optimism is zero (hoopsq: 10 of 10 folds, nested 0.62917 = reported
+  0.62917). If it does not, the nested score is the honest one.
+- **Report a model confidence set, not a single name.** Against the top five,
+  Holm-adjusted p ≥ 0.35 and max-T p ≥ 0.24; a game-bootstrap put the named
+  winner at rank 1 only **52%** of the time (24% and 15% for two siblings) and
+  the top-5 at rank 1 98.6% of the time. The two best entries differed by
+  0.0006, below the seed sd of 0.0008. The result is "mirror-augmented depth-2
+  boosted trees", not one row. With few groups, Holm cannot resolve anything
+  (floor 2^−G, `resampling.md` §1b) — use max-T or the confidence set.
+- **Seed variance is part of the entry, not the run.** Score every stochastic
+  entry on 3–5 seeds and pin threads (`competition.md` §6); hoopsq's committed
+  seed 0 was the winner's worst of six.
+- **The selection criterion must be the model's use.** A shrinkage constant
+  chosen on a 10-game residual and reused for a season aggregate (k = 10 at the
+  grid edge; k = 50–100 up to 0.0007 better) was tuned for a different quantity.
+
+```python
+def nested_selection_optimism(scores_by_entry_group):
+    """scores_by_entry_group: {entry: array of per-group losses (lower better)}.
+    Returns (nested_mean, naive_best_mean): choose on G-1 groups, score on the held-out."""
+    import numpy as np
+    names = list(scores_by_entry_group)
+    M = np.vstack([scores_by_entry_group[n] for n in names])       # entries x groups
+    G = M.shape[1]
+    held = []
+    for g in range(G):
+        others = np.delete(M, g, axis=1).mean(axis=1)
+        held.append(M[int(np.argmin(others)), g])
+    return float(np.mean(held)), float(M.mean(axis=1).min())
+```
+
+### Intervals on "actual − expected" must be predictive, not posterior-only
+
+A player-level residual — points above expectation, makes above xFG — is a
+difference between an *outcome* and a *model*. An interval that holds the
+outcomes fixed and draws only from the model's posterior answers "how sure is
+the model of its own expectation", not "could this residual be noise". hoopsq
+(2026-09-17): posterior-only intervals for 13 shooters with ≥ 15 attempts had a
+median SE of **0.123** against a sampling SE of **0.274** — **2.1× too narrow** —
+and the report's caption said few intervals excluded zero when **10 of 13** did
+(1 of 13 with the sampling SE). Two more traps in the same figure: the units
+mismatched (free-throw-inclusive points against field-goal-only expectation,
+shifting every player by +0.130 per shot), and the shooter's own random effect
+sat inside the expectation, absorbing the skill being measured.
+
+- Draw `y_rep ~ Bernoulli(p)` (or the model's likelihood) per posterior draw and
+  form the interval on `mean(y_rep − p)`; that is the null band a real residual
+  must clear.
+- Match the units of the outcome and the expectation exactly, and assert the
+  pooled residual is ≈ 0 (hoopsq: −0.0004 per shot FG-only, +0.130 mixed).
+- Exclude the entity's own effect from its expectation, or the residual is
+  shrunk toward zero by construction.
+
+```python
+def predictive_residual_interval(p_draws, n_rep=1, q=(0.025, 0.975), seed=0):
+    """p_draws: (n_draws, n_events) posterior make probabilities for ONE entity.
+    Returns the interval on mean(y_rep - p) -- what a residual must clear to be
+    called skill. Posterior-only intervals (outcomes held fixed) are too narrow."""
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    y_rep = rng.random(p_draws.shape) < p_draws
+    return tuple(np.quantile((y_rep - p_draws).mean(axis=1), q))
+
+
+def assert_units_match(outcome, expectation, tol=0.02):
+    """Pooled actual - expected must be ~0; a shift means the units disagree."""
+    import numpy as np
+    gap = float(np.mean(np.asarray(outcome, float) - np.asarray(expectation, float)))
+    assert abs(gap) <= tol, f"pooled residual {gap:+.3f} per event: outcome and expectation are not in the same units"
+```
 
 ### Error analysis by segment is where the real defects surface
 

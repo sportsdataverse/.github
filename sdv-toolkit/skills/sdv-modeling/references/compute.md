@@ -138,10 +138,19 @@ build one, three rules carry over unchanged:
 
 ## 6. Parallelism that actually pays, in order
 
-1. **`n_jobs=-1`** on the estimator. Free.
+1. **`n_jobs=-1`** on the estimator — for a frame large enough to feed it.
+   On a small frame more threads are *slower* and change the number: hoopsq's
+   XGBoost on 1,324 rows was 22% slower at 24 threads than at 1, and the
+   thread count moved log loss by 0.0006 (`sklearn-xgboost.md` §G). Pin a
+   small explicit count and put the parallelism at the next level.
 2. **A process pool over seasons or over sweep configurations.** The natural
    grain: each unit is an independent fit, and cross-season leakage is
    impossible by construction.
+2b. **Check the backend before blaming the hardware.** A PyMC model with no C
+   compiler runs in pure Python without saying so — 1,116 s (34% of a
+   58-minute bake-off) for non-contending entries on hoopsq
+   (`bayesian.md` §6). Assert `pytensor.config.cxx` is set, or use the
+   numpyro sampler.
 3. **Cache the expensive input once.** Most "slow training" here is re-deriving
    the same frame per stage. Stage fingerprints (`tracking.md`) fix that
    properly; a parquet on disk fixes it today.

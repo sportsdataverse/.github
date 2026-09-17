@@ -218,7 +218,13 @@ Procedure:
   MUST-FIX for it.
   Grep: `grep -nE "rolling|_to_date|prior_|last_[0-9]|_elo|cum(sum|_)" <file>` —
   if any feature name matches AND the splitter is `GroupKFold`/`KFold`, flag it.
-  The purge length must be at least the longest lookback the features use.
+  Size the purge by LABEL overlap, exactly as §2 says — not by feature lookback
+  (an earlier version of this line said "at least the longest lookback the
+  features use", contradicting §2; the reference was corrected to match §2 in
+  sdv-modeling 0.13.1). A prior built from an external aggregate is the third
+  case: every evaluation unit must be subtracted from the aggregate, and the
+  assertion is the exact subtraction, not group disjointness
+  (`sklearn-xgboost.md` §A2).
   Note the deliberate exception: a within-play model whose features are all
   same-snap state (EP given down/distance/yardline) has no memory, so
   `GroupKFold` IS correct there. Judge by the feature list, not the sport.
@@ -327,7 +333,12 @@ surfaces this ecosystem ships **default-on**.
   300-game x 150-play panel at ICC 0.5. A cluster bootstrap fixes that, but it
   is one valid method and not the only one: a cluster-robust (sandwich) SE, or a
   mixed model carrying the grouping, is equally acceptable. Flag the ABSENCE of
-  any clustering treatment, never the choice of method.
+  any clustering treatment, never the choice of method. The 8.8x figure is for
+  a LEVEL; a PAIRED model delta on the same rows cancels the game effect
+  (measured ratio 0.86–0.99 on hoopsq, `resampling.md` §1) — do not quote 8.8x
+  against a paired comparison, but still require the cluster unit, because it
+  can flip a borderline claim's significance; with G ≈ 10 clusters, require a
+  sign-flip or t_{G−1} report rather than a percentile bootstrap.
   **A `game_id` column is not itself evidence of clustering** — the frame must
   actually carry repeated rows per group that feed the estimator. Once
   aggregated to one row per game, a row-level resample IS cluster-level and

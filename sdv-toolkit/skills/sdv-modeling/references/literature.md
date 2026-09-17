@@ -5,14 +5,33 @@
 > content was read from the paper, not inferred from its title.
 
 **The corpus is already on your machine.** `Sports-Research-Papers/md/` holds
-**685 markdown-converted papers** (338k lines) — JQAS, MIT Sloan, NESSIS, CMSAC,
-Hudl StatsBomb, plus a `randoms/` tier. Paths below are relative to
-`GitHub-Data/sdv-dev/Sports-Research-Papers/md/`.
+**717 markdown files** (counted 2026-09-17: `find md -name '*.md' | wc -l`;
+436 of them under `library/`) — JQAS, MIT Sloan, NESSIS, CMSAC, Hudl
+StatsBomb, plus a `randoms/` tier. Paths below are relative to
+`GitHub-Data/sdv-dev/Sports-Research-Papers/md/`. Three caveats before you
+count it as 717 papers:
+
+- **Duplicates.** The same paper can appear at the root and under
+  `library/conferences/...` — Body Shots ×3, Bhostgusters ×2, the hot-hand
+  literature ×6 across three distinct papers. Dedupe by title before citing a
+  count or a "N corpus papers" figure.
+- **Empty stubs.** Some conversions produced no text: the file holds only a
+  `> No extractable text — ... scanned/image-only PDF or a slides deck` line
+  (3 files on 2026-09-17, including `2014 Quantifying Shot Quality in the NBA -
+  Second Spectrum.md`, the qSQ deck). A grep hit on the *filename* is not
+  evidence the paper is readable; open it. `grep -rl "No extractable text" md`
+  lists them.
+- **Search `library/` too.** The 2026-09-14 shot-quality synthesis skipped
+  `library/` entirely and missed the three papers most relevant to its
+  question (Bajons & Harringer, Rolland et al., Tenan & Rezai — all under
+  `library/conferences/`). `grep -ril` from `md/` recurses; a glob on the root
+  does not.
 
 Search it before reaching for the web:
 
 ```sh
 grep -ril "adjusted plus-minus" "Sports-Research-Papers/md" | head
+grep -rl "No extractable text" "Sports-Research-Papers/md"     # stubs to skip
 ```
 
 ---
@@ -101,8 +120,13 @@ fourth downs is fit on a non-random sample of game states.
 
 | paper | why it matters here |
 |---|---|
-| `.../2025 - One x G model to rule them all` (Bajons, Harringer) | Cross-competition xG generalization — the question our PWHL/NHL xG split raises. |
-| `2016 spatio temporal analysis for team sports` · `Modeling Player and Team Performance in Basketball - Terner, Franks` | Spatial structure of shot value; the NBA shot-value spine's context. |
+| `library/conferences/Hudl StatsBomb/Research Competitions/2025/2025 - One x G model to rule them all ... Bajons Tobias Harringer` | **Not** a cross-competition generalization paper (an earlier version of this row said so). It **evaluates a vendor's xG** (Hudl-StatsBomb's, 2024/25, five leagues) against binary outcomes with log loss / AUC / calibration, a Poisson-binomial interval on total goals, and residuals by omitted category; finds small feature sets do better with little data; the vendor model wins alone but a **local + vendor stack beats it in all five leagues**. The closest published analogue to any "open model vs shot-quality vendor" comparison — hoopsq reproduced the stacking result (0.6065 vs 0.6068) and the total-makes z-check (open +0.31, vendor −1.20). |
+| `library/conferences/MIT Sloan .../2020/2020 - Characterization of Space and Time-Dependence of 3-Point Shots in Basketball` (Rolland, Vuillemot, Bos, Rivière) | **Tracking-based shot model.** 26,332 SportVU three-point attempts (632 games, 2015-16), release detected from the ball path; catch-and-shoot vs pull-up (36.0% vs 31.5%); defender *free space* defined as time-to-arrive under a velocity-aware occupation model rather than static distance; make rate drops inside ~6 ft or ~0.4 s. The arrival-time free-space feature is the untested idea in hoopsq. |
+| `library/conferences/MIT Sloan .../undated/undated - Player Tracking Facilitates Valid Causal Inference ... Defender Proximity on Scoring` (Tenan, Rezai) | **Causal, not predictive:** propensity-weighted average treatment effect of closest-defender distance on 15,835 ShotTracker NCAA shots (Big 12 + Mountain West, 2020-21). Proximity lowers make probability, more strongly near the rim (interaction), and defender *angle* has no meaningful effect. Supports a monotone `closest_def_dist +` constraint and a distance × contest interaction; questions an approach-angle feature. |
+| `2014 Pointwise Predicting Points and Valuing Decisions` (Cervone, D'Amour, Bornn, Goldsberry) | EPV from optical tracking — the value of a *possession state*, marginalizing over the ball-handler's decisions. Its per-player numbers are situation EPV, **not** shot value; do not cite them as xFG. |
+| `2019 Rao-Blackwellizing field goal percentage - dalygrafstein_jqas_2019` (Daly-Grafstein, Bornn) | Replaces the binary make with the trajectory-implied make probability to cut the variance of FG% — the tracking-side answer to "how many shots before a rate stabilizes". |
+| `2017 Body Shots - Analyzing Shooting Styles in the NBA using Body-Pose Attributes` (×3 copies) | Broadcast-video pose attributes for ~1,500 labelled threes; logistic regression beat random forest on mean average precision (57.1 vs 54.7). Often mis-cited as "~2,300 shots" and "log loss" — read the paper. |
+| `2016 spatio temporal analysis for team sports` (Gudmundsson, Horton) · `Modeling Player and Team Performance in Basketball - Terner, Franks` | General surveys — the first of spatio-temporal methods across invasion sports, the second of basketball performance modelling. Context, not shot models. |
 
 ### Simulation, brackets, season sims
 
@@ -126,7 +150,7 @@ fourth downs is fit on a non-random sample of game states.
 |---|---|
 | Baumer, Matthews & Nguyen (2023), *Big Ideas in Sports Analytics and Statistical Tools for their Investigation*, [arXiv:2301.04001](https://arxiv.org/abs/2301.04001) | The single best survey for this ecosystem: it organizes sports analytics around exactly our four families — **expected value of a game state, win probability, measures of team strength, and betting market data**. Start here for a new sport. |
 | `BradleyTerry2` R package, [CRAN vignette](https://cran.r-project.org/web/packages/BradleyTerry2/vignettes/BradleyTerry.html) | Fits Bradley-Terry logit/probit/cauchit with contest-specific effects (home advantage), by ML, penalized quasi-likelihood, or bias-reduced ML. Note the documented limit: **no tie handling** — `BTm` needs a binary or binomial response, which rules it out unmodified for a sport with draws. |
-| Russell Carleton's stabilization work, summarized at [FanGraphs](https://www.fangraphs.com/blogs/a-new-way-to-look-at-sample-size/) and [Baseball Prospectus](https://www.baseballprospectus.com/news/article/17659/baseball-therapy-its-a-small-sample-size-after-all/) | Split-half reliability, later Cronbach's alpha and Kuder-Richardson 21 for binary events, to find the sample at which a rate stat carries as much signal as noise (conventionally r ≈ 0.7). K-rate stabilizes near 60 PA; HR rate needs 300+. **We have no stabilization analysis anywhere**, which means every per-player rate we publish is served without a minimum-sample caveat. |
+| Russell Carleton's stabilization work, summarized at [FanGraphs](https://www.fangraphs.com/blogs/a-new-way-to-look-at-sample-size/) and [Baseball Prospectus](https://www.baseballprospectus.com/news/article/17659/baseball-therapy-its-a-small-sample-size-after-all/) | Split-half reliability, later Cronbach's alpha and Kuder-Richardson 21 for binary events, to find the sample at which a rate stat carries as much signal as noise (conventionally r ≈ 0.7). K-rate stabilizes near 60 PA; HR rate needs 300+. **Two stabilization analyses now exist:** sdv-py's shot-value spine fits its shooter-talent shrinkage split-half (`nba/nba_shot_value_constants.py`: `split_half_reliability`, `TALENT_SHRINKAGE_K` 70.1 NBA / 60.0 WNBA) and hoopsq's `skill.split_half` does the same on odd- vs even-indexed games. Every *other* per-player rate we publish is still served without a minimum-sample caveat. |
 
 ---
 
@@ -134,9 +158,10 @@ fourth downs is fit on a non-random sample of game states.
 
 Named honestly so nobody mistakes silence for absence:
 
-- **Stabilization applied to our own stats.** The method is cited; the analysis
-  has never been run on SDV data. Until it is, we do not know the minimum
-  possessions/attempts for any published rate.
+- **Stabilization applied to most of our own stats.** It has been run for
+  shooter talent (split-half, `nba_shot_value_constants.py`) and nowhere else;
+  for every other published rate we do not know the minimum possessions or
+  attempts.
 - **Survival/hazard models** (31 corpus papers) — injury, drive continuation,
   career length. No SDV model uses them.
 - **Count and zero-inflated models** (45 corpus papers) — the natural family for

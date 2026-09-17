@@ -94,6 +94,36 @@ def assert_mcmc_healthy(idata, rhat_max=1.01, ess_min=400):
         raise RuntimeError("MCMC did not converge: " + "; ".join(problems))
 ```
 
+**The gate must gate.** A diagnostic that is computed and then ignored is a
+log line. hoopsq (2026-09-17): the threshold was `r_hat < 1.05` (5 of 33 fits
+sat between 1.0101 and 1.0199, which this file's 1.01 rejects), no ESS was
+computed, two chains ran, and the posterior mean was scored on the leaderboard
+*regardless of the gate's outcome*. Call `assert_mcmc_healthy` before the
+posterior is read, and let it raise.
+
+**The fourth check is a posterior predictive check.** Convergence says the
+sampler found the posterior of *this* model; it says nothing about whether the
+model could have generated the data. Draw `y_rep` from the posterior
+predictive, and compare a few statistics that matter for the use — for a
+make-probability model, total makes and makes by zone / contest bucket; for a
+rating model, the game-margin distribution — against the observed values.
+Interval coverage on a held-out group is the same check from the other side:
+a 90% interval should cover about 90% of held-out outcomes. None of this was
+done in hoopsq's Bayesian arm, so its intervals were reported without
+evidence they were intervals.
+
+```python
+def ppc_total(y, p_draws, q=(0.025, 0.975)):
+    """Posterior predictive check on a total: observed sum vs the sum of y_rep.
+    p_draws: (n_draws, n_events). Returns (observed, lo, hi, z)."""
+    import numpy as np
+    rng = np.random.default_rng(0)
+    rep = (rng.random(p_draws.shape) < p_draws).sum(axis=1)
+    lo, hi = np.quantile(rep, q)
+    z = (np.sum(y) - rep.mean()) / rep.std(ddof=1)
+    return float(np.sum(y)), float(lo), float(hi), float(z)
+```
+
 **ArviZ API note (1.3.0).** `az.rhat(idata).to_array()` raises
 `AttributeError: 'DataTree' object has no attribute 'to_array'` — the return
 type changed in ArviZ 1.x. `az.summary(idata)` is the portable route and is what
@@ -131,6 +161,15 @@ range from 3 to 2,000. **Fit it both ways once, require BOTH to clear every gate
 in §2, and among those that pass keep the higher ESS.** Selecting on ESS alone
 would pick a run with more effective draws from a chain set that never converged
 — higher ESS with a failing r_hat is a more confident wrong answer.
+
+**Default for a small-group model, when you cannot afford both fits:
+non-centered.** When the entities have few rows each (hoopsq: 191 shooters
+over 1,324 shots, most with a handful of attempts), the group-level scale is
+small relative to the observation noise by construction and the weak-signal
+row of the table applies. Start non-centered there; measure centered only if
+the entities are well sampled. hoopsq never measured either, which is why its
+r_hat sat in 1.01–1.02 on 5 of 33 fits with nobody able to say whether the
+geometry or the budget was at fault.
 
 ```python
 # centered -- prefer when entities are well sampled
@@ -190,6 +229,22 @@ cannot express.
 `numpyro` + `arviz` is the stack verified for this file (numpyro 0.21, arviz
 1.3, jax 0.11). PyMC is equivalent and slower to install; Stan/`brms` is the R
 route and the local `r-skills:r-bayes` skill covers it.
+
+**PyMC without a C compiler runs the model in pure Python, and it is the
+largest compute sink you will not see in the code.** PyTensor falls back to
+its Python backend when `cxx` is empty (a fresh Windows box, a bare
+container), silently and without a warning at fit time. hoopsq (2026-09-17):
+the Bayesian arm took **1,116 s — 34% of the whole bake-off** — for entries
+that never contended, with `pytensor.config.cxx == ""` and neither `numpyro`
+nor `jax` installed. Check the backend before the first fit and either install
+a compiler, or sample with `nuts_sampler="numpyro"`, which needs none:
+
+```python
+def assert_pytensor_compiles():
+    """Pure-Python PyTensor is 10-100x slower and prints nothing about it."""
+    import pytensor
+    assert pytensor.config.cxx, "pytensor.config.cxx is empty: install a C++ compiler or sample with nuts_sampler='numpyro'"
+```
 
 **None of these are dependencies of `sdv-py`,** and they should not become hard
 ones. A Bayesian fit belongs in a producer's `python/` package with the library

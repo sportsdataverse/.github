@@ -25,10 +25,34 @@ model outputs as inputs, missingness and the predict-time smoke test — is
 
 ## 1. Cyclical encoding — clock, season-week, and day-of-year
 
-**The trap.** Encoding a game clock, a week number, or a day-of-year as a plain
-integer tells the model that week 1 and week 15 are maximally distant, when for
-anything that wraps — day-of-year across a New Year bowl window, a clock
-counting down within a period — they are adjacent.
+**The trap.** Encoding a week number or a day-of-year as a plain integer tells
+the model that week 1 and week 15 are maximally distant, when for anything that
+wraps — day-of-year across a New Year bowl window, month, minute-of-hour on a
+wall clock — they are adjacent.
+
+**A countdown clock does NOT wrap.** An earlier version of this section listed
+"a clock counting down within a period" as a wrapping quantity. It is not:
+12:00 at the start of a quarter and 0:00 at its end are the two most different
+game states a period has, not neighbours. Leave `game_clock` / `sec_remaining`
+raw (measured on hoopsq, 2026-09-17: the raw countdown was correct and no
+encoding was needed). Cyclical encoding is for quantities whose last value is
+adjacent to its first — the question in "When NOT to use it" below.
+
+**Angles have a seam; put it where nothing happens.** `atan2` returns in
+(−π, π], so an angle feature is discontinuous at ±π. Choose the reference axis
+so the seam falls where the data is empty — hoopsq puts the shot-angle seam
+directly behind the rim, where only 27 of 1,458 shots have |angle| > 150°.
+Check it: a seam through a populated region shows up as a tree split exactly at
+±π that a mirrored copy of the same data does not reproduce.
+
+```python
+def assert_angle_seam_is_sparse(angle_rad, max_share=0.03):
+    """Fail when a material share of rows sits within 30 degrees of the atan2 seam."""
+    import numpy as np
+    a = np.abs(np.asarray(angle_rad, float))
+    share = float(np.mean(a > np.deg2rad(150)))
+    assert share <= max_share, f"{share:.1%} of rows within 30 deg of the +/-pi seam; rotate the reference axis"
+```
 
 ```python
 import numpy as np
@@ -52,10 +76,11 @@ def cyclical(values, period):
 
 **When NOT to use it.** A CFB season week does *not* wrap — week 15 is followed
 by the postseason, not by week 1, and the two are not adjacent in any sense a
-model should learn. Cyclical encoding is for genuinely periodic quantities:
-clock within a period, month, day-of-year for a sport that crosses the New
-Year. Applying it to a monotone season index invents an adjacency that is not
-there. Ask "does the last value neighbour the first?" before reaching for it.
+model should learn. Neither does a period clock (above). Cyclical encoding is
+for genuinely periodic quantities: month, day-of-year for a sport that crosses
+the New Year, time-of-day. Applying it to a monotone index — a season week, a
+countdown — invents an adjacency that is not there. Ask "does the last value
+neighbour the first?" before reaching for it.
 
 ---
 

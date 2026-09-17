@@ -164,6 +164,22 @@ than "check nulls decreased":** a rate pinned at exactly 1.0 (or exactly 0.0)
 on a boolean-derived mean is the tell, independent of whether the null count
 moved — check both.
 
+**The general form is "constant after dropping nulls", and it applies to every
+shipped flag, not only to fill sites.** A boolean that is `True` on zero (or
+all) of the rows the model actually sees is dead whether or not a null was ever
+involved. hoopsq (2026-09-17): `after_timeout_opp` was `True` on **1 of 1,458**
+built rows and **0 of 1,324 modelled** shots, yet shipped in two feature sets;
+the existing test checked that the flag partitioned the rows, not that it ever
+fired. Assert, on the modelled rows and per shipped feature set:
+
+```python
+def assert_flags_fire(df, flag_cols, min_true=1):
+    """Every boolean in a shipped feature set must vary on the rows the model sees."""
+    dead = {c: int(df[c].drop_nulls().sum()) for c in flag_cols
+            if df[c].drop_nulls().n_unique() < 2 or df[c].drop_nulls().sum() < min_true}
+    assert not dead, f"constant flags on modelled rows (name: n_true): {dead}"
+```
+
 ---
 
 ## 4. Release tag on the wrong commit (#3)
@@ -515,6 +531,52 @@ numbers across two arms is not a weak effect, it is usually a disconnected
 wire. Print what varied, not just what resulted"** (`higher-order-models.md`
 §4e). Assertion: **the two arms' input columns must differ before their
 metrics are compared** — diff the schemas, not just the scores.
+
+---
+
+## 15b. Bonus: the output changed — but not because of the thing you claimed
+
+"Assert the output changed" (§2, `SKILL.md`) is necessary and, measured on
+hoopsq (2026-09-17), not sufficient three times over. Each is a component that
+demonstrably *did* something, where the something was not the claim.
+
+1. **A side effect can produce the change.** Mirror augmentation changed the
+   score by −0.0028 — real, asserted, reproducible. About a third to a half of
+   it came from **doubling the rows**, which halves the effective
+   `min_child_weight`/`reg_lambda` (`sklearn-xgboost.md` §J): rows copied
+   *without* reflection scored −0.0010 to −0.0021 by themselves. "The output
+   changed" cannot see an implicit regularisation change. **Add a control arm
+   that applies the side effect without the claimed transform**, and attribute
+   only the difference (`competition.md` §8).
+2. **A weight passed is not a weighting.** hoopsq's "weighted vs unweighted
+   mirror" compared weights of `1/count` against 1 — with `count` always 2,
+   `np.unique(w) == [0.5]`, a global rescale of the gradients and hessians, not
+   a weighting. Assert `np.unique(sample_weight).size > 1` before calling any
+   arm a weighting experiment.
+3. **"Changes predictions" is not "matters".** The shooter prior's shrinkage
+   constant moved from k = 10 to k = 50 changed per-shot probabilities by up to
+   **0.128** — and the paired log-loss delta was **0.00004**. A max-|Δp| assertion
+   proves the wire is connected, not that the component earns its place.
+   Require a **paired metric delta with its seed spread** (`resampling.md` §1)
+   beside any "the output changed" assertion before a component is named in a
+   result (the "s" in hoopsq's `t12s` was worth 0.0004, seed-averaged).
+
+The §3 dead-flag rule (constant after dropping nulls) is the fourth member of
+this family: a component that ran, produced a column, and was never `True`.
+
+```python
+def assert_component_matters(loss_with, loss_without, groups, min_delta, seeds=3):
+    """The wire being connected (predictions differ) is not the claim; the paired,
+    seed-averaged, cluster-aware delta is. loss_with/loss_without: per-row losses,
+    one array per seed."""
+    import numpy as np
+    d = np.mean([np.asarray(a) - np.asarray(b) for a, b in zip(loss_with, loss_without)], axis=0)
+    per_group = np.array([d[np.asarray(groups) == g].mean() for g in np.unique(groups)])
+    assert per_group.mean() <= -min_delta, (
+        f"component changes predictions but paired delta {per_group.mean():+.5f} "
+        f"(sd over groups {per_group.std(ddof=1):.5f}) does not clear {min_delta}"
+    )
+```
 
 ---
 
