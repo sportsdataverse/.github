@@ -89,9 +89,10 @@ measured on the same hoopsq comparison:
   sign-flip p, and a `t9` interval (±0.0038 on a mean delta of −0.0028) — three
   numbers that disagree in this case, which is the point. Quoting only the
   smallest of them (hoopsq's README quoted the Wilcoxon p alone) is selection.
-- **Multiplicity has a resolution floor of 2^−G.** A sign-flip p cannot go
-  below 1/1024 at G = 10, so a Holm correction over 55 comparisons (threshold
-  0.05/55 ≈ 0.0009) can never reject anything. With few clusters, use a
+- **Multiplicity has a resolution floor of 2/2^G.** A two-sided sign-flip p
+  counts both the all-positive and the all-negative assignment, so it cannot go
+  below 2/1024 ≈ 0.002 at G = 10; a Holm correction over 55 comparisons
+  (threshold 0.05/55 ≈ 0.0009) can never reject anything. With few clusters, use a
   max-T (step-down) permutation test, or report a model confidence set rather
   than a corrected p (`metrics-and-gates.md` §1b).
 
@@ -103,7 +104,7 @@ def sign_flip_p(delta_by_group):
     obs = abs(d.mean())
     flips = np.array(list(itertools.product((-1, 1), repeat=len(d))))
     null = np.abs((flips * d).mean(axis=1))
-    return float((null >= obs - 1e-12).mean())     # floor is 2 ** -len(d)
+    return float((null >= obs - 1e-12).mean())     # two-sided floor is 2 / 2 ** len(d)
 ```
 
 ---

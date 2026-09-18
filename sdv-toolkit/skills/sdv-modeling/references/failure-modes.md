@@ -570,6 +570,8 @@ def assert_component_matters(loss_with, loss_without, groups, min_delta, seeds=3
     seed-averaged, cluster-aware delta is. loss_with/loss_without: per-row losses,
     one array per seed."""
     import numpy as np
+    if len(loss_with) != len(loss_without) or len(loss_with) < seeds:
+        raise ValueError(f"need >= {seeds} paired seed runs, got {len(loss_with)}/{len(loss_without)}")
     d = np.mean([np.asarray(a) - np.asarray(b) for a, b in zip(loss_with, loss_without)], axis=0)
     per_group = np.array([d[np.asarray(groups) == g].mean() for g in np.unique(groups)])
     assert per_group.mean() <= -min_delta, (

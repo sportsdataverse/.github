@@ -180,8 +180,10 @@ supports it:
 2. **The release frame is the boundary.** Define the shot at the release
    frame, verify it (hoopsq: ball rising on 96.6% of shots, within 3 ft of the
    shooter on 93.6%, identical for makes and misses), and compute every
-   feature **causally up to that frame** — forward-only smoothing, no centred
-   window, no RTS pass over the post-release flight (`tracking-data-cv.md` §7).
+   feature **causally up to and including that frame** (the release sample is
+   the snapshot; frames strictly after it are off limits) — forward-only
+   smoothing, no centred window, no RTS pass over the post-release flight
+   (`tracking-data-cv.md` §7).
 3. **Features that carry signal, in order:** distance and angle (seam behind
    the rim), closest-defender distance and closing speed *at release*, ball
    height at release (a shot-type proxy — AUC 0.626 pooled, ≈ 0.5 within
@@ -208,9 +210,14 @@ supports it:
    confidence set, not one row (`resampling.md` §1b, `metrics-and-gates.md`
    §1b). Shuffled-target control must fall to the constant rate.
 8. **Benchmark.** Against a vendor shot-quality feed the open model trailed by
-   0.022 log loss, all of it resolution (0.0254 vs 0.0339), none of it
-   calibration — and a local + vendor stack beat the vendor alone (0.6065 vs
-   0.6068), the same result Bajons & Harringer 2025 report for soccer xG.
+   0.022 log loss pooled (0.023 as a per-game mean; the two estimands differ).
+   Report that gap and the Brier decomposition *separately*: on the Murphy
+   split the models had the same reliability (0.0018 vs 0.0021) and differed
+   in resolution (0.0254 vs 0.0339) — so recalibration cannot close the gap,
+   which is the decision the split informs; it does not by itself account for
+   the log-loss difference. A local + vendor stack beat the vendor alone
+   (0.6065 vs 0.6068), the same result Bajons & Harringer 2025 report for
+   soccer xG.
 
 ## Possession engines (NBA / NCAA possession boundaries)
 

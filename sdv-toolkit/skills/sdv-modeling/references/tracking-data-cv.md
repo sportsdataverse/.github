@@ -129,8 +129,11 @@ timeout" feature is all-False. Assert a non-zero True-count on real data
 (`competition.md` §1c).
 
 **Rule.** Build every feature with an explicit `as_of_frame` and assert
-`consumed_frame < event_start_frame`. For windowed features, assert the window is
-satisfiable on real data before trusting its importance.
+`consumed_frame <= event_frame` — the event frame itself is the "at release"
+snapshot and IS observable; everything strictly after it is not. That is the
+convention `assert_causal_at_event` below encodes (`xy[:event_ix + 1]`), and
+the one `methods.md`'s xFG recipe uses. For windowed features, assert the
+window is satisfiable on real data before trusting its importance.
 
 ---
 

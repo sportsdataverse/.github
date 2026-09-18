@@ -425,7 +425,7 @@ scores. Three checks, all measured on hoopsq's 56 eligible entries
   the top-5 at rank 1 98.6% of the time. The two best entries differed by
   0.0006, below the seed sd of 0.0008. The result is "mirror-augmented depth-2
   boosted trees", not one row. With few groups, Holm cannot resolve anything
-  (floor 2^−G, `resampling.md` §1b) — use max-T or the confidence set.
+  (two-sided floor 2/2^G, `resampling.md` §1b) — use max-T or the confidence set.
 - **Seed variance is part of the entry, not the run.** Score every stochastic
   entry on 3–5 seeds and pin threads (`competition.md` §6); hoopsq's committed
   seed 0 was the winner's worst of six.
@@ -477,15 +477,30 @@ def predictive_residual_interval(p_draws, n_rep=1, q=(0.025, 0.975), seed=0):
     called skill. Posterior-only intervals (outcomes held fixed) are too narrow."""
     import numpy as np
     rng = np.random.default_rng(seed)
-    y_rep = rng.random(p_draws.shape) < p_draws
-    return tuple(np.quantile((y_rep - p_draws).mean(axis=1), q))
+    resid = np.concatenate([
+        ((rng.random(p_draws.shape) < p_draws) - p_draws).mean(axis=1)
+        for _ in range(int(n_rep))          # n_rep replicate sets per posterior draw
+    ])
+    return tuple(np.quantile(resid, q))
 
 
-def assert_units_match(outcome, expectation, tol=0.02):
-    """Pooled actual - expected must be ~0; a shift means the units disagree."""
+def assert_outcome_units(outcome, allowed_values):
+    """Validate the unit DIRECTLY: every outcome value must lie in the set the
+    expectation is built from (field-goal points: {0, 2, 3}; makes: {0, 1}).
+    hoopsq's +0.130-per-shot shift came from outcomes that included free throws
+    while the expectation was p x {2, 3}; the value set catches that, a bias
+    check cannot."""
     import numpy as np
-    gap = float(np.mean(np.asarray(outcome, float) - np.asarray(expectation, float)))
-    assert abs(gap) <= tol, f"pooled residual {gap:+.3f} per event: outcome and expectation are not in the same units"
+    bad = set(np.unique(np.asarray(outcome)).tolist()) - set(allowed_values)
+    assert not bad, f"outcome carries values {sorted(bad)} outside the expectation's unit {sorted(allowed_values)}"
+
+
+def pooled_residual_bias(outcome, expectation):
+    """Calibration-in-the-large diagnostic, NOT a unit check: a unit-matched
+    model can have non-zero bias and a unit offset can be cancelled by model
+    bias. Report it; interpret it only after `assert_outcome_units` passes."""
+    import numpy as np
+    return float(np.mean(np.asarray(outcome, float) - np.asarray(expectation, float)))
 ```
 
 ### Error analysis by segment is where the real defects surface

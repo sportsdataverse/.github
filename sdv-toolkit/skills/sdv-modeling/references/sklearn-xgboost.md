@@ -231,8 +231,11 @@ def assert_purged(order, purge, embargo, splits):
     for train, test in splits:
         lo, hi = order[test].min(), order[test].max()
         reach = order[train]
-        # A training row at `t` carries a label spanning [t - purge, t]; if that
-        # window touches [lo, hi], the row's label overlaps the test block.
+        # A training row at `t` carries a FORWARD-looking label spanning
+        # [t, t + purge] (e.g. "scores within the next N plays"); a row just before
+        # the test block therefore has a label that reaches into [lo, hi], which is
+        # what the band below removes. For a backward-looking label the band flips
+        # to rows just AFTER the block -- state which one the target is.
         assert not ((reach >= lo - purge) & (reach <= hi + embargo)).any(), (
             f"training rows within the purge/embargo band of test block [{lo}, {hi}]"
         )
@@ -240,7 +243,7 @@ def assert_purged(order, purge, embargo, splits):
 
 **Few groups.** Leave-one-group-out with G ≈ 10 games is honest but coarse:
 per-fold spread is large, a percentile bootstrap under-covers, and the
-significance resolution floor is 2^−G. Report per-group deltas with a sign-flip
+two-sided significance floor is 2/2^G. Report per-group deltas with a sign-flip
 test and a `t_{G−1}` interval, not a single pooled number (`resampling.md`
 §1b, measured on hoopsq's 10-game LOGO).
 
@@ -886,7 +889,9 @@ def assert_unseen_categories_are_flagged(
         return
     all_zero = ~encoded_rows[unseen].any(axis=1)
     if full_penalized_block:
-        return  # all-zero == population mean by construction; nothing to flag
+        # all-zero == population mean by construction -- but it must actually BE all-zero
+        assert all_zero.all(), f"{int((~all_zero).sum())} unseen full-penalized rows are not all-zero"
+        return
     assert not all_zero.any(), f"{int(all_zero.sum())} unseen-category rows encoded as all-zero"
 
 
@@ -1377,20 +1382,26 @@ clearing the dict produced 703 monotonicity violations that the test caught.
 That is the whole recipe — a few hundred trees on the real frame, seconds.
 
 ```python
-def monotone_tuple(feature_names, signs):
-    """Bind constraints by NAME; a positional tuple silently pins the wrong column."""
-    unknown = set(signs) - set(feature_names)
-    assert not unknown, f"monotone keys not in the feature list: {sorted(unknown)}"
+def monotone_tuple(feature_names, signs, *, log=print):
+    """Bind constraints by NAME; a positional tuple silently pins the wrong column.
+    Keys absent from this feature set are tolerated and REPORTED (one shared sign
+    dict is applied to many feature sets), never silently dropped."""
+    unused = sorted(set(signs) - set(feature_names))
+    if unused:
+        log(f"monotone keys not in this feature set (ignored): {unused}")
     return tuple(int(signs.get(f, 0)) for f in feature_names)
 
 
 def assert_monotone_holds(predict, X, feature_names, signs, n_probe=200, seed=0):
-    """Bump each constrained feature on real rows; the prediction must not move the wrong way."""
+    """Bump each constrained feature PRESENT in this feature set on real rows;
+    the prediction must not move the wrong way."""
     import numpy as np
     rng = np.random.default_rng(seed)
     X = np.asarray(X, float)
     rows = rng.choice(len(X), min(n_probe, len(X)), replace=False)
     for f, s in signs.items():
+        if f not in feature_names:
+            continue                          # reported by monotone_tuple
         j = feature_names.index(f)
         lo, hi = X[rows].copy(), X[rows].copy()
         hi[:, j] += np.nanstd(X[:, j]) or 1.0

@@ -84,10 +84,12 @@ artifact's; and the attributions sum to the shipped booster's margin
 
 ```python
 def assert_attributions_are_from_shipped_model(booster, dmatrix, contribs, atol=1e-4):
-    """SHAP from a twin model does not reconstruct this booster's margins."""
+    """SHAP from a twin model does not reconstruct this booster's margins.
+    Sums over the LAST axis so it covers both the binary (n, p + 1) and the
+    multi:softprob (n, classes, p + 1) attribution shapes documented above."""
     import numpy as np
     margin = booster.predict(dmatrix, output_margin=True)
-    assert np.allclose(contribs.sum(axis=1), margin, atol=atol), (
+    assert np.allclose(contribs.sum(axis=-1), margin, atol=atol), (
         "attributions do not sum to the shipped booster's margin: they were computed on a different model"
     )
 ```

@@ -52,9 +52,14 @@ vendor feed.
   (`tracking-data-cv.md` §7).
 - **The vendor ball-detection flag can be dead** (`isDetected == 0` on 100% of
   ball frames): ball xyz, including release height, is model output.
-- **Ball height at release is shot type, not leakage** (AUC 0.626 pooled,
-  0.507 on threes) — run the stratified single-feature test before rejecting
-  it (`competition.md` §1b).
+- **Ball height at release reads as shot type, and its association is not by
+  itself evidence of availability at release.** AUC 0.626 pooled, 0.507 on
+  threes (`competition.md` §1b) shows where the signal lives; the causal-frame
+  test (`tracking-data-cv.md` §7) shows the feature reads no frame after
+  release. What neither can show is whether the vendor placed the ball at
+  release using its post-release flight — the ball flag is dead, so every
+  coordinate is extrapolated. State it as a predictive association verified
+  causal on the open data, not as a certified pre-release measurement.
 - **The shooter prior is season-grain only** in the public aggregates (no
   game or date column), so an as-of prior is impossible; subtract the
   evaluation games exactly and state the look-ahead.

@@ -189,6 +189,8 @@ def grouped_shap_importance(contribs, names, groups):
         signed = contribs[:, [ix[c] for c in cols]].sum(axis=1)   # sum signed FIRST
         out[g] = float(np.abs(signed).mean())
     total = sum(out.values())
+    if total == 0:   # constant model, or none of the grouped features used
+        return {g: 0.0 for g in out}
     return {g: v / total for g, v in out.items()}
 ```
 

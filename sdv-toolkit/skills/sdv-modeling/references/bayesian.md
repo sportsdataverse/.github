@@ -120,6 +120,9 @@ def ppc_total(y, p_draws, q=(0.025, 0.975)):
     rng = np.random.default_rng(0)
     rep = (rng.random(p_draws.shape) < p_draws).sum(axis=1)
     lo, hi = np.quantile(rep, q)
+    if rep.shape[0] < 2 or rep.std(ddof=1) == 0:
+        raise ValueError("ppc_total needs >= 2 draws with variable replicate totals; "
+                         "a single or deterministic draw gives no predictive spread")
     z = (np.sum(y) - rep.mean()) / rep.std(ddof=1)
     return float(np.sum(y)), float(lo), float(hi), float(z)
 ```
@@ -240,10 +243,13 @@ nor `jax` installed. Check the backend before the first fit and either install
 a compiler, or sample with `nuts_sampler="numpyro"`, which needs none:
 
 ```python
-def assert_pytensor_compiles():
-    """Pure-Python PyTensor is 10-100x slower and prints nothing about it."""
+def require_pytensor_backend():
+    """Pure-Python PyTensor is 10-100x slower and prints nothing about it.
+    A plain `assert` would vanish under `python -O`; raise instead."""
     import pytensor
-    assert pytensor.config.cxx, "pytensor.config.cxx is empty: install a C++ compiler or sample with nuts_sampler='numpyro'"
+    if not pytensor.config.cxx:
+        raise RuntimeError("pytensor.config.cxx is empty: install a C++ compiler "
+                           "or sample with nuts_sampler='numpyro'")
 ```
 
 **None of these are dependencies of `sdv-py`,** and they should not become hard
