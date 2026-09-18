@@ -165,13 +165,30 @@ Financial Machine Learning* (ch. 7), and the mapping to our panel is direct
 because the problem is identical: overlapping information windows in ordered
 data.
 
-- **Purge**: drop from the *training* fold every observation whose feature
-  window overlaps the test fold's span. For a rolling-`k`-game feature, that
-  is the `k` games before each test game.
-- **Embargo**: additionally drop a gap *after* the test fold, because the
-  label of a test observation can leak forward into training rows computed
-  immediately afterwards. A week is the natural unit for CFB/NFL; a small
-  fraction of the season for basketball and hockey.
+- **Purge**: drop from the *training* fold every observation whose **label
+  window** overlaps the test fold's span. **Size the purge from
+  label-information overlap, never from feature lookback** — this is the rule
+  `sdv-model-reviewer` §2 enforces, and an earlier version of this bullet
+  ("for a rolling-`k`-game feature, the `k` games before each test game")
+  contradicted it. A strictly causal rolling feature on a training row before
+  the block reads only rows before its own target and needs no purge; a label
+  that spans periods (a season-end rating, a multi-week outcome) whose window
+  crosses the boundary is what the purge removes. Demanding `k` units for a
+  causal feature discards valid history for no gain.
+- **Embargo**: additionally drop a gap *after* the test fold, for training
+  rows whose labels or carried features would carry the block's outcomes
+  forward. A week is the natural unit for CFB/NFL; a small fraction of the
+  season for basketball and hockey.
+- **A prior built from an external aggregate is the third case: remove every
+  evaluation unit from the aggregate.** A season-total shooter prior contains
+  the evaluation games. hoopsq (2026-09-17) subtracts all 10 tracked games'
+  attempts and makes from the season totals before shrinking — stronger than a
+  purge, and verified exact (0 buckets where the 10-game count exceeds the
+  season count; an in-sample prior would have scored −0.0062 better). That
+  subtraction is the assertion, not group disjointness: assert
+  `season_attempts_used == season_attempts − evaluation_attempts` per entity.
+  What remains is a look-ahead only for a "knowable at the time" claim (the
+  aggregate includes games *after* the shot) — state it as a limitation.
 
 ```python
 import numpy as np
@@ -186,8 +203,10 @@ def purged_time_series_split(order, n_splits=5, purge=1, embargo=1):
             unique in the key, and that is the point (many rows per game).
         n_splits: Number of folds.
         purge: Units of `order` to drop from train BEFORE each test block --
-            set to the longest feature lookback (a 4-game rolling mean is 4).
-        embargo: Units to drop from train AFTER each test block.
+            the longest LABEL window that can straddle the boundary (1 for a
+            per-game label; a causal rolling feature adds nothing here).
+        embargo: Units to drop from train AFTER each test block -- rows whose
+            labels or carried features would read the block's outcomes.
 
     Yields:
         (train_idx, test_idx) index arrays, train always disjoint in `order`
@@ -202,22 +221,31 @@ def purged_time_series_split(order, n_splits=5, purge=1, embargo=1):
         yield train, test
 ```
 
-**Detection test.** The assertion is about the *feature window*, not the row.
+**Detection test.** The assertion is about the *label window*, not the row.
 A test that only checks group disjointness passes on the bug.
 
 ```python
 def assert_purged(order, purge, embargo, splits):
-    """Fail if any training row's feature window reaches into the test block."""
+    """Fail if any training row's label window reaches into the test block."""
     order = np.asarray(order)
     for train, test in splits:
         lo, hi = order[test].min(), order[test].max()
         reach = order[train]
-        # A training row at `t` was built from data back to `t - purge`; if that
-        # window touches [lo, hi], the row saw the test block.
+        # A training row at `t` carries a FORWARD-looking label spanning
+        # [t, t + purge] (e.g. "scores within the next N plays"); a row just before
+        # the test block therefore has a label that reaches into [lo, hi], which is
+        # what the band below removes. For a backward-looking label the band flips
+        # to rows just AFTER the block -- state which one the target is.
         assert not ((reach >= lo - purge) & (reach <= hi + embargo)).any(), (
             f"training rows within the purge/embargo band of test block [{lo}, {hi}]"
         )
 ```
+
+**Few groups.** Leave-one-group-out with G ≈ 10 games is honest but coarse:
+per-fold spread is large, a percentile bootstrap under-covers, and the
+two-sided significance floor is 2/2^G. Report per-group deltas with a sign-flip
+test and a `t_{G−1}` interval, not a single pooled number (`resampling.md`
+§1b, measured on hoopsq's 10-game LOGO).
 
 Would this fire? Yes — a plain `TimeSeriesSplit` puts training rows
 immediately adjacent to the test block by construction, so the band is
@@ -786,8 +814,22 @@ shipping.
 chosen specifically to avoid the default `"error"` raising at predict time —
 makes a player/team id absent from the training season encode as an
 all-zero row: every known category is `False`. The model doesn't know the
-entity is new; it scores it as if it matches the reference level of every
-category simultaneously, and returns a normal-looking number.
+entity is new, and returns a normal-looking number.
+
+**What the all-zero row means depends on the design, so flag the DESIGN, not
+the zeros.** For a **full** (no reference level dropped) one-hot block that is
+**penalized** and sits beside an intercept, the all-zero row is the correct
+"population mean" prediction: every entity dummy is shrunk toward zero, so zero
+*is* the prior for an entity with no data. hoopsq (2026-09-17) encodes shooter
+ids that way and an unseen shooter scores at the intercept — an earlier version
+of this section would have flagged it. The all-zero row is WRONG in two cases:
+a **reference level was dropped** (`drop="first"`), so all-zero means "the
+reference entity", not "unknown"; or the block is **unpenalized**, so the
+dummies carry no shrinkage and zero is arbitrary. And it is silently wrong in
+a third: a hand-rolled `design(columns=)` that zero-fills an unseen *category
+level* (not an entity id) — hoopsq's `design()` returns `[0, 0, 0, 0, 0]` for an
+unseen zone, i.e. "no zone", which the trees never saw. Raise on unseen levels
+of a low-cardinality categorical; shrink unseen entity ids to zero on purpose.
 `LabelEncoder`/`OrdinalEncoder` applied to a categorical *feature* (team ID,
 not a target) imposes a numeric ordering with no real meaning — a
 tree-only model that just splits on it is often fine; any linear or
@@ -829,16 +871,27 @@ hand-rolled `pd.get_dummies` path.
 import numpy as np
 
 def assert_unseen_categories_are_flagged(
-    fit_categories: set, predict_categories: np.ndarray, encoded_rows: np.ndarray
+    fit_categories: set, predict_categories: np.ndarray, encoded_rows: np.ndarray,
+    *, full_penalized_block: bool = False,
 ) -> None:
     """Fires when a category absent from the fit sample silently collapses
-    to the all-reference-level (all-zero) encoded row instead of being
-    flagged -- the failure mode of handle_unknown='ignore' and of
-    nhl_faceoff_value._context_design_matrix's column-align-and-zero-fill."""
+    to the all-zero encoded row instead of being flagged -- the failure mode
+    of handle_unknown='ignore' and of nhl_faceoff_value._context_design_matrix's
+    column-align-and-zero-fill.
+
+    Pass full_penalized_block=True for an entity-id block with NO dropped
+    reference level and a penalty: there the all-zero row is the intended
+    shrink-to-population prediction and is not a finding. Never pass it for a
+    low-cardinality categorical (zone, strength state) -- an unseen level of
+    those is a schema change, not a new entity."""
     unseen = ~np.isin(predict_categories, list(fit_categories))
     if not unseen.any():
         return
     all_zero = ~encoded_rows[unseen].any(axis=1)
+    if full_penalized_block:
+        # all-zero == population mean by construction -- but it must actually BE all-zero
+        assert all_zero.all(), f"{int((~all_zero).sum())} unseen full-penalized rows are not all-zero"
+        return
     assert not all_zero.any(), f"{int(all_zero.sum())} unseen-category rows encoded as all-zero"
 
 
@@ -987,12 +1040,20 @@ was given, the exact shape of the silent column-drop.
 a shuffled splitter, `sag`/`saga`, `GaussianMixture`, any
 sklearn/XGBoost randomness — means two runs over identical data produce
 different fitted coefficients, and a backtest, gate, or published artifact
-becomes non-reproducible without ever raising. `n_jobs > 1` can also change
+becomes non-reproducible without ever raising. `n_jobs > 1` also changes
 the floating-point reduction order in parallel tree building or BLAS calls,
-producing tiny run-to-run numeric drift — invisible unless something diffs
+producing run-to-run numeric drift — invisible unless something diffs
 exact bytes (this is the mechanism behind the "cheap pre-check only"
 distinction in `failure-modes.md` §2's λ-no-op-republish row: a timestamp
-move is not proof of byte-identical content).
+move is not proof of byte-identical content). **That drift is not "tiny" on a
+small frame.** An earlier version of this paragraph called it tiny; measured on
+hoopsq (2026-09-17, XGBoost, 1,324 rows): log loss **0.63153 / 0.63160 /
+0.63149 / 0.63210 / 0.63200** at 1 / 2 / 4 / 8 / 24 threads (spread 0.0006 —
+the size of the leaderboard's #1-vs-#2 gap and its tie tolerance), and
+per-shot probabilities differing by up to **0.044** between 1 and 24 threads.
+Pin `n_jobs`/`nthread`, record it in run metadata, and compare configurations
+seed-averaged (`competition.md` §6) — a fixed seed alone does not make the
+number reproducible across boxes.
 
 **Why invisible.** Nothing errors on a different random draw; the model
 "works" every time, it's just not the *same* model every time, and a gate
@@ -1311,18 +1372,65 @@ relative to the shipped `ep_model.card.json`'s `features` list and
 `test_ep_features_match_model_card` fails immediately; as written today
 against the real files it passes, because the two are confirmed identical.
 
-**Two named sub-traps ship without a test, honestly left as gaps:**
-early-stopping needing a genuine untouched holdout (not a CV fold reused for
-both hyperparameter selection and the stopping decision), and
-`monotone_constraints=` binding to feature position rather than name.
-Neither has a real call site in this codebase to ground a test against —
-`monotone_constraints` appears zero times in `sportsdataverse/`, and no
-early-stopping (`early_stopping_rounds=`) call site exists either — and a
-trustworthy version of either test requires actually training an XGBoost
-model with the constraint or the stopping callback wired up, which is
-expensive enough to get subtly wrong that it risks the exact defect class
-this file is built to avoid (see Family B's discarded-draft note above for
-what that looks like when it isn't caught before shipping).
+**Monotone constraints ARE cheaply testable** — an earlier version of this
+section left them as an untestable gap. hoopsq (2026-09-17) builds the tuple
+**by name** from a `{feature: sign}` dict over the ordered column list, then
+tests the behaviour on a two-row probe: 78 columns, four non-zero
+(`dist` −1, `closest_def_dist` +1, `def_closing_speed` −1, `help_dist` +1);
+removing the constraints moved log loss by +0.00067 and max |Δp| 0.034;
+clearing the dict produced 703 monotonicity violations that the test caught.
+That is the whole recipe — a few hundred trees on the real frame, seconds.
+
+```python
+def monotone_tuple(feature_names, signs, *, log=print):
+    """Bind constraints by NAME; a positional tuple silently pins the wrong column.
+    Keys absent from this feature set are tolerated and REPORTED (one shared sign
+    dict is applied to many feature sets), never silently dropped."""
+    unused = sorted(set(signs) - set(feature_names))
+    if unused:
+        log(f"monotone keys not in this feature set (ignored): {unused}")
+    return tuple(int(signs.get(f, 0)) for f in feature_names)
+
+
+def assert_monotone_holds(predict, X, feature_names, signs, n_probe=200, seed=0):
+    """Bump each constrained feature PRESENT in this feature set on real rows;
+    the prediction must not move the wrong way."""
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    X = np.asarray(X, float)
+    rows = rng.choice(len(X), min(n_probe, len(X)), replace=False)
+    for f, s in signs.items():
+        if f not in feature_names:
+            continue                          # reported by monotone_tuple
+        j = feature_names.index(f)
+        lo, hi = X[rows].copy(), X[rows].copy()
+        hi[:, j] += np.nanstd(X[:, j]) or 1.0
+        d = (predict(hi) - predict(lo)) * s
+        assert (d >= -1e-9).all(), f"{f}: {(d < -1e-9).sum()} probes move against sign {s}"
+```
+
+Report the *unused* keys too: 7 of hoopsq's 11 `MONOTONE` keys named columns
+absent from the winner's feature set, which the by-name builder tolerates and
+a reader would otherwise assume were binding.
+
+**Row weights rescale the regularisation.** `sample_weight`, and any
+row-adding augmentation, change the gradient/hessian mass each leaf sees:
+doubling the rows halves the effective `min_child_weight` and `reg_lambda`.
+hoopsq's mirrored training set (2× rows, weight 1) gained ~0.001 of its 0.0028
+from that alone; halving `min_child_weight` on the plain model recovered almost
+nothing, so the lever was `reg_lambda`. When comparing a weighted or augmented
+fit against a plain one, either hold the hessian mass constant
+(`sample_weight = 1/copies`) or re-tune the regularisation on the plain arm
+(`competition.md` §8 has the control-arm recipe).
+
+**One named sub-trap still ships without a test:** early stopping needs a
+genuine untouched holdout (not a CV fold reused for both hyperparameter
+selection and the stopping decision). No `early_stopping_rounds=` call site
+exists in `sportsdataverse/` to ground a test against, and the honest statement
+is that this file has not measured it. **Selection over many entries is its own
+trap** — a leaderboard of 56 CV entries picks a winner by the same noise it
+scores, and the reviewer's check is nested selection (choose on G−1 groups,
+score the held-out one); `metrics-and-gates.md` §1b has the measured case.
 
 ---
 

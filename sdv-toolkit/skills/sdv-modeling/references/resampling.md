@@ -42,6 +42,71 @@ ICC of 0.05 still gives a 2.9× understatement.
 A 95% interval that is 8.8× too narrow is not a slightly optimistic interval. It
 is a published number asserting a precision that does not exist.
 
+**The 8.8× is for a LEVEL — a mean, a rate, a rating. It does not transfer to a
+PAIRED model delta.** When two models are scored on the same rows and the
+statistic is the per-row difference of their losses, the game effect that
+inflates a level's variance is common to both models and cancels in the
+difference. Measured on hoopsq (2026-09-17; 1,324 shots in 10 games, winner vs
+`xgb_t12s`): the paired per-shot log-loss delta has ICC 0.002–0.003, and the
+row / cluster / stratified SEs are 0.00143 / 0.00166 / 0.00144 — a ratio of
+**0.86–0.99**, not 8.8. So do not quote this section's figure when the
+statistic is a paired delta.
+
+**Still resample by cluster.** The unit that draws the interval is the unit
+that decides significance, and at small ratios it still flips a borderline
+claim: the same winner-vs-reference delta gives a cluster 95% CI of
+[−0.0058, +0.0006] (does not exclude zero) where a row-level CI does. Report
+the SE ratio you measured, and cluster regardless.
+
+```python
+def se_ratio_row_vs_cluster(delta, groups, n_boot=4000, seed=0):
+    """Row-level SE over cluster-level SE for a paired per-row statistic.
+
+    Near 1.0 on a paired model delta (game effects cancel); near the design
+    effect on a level. Report it next to the interval instead of asserting
+    either regime by assumption.
+    """
+    import numpy as np
+    delta, groups = np.asarray(delta, float), np.asarray(groups)
+    rng = np.random.default_rng(seed)
+    row = np.std([rng.choice(delta, len(delta)).mean() for _ in range(n_boot)], ddof=1)
+    uniq = np.unique(groups)
+    per = {g: delta[groups == g] for g in uniq}
+    clus = np.std([np.concatenate([per[g] for g in rng.choice(uniq, len(uniq))]).mean()
+                   for _ in range(n_boot)], ddof=1)
+    return row / clus
+```
+
+### 1b. Few clusters — G ≈ 10 is a different regime
+
+A cluster bootstrap with 10 games has 10 units to draw from; its percentile
+interval under-covers and its resolution is coarse. Two consequences, both
+measured on the same hoopsq comparison:
+
+- **Use an exact sign-flip (or `t` with G − 1 degrees of freedom) instead of
+  the bootstrap percentile interval.** With G = 10 the honest report is the
+  per-game deltas, a sign test (9 of 10 games negative, p = 0.011), the exact
+  sign-flip p, and a `t9` interval (±0.0038 on a mean delta of −0.0028) — three
+  numbers that disagree in this case, which is the point. Quoting only the
+  smallest of them (hoopsq's README quoted the Wilcoxon p alone) is selection.
+- **Multiplicity has a resolution floor of 2/2^G.** A two-sided sign-flip p
+  counts both the all-positive and the all-negative assignment, so it cannot go
+  below 2/1024 ≈ 0.002 at G = 10; a Holm correction over 55 comparisons
+  (threshold 0.05/55 ≈ 0.0009) can never reject anything. With few clusters, use a
+  max-T (step-down) permutation test, or report a model confidence set rather
+  than a corrected p (`metrics-and-gates.md` §1b).
+
+```python
+def sign_flip_p(delta_by_group):
+    """Exact two-sided sign-flip p-value for a paired per-group delta (G <= ~20)."""
+    import itertools, numpy as np
+    d = np.asarray(delta_by_group, float)
+    obs = abs(d.mean())
+    flips = np.array(list(itertools.product((-1, 1), repeat=len(d))))
+    null = np.abs((flips * d).mean(axis=1))
+    return float((null >= obs - 1e-12).mean())     # two-sided floor is 2 / 2 ** len(d)
+```
+
 ---
 
 ## 2. Cluster bootstrap — the default for anything play-level

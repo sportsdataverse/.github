@@ -70,6 +70,34 @@ importance is `mean(|coef_j * (x_j - mean_j)|)` — no sampling, no package.
 pipeline. `shap` is worth installing for interactive investigation, not for a
 scheduled job.
 
+**Attribute the model you ship, not a twin of it.** It is easy to compute SHAP
+on a convenient sibling — the same features fit on a different target, or
+without the augmentation — and present it as the winner's explanation. The
+twin's ranking is not the winner's. hoopsq (2026-09-17): the committed
+`winner_shap.csv` came from a model fit on the *points* target, un-augmented;
+refit on the actual made-target mirror winner, rank Spearman against that csv
+was **0.837**, ball height at release moved from #33 to **#2**, shooter speed
+from #41 to **#5**. Two assertions, both cheap: the attribution artifact's
+`model_hash` (or the booster it was computed from) equals the shipped
+artifact's; and the attributions sum to the shipped booster's margin
+(`contribs.sum(axis=1) == predict(output_margin=True)` on the same rows).
+
+```python
+def assert_attributions_are_from_shipped_model(booster, dmatrix, contribs, atol=1e-4):
+    """SHAP from a twin model does not reconstruct this booster's margins.
+    Sums over the LAST axis so it covers both the binary (n, p + 1) and the
+    multi:softprob (n, classes, p + 1) attribution shapes documented above."""
+    import numpy as np
+    margin = booster.predict(dmatrix, output_margin=True)
+    assert np.allclose(contribs.sum(axis=-1), margin, atol=atol), (
+        "attributions do not sum to the shipped booster's margin: they were computed on a different model"
+    )
+```
+
+Group correlated columns before reporting importance — sum the *signed*
+contributions within the group, then take the absolute value
+(`feature-construction.md` §3; 16.3% → 7.3% on a nine-column prior block).
+
 ---
 
 ## 2. The three tools answer three different questions

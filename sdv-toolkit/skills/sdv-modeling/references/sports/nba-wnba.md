@@ -27,6 +27,45 @@ Impact family bypasses ESPN loaders for stats.nba.com (`data-sources.md` §2) �
 - `failure-modes.md` #12 (`group_by` w/o `maintain_order`, `nba_player_identity`) lives in this same tree — cross-referenced, not re-derived.
 - Clutch cross-season Spearman ≈0.10 sitting **inside** the null band is the *correct* gate outcome, not a weak result — the gate accepts `rho>0` OR `|rho|<0.1`, and the model keeps heavy shrinkage rather than inventing a signal (`nba_clutch.py:24-27`; `test_nba_clutch.py:108-111`).
 
-## 4. Oracle
+## 4. Tracking and shot quality
+
+**Shipped in sdv-py** (`prior-art.md` §1): `nba/nba_shot_value.py` (five
+league-agnostic models off the `shotchartdetail` FG%-by-zone table —
+`score_shot_xpoints`, `make_prob_by_context`/`make_prob_joint`,
+`shooter_talent` with `TALENT_SHRINKAGE_K = {"00": 70.1, "20": 70.1, "10": 60.0}`
+fitted split-half, `shot_selection_quality`, `zone_value_map`);
+`nba/nba_tracking_value.py` (six SportVU over-expected residual models —
+rebounds, passes, drives, shot diet, touches, rim protection — baselines
+recomputed per call, no artifact); `mbb/mbb_shot_quality.py` (empirical-Bayes
+zone × type make-rate table, `n / (n + k)` toward the parent zone). None of
+these consumes raw coordinates: the public stats API exposes only aggregate
+buckets (defender distance, shot clock), so a per-shot tracking model needs a
+vendor feed.
+
+**Per-shot tracking xFG — the recipe and its numbers** live in `methods.md`
+("xG / shot quality") and come from hoopsq (SkillCorner open data, 10 games,
+1,324 shots). The gotchas specific to this league's tracking feeds:
+
+- **Shot `start_frame` is release, not catch** — verify per source (ball
+  rising 96.6%, within 3 ft of the shooter 93.6%, leaves 3 ft a median 6
+  frames later). Every "at release" feature must be causal up to that frame
+  (`tracking-data-cv.md` §7).
+- **The vendor ball-detection flag can be dead** (`isDetected == 0` on 100% of
+  ball frames): ball xyz, including release height, is model output.
+- **Ball height at release reads as shot type, and its association is not by
+  itself evidence of availability at release.** AUC 0.626 pooled, 0.507 on
+  threes (`competition.md` §1b) shows where the signal lives; the causal-frame
+  test (`tracking-data-cv.md` §7) shows the feature reads no frame after
+  release. What neither can show is whether the vendor placed the ball at
+  release using its post-release flight — the ball flag is dead, so every
+  coordinate is extrapolated. State it as a predictive association verified
+  causal on the open data, not as a certified pre-release measurement.
+- **The shooter prior is season-grain only** in the public aggregates (no
+  game or date column), so an as-of prior is impossible; subtract the
+  evaluation games exactly and state the look-ahead.
+- **hoopsq's `k = 10` and sdv-py's `k = 70.1` shrink different quantities**
+  (a 10-game residual vs season make-above-expected) — do not reconcile them.
+
+## 5. Oracle
 
 Six-fixture NBA RAPM/EPM/DARKO/LEBRON oracle + its placeholder-row honesty note is covered in `data-sources.md` §4. Prediction-market has its own fixture family, `tests/fixtures/nba_prediction/` (captured 2026-07-08, season 2024 + prior 2023 for the clutch gate) — WNBA fixtures fold into that same directory (`wnba_results_2024.parquet` etc.); **no separate `wnba_prediction/` exists**. Observed floor `spearman(adj_net_rtg, NET_RATING) >= 0.95` (`test_nba_team_ratings_oracle.py:48`) is tighter than `design.md`'s 0.90 target, per the never-lower rule (`metrics-and-gates.md` §2).

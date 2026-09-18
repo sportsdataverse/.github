@@ -150,6 +150,36 @@ measuring the honest features. The same guard would have caught the real leak:
 and a naive `score_diff` scored **0.8495** LOSO against a **0.7769** control.
 Fixed by lagging the score within game.
 
+**The pooled ceiling fires on honest physics; stratify it.** A feature can beat
+the best honest feature *pooled* because it proxies shot type, not the outcome.
+hoopsq (2026-09-17): ball height at release scored AUC **0.626** alone, above
+distance's 0.602 — and it is not a leak. Within distance strata it collapses to
+shot-type information: 0.607 under 4 ft, 0.659 at 4–10 ft, **0.532** at 10–22 ft,
+**0.507** on threes. A real post-outcome column stays high inside every stratum.
+Run the pooled test first, then the stratified one on anything it flags, and
+commit the stratified numbers so the next reviewer does not re-litigate them.
+
+```python
+def single_feature_auc_by_stratum(df, target, feature, strata_col, bins):
+    """Orientation-free AUC of one feature within bins of the dominant honest feature.
+
+    A leak stays high in every bin; a shot-type proxy falls to ~0.5 in the bins
+    where the type is fixed. Returns {bin_label: auc}.
+    """
+    import numpy as np, pandas as pd
+    from sklearn.metrics import roc_auc_score
+    out = {}
+    cut = pd.cut(df[strata_col], bins=bins)
+    for label, sub in df.groupby(cut, observed=True):
+        y, x = sub[target].to_numpy(), sub[feature].to_numpy(float)
+        ok = ~np.isnan(x)
+        if ok.sum() < 50 or len(np.unique(y[ok])) < 2:
+            continue
+        auc = roc_auc_score(y[ok], x[ok])
+        out[str(label)] = round(max(auc, 1 - auc), 3)
+    return out
+```
+
 ### 1c. Every new boolean must actually fire on real data
 
 **Trap.** A flag built on a field that is constant, or on a window that can
@@ -464,6 +494,31 @@ def seed_spread(score_fn, seeds=(0, 1, 2, 3, 4)):
     return s.mean(), s.std(ddof=1)
 ```
 
+**Thread count is a second seed, and it is not tiny.** XGBoost's parallel
+histogram build changes the floating-point reduction order with `n_jobs`, and
+on a small frame that moves the score by as much as a seed does. hoopsq
+(2026-09-17, 1,324 rows): the same configuration scored **0.63153 / 0.63160 /
+0.63149 / 0.63210 / 0.63200** at 1 / 2 / 4 / 8 / 24 threads — a 0.0006 spread,
+the size of the #1-vs-#2 gap and of the leaderboard's tie tolerance — and
+per-shot probabilities moved by up to **0.044** between 1 and 24 threads. The
+committed single-seed, unpinned-thread number was also the winner's *worst* of
+six seeds (seed sd 0.0004–0.0008). Two rules, both cheap:
+
+- **Pin `n_jobs`** (or `nthread`) in the estimator factory and record it in
+  the run metadata — a leaderboard whose entries ran on different thread counts
+  is not comparable at the third decimal.
+- **Compare seed-averaged scores, never one seed.** Score every tree entry on
+  3–5 seeds; a claim smaller than the seed sd is not a claim. Seed-averaged, the
+  same hoopsq winner-vs-reference delta went from "not significant at 5%" (one
+  seed: t p 0.13) to −0.0036, 9/10 games, t p 0.014.
+
+```python
+def assert_threads_pinned(model):
+    """A boosted model whose thread count floats gives a different number per box."""
+    n = getattr(model, "n_jobs", None) or getattr(model, "nthread", None)
+    assert n not in (None, -1, 0), "pin n_jobs/nthread explicitly and record it in run_meta"
+```
+
 **Bagging.** Averaging the same model over several seeds (and several fold
 assignments) reduces variance for little risk and is one of the few "free" late
 gains. It does not fix bias, leakage, or a wrong splitter.
@@ -525,18 +580,49 @@ pure noise; any real feature ranking below them is a candidate to drop.
   never before splitting, or the reflected copy of a validation row trains the
   model that scores it.
 
-**Real citation — what helped and what hurt.** hoopsq (2026-09-15), all measured
-leave-one-game-out:
+- **A row-adding augmentation needs a duplication control.** Doubling the rows
+  doubles the gradient/hessian mass a boosted model sees, which halves the
+  effective `min_child_weight` and `reg_lambda` — a regularisation change that
+  has nothing to do with the transform. Register a "duplicate without
+  transform" arm (or hold the hessian constant with `sample_weight = 1/copies`)
+  before attributing any gain to the augmentation.
 
-| augmentation | effect on log loss |
+**Real citation — what helped and what hurt.** hoopsq (2026-09-15, re-measured
+2026-09-17 with the duplication control, 5 seeds), all leave-one-game-out:
+
+| arm (winner's settings) | log loss |
 |---|---|
-| **court reflection** (y → −y, left/right vocabulary swapped) | **−0.003**, 9/10 games (not significant alone) |
+| plain | 0.63197 |
+| **rows stacked twice, no reflection** (the control) | 0.62986 |
+| court reflection (y → −y, left/right vocabulary swapped), unweighted | 0.62802 |
+| court reflection, each copy at weight 0.5 (hessian held constant) | ≈ −0.0023 vs plain |
 | position jitter at the tracker's `predError` scale | **+0.006** (hurts) |
 | season-aggregate `base_margin` (XGBoost) | **+0.004 to +0.009** (hurts) |
 | game bagging | neutral |
 
-Reflection is the only one of the four that preserves the label exactly. Jitter
-at the noise scale *adds* noise to a model already limited by it.
+The first-reported "−0.003, 9/10 games" was about **half duplication**:
+reflection beyond the control is ≈ −0.0018, and three independent reviewers
+found it only because the control arm was added. Reflection is still the only
+one of the four that preserves the label exactly; jitter at the noise scale
+*adds* noise to a model already limited by it. Note also that "weighted vs
+unweighted" is not a weighting test when every weight is 0.5 — assert
+`np.unique(sample_weight).size > 1` before calling something a weighting
+experiment (`failure-modes.md` §15b).
+
+```python
+def augmentation_arms(fit_score, X, y, transform, seeds=(0, 1, 2, 3, 4)):
+    """Three arms, seed-averaged: plain / duplicated-untransformed / transformed.
+
+    fit_score(X, y, seed) -> held-out loss under the grouped splitter.
+    Attribute to the transform only (arms[2] - arms[1]); arms[1] - arms[0] is
+    the regularisation change from doubling the rows.
+    """
+    import numpy as np
+    Xt, yt = transform(X, y)
+    arms = [(X, y), (np.vstack([X, X]), np.concatenate([y, y])),
+            (np.vstack([X, Xt]), np.concatenate([y, yt]))]
+    return [np.mean([fit_score(a, b, s) for s in seeds]) for a, b in arms]
+```
 
 ---
 

@@ -129,8 +129,11 @@ timeout" feature is all-False. Assert a non-zero True-count on real data
 (`competition.md` §1c).
 
 **Rule.** Build every feature with an explicit `as_of_frame` and assert
-`consumed_frame < event_start_frame`. For windowed features, assert the window is
-satisfiable on real data before trusting its importance.
+`consumed_frame <= event_frame` — the event frame itself is the "at release"
+snapshot and IS observable; everything strictly after it is not. That is the
+convention `assert_causal_at_event` below encodes (`xy[:event_ix + 1]`), and
+the one `methods.md`'s xFG recipe uses. For windowed features, assert the
+window is satisfiable on real data before trusting its importance.
 
 ---
 
@@ -293,19 +296,65 @@ acceleration is mostly noise.
 - Vendor tracking often carries a per-point uncertainty (SkillCorner's
   `predError`). Use it to **weight or mask**, not to jitter: hoopsq found jitter at
   the `predError` scale **hurt** log loss by +0.006 (§9).
+- **A vendor detection flag can be dead.** hoopsq's ball `isDetected` was `0.0`
+  on 100% of 27,277 ball frames in one game — every ball coordinate, including
+  ball height at release (the model's #2 feature), was the vendor's
+  extrapolation, possibly fitted using the post-release flight. It was harmless
+  for jumpers there, but a "detected" column that never varies is not evidence
+  of detection. Check it once per source and say so in the model card:
 
 ```python
-from scipy.signal import savgol_filter
+def assert_flag_varies(flag, name):
+    """A detection/quality flag constant across all frames is dead, not clean."""
+    import numpy as np
+    vals = np.unique(np.asarray(flag)[~np.isnan(np.asarray(flag, float))])
+    assert vals.size > 1, f"{name} is constant ({vals}); every coordinate is model output"
+```
 
-def velocity_from_positions(xy, t, window_s=0.4):
-    """Smoothed velocity (units/s) for one gap-free, uniformly sampled segment."""
+- **Centred filters read the future.** A Savitzky–Golay window, a centred
+  moving average, or a Kalman RTS smoother evaluated at frame `t` uses frames
+  after `t`. For a feature defined "at release" that is a leak across the event
+  boundary: hoopsq's RTS smoother ran over the whole −75..+25 frame window and
+  moved release speed by a **median 1.99 ft/s** (p90 4.24) against a
+  forward-only estimate on 406 shots; its centred 5-frame moving average read
+  **2 frames (80 ms) after release** and those speeds were in the winning
+  feature set. The effect on the score was small; the violation of the
+  advertised pre-release rule was not. **Smooth causally up to the event frame,
+  or smooth the pre-event segment only** (`xy[:release + 1]`) — the helper
+  below does the former with a one-sided Savitzky–Golay fit.
+
+```python
+from scipy.signal import savgol_coeffs, savgol_filter
+
+def velocity_from_positions(xy, t, window_s=0.4, causal=True):
+    """Smoothed velocity (units/s) for one gap-free, uniformly sampled segment.
+
+    causal=True evaluates the local polynomial at the LAST sample of each
+    window, so v[t] uses frames <= t only. causal=False is the centred filter --
+    fine for whole-track kinematics, WRONG for a value taken at an event frame.
+    """
     xy, t = np.asarray(xy, float), np.asarray(t, float)
     if len(xy) < 3:             # polyorder=2 needs a window of at least 3
         raise ValueError(f"segment has {len(xy)} samples; need >= 3 for velocity")
     dt = float(np.median(np.diff(t)))
     w = max(5, int(round(window_s / dt)) | 1)          # odd, >= 5
     w = min(w, len(xy) - (1 - len(xy) % 2))            # fit inside the segment
-    return savgol_filter(xy, w, polyorder=2, deriv=1, delta=dt, axis=0)
+    if not causal:
+        return savgol_filter(xy, w, polyorder=2, deriv=1, delta=dt, axis=0)
+    c = savgol_coeffs(w, polyorder=2, deriv=1, delta=dt, pos=w - 1, use="dot")
+    out = np.full_like(xy, np.nan)
+    for i in range(w - 1, len(xy)):                    # first w-1 frames have no full window
+        out[i] = c @ xy[i - w + 1:i + 1]
+    return out
+
+
+def assert_causal_at_event(feature_fn, xy, t, event_ix, atol=1e-9):
+    """The value at the event frame must not change when post-event frames are removed."""
+    full = feature_fn(xy, t)[event_ix]
+    cut = feature_fn(xy[:event_ix + 1], t[:event_ix + 1])[event_ix]
+    assert np.allclose(full, cut, atol=atol, equal_nan=True), (
+        f"feature at event frame reads post-event frames: {full} vs {cut} with the tail removed"
+    )
 ```
 
 ---
@@ -344,9 +393,15 @@ Run every new feature through `competition.md` §1 before trusting its importanc
   sign test (`competition.md` §11), not only the mean.
 - **Reflection is the natural label-preserving augmentation.** A court mirrored
   across its long axis is the same play. In hoopsq it was the **only**
-  augmentation that helped — **−0.003 log loss, 9 of 10 games** — while
-  `predError`-scale jitter hurt (+0.006). Reflect in-fold only, and swap the
-  left/right vocabulary (`left_corner` ↔ `right_corner`) along with the coordinate.
+  augmentation that helped, while `predError`-scale jitter hurt (+0.006). But
+  the first-reported figure (−0.003, 9/10 games) had **no duplication
+  control**: about half of it was row doubling, not reflection. Re-measured
+  2026-09-17 (5 seeds): plain 0.63197; rows stacked twice, unreflected 0.62986;
+  mirrored 0.62802 — reflection beyond duplication ≈ **−0.0018**, and the
+  weighted mirror (each copy at weight 0.5, hessian mass held constant) ≈
+  −0.0023. **Any row-adding augmentation needs a "duplicate without transform"
+  arm** (`competition.md` §8). Reflect in-fold only, and swap the left/right
+  vocabulary (`left_corner` ↔ `right_corner`) along with the coordinate.
 - **Reflection breaks for asymmetric facts.** Handedness is not symmetric under
   reflection: mirror the shooter's side and the off-wing relationship flips unless
   handedness flips with it. Decide explicitly, per feature, what a mirror means.

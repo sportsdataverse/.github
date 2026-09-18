@@ -65,6 +65,35 @@ sha for one package.
 `pbp_full.parquet` filename holds different content after a reprocess, which is
 exactly the case that must invalidate.
 
+**Hash the whole package, not a hand-picked list of files.** A `_CODE_FILES =
+[...]` constant is the gap this rule exists to close: hoopsq's hash covered
+five modules and not `features/*`, `pipeline.py`, `io.py`, `court.py` or
+`skill.py`, its feature cache was keyed only by a hand-bumped
+`FEATURE_VERSION`, and `--force` did not rebuild that cache. It bit twice in
+the repo's history (a null-handling change and a new defender column both
+shipped under an unbumped version). Use the tree sha of the package
+directory, and key every derived cache by it plus the input digests.
+
+### 2.0 Where this file stops applying: a fixed corpus is not a producer
+
+Everything above assumes a **release-publishing producer**: inputs that
+change on a schedule, outputs published to a tag, a registry that a loader
+reads. A research repo on a **fixed corpus** — a competition entry, a paper,
+hoopsq's 10 games — has none of that, and most of §3–§5 reduces to two
+things:
+
+- **The list of unit ids that were in the fit** (`game_ids`, or the partition
+  file in §2.1), so the exact holdout can be named without re-running.
+- **The input digests** (sha256 of every raw file), so "same data" is a
+  checkable claim rather than a filename.
+
+Write both into `run_meta.json` beside the code hash. hoopsq's `run_meta`
+carried neither, so its held-out numbers could not be re-checked without a
+58-minute run, and its winner booster was never saved (§2.1's meta sidecar and
+a saved artifact are the rest of the fix). The registry, ledger and lineage
+sections are for the producer case; do not build them for a corpus that will
+never change.
+
 ---
 
 ### 2.1 The fit's own identity: partition + meta sidecar

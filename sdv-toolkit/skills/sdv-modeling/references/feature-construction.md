@@ -42,6 +42,18 @@ geometry the trees had already split on scored 0.7762 against 0.7769, and only
 *new information* (shooter handedness, +0.0021 in 16/16 seasons) moved the score
 (`tracking-data-cv.md` §8).
 
+**"The trees already split on it" was measured at `max_depth=4`.** A depth-2
+model can represent at most a pairwise interaction per tree and no three-way
+term; an `interaction_constraints` model can represent only the listed pairs;
+a `monotone_constraints` model cannot bend a constrained feature through a
+hand-built product. In those settings a constructed feature *can* add what the
+trees cannot, so re-run the §4 test rather than assuming this table. Measured on
+hoopsq's depth-2 winner (2026-09-17): 31.8% of the SHAP-interaction mass was
+off-diagonal and forcing an additive fit cost +0.0118, so the depth-2 trees were
+already using pairwise terms — and the explicit ratio/product candidates for the
+top pairs still gained nothing (+0.0002 to +0.0022, seed-averaged). The table
+held at depth 2 here, but only the test says so.
+
 ---
 
 ## 1. The fitted-statistic litmus test
@@ -57,6 +69,15 @@ Row-wise arithmetic (`ydstogo / down`, `log1p(x)`, a clock split) passes and can
 be computed once. A percentile rank, quantile bins, `KBinsDiscretizer(strategy=
 "quantile")`, a category list, target-aware imputation and any target encoding
 fail.
+
+**One deliberate exception the test will flag: a prior from an external
+aggregate with every evaluation unit subtracted.** hoopsq's shooter prior is
+season totals minus all 10 tracked games, so its value on a training row does
+*not* change when computed on the training rows alone — it is stricter than
+in-fold (it excludes the training games too), and the litmus test's "would it
+change" question is the wrong one for it. The right assertion is the exact
+subtraction (`sklearn-xgboost.md` §A2). Document the exception at the call site;
+do not weaken the test.
 
 **How big the error is depends on the statistic.** A full-frame percentile rank of
 `ydstogo` moved training-row values by at most **0.0016** against the
@@ -149,6 +170,29 @@ was **0.963**, the only pair above 0.7 in the set. §6 has the rest of that stor
 per cluster or permute and ablate each cluster as a unit (`competition.md` §7).
 For linear models, check the variance inflation factor as well: correlation
 misses a column that is a combination of several others.
+
+**How to group SHAP: sum the SIGNED contributions within the group first, then
+take the absolute value.** Summing per-column |SHAP| over a correlated group
+double-counts credit that the columns pass back and forth with opposite signs.
+hoopsq (2026-09-17): nine shooter-prior columns with pairwise ρ 0.70–0.97 read
+**16.3%** of total attribution by per-column |SHAP| sums and **7.3%** grouped
+correctly — the group was less than half as important as the naive sum said.
+
+```python
+def grouped_shap_importance(contribs, names, groups):
+    """Mean |sum of signed SHAP within group| per row; contribs is (n, p) margin-space
+    attributions without the bias column. groups: {group_name: [col, ...]}."""
+    import numpy as np
+    ix = {n: i for i, n in enumerate(names)}
+    out = {}
+    for g, cols in groups.items():
+        signed = contribs[:, [ix[c] for c in cols]].sum(axis=1)   # sum signed FIRST
+        out[g] = float(np.abs(signed).mean())
+    total = sum(out.values())
+    if total == 0:   # constant model, or none of the grouped features used
+        return {g: 0.0 for g in out}
+    return {g: v / total for g, v in out.items()}
+```
 
 ```python
 import numpy as np
@@ -280,6 +324,39 @@ cleared it: 17 by at least 0.001 AUC, the other 41 by less. Many of the survivor
 share columns, so cluster them (§3) as well. Rank what survives, keep the few with material gains, and confirm
 them on a later season. When screened gains sit within a few multiples of the
 null maximum, treat them as noise.
+
+**At small n the bar must be seed-averaged, and for a LOSS the bar is the
+MINIMUM null Δ.** The table above scored one CV run per candidate on 35k rows,
+where the seed noise is far below the gains. On hoopsq's 1,324 shots
+(2026-09-17) seed-only changes moved the same configuration by 0.0005–0.0021 —
+the size of the candidate gains — so a single-seed real-vs-null comparison is a
+coin flip. Score both the real candidate and every null draw as a seed average
+(3–5 seeds). And mind the direction: the rule "beat the null **maximum**" is
+stated for a gain (higher-is-better). For a loss, a candidate must come in
+**below the null minimum**. Measured that way, against an un-mirrored reference
+of 0.63220 with 5 permuted draws per block: FLOW +0.0020 sat *inside* its null
+(+0.0014…+0.0048), ACTION +0.0006 inside (−0.0001…+0.0010), LITERATURE +0.0043
+was **worse than every null draw** (−0.0010…+0.0032), and PRIOR −0.0002 beat
+all five nulls (+0.0004…+0.0032) by 0.0006. The rejections had been right; the
+evidence had been missing.
+
+```python
+def null_bar(score_block, X, block_cols, seeds=(0, 1, 2), n_null=5, higher_is_better=True):
+    """Seed-averaged real delta vs seed-averaged deltas of the same block with its
+    columns permuted independently across rows. Returns (real, null_bar, passed):
+    for a gain the bar is max(null); for a loss it is min(null)."""
+    import numpy as np
+    rng = np.random.default_rng(0)
+    real = np.mean([score_block(X, block_cols, s) for s in seeds])
+    nulls = []
+    for _ in range(n_null):
+        Xp = X.copy()
+        for c in block_cols:
+            Xp[c] = rng.permutation(np.asarray(Xp[c]))
+        nulls.append(np.mean([score_block(Xp, block_cols, s) for s in seeds]))
+    bar = max(nulls) if higher_is_better else min(nulls)
+    return real, bar, (real > bar) if higher_is_better else (real < bar)
+```
 
 ```python
 import numpy as np
@@ -416,6 +493,18 @@ than fit (`wp`, `ep`, `xpass`, `cp` in nflverse and sdv-py):
 - **Training window.** A published model fitted on seasons that include your
   evaluation season is in-sample for those rows. Read its model card or fitting
   script and evaluate only on seasons it never saw (`competition.md` §2).
+- **The same rule for a prior built from an external aggregate — and the
+  aggregate's grain decides whether an as-of version is even possible.** A
+  season-total table (player × team × season, no game or date column) cannot
+  yield an as-of prior: the only leak-free construction is to subtract every
+  evaluation unit from the totals, which hoopsq does exactly
+  (`sklearn-xgboost.md` §A2). What remains still contains games played *after*
+  each evaluation shot. That is fine for "make probability given the shooter's
+  season talent" and a look-ahead for any "knowable at the time" claim — say
+  which one the model card is making. Also choose the shrinkage constant on the
+  prior's own outer-fold performance, not on a different quantity: hoopsq's
+  k = 10 was tuned for a 10-game residual, sat at the grid edge, and k = 50–100
+  scored up to 0.0007 better.
 - **Redundancy with its inputs.** `wp` correlated 0.963 with `score_differential`
   (§3). Adding a model output alongside its own inputs splits importance and
   rarely adds information; the output is most useful when it encodes inputs the

@@ -42,6 +42,25 @@ league-agnostic so WNBA/G-League inherit the same code:
 disk for these (Ryan Davis RAPM, Dunks&Threes EPM, DARKO DPM, LEBRON) are
 listed in the same document §1 — used to score, not to re-derive, the mimicry.
 
+### Shot value, tracking value and shot quality — also `sdv-py` main
+
+Three shipped modules that any new basketball shot model must name before
+claiming novelty (the hoopsq re-audit of 2026-09-17 found a project planning to
+"graduate into sdv-py" that never mentioned them):
+
+| Module | What it is | Fitted constant |
+|---|---|---|
+| `nba/nba_shot_value.py` | Five league-agnostic models (`league_id` 00/10/20) off the `shotchartdetail` FG%-by-zone table: `score_shot_xpoints` (per-shot expected points), `make_prob_by_context` / `make_prob_joint` (FG% by defender-distance and shot-clock buckets — the only form the public API exposes), `shooter_talent` (regressed make-above-expected per shooter), `shot_selection_quality`, `zone_value_map`. Everything downstream consumes the one scored frame. | `TALENT_SHRINKAGE_K = {"00": 70.1, "20": 70.1, "10": 60.0}` pseudo-attempts, **fitted split-half** on the 2022-23 fixture (`nba_shot_value_constants.py:122-126`); `split_half_reliability` + `points_calibration_error` back the oracle gates |
+| `nba/nba_tracking_value.py` | Six SportVU over-expected residual models — rebound chances, passes, drives, shot diet, touches, rim protection — `residual = realized − opportunities × league rate` within role buckets; baselines recomputed per call, no artifact | none |
+| `mbb/mbb_shot_quality.py` | Compute-on-demand empirical-Bayes make-rate table over zone × type, each cell shrunk `n / (n + k)` toward its parent zone, plus the per-shot scorer | `k` chosen per call |
+
+None of these reads raw coordinates — the public stats API ships aggregate
+buckets only — so a per-shot tracking xFG (hoopsq's shape) is complementary,
+not a duplicate, provided its shooter term is stated in the same terms:
+hoopsq's `k = 10` shrinks a 10-game residual, sdv-py's `k = 70.1` shrinks a
+season make-above-expected; they are not the same constant and should not be
+"reconciled". The recipe is in `methods.md` ("xG / shot quality").
+
 ### Validation harness, calibration primitives, season sims — also `sdv-py` main
 
 - **Validation harness** `tools/validation/`: six check families wired in
