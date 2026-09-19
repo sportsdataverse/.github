@@ -30,6 +30,6 @@ api "orgs/$ORG/outside_collaborators?per_page=100" --paginate --jq '.[] | "- \(.
 echo; echo "## Installed GitHub Apps (administration/members permissions are the ones to justify)"
 api "orgs/$ORG/installations" --jq '.installations[] | "- \(.app_slug) (repos=\(.repository_selection), perms=\(.permissions | keys | join(",")))"'
 echo; echo "## Fine-grained PAT policy"
-echo "- pending requests: $(api "orgs/$ORG/personal-access-token-requests?per_page=1" --jq 'if type=="array" then length else .message end')"
-echo "- active grants: $(api "orgs/$ORG/personal-access-tokens?per_page=1" --jq 'if type=="array" then length else .message end')"
-echo "  (\"Not Found\" on both = the org has never enabled fine-grained PAT access / approval; see runbook step 5)"
+echo "- not auditable from here: the personal-access-token endpoints accept only GitHub App tokens,"
+echo "  so an owner's gh session gets 404. Read Settings -> Personal access tokens -> Pending requests /"
+echo "  Active tokens in the UI (runbook step 5)."

@@ -59,7 +59,9 @@ Settings → Personal access tokens:
 - Tokens (classic) → **Restrict access via personal access tokens (classic)**. Classic PATs
   carry `repo` scope across every repo the user can reach; with base = none that is mostly
   harmless, but restricting them forces the fine-grained path.
-After this, `scripts/org-audit.sh` reports request/grant counts instead of "Not Found".
+The audit script cannot count requests or grants: those REST endpoints accept only GitHub
+App tokens, not an owner's `gh` session. Read the numbers in the UI (Settings → Personal
+access tokens → Pending requests / Active tokens) before and after.
 
 ## 6. OAuth and GitHub Apps
 
@@ -84,7 +86,8 @@ people you actually admitted, which is the real fix for "API access too permissi
 
 ## 9. Funding button
 
-`FUNDING.yml` in this repo shows the Sponsor button on every org repo. Ko-fi is live;
+`.github/FUNDING.yml` in this repo shows the Sponsor button on every org repo that has no
+`FUNDING.yml` of its own. Ko-fi is live;
 two lines wait on you:
 - publish a GitHub Sponsors listing for the org (Settings → Sponsors) and uncomment `github:`;
 - fill the `patreon:` slug.
@@ -95,5 +98,5 @@ two lines wait on you:
 scripts/org-audit.sh > audit-after.md && diff audit-before.md audit-after.md
 ```
 
-Expected diff: base permission `none`, 2FA `true`, repo creation `false`, PAT counts numeric,
-teams listed with grants, fewer owners/outside collaborators.
+Expected diff: base permission `none`, 2FA `true`, repo creation `false`, teams listed with
+grants, fewer owners/outside collaborators. PAT state is compared in the UI.
