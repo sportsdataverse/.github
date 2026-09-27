@@ -12,6 +12,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | Skill | When to reach for it |
 |---|---|
 | `/sdv-add-source` | Add a league/sport/endpoint/provider to sdv-py: capture, catalog, returns doc, scaffold, fixtures, drift gate. |
+| `/sdv-api-sync` | Turn an open api-sync issue (opened daily by the reusable api-spec-sync workflow) into a PR adding the upstream API's missing endpoints as in-style wrappers (CFBD to cfbfastR, CBBD to hoopR) plus drifted query params; never deletes, never closes the issue, never merges. |
 | `/sdv-assuring-data-pipelines` | Data quality validation and observability for pipelines via Great Expectations/Pandera plus OpenTelemetry/Prometheus monitoring. |
 | `/sdv-building-data-pipelines` | Production batch data pipelines with Polars, DuckDB, and PyArrow -- ETL patterns, medallion architecture, and partitioning. |
 | `/sdv-conventions` | Archetype convention packs; the router points here. |
