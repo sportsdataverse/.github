@@ -29,8 +29,9 @@ Everything below is a contract, not a suggestion: a cloud routine follows it una
 | `cfbd` | `https://apinext.collegefootballdata.com/api/X.Y.Z/cfbd-openapi.json` | `api.collegefootballdata.com` |
 | `cbbd` | `https://api.collegebasketballdata.com/api/X.Y.Z/cbbd-openapi.json` | `api.collegebasketballdata.com` |
 
-Sanity stop: if `counts.missing` is more than half the spec's paths, the host or prefix is
-misconfigured (a wrong host makes every wrapper invisible). Stop and report; write nothing.
+Sanity stop: if `counts.missing` is more than half of `spec_operations` (both in
+`/tmp/summary.json`), the host or prefix is misconfigured (a wrong host makes every wrapper
+invisible). Stop and report; write nothing.
 
 `curl -fsSL <url> -o /tmp/spec.json`, then
 `python3 <toolkit>/skills/sdv-api-sync/scripts/api_coverage.py /tmp/spec.json R /tmp/report.md /tmp/summary.json --host <host> --prefix <prefix>`

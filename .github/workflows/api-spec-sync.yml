@@ -192,7 +192,9 @@ jobs:
               }
             } else if (EXISTING) {
               await github.rest.issues.createComment({ ...base, issue_number: Number(EXISTING), body: `Clean at ${VERSION}. Closing.` });
-              await github.rest.issues.update({ ...base, issue_number: Number(EXISTING), state: 'closed', state_reason: 'completed' });
+              // Rewrite the body too, so the closed issue's marker records the version this
+              // package was clean AT (the closed-issue fallback above reads it tomorrow).
+              await github.rest.issues.update({ ...base, issue_number: Number(EXISTING), body, state: 'closed', state_reason: 'completed' });
               core.info(`Closed #${EXISTING}`);
             } else {
               core.info(`Clean at ${VERSION}; no issue to close.`);

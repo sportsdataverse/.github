@@ -89,6 +89,16 @@ EXTRA_PATHS = {
         }
     },
     "/fg/ep": {"get": {"operationId": "GetFgEp", "tags": ["x"], "parameters": []}},
+    "/fg/ep2": {"get": {"operationId": "GetFgEp2", "tags": ["x"], "parameters": []}},
+    "/stale": {
+        "get": {
+            "operationId": "GetStale",
+            "tags": ["x"],
+            "parameters": [
+                {"name": "classification", "in": "query", "schema": {"type": "string"}},
+            ],
+        }
+    },
     "/commented": {
         "get": {
             "operationId": "GetCommented",
@@ -124,6 +134,17 @@ cfbd_fg <- function() {
 }
 cfbd_dead <- function() {
   base_url <- "https://api.example.com/zzz"
+}
+cfbd_stale <- function(division = NULL) {
+  base_url <- "https://api.example.com/stale"
+  # query_params <- list("classification" = division)   # old, commented out
+  query_params <- list("division" = division)
+}
+cfbd_fg2 <- function() {
+  base_url <- 'https://api.example.com'
+  # endpoint_path <- "old/one"
+  endpoint_path <- "fg/ep2"
+  full_url <- paste0(base_url, "/", endpoint_path)
 }
 cfbd_commented <- function(year = NULL, division = NULL) {
   base_url <- "https://api.example.com/commented?"
@@ -218,6 +239,36 @@ class ApiCoverageTest(unittest.TestCase):
         self.assertEqual(r["/commented"][0]["query_keys"], ["year", "classification"])
         d = self._diff()
         self.assertNotIn("cfbd_commented", {x["fn"] for x in d["drift"]})
+
+    def test_commented_out_lines_are_ignored(self):
+        # A commented-out `# query_params <- list(...)` or `# endpoint_path <- "..."` is not
+        # code: cfbd_stale really sends "division" (drift), cfbd_fg2 really hits /fg/ep2.
+        r = ac.scan_r_dir(self.r, "api.example.com", "cfbd")
+        self.assertEqual(r["/stale"][0]["query_keys"], ["division"])
+        self.assertIn("/fg/ep2", r)
+        self.assertNotIn("/old/one", r)
+        d = self._diff()
+        by_fn = {x["fn"]: x["missing_params"] for x in d["drift"]}
+        self.assertEqual(by_fn.get("cfbd_stale"), ["classification"])
+
+    def test_summary_carries_spec_operation_count(self):
+        out_md = pathlib.Path(self.tmp.name) / "r2.md"
+        out_js = pathlib.Path(self.tmp.name) / "s2.json"
+        ac.main(
+            [
+                str(self.spec),
+                str(self.r),
+                str(out_md),
+                str(out_js),
+                "--host",
+                "api.example.com",
+                "--prefix",
+                "cfbd",
+            ]
+        )
+        s = json.loads(out_js.read_text(encoding="utf-8"))
+        # one GET per path in the fixture spec
+        self.assertEqual(s["spec_operations"], len(SPEC["paths"]) + len(EXTRA_PATHS))
 
     def test_releases_between_yanked(self):
         tags = ["v5.31.1", "v5.31.0", "v5.30.1"]

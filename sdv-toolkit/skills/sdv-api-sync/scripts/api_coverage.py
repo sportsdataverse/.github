@@ -147,6 +147,32 @@ QUERY_LIST_RE = re.compile(r"(?:query_params\s*<-\s*list|query\s*=\s*list)\s*\("
 ENDPOINT_PATH_RE = re.compile(r"endpoint_path\s*<-\s*\"([^\"]+)\"")
 
 
+def _strip_comments(src: str) -> str:
+    """Blank out R `#` comments (outside string literals) so a commented-out
+    `# query_params <- list(...)` or `# endpoint_path <- "old"` is never read as code."""
+    out, i, in_str = [], 0, None
+    while i < len(src):
+        ch = src[i]
+        if in_str:
+            out.append(ch)
+            if ch == "\\" and i + 1 < len(src):
+                out.append(src[i + 1])
+                i += 1
+            elif ch == in_str:
+                in_str = None
+        elif ch in "\"'":
+            in_str = ch
+            out.append(ch)
+        elif ch == "#":
+            nl = src.find("\n", i)
+            i = len(src) if nl < 0 else nl
+            continue
+        else:
+            out.append(ch)
+        i += 1
+    return "".join(out)
+
+
 def _query_keys(body: str) -> list[str]:
     """The camelCase query keys a wrapper body SENDS: the names on the left of `=` in
     `query_params <- list("year" = year, ...)` (cfbfastR) or `query = list(season = season,
@@ -180,7 +206,7 @@ def scan_r_dir(r_dir, host: str, prefix: str):
                 m.start(),
                 m.group(1),
                 _formals(src, m.end() - 1),
-                src[m.start() : starts[i + 1]],
+                _strip_comments(src[m.start() : starts[i + 1]]),
             )
             for i, m in enumerate(FN_HEAD_RE.finditer(src))
         ]
@@ -333,6 +359,7 @@ def main(argv=None) -> int:
                 "version": version,
                 "prefix": a.prefix,
                 "counts": {k: len(v) for k, v in d.items()},
+                "spec_operations": len(eps),
                 **d,
             },
             indent=2,
