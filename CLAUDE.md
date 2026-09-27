@@ -36,6 +36,7 @@ publishes the marketplace and the bundled `sdv-toolkit` plugin.
   and `python tools/render.py --check` (run from `sdv-toolkit/`).
 - `ecosystem-status.yml` — scheduled `status/` snapshot (`[skip ci]` commits).
 - `orphan-scripts.yml` — reusable `workflow_call` gate used by the `-raw`/`-data` repos.
+- `api-spec-sync.yml` — reusable `workflow_call` detector called daily by cfbfastR (CFBD) and hoopR (CBBD): diffs the upstream OpenAPI spec against `R/` and upserts one `api-sync` issue + a ClaudeCowork mirror. Commit-free. Script + tests live in `sdv-toolkit/skills/sdv-api-sync/`.
 
 Run the same three catalog commands locally before pushing a toolkit change, plus
 `python -m unittest discover -s hooks -p 'test_*.py'` for router changes.

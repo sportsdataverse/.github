@@ -1,0 +1,216 @@
+name: api-spec-sync
+
+# Reusable daily detector: is the R package's <prefix>_* wrapper surface behind the
+# upstream OpenAPI spec? Commit-free by design: its only outputs are one labeled
+# tracking issue in the caller repo and a mirror checklist issue in ClaudeCowork.
+# Spec: ClaudeCowork/specs/2026-09-26-api-spec-sync-design.md. Callers:
+#   jobs: { sync: { uses: sportsdataverse/.github/.github/workflows/api-spec-sync.yml@main, with: {...}, secrets: inherit } }
+
+on:
+  workflow_call:
+    inputs:
+      upstream_repo:     {type: string, required: true}   # e.g. CFBD/cfb-api-v2
+      spec_url_template: {type: string, required: true}   # contains {version}
+      host:              {type: string, required: true}   # e.g. api.collegefootballdata.com
+      fn_prefix:         {type: string, required: true}   # cfbd | cbbd
+      force:             {type: boolean, default: false}  # ignore the last-seen version
+    secrets:
+      COWORK_ISSUES_TOKEN: {required: false}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions: {contents: read, issues: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PREFIX: ${{ inputs.fn_prefix }}
+      UPSTREAM: ${{ inputs.upstream_repo }}
+    steps:
+      - name: Latest upstream release
+        id: up
+        run: |
+          tag=$(gh api "repos/$UPSTREAM/releases/latest" --jq .tag_name)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "upstream latest: $tag"
+
+      - name: Ensure the api-sync label exists
+        run: gh label create api-sync --repo "$GITHUB_REPOSITORY" --color 0E8A16 --description "Upstream API spec vs wrapper coverage tracker" --force
+
+      - name: Last-seen version (marker in the open api-sync issue)
+        id: seen
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const res = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'api-sync', per_page: 10,
+            });
+            const issues = res.data.filter(i => !i.pull_request).sort((a, b) => a.number - b.number);
+            const first = issues[0];
+            const m = first && /<!--\s*api-sync:\s*version=([0-9][\w.\-]*)\s*-->/.exec(first.body || '');
+            core.setOutput('version', m ? m[1] : '');
+            core.setOutput('issue', first ? String(first.number) : '');
+            for (const extra of issues.slice(1)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: extra.number,
+                body: `Duplicate api-sync tracker: #${first.number} is canonical; please close this one.`,
+              });
+            }
+            core.info(`last-seen=${m ? m[1] : '(none)'} issue=${first ? first.number : '(none)'}`);
+
+      # Upstream-controlled values (the release tag) and caller inputs are passed through
+      # `env:` and read as quoted shell variables, never interpolated into shell source.
+      - name: Short-circuit when nothing changed
+        id: gate
+        env:
+          FORCE: ${{ inputs.force }}
+          LATEST: ${{ steps.up.outputs.version }}
+          LAST_SEEN: ${{ steps.seen.outputs.version }}
+        run: |
+          if [ "$FORCE" != "true" ] && [ "$LATEST" = "$LAST_SEEN" ]; then
+            echo "up to date at $LATEST — nothing to do"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          fetch-depth: 1
+          sparse-checkout: R
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/checkout@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          repository: sportsdataverse/.github
+          path: _org
+          fetch-depth: 1
+          sparse-checkout: sdv-toolkit/skills/sdv-api-sync/scripts
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-python@v6
+        if: steps.gate.outputs.run == 'true'
+        with: {python-version: '3.12'}
+
+      - name: Fetch spec
+        if: steps.gate.outputs.run == 'true'
+        env:
+          TEMPLATE: ${{ inputs.spec_url_template }}
+          VERSION: ${{ steps.up.outputs.version }}
+        run: |
+          url=$(python3 -c 'import sys; print(sys.argv[1].replace("{version}", sys.argv[2]))' "$TEMPLATE" "$VERSION")
+          echo "spec: $url"
+          curl -fsSL --retry 3 "$url" -o spec.json    # -f: a 404 (moved host / version skew) fails this run red
+
+      - name: Coverage diff
+        id: diff
+        if: steps.gate.outputs.run == 'true'
+        env:
+          HOST: ${{ inputs.host }}
+        run: |
+          python3 _org/sdv-toolkit/skills/sdv-api-sync/scripts/api_coverage.py spec.json R report.md summary.json --host "$HOST" --prefix "$PREFIX"
+          python3 - <<'EOF' >> "$GITHUB_OUTPUT"
+          import json; s = json.load(open("summary.json"))
+          c = s["counts"]; print(f"missing={c['missing']}\ndead={c['dead']}\ndrift={c['drift']}\ndirty={'true' if sum(c.values()) else 'false'}")
+          EOF
+
+      - name: Upstream changelog slice
+        if: steps.gate.outputs.run == 'true'
+        env:
+          LAST_SEEN: ${{ steps.seen.outputs.version }}
+          LATEST: ${{ steps.up.outputs.version }}
+        run: |
+          # Releases go to a file first: a `gh ... | python3 - <<EOF` pipe is silently
+          # replaced by the heredoc (SC2259) and the script would see an empty stdin.
+          gh api "repos/$UPSTREAM/releases?per_page=100" --paginate --jq '.[] | {tag_name, body, html_url}' > releases.jsonl
+          python3 - "$LAST_SEEN" "$LATEST" <<'EOF'
+          import json, sys
+          sys.path.insert(0, "_org/sdv-toolkit/skills/sdv-api-sync/scripts")
+          from api_coverage import releases_between
+          with open("releases.jsonl", encoding="utf-8") as fh:
+              rel = [json.loads(l) for l in fh if l.strip()]
+          last_seen, latest = (sys.argv[1] or None), sys.argv[2]
+          keep = set(releases_between([r["tag_name"] for r in rel], last_seen, latest))
+          with open("changelog.md", "w", encoding="utf-8") as f:
+              f.write(f"### Upstream changes since {last_seen or '(first run)'}\n\n")
+              for r in rel:
+                  if r["tag_name"] in keep:
+                      f.write(f"#### [{r['tag_name']}]({r['html_url']})\n\n{(r['body'] or '').strip()}\n\n")
+          EOF
+
+      - name: Upsert or close the api-sync tracking issue
+        id: upsert
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/github-script@v9
+        env:
+          VERSION: ${{ steps.up.outputs.version }}
+          TAG: ${{ steps.up.outputs.tag }}
+          DIRTY: ${{ steps.diff.outputs.dirty }}
+          EXISTING: ${{ steps.seen.outputs.issue }}
+        with:
+          script: |
+            const fs = require('fs');
+            const { VERSION, TAG, DIRTY, EXISTING, PREFIX, UPSTREAM } = process.env;
+            const s = JSON.parse(fs.readFileSync('summary.json', 'utf8'));
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `${PREFIX.toUpperCase()} ${VERSION}: ${s.counts.missing} missing, ${s.counts.drift} drift, ${s.counts.dead} dead`;
+            const body = [
+              `<!-- api-sync: version=${VERSION} -->`,
+              `Upstream: [${UPSTREAM} ${TAG}](https://github.com/${UPSTREAM}/releases/tag/${TAG}) · Run: ${runUrl}`,
+              ``,
+              fs.readFileSync('report.md', 'utf8'),
+              fs.readFileSync('changelog.md', 'utf8'),
+              `---`,
+              `**How this is resolved:** the \`sdv-api-sync\` skill (sdv-toolkit) reads this issue and opens a PR adding the missing wrappers and drift params. This workflow closes the issue on the first clean run after that PR merges. Do not edit the marker line above.`,
+            ].join('\n');
+            const base = { owner: context.repo.owner, repo: context.repo.repo };
+            if (DIRTY === 'true') {
+              if (EXISTING) {
+                await github.rest.issues.update({ ...base, issue_number: Number(EXISTING), title, body });
+                await github.rest.issues.createComment({ ...base, issue_number: Number(EXISTING), body: `Refreshed for ${TAG}: ${s.counts.missing} missing, ${s.counts.drift} drift, ${s.counts.dead} dead.` });
+                core.setOutput('issue', EXISTING);
+                core.info(`Updated #${EXISTING}`);
+              } else {
+                const c = await github.rest.issues.create({ ...base, title, body, labels: ['api-sync'] });
+                core.setOutput('issue', String(c.data.number));
+                core.info(`Opened #${c.data.number}`);
+              }
+            } else if (EXISTING) {
+              await github.rest.issues.createComment({ ...base, issue_number: Number(EXISTING), body: `Clean at ${VERSION}. Closing.` });
+              await github.rest.issues.update({ ...base, issue_number: Number(EXISTING), state: 'closed', state_reason: 'completed' });
+              core.info(`Closed #${EXISTING}`);
+            } else {
+              core.info(`Clean at ${VERSION}; no issue to close.`);
+            }
+
+      - name: Mirror checklist issue in ClaudeCowork
+        if: steps.gate.outputs.run == 'true' && steps.diff.outputs.missing != '0'
+        continue-on-error: true
+        uses: actions/github-script@v9
+        env:
+          VERSION: ${{ steps.up.outputs.version }}
+          TAG: ${{ steps.up.outputs.tag }}
+          TRACKER: ${{ steps.upsert.outputs.issue }}
+        with:
+          github-token: ${{ secrets.COWORK_ISSUES_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const { VERSION, TAG, PREFIX, UPSTREAM } = process.env;
+            const s = JSON.parse(fs.readFileSync('summary.json', 'utf8'));
+            const owner = 'saiemgilani', repo = 'ClaudeCowork';
+            const title = `${PREFIX.toUpperCase()} ${VERSION}: recreate ${s.counts.missing} new endpoint(s) in sdv-py / sdv-db / sdv-data-api / GoP`;
+            const existing = await github.rest.issues.listForRepo({ owner, repo, state: 'all', labels: 'api-sync', per_page: 50 });
+            if (existing.data.some(i => i.title === title)) { core.info('mirror issue already exists'); return; }
+            const targets = ['sdv-py', 'sdv-db', 'sdv-data-api', 'game-on-paper'];
+            const lines = [
+              `Upstream: [${UPSTREAM} ${TAG}](https://github.com/${UPSTREAM}/releases/tag/${TAG})`,
+              `Tracker: https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${process.env.TRACKER || ''}`,
+              ``,
+              `Per Saiem (2026-09-26): only the R wrapper is automated; these are the surfaces to recreate by hand, one decision each.`,
+              ``,
+            ];
+            for (const m of s.missing) for (const t of targets) lines.push(`- [ ] \`${m.method} ${m.path}\` (${m.operationId}) → ${t}`);
+            await github.rest.issues.create({ owner, repo, title, body: lines.join('\n'), labels: ['api-sync'] });
