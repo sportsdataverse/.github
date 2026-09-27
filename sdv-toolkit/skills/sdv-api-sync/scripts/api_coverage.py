@@ -39,7 +39,16 @@ def norm(path: str) -> str:
 
 
 def load_spec(path):
-    spec = json.loads(Path(path).read_text(encoding="utf-8"))
+    try:
+        spec = json.loads(Path(path).read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        # collegebasketballdata.com serves only the current spec version; an older
+        # versioned URL answers HTTP 200 with an HTML page, which curl -f passes.
+        print(
+            f"spec is not JSON (moved or unpublished version?): {path}: {exc}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
     eps = {}
     for p, ops in (spec.get("paths") or {}).items():
         for method, op in ops.items():
