@@ -90,6 +90,21 @@ EXTRA_PATHS = {
     },
     "/fg/ep": {"get": {"operationId": "GetFgEp", "tags": ["x"], "parameters": []}},
     "/fg/ep2": {"get": {"operationId": "GetFgEp2", "tags": ["x"], "parameters": []}},
+    "/games/{gameId}/preview": {
+        "get": {
+            "operationId": "GetPv",
+            "tags": ["games"],
+            "parameters": [
+                {
+                    "name": "gameId",
+                    "in": "path",
+                    "required": True,
+                    "schema": {"type": "integer"},
+                }
+            ],
+        }
+    },
+    "/games": {"get": {"operationId": "GetGames", "tags": ["games"], "parameters": []}},
     "/stale": {
         "get": {
             "operationId": "GetStale",
@@ -131,6 +146,9 @@ cfbd_fg <- function() {
   base_url <- "https://api.example.com"
   endpoint_path <- "fg/ep"
   full_url <- paste0(base_url, "/", endpoint_path)
+}
+cfbd_pv <- function(game_id) {
+  full_url <- paste0("https://api.example.com/games/", game_id, "/preview")
 }
 cfbd_dead <- function() {
   base_url <- "https://api.example.com/zzz"
@@ -193,7 +211,8 @@ class ApiCoverageTest(unittest.TestCase):
 
     def test_missing_and_dead(self):
         d = self._diff()
-        self.assertEqual([m["path"] for m in d["missing"]], ["/d"])
+        # /games is in the spec but nobody wraps it (cfbd_pv wraps /games/{id}/preview)
+        self.assertEqual([m["path"] for m in d["missing"]], ["/d", "/games"])
         self.assertEqual([x["path"] for x in d["dead"]], ["/zzz"])
 
     def test_paste0_middle_segment_param(self):
@@ -270,6 +289,16 @@ class ApiCoverageTest(unittest.TestCase):
         # one GET per path in the fixture spec
         self.assertEqual(s["spec_operations"], len(SPEC["paths"]) + len(EXTRA_PATHS))
 
+    def test_paste0_literal_url_with_path_param(self):
+        # cfbfastR composes some URLs as paste0("https://host/games/", id, "/preview"):
+        # the literal must be read as the whole call (/games/{}/preview), not truncated
+        # at the first closing quote (/games) -- which reported the preview wrappers
+        # missing and /games covered on cfbfastR#161.
+        r = ac.scan_r_dir(self.r, "api.example.com", "cfbd")
+        self.assertIn("/games/{}/preview", r)
+        self.assertEqual(r["/games/{}/preview"][0]["fn"], "cfbd_pv")
+        self.assertNotIn("/games", r)
+
     def test_releases_between_yanked(self):
         tags = ["v5.31.1", "v5.31.0", "v5.30.1"]
         self.assertEqual(ac.releases_between(tags, "5.31.1", "5.31.0"), [])
@@ -312,7 +341,7 @@ class ApiCoverageTest(unittest.TestCase):
         self.assertEqual(rc, 0)
         s = json.loads(out_js.read_text(encoding="utf-8"))
         # /b/{id}/c, /d and /teams/{teamId}/roster are unwrapped in the cfbd (literal-URL) view
-        self.assertEqual(s["counts"]["missing"], 3)
+        self.assertEqual(s["counts"]["missing"], 4)
         self.assertIn(
             "## Spec endpoints with NO cfbd wrapper", out_md.read_text(encoding="utf-8")
         )
