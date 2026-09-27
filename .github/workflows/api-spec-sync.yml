@@ -48,7 +48,19 @@ jobs:
             });
             const issues = res.data.filter(i => !i.pull_request).sort((a, b) => a.number - b.number);
             const first = issues[0];
-            const m = first && /<!--\s*api-sync:\s*version=([0-9][\w.\-]*)\s*-->/.exec(first.body || '');
+            const MARKER = /<!--\s*api-sync:\s*version=([0-9][\w.\-]*)\s*-->/;
+            let m = first && MARKER.exec(first.body || '');
+            if (!first) {
+              // Clean state has no open issue; remember the version from the most recently
+              // closed tracker so a clean package still short-circuits daily and a later
+              // re-open carries every release since, not just the latest.
+              const closed = await github.rest.issues.listForRepo({
+                owner: context.repo.owner, repo: context.repo.repo,
+                state: 'closed', labels: 'api-sync', sort: 'updated', direction: 'desc', per_page: 5,
+              });
+              const last = closed.data.find(i => !i.pull_request && MARKER.test(i.body || ''));
+              m = last ? MARKER.exec(last.body) : null;
+            }
             core.setOutput('version', m ? m[1] : '');
             core.setOutput('issue', first ? String(first.number) : '');
             for (const extra of issues.slice(1)) {

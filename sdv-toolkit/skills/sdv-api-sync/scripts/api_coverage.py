@@ -21,10 +21,9 @@ import sys
 from pathlib import Path
 
 METHODS = {"get", "post", "put", "delete", "patch"}
-# R formals are snake_case, spec params camelCase; both fold to lower + no underscores.
-# The R side abbreviates a few: map spec-fold -> R-fold explicitly. Anything else that
-# differs is reported as drift; do NOT grow this table to hide real gaps.
-ALIASES = {"firstname": "first", "lastname": "last"}
+# Spec params are camelCase and the wrappers SEND camelCase query keys, so drift is
+# judged on the keys of the query list (see _query_keys), folded to lower + no
+# underscores. Formal names (snake_case, sometimes legacy-named) are only a fallback.
 IGNORED_FORMALS = {"...", "verbose", "proxy"}
 MARKER_RE = re.compile(r"<!--\s*api-sync:\s*version=([0-9][\w.\-]*)\s*-->")
 FN_HEAD_RE = re.compile(r"^([A-Za-z0-9_.]+)\s*<-\s*function\s*\(", re.M)
@@ -73,6 +72,12 @@ def _balanced_end(src: str, open_idx: int) -> int:
                 in_str = None
         elif ch in "\"'":
             in_str = ch
+        elif ch == "#":
+            # R comment: a ')' or a quote inside it is prose, not code. Skip to EOL.
+            nl = src.find("\n", i)
+            if nl < 0:
+                return len(src)
+            i = nl
         elif ch == "(":
             depth += 1
         elif ch == ")":
@@ -86,26 +91,35 @@ def _balanced_end(src: str, open_idx: int) -> int:
 def _split_top(inner: str) -> list[str]:
     """Split a call's argument text on commas at depth 0 and outside string literals,
     so `f(a = g(1, 2), b = "x,y")` yields two args, not four."""
-    parts, depth, cur, in_str = [], 0, "", None
-    for ch in inner + ",":
+    parts, depth, cur, in_str, i = [], 0, "", None, 0
+    s = inner + ","
+    while i < len(s):
+        ch = s[i]
         if in_str:
             cur += ch
             if ch == in_str:
                 in_str = None
-            continue
-        if ch in "\"'":
+        elif ch in "\"'":
             in_str = ch
             cur += ch
+        elif ch == "#":
+            # R comment inside the call: drop it to end of line (see _balanced_end).
+            nl = s.find("\n", i)
+            i = len(s) if nl < 0 else nl
             continue
-        if ch in "([{":
-            depth += 1
-        elif ch in ")]}":
-            depth -= 1
-        if ch == "," and depth == 0:
-            parts.append(cur.strip())
-            cur = ""
         else:
-            cur += ch
+            if ch in "([{":
+                depth += 1
+            elif ch in ")]}":
+                depth -= 1
+            if ch == "," and depth == 0:
+                parts.append(cur.strip())
+                cur = ""
+            else:
+                cur += ch
+        i += 1
+    if cur.strip():
+        parts.append(cur.strip())
     return [p for p in parts if p]
 
 
@@ -129,8 +143,29 @@ def _paste_path(inner: str) -> str:
     return "".join(out)
 
 
+QUERY_LIST_RE = re.compile(r"(?:query_params\s*<-\s*list|query\s*=\s*list)\s*\(")
+ENDPOINT_PATH_RE = re.compile(r"endpoint_path\s*<-\s*\"([^\"]+)\"")
+
+
+def _query_keys(body: str) -> list[str]:
+    """The camelCase query keys a wrapper body SENDS: the names on the left of `=` in
+    `query_params <- list("year" = year, ...)` (cfbfastR) or `query = list(season = season,
+    ...)` (hoopR). These, not the snake_case formals, are what drift is judged on."""
+    keys = []
+    for m in QUERY_LIST_RE.finditer(body):
+        open_idx = m.end() - 1
+        inner = body[open_idx + 1 : _balanced_end(body, open_idx)]
+        for arg in _split_top(inner):
+            if "=" in arg:
+                keys.append(arg.split("=", 1)[0].strip().strip("\"'"))
+    return [k for k in keys if k]
+
+
 def scan_r_dir(r_dir, host: str, prefix: str):
     lit = re.compile(r"https://" + re.escape(host) + r"(/[A-Za-z0-9_/{}\-]*)")
+    # cfbfastR's other idiom: a bare host literal plus `endpoint_path <- "metrics/fg/ep"`
+    # in the same function (cfbd_metrics_fg_ep). Resolved per enclosing function below.
+    bare = re.compile(r"https://" + re.escape(host) + r"[\"']")
     # group 1 = a literal path; no group 1 = a paste0( call whose args are scanned
     # to the balanced ')' (nested calls and commas inside literals are safe).
     helper = re.compile(
@@ -139,10 +174,24 @@ def scan_r_dir(r_dir, host: str, prefix: str):
     found = {}
     for f in sorted(Path(r_dir).glob("*.R")):
         src = f.read_text(encoding="utf-8", errors="replace")
+        starts = [m.start() for m in FN_HEAD_RE.finditer(src)] + [len(src)]
         heads = [
-            (m.start(), m.group(1), _formals(src, m.end() - 1))
-            for m in FN_HEAD_RE.finditer(src)
+            (
+                m.start(),
+                m.group(1),
+                _formals(src, m.end() - 1),
+                src[m.start() : starts[i + 1]],
+            )
+            for i, m in enumerate(FN_HEAD_RE.finditer(src))
         ]
+
+        def enclosing(pos):
+            fn, formals, body = "<module>", [], ""
+            for start, name, fs, b in heads:
+                if start < pos:
+                    fn, formals, body = name, fs, b
+            return fn, formals, body
+
         hits = [(m.start(), m.group(1)) for m in lit.finditer(src)]
         hits += [
             (
@@ -152,16 +201,23 @@ def scan_r_dir(r_dir, host: str, prefix: str):
             )
             for m in helper.finditer(src)
         ]
+        for m in bare.finditer(src):
+            ep = ENDPOINT_PATH_RE.search(enclosing(m.start())[2])
+            if ep:
+                hits.append((m.start(), "/" + ep.group(1).lstrip("/")))
         for pos, p in hits:
             p = p.rstrip("/") or "/"
             if p == "/":
                 continue  # a bare host mention in prose, not a wrapper
-            fn, formals = "<module>", []
-            for start, name, fs in heads:
-                if start < pos:
-                    fn, formals = name, fs
+            fn, formals, body = enclosing(pos)
             found.setdefault(norm(p), []).append(
-                {"file": f.name, "fn": fn, "formals": formals, "path": p}
+                {
+                    "file": f.name,
+                    "fn": fn,
+                    "formals": formals,
+                    "query_keys": _query_keys(body),
+                    "path": p,
+                }
             )
     return found
 
@@ -190,12 +246,10 @@ def diff(eps, r_eps):
         for e in entries:
             if e["fn"] == "<module>":
                 continue
-            fm = {fold(x) for x in e["formals"]}
-            absent = sorted(
-                q
-                for q in spec_params
-                if fold(q) not in fm and ALIASES.get(fold(q), fold(q)) not in fm
-            )
+            # Judge on what the wrapper SENDS (its query-list keys); fall back to the
+            # formals only for wrappers that build no query list at all.
+            sent = {fold(x) for x in (e.get("query_keys") or e["formals"])}
+            absent = sorted(q for q in spec_params if fold(q) not in sent)
             if absent:
                 drift.append(
                     {
