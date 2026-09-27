@@ -38,6 +38,12 @@ invisible). Stop and report; write nothing.
 where `<toolkit>` is this skill's plugin root, or the `sdv-toolkit/` folder of a
 `sportsdataverse/.github` checkout when the org repo is available as a source. Work from
 `/tmp/summary.json`, not from the issue text; the issue may be a day stale.
+
+The CBBD host serves only the CURRENT spec version: an older versioned URL answers HTTP 200 with
+an HTML page, so `curl -f` passes it through and the script exits 2 ("spec is not JSON"). That
+means upstream moved after the detector ran. Re-fetch with the latest release tag
+(`gh api repos/CFBD/<upstream repo>/releases/latest --jq .tag_name`, strip the `v`), state the
+version you actually diffed in the PR body, and carry on; the next detector run refreshes the marker.
 If every count is zero: comment `Clean on re-diff at X.Y.Z; nothing to add.` on the issue and stop.
 
 ## 2. Read the package's idiom before writing anything

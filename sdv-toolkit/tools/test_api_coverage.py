@@ -316,6 +316,18 @@ class ApiCoverageTest(unittest.TestCase):
             ac.load_spec(bad)
         self.assertEqual(cm.exception.code, 2)
 
+    def test_spec_not_json_exits_2(self):
+        # collegebasketballdata.com serves only the CURRENT spec version; an old
+        # versioned URL answers HTTP 200 with an HTML page (not a 404), so curl -f
+        # passes it through. That must be a clean exit 2, not a traceback.
+        html = pathlib.Path(self.tmp.name) / "old.json"
+        html.write_text(
+            "<!doctype html><html><body>Not found</body></html>", encoding="utf-8"
+        )
+        with self.assertRaises(SystemExit) as cm:
+            ac.load_spec(html)
+        self.assertEqual(cm.exception.code, 2)
+
     def test_parse_marker_absent(self):
         self.assertIsNone(ac.parse_marker(""))
         self.assertIsNone(ac.parse_marker("no marker here"))
