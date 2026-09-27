@@ -160,6 +160,10 @@ So:
 
 ## 7. Commit, push, PR, hand back
 
+- **Identity first, unconditionally:** `git config user.name "Saiem Gilani" && git config user.email "saiem.gilani@gmail.com"`
+  (repo-local). A cloud checkout ships a default identity of `Claude <noreply@anthropic.com>`, so a
+  "set only if unset" guard is defeated and every commit would carry an AI author (and a squash-merge
+  would add an AI `Co-authored-by` trailer). The human maintainer is the sole author.
 - One commit per endpoint plus one for drift: `feat(<prefix>): add <fn>() — <PREFIX> <path> (v X.Y.Z)`;
   drift: `feat(<prefix>): add <n> upstream query params (v X.Y.Z)`. Conventional Commits; **no AI co-author trailers**.
 - `git push -u origin HEAD:api-sync/<prefix>-X.Y.Z` (a cloud checkout sits on a `claude/*` branch: push
