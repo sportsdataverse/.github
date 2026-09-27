@@ -218,7 +218,25 @@ def scan_r_dir(r_dir, host: str, prefix: str):
                     fn, formals, body = name, fs, b
             return fn, formals, body
 
-        hits = [(m.start(), m.group(1)) for m in lit.finditer(src)]
+        # cfbfastR also composes path params into a literal host URL:
+        #   paste0("https://HOST/games/", game_id, "/preview")  ->  /games/{}/preview
+        # Read the whole call, and keep the plain literal scan from reading the
+        # first literal alone (which reported /games covered and the preview missing).
+        paste_lit = re.compile(r"paste0\(\s*[\"']https://" + re.escape(host) + r"/")
+        paste_spans, hits = [], []
+        for m in paste_lit.finditer(src):
+            open_idx = m.start() + len("paste0")
+            end = _balanced_end(src, open_idx)
+            paste_spans.append((open_idx, end))
+            args = _split_top(src[open_idx + 1 : end])
+            first = args[0].strip("\"'") if args else ""
+            first = first[len("https://" + host) :]  # keep the path part of the literal
+            hits.append((m.start(), first + _paste_path(",".join(args[1:]))))
+        hits += [
+            (m.start(), m.group(1))
+            for m in lit.finditer(src)
+            if not any(a <= m.start() <= b for a, b in paste_spans)
+        ]
         hits += [
             (
                 m.start(),
