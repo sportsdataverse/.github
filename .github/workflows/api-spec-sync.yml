@@ -59,11 +59,17 @@ jobs:
             }
             core.info(`last-seen=${m ? m[1] : '(none)'} issue=${first ? first.number : '(none)'}`);
 
+      # Upstream-controlled values (the release tag) and caller inputs are passed through
+      # `env:` and read as quoted shell variables, never interpolated into shell source.
       - name: Short-circuit when nothing changed
         id: gate
+        env:
+          FORCE: ${{ inputs.force }}
+          LATEST: ${{ steps.up.outputs.version }}
+          LAST_SEEN: ${{ steps.seen.outputs.version }}
         run: |
-          if [ "${{ inputs.force }}" != "true" ] && [ "${{ steps.up.outputs.version }}" = "${{ steps.seen.outputs.version }}" ]; then
-            echo "up to date at ${{ steps.up.outputs.version }} — nothing to do"
+          if [ "$FORCE" != "true" ] && [ "$LATEST" = "$LAST_SEEN" ]; then
+            echo "up to date at $LATEST — nothing to do"
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
@@ -91,16 +97,21 @@ jobs:
 
       - name: Fetch spec
         if: steps.gate.outputs.run == 'true'
+        env:
+          TEMPLATE: ${{ inputs.spec_url_template }}
+          VERSION: ${{ steps.up.outputs.version }}
         run: |
-          url=$(python3 -c 'import sys; print(sys.argv[1].replace("{version}", sys.argv[2]))' "${{ inputs.spec_url_template }}" "${{ steps.up.outputs.version }}")
+          url=$(python3 -c 'import sys; print(sys.argv[1].replace("{version}", sys.argv[2]))' "$TEMPLATE" "$VERSION")
           echo "spec: $url"
           curl -fsSL --retry 3 "$url" -o spec.json    # -f: a 404 (moved host / version skew) fails this run red
 
       - name: Coverage diff
         id: diff
         if: steps.gate.outputs.run == 'true'
+        env:
+          HOST: ${{ inputs.host }}
         run: |
-          python3 _org/sdv-toolkit/skills/sdv-api-sync/scripts/api_coverage.py spec.json R report.md summary.json --host "${{ inputs.host }}" --prefix "$PREFIX"
+          python3 _org/sdv-toolkit/skills/sdv-api-sync/scripts/api_coverage.py spec.json R report.md summary.json --host "$HOST" --prefix "$PREFIX"
           python3 - <<'EOF' >> "$GITHUB_OUTPUT"
           import json; s = json.load(open("summary.json"))
           c = s["counts"]; print(f"missing={c['missing']}\ndead={c['dead']}\ndrift={c['drift']}\ndirty={'true' if sum(c.values()) else 'false'}")
@@ -108,12 +119,19 @@ jobs:
 
       - name: Upstream changelog slice
         if: steps.gate.outputs.run == 'true'
+        env:
+          LAST_SEEN: ${{ steps.seen.outputs.version }}
+          LATEST: ${{ steps.up.outputs.version }}
         run: |
-          gh api "repos/$UPSTREAM/releases?per_page=100" --paginate --jq '.[] | {tag_name, body, html_url}' | python3 - "${{ steps.seen.outputs.version }}" "${{ steps.up.outputs.version }}" <<'EOF'
+          # Releases go to a file first: a `gh ... | python3 - <<EOF` pipe is silently
+          # replaced by the heredoc (SC2259) and the script would see an empty stdin.
+          gh api "repos/$UPSTREAM/releases?per_page=100" --paginate --jq '.[] | {tag_name, body, html_url}' > releases.jsonl
+          python3 - "$LAST_SEEN" "$LATEST" <<'EOF'
           import json, sys
           sys.path.insert(0, "_org/sdv-toolkit/skills/sdv-api-sync/scripts")
           from api_coverage import releases_between
-          rel = [json.loads(l) for l in sys.stdin if l.strip()]
+          with open("releases.jsonl", encoding="utf-8") as fh:
+              rel = [json.loads(l) for l in fh if l.strip()]
           last_seen, latest = (sys.argv[1] or None), sys.argv[2]
           keep = set(releases_between([r["tag_name"] for r in rel], last_seen, latest))
           with open("changelog.md", "w", encoding="utf-8") as f:

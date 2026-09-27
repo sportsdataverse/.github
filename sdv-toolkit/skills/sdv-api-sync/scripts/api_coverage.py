@@ -60,51 +60,81 @@ def load_spec(path):
     return spec.get("info", {}).get("version", "?"), eps
 
 
-def _formals(src: str, open_idx: int) -> list[str]:
-    """Formal names from the '(' at open_idx to its balanced ')'. Defaults may
-    contain calls (`season = most_recent_mbb_season()`), so split at depth 0 only."""
-    depth, i = 0, open_idx
+def _balanced_end(src: str, open_idx: int) -> int:
+    """Index of the ')' matching the '(' at open_idx; quote-aware so a ')' inside a
+    string literal does not close the call. Returns len(src) if unbalanced."""
+    depth, i, in_str = 0, open_idx, None
     while i < len(src):
-        if src[i] == "(":
+        ch = src[i]
+        if in_str:
+            if ch == "\\":
+                i += 1
+            elif ch == in_str:
+                in_str = None
+        elif ch in "\"'":
+            in_str = ch
+        elif ch == "(":
             depth += 1
-        elif src[i] == ")":
+        elif ch == ")":
             depth -= 1
             if depth == 0:
-                break
+                return i
         i += 1
-    inner = src[open_idx + 1 : i]
-    names, depth, cur = [], 0, ""
+    return len(src)
+
+
+def _split_top(inner: str) -> list[str]:
+    """Split a call's argument text on commas at depth 0 and outside string literals,
+    so `f(a = g(1, 2), b = "x,y")` yields two args, not four."""
+    parts, depth, cur, in_str = [], 0, "", None
     for ch in inner + ",":
+        if in_str:
+            cur += ch
+            if ch == in_str:
+                in_str = None
+            continue
+        if ch in "\"'":
+            in_str = ch
+            cur += ch
+            continue
         if ch in "([{":
             depth += 1
         elif ch in ")]}":
             depth -= 1
         if ch == "," and depth == 0:
-            name = cur.split("=", 1)[0].strip()
-            if name and name not in IGNORED_FORMALS:
-                names.append(name)
+            parts.append(cur.strip())
             cur = ""
         else:
             cur += ch
-    return names
+    return [p for p in parts if p]
 
 
-def _paste_path(args: str) -> str:
-    """paste0("/b/", id, "/c") -> /b/{}/c ; non-literal args become a path param."""
+def _formals(src: str, open_idx: int) -> list[str]:
+    """Formal names from the '(' at open_idx to its balanced ')'. Defaults may
+    contain calls (`season = most_recent_mbb_season()`), so split at depth 0 only."""
+    inner = src[open_idx + 1 : _balanced_end(src, open_idx)]
+    names = [p.split("=", 1)[0].strip() for p in _split_top(inner)]
+    return [n for n in names if n and n not in IGNORED_FORMALS]
+
+
+def _paste_path(inner: str) -> str:
+    """paste0("/b/", id, "/c") -> /b/{}/c ; non-literal args (including nested calls
+    such as toupper(trimws(team))) become one path param each."""
     out = []
-    for arg in args.split(","):
-        arg = arg.strip()
-        if arg.startswith('"') and arg.endswith('"'):
+    for arg in _split_top(inner):
+        if len(arg) >= 2 and arg[0] == arg[-1] and arg[0] in "\"'":
             out.append(arg[1:-1])
-        elif arg:
+        else:
             out.append("{}")
     return "".join(out)
 
 
 def scan_r_dir(r_dir, host: str, prefix: str):
     lit = re.compile(r"https://" + re.escape(host) + r"(/[A-Za-z0-9_/{}\-]*)")
+    # group 1 = a literal path; no group 1 = a paste0( call whose args are scanned
+    # to the balanced ')' (nested calls and commas inside literals are safe).
     helper = re.compile(
-        r"\." + re.escape(prefix) + r"_get\(\s*(?:\"(/[^\"]*)\"|paste0\(([^)]*)\))"
+        r"\." + re.escape(prefix) + r"_get\(\s*(?:\"(/[^\"]*)\"|paste0\()"
     )
     found = {}
     for f in sorted(Path(r_dir).glob("*.R")):
@@ -115,7 +145,11 @@ def scan_r_dir(r_dir, host: str, prefix: str):
         ]
         hits = [(m.start(), m.group(1)) for m in lit.finditer(src)]
         hits += [
-            (m.start(), m.group(1) or _paste_path(m.group(2)))
+            (
+                m.start(),
+                m.group(1)
+                or _paste_path(src[m.end() : _balanced_end(src, m.end() - 1)]),
+            )
             for m in helper.finditer(src)
         ]
         for pos, p in hits:

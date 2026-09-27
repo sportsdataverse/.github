@@ -51,6 +51,20 @@ SPEC = {
             }
         },
         "/d": {"get": {"operationId": "GetD", "tags": ["d"], "parameters": []}},
+        "/teams/{teamId}/roster": {
+            "get": {
+                "operationId": "GetRoster",
+                "tags": ["teams"],
+                "parameters": [
+                    {
+                        "name": "teamId",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+            }
+        },
     },
 }
 
@@ -66,6 +80,9 @@ cfbd_dead <- function() {
 HELPER_R = """
 cbbd_bc <- function(id, season = most_recent_mbb_season(), team = NULL) {
   data <- .cbbd_get(paste0("/b/", id, "/c"))
+}
+cbbd_nested <- function(team) {
+  data <- .cbbd_get(paste0("/teams/", toupper(trimws(team)), "/roster"), query = list(x = 1))
 }
 """
 
@@ -100,6 +117,13 @@ class ApiCoverageTest(unittest.TestCase):
         r = ac.scan_r_dir(self.r, "api.other.com", "cbbd")
         self.assertIn("/b/{}/c", r)
         self.assertEqual(r["/b/{}/c"][0]["fn"], "cbbd_bc")
+
+    def test_paste0_nested_call_args(self):
+        # paste0("/teams/", toupper(trimws(team)), "/roster") must not stop at the first ')'
+        r = ac.scan_r_dir(self.r, "api.other.com", "cbbd")
+        self.assertIn("/teams/{}/roster", r)
+        self.assertNotIn("/teams/{}", r)
+        self.assertEqual(r["/teams/{}/roster"][0]["fn"], "cbbd_nested")
 
     def test_formals_balanced_parens(self):
         r = ac.scan_r_dir(self.r, "api.other.com", "cbbd")
@@ -153,9 +177,8 @@ class ApiCoverageTest(unittest.TestCase):
         )
         self.assertEqual(rc, 0)
         s = json.loads(out_js.read_text(encoding="utf-8"))
-        self.assertEqual(
-            s["counts"]["missing"], 2
-        )  # /b/{id}/c and /d are unwrapped in the cfbd view
+        # /b/{id}/c, /d and /teams/{teamId}/roster are unwrapped in the cfbd (literal-URL) view
+        self.assertEqual(s["counts"]["missing"], 3)
         self.assertIn(
             "## Spec endpoints with NO cfbd wrapper", out_md.read_text(encoding="utf-8")
         )
