@@ -68,12 +68,92 @@ SPEC = {
     },
 }
 
+# Extra spec paths for the query-key and bare-host idioms (merged into SPEC in setUp).
+EXTRA_PATHS = {
+    "/div": {
+        "get": {
+            "operationId": "GetDiv",
+            "tags": ["x"],
+            "parameters": [
+                {"name": "classification", "in": "query", "schema": {"type": "string"}}
+            ],
+        }
+    },
+    "/wrong": {
+        "get": {
+            "operationId": "GetWrong",
+            "tags": ["x"],
+            "parameters": [
+                {"name": "classification", "in": "query", "schema": {"type": "string"}}
+            ],
+        }
+    },
+    "/fg/ep": {"get": {"operationId": "GetFgEp", "tags": ["x"], "parameters": []}},
+    "/fg/ep2": {"get": {"operationId": "GetFgEp2", "tags": ["x"], "parameters": []}},
+    "/stale": {
+        "get": {
+            "operationId": "GetStale",
+            "tags": ["x"],
+            "parameters": [
+                {"name": "classification", "in": "query", "schema": {"type": "string"}},
+            ],
+        }
+    },
+    "/commented": {
+        "get": {
+            "operationId": "GetCommented",
+            "tags": ["x"],
+            "parameters": [
+                {"name": "year", "in": "query", "schema": {"type": "integer"}},
+                {"name": "classification", "in": "query", "schema": {"type": "string"}},
+            ],
+        }
+    },
+}
+
 LITERAL_R = """
 cfbd_a <- function(year = NULL, first = NULL) {
   base_url <- "https://api.example.com/a"
+  query_params <- list(
+    "year" = year,
+    "firstName" = first
+  )
+}
+cfbd_div <- function(year = NULL, division = NULL) {
+  base_url <- "https://api.example.com/div"
+  query_params <- list("classification" = division)
+}
+cfbd_wrong <- function(classification = NULL) {
+  base_url <- "https://api.example.com/wrong"
+  query_params <- list("division" = classification)
+}
+cfbd_fg <- function() {
+  base_url <- "https://api.example.com"
+  endpoint_path <- "fg/ep"
+  full_url <- paste0(base_url, "/", endpoint_path)
 }
 cfbd_dead <- function() {
   base_url <- "https://api.example.com/zzz"
+}
+cfbd_stale <- function(division = NULL) {
+  base_url <- "https://api.example.com/stale"
+  # query_params <- list("classification" = division)   # old, commented out
+  query_params <- list("division" = division)
+}
+cfbd_fg2 <- function() {
+  base_url <- 'https://api.example.com'
+  # endpoint_path <- "old/one"
+  endpoint_path <- "fg/ep2"
+  full_url <- paste0(base_url, "/", endpoint_path)
+}
+cfbd_commented <- function(year = NULL, division = NULL) {
+  base_url <- "https://api.example.com/commented?"
+  query_params <- list(
+    "year" = year,
+    # CFBD renamed this to `classification`; sending `division=` isn't honoured (measured:
+    # division=fcs returned all games). Keep the formal, send the new key.
+    "classification" = division
+  )
 }
 """
 
@@ -92,7 +172,10 @@ class ApiCoverageTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         root = pathlib.Path(self.tmp.name)
         self.spec = root / "spec.json"
-        self.spec.write_text(json.dumps(SPEC), encoding="utf-8")
+        self.spec.write_text(
+            json.dumps({**SPEC, "paths": {**SPEC["paths"], **EXTRA_PATHS}}),
+            encoding="utf-8",
+        )
         self.r = root / "R"
         self.r.mkdir()
         (self.r / "lit.R").write_text(LITERAL_R, encoding="utf-8")
@@ -129,12 +212,63 @@ class ApiCoverageTest(unittest.TestCase):
         r = ac.scan_r_dir(self.r, "api.other.com", "cbbd")
         self.assertEqual(r["/b/{}/c"][0]["formals"], ["id", "season", "team"])
 
-    def test_drift_alias_and_real(self):
+    def test_drift_uses_query_keys_not_formals(self):
+        # Drift is judged on the camelCase keys the function SENDS, not on its formal names:
+        # cfbd_a sends "firstName" (formal `first`) and cfbd_div sends "classification"
+        # (formal `division`) -> no drift; cfbd_wrong sends "division" for a spec param
+        # named classification -> real drift.
         d = self._diff()
-        rows = [x for x in d["drift"] if x["fn"] == "cfbd_a"]
-        self.assertEqual(len(rows), 1)
-        # firstName is covered by the R abbreviation `first`; classification is real drift
-        self.assertEqual(rows[0]["missing_params"], ["classification"])
+        by_fn = {x["fn"]: x["missing_params"] for x in d["drift"]}
+        # firstName is sent (as a key), so only classification -- which /a declares and
+        # cfbd_a never sends -- is reported for it.
+        self.assertEqual(by_fn.get("cfbd_a"), ["classification"])
+        self.assertNotIn("cfbd_div", by_fn)
+        self.assertEqual(by_fn.get("cfbd_wrong"), ["classification"])
+
+    def test_bare_host_endpoint_path(self):
+        # cfbfastR's cfbd_metrics_fg_ep idiom: base_url is the bare host and the path
+        # lives in a separate `endpoint_path <- "..."` assignment.
+        r = ac.scan_r_dir(self.r, "api.example.com", "cfbd")
+        self.assertIn("/fg/ep", r)
+        self.assertEqual(r["/fg/ep"][0]["fn"], "cfbd_fg")
+
+    def test_query_keys_skip_comments(self):
+        # A `#` comment inside the query list (with an apostrophe, backticks and parens)
+        # must not swallow the keys that follow it: cfbd_commented sends both keys.
+        r = ac.scan_r_dir(self.r, "api.example.com", "cfbd")
+        self.assertEqual(r["/commented"][0]["query_keys"], ["year", "classification"])
+        d = self._diff()
+        self.assertNotIn("cfbd_commented", {x["fn"] for x in d["drift"]})
+
+    def test_commented_out_lines_are_ignored(self):
+        # A commented-out `# query_params <- list(...)` or `# endpoint_path <- "..."` is not
+        # code: cfbd_stale really sends "division" (drift), cfbd_fg2 really hits /fg/ep2.
+        r = ac.scan_r_dir(self.r, "api.example.com", "cfbd")
+        self.assertEqual(r["/stale"][0]["query_keys"], ["division"])
+        self.assertIn("/fg/ep2", r)
+        self.assertNotIn("/old/one", r)
+        d = self._diff()
+        by_fn = {x["fn"]: x["missing_params"] for x in d["drift"]}
+        self.assertEqual(by_fn.get("cfbd_stale"), ["classification"])
+
+    def test_summary_carries_spec_operation_count(self):
+        out_md = pathlib.Path(self.tmp.name) / "r2.md"
+        out_js = pathlib.Path(self.tmp.name) / "s2.json"
+        ac.main(
+            [
+                str(self.spec),
+                str(self.r),
+                str(out_md),
+                str(out_js),
+                "--host",
+                "api.example.com",
+                "--prefix",
+                "cfbd",
+            ]
+        )
+        s = json.loads(out_js.read_text(encoding="utf-8"))
+        # one GET per path in the fixture spec
+        self.assertEqual(s["spec_operations"], len(SPEC["paths"]) + len(EXTRA_PATHS))
 
     def test_releases_between_yanked(self):
         tags = ["v5.31.1", "v5.31.0", "v5.30.1"]

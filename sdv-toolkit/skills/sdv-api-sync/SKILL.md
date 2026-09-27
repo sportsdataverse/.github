@@ -15,17 +15,23 @@ Everything below is a contract, not a suggestion: a cloud routine follows it una
    issue: stop, report "nothing to do".**
 2. Read the marker `<!-- api-sync: version=X.Y.Z -->` from the body. No marker: stop and report
    "issue #N has no version marker; the detector must refresh it".
-3. `gh pr list --state open --search "api-sync/<prefix>-X.Y.Z in:head"` (or any open PR whose
-   body links the issue number). **One exists: stop, report its URL.** The work is in flight.
+3. `gh pr list --state open --head "api-sync/<prefix>-X.Y.Z" --json number,url` and, separately,
+   `gh pr list --state open --search "Tracker: #<issue> in:body" --json number,url`.
+   **Either returns a PR: stop, report its URL.** The work is in flight. (Do not use `in:head`;
+   it is not a search qualifier.)
 4. `git status --porcelain` must be empty; `git fetch origin main` then branch from `origin/main`:
    `git checkout -b api-sync/<prefix>-X.Y.Z origin/main`.
 
 ## 1. Fetch the spec at the marker version and re-diff
 
-| prefix | spec URL |
-|---|---|
-| `cfbd` | `https://apinext.collegefootballdata.com/api/X.Y.Z/cfbd-openapi.json` |
-| `cbbd` | `https://api.collegebasketballdata.com/api/X.Y.Z/cbbd-openapi.json` |
+| prefix | spec URL | `--host` (the WRAPPER host, not the spec host) |
+|---|---|---|
+| `cfbd` | `https://apinext.collegefootballdata.com/api/X.Y.Z/cfbd-openapi.json` | `api.collegefootballdata.com` |
+| `cbbd` | `https://api.collegebasketballdata.com/api/X.Y.Z/cbbd-openapi.json` | `api.collegebasketballdata.com` |
+
+Sanity stop: if `counts.missing` is more than half of `spec_operations` (both in
+`/tmp/summary.json`), the host or prefix is misconfigured (a wrong host makes every wrapper
+invisible). Stop and report; write nothing.
 
 `curl -fsSL <url> -o /tmp/spec.json`, then
 `python3 <toolkit>/skills/sdv-api-sync/scripts/api_coverage.py /tmp/spec.json R /tmp/report.md /tmp/summary.json --host <host> --prefix <prefix>`
@@ -72,15 +78,24 @@ Document the choice in `@return` ("A named list of tibbles: `record`, `ratings`,
 
 ## 4. Write each missing endpoint
 
-For every row in `summary.missing`, in the tag's file (create `R/<prefix>_<tag>.R` only if no file
-for that tag exists, copying the header block of the nearest sibling file):
+**Before writing any endpoint:** derive its function name (section 2), then
+`grep -n "^<fn> <- function" R/*.R`. If it already exists, the detector missed it (an idiom the
+script does not recognise). Write nothing for that row; list it in the PR body under
+"Already wrapped (detector miss)" with the file:line, so the script gets a fixture. A second
+definition of an exported function is a red R CMD check and a PR nobody can merge.
+
+For every remaining row in `summary.missing`, in the tag's file (create `R/<prefix>_<tag>.R` only
+if no file for that tag exists, copying the header block of the nearest sibling file):
 
 1. **roxygen**: copy the neighbour's header verbatim in structure:
    `#' @title` / `#' **<Prefix> <Human title>**` / `#' @description` / `#' **<one sentence from the spec summary or, when empty, from the operationId>**`;
    one `#' @param <formal> (*<Type>* required|optional): <spec description, or the enum list>` per formal
    (Type = `Integer`/`String`/`Logical` in cfbfastR, `integer`/`character`/`logical` in hoopR; match the file);
-   `#' @return` = the `\if{html}{\tabular{lll}{ col_name \tab types \tab description \cr ... }}` table the
-   neighbours use, built from the resolved schema's `properties` (snake_case the names; types from
+   `#' @return` = the column table in the package's own format: **cfbfastR uses a markdown table
+   in roxygen** (`#' |col_name |types |description |` / `#' |---|---|---|` rows, see
+   `cfbd_passing.R`), **hoopR uses `\if{html}{\tabular{lll}{ col_name \tab types \tab description \cr ... }}`**
+   (see `cbbd_games.R`); copy the neighbour's exact form. Build it from the resolved schema's
+   `properties` (snake_case the names; types from
    `type`/`format`; description from the schema when present, else a plain-English reading of the name);
    for a named-list return, one short table per section. If a `$ref` cannot be resolved or a property
    has no `type`, write the rows you can and list the gap under "Schema gaps" in the PR body; never
@@ -133,7 +148,11 @@ So:
 - Else, with a **10-minute cap** on the whole block:
   `sudo apt-get update -qq && sudo apt-get install -y -qq r-base-core r-cran-roxygen2 r-cran-devtools`
   (Ubuntu binaries; no compilation). `roxygenise()` loads the package, so its `Imports` must be
-  installed too: try `sudo apt-get install -y -qq $(sed -n '/^Imports:/,/^[A-Z]/p' DESCRIPTION | grep -oE '^\s+[a-zA-Z0-9.]+' | tr -d ' ' | sed 's/^/r-cran-/' | tr 'A-Z' 'a-z')` and let missing binaries fail silently, then
+  installed too. apt aborts the whole transaction on one unknown package name (Ubuntu has no
+  `r-cran-httr2`, for example), so install them ONE AT A TIME and tolerate misses:
+  `for p in $(sed -n '/^Imports:/,/^[A-Z]/p' DESCRIPTION | grep -oE '^\s+[a-zA-Z0-9.]+' | tr -d ' ' | tr 'A-Z' 'a-z'); do sudo apt-get install -y -qq "r-cran-$p" || true; done`.
+  Any Import with no Ubuntu binary will surface as a load error on the next line; that is the
+  signal to fall through to the note below, not to start compiling from CRAN. Then
   `Rscript -e 'roxygen2::roxygenise()'`. If it completes: `git add man NAMESPACE`.
 - Else (cap hit, or roxygenise errors): do NOT hand-write `man/*.Rd` or edit `NAMESPACE`. Add this block
   to the PR body:
@@ -141,10 +160,17 @@ So:
 
 ## 7. Commit, push, PR, hand back
 
+- **Identity first, unconditionally:** `git config user.name "Saiem Gilani" && git config user.email "saiem.gilani@gmail.com"`
+  (repo-local). A cloud checkout ships a default identity of `Claude <noreply@anthropic.com>`, so a
+  "set only if unset" guard is defeated and every commit would carry an AI author (and a squash-merge
+  would add an AI `Co-authored-by` trailer). The human maintainer is the sole author.
 - One commit per endpoint plus one for drift: `feat(<prefix>): add <fn>() — <PREFIX> <path> (v X.Y.Z)`;
   drift: `feat(<prefix>): add <n> upstream query params (v X.Y.Z)`. Conventional Commits; **no AI co-author trailers**.
 - `git push -u origin HEAD:api-sync/<prefix>-X.Y.Z` (a cloud checkout sits on a `claude/*` branch: push
   `HEAD:<branch>`, never `origin main`). Verify: `git ls-remote origin api-sync/<prefix>-X.Y.Z`.
+  **If the push is rejected (non-fast-forward, branch exists): stop and report.** Never `--force`,
+  never rebase onto or reset the remote branch, never open a second PR: a rejected push means a
+  human-reviewed branch already exists and stop condition 3 should have caught it.
 - `gh pr create --title "feat(<prefix>): <PREFIX> X.Y.Z — <n> new wrappers, <m> drift params" --body-file /tmp/pr.md`
   where `/tmp/pr.md` holds: `Tracker: #<issue>` (a plain reference, NOT a `Closes #` keyword; the detector closes it),
   the missing table from `/tmp/report.md` with a done / skipped / needs-decision column, the drift
