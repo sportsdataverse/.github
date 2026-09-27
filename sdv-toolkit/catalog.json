@@ -443,6 +443,24 @@
         "sdv-py",
         "data"
       ]
+    },
+    {
+      "name": "sdv-api-sync",
+      "kind": "skill",
+      "purpose": "Turn an open api-sync issue (opened daily by the reusable api-spec-sync workflow) into a PR adding the upstream API's missing endpoints as in-style wrappers (CFBD to cfbfastR, CBBD to hoopR) plus drifted query params; never deletes, never closes the issue, never merges.",
+      "archetypes": [
+        "r-package"
+      ],
+      "phases": [
+        "preconditions",
+        "re-diff",
+        "read-idiom",
+        "write-endpoints",
+        "add-drift-params",
+        "regen-docs",
+        "pr"
+      ],
+      "dispatches": []
     }
   ]
 }
