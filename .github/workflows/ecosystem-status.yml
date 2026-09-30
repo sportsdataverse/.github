@@ -1,6 +1,13 @@
-# Nightly org-wide status snapshot -> status/ecosystem.{json,md}.
-# Read by the chief-of-staff cloud routines (no api.github.com access there) and
-# by humans who want one page of PR / CI / release-freshness state.
+# Nightly org-wide status snapshot -> status/ecosystem.{json,md}, status/summary.json
+# and the shields endpoint badges under status/badges/.
+# Read by the chief-of-staff cloud routines (no api.github.com access there), by
+# sportsdataverse.org/status, and by every README badge in the ecosystem.
+#
+# Token hygiene (R-SV-15; ~40 repos call this repo's reusable workflows @main):
+# checkout persists no credentials, the doctoc step runs a pinned version with npm
+# install scripts off and no token, and only the push step holds the token.
+# A non-zero exit from the build (API failure, hub down, >10% of repos failed)
+# stops the job before anything is committed.
 name: ecosystem-status
 on:
   schedule:
@@ -17,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -24,12 +33,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python .github/scripts/ecosystem_status.py
-      - name: Commit if changed
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Refresh tables of contents
+        env:
+          npm_config_ignore_scripts: "true"
+        run: npx --yes doctoc@2.5.0 status/ecosystem.md status/README.md --github
+      - name: Commit and push if changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add status/
+          git add -A status/
           git diff --cached --quiet && { echo "no change"; exit 0; }
           git commit -m "chore(status): ecosystem snapshot $(date -u +%F) [skip ci]"
-          git pull --rebase -X theirs origin main
-          git push
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git pull --rebase -X theirs "$remote" main
+          git push "$remote" HEAD:main
