@@ -292,10 +292,10 @@ def snapshot_workflows(full: str, default: str, backfill: bool) -> dict:
         if entry:
             entry = {**entry, "name": w["name"]}
         elif backfill and w.get("state") == "active" and wf_stem(path) != "orphan_scripts":
-            one = (
-                gh(f"repos/{full}/actions/workflows/{w['id']}/runs?branch={default}&status=completed&per_page=1") or {}
-            )
-            got = one.get("workflow_runs") or []
+            # No status= filter: GitHub serves it from a stale index (daily_wbb.yml's
+            # newest "completed" run came back from April while September runs existed).
+            one = gh(f"repos/{full}/actions/workflows/{w['id']}/runs?branch={default}&per_page=10") or {}
+            got = [x for x in one.get("workflow_runs") or [] if x.get("status") == "completed"]
             entry = _run_entry(got[0], w["name"]) if got else None
         if entry is None:
             entry = {
@@ -313,7 +313,24 @@ def snapshot_workflows(full: str, default: str, backfill: bool) -> dict:
     return out
 
 
-def snapshot_repo(r: dict, backfill: bool = False) -> dict:
+def keep_latest_runs(workflows: dict, prev_workflows: dict) -> dict:
+    """Never let a workflow's latest run move backwards versus the last snapshot.
+
+    GitHub's runs listing intermittently serves a stale replica (observed: the same
+    call returned 375 runs ending 08-24, then 513 ending 09-30), which would flip a
+    badge to an old conclusion for a night. Matched by workflow file."""
+    prev_by_file = {w.get("file"): w for w in prev_workflows.values() if w.get("file")}
+    run_keys = ("conclusion", "created_at", "url", "event")
+    out = {}
+    for key, w in workflows.items():
+        old = prev_by_file.get(w["file"])
+        if old and old.get("created_at") and (old["created_at"] > (w.get("created_at") or "")):
+            w = {**w, **{k: old.get(k) for k in run_keys}, "age_days": age_days(old["created_at"])}
+        out[key] = w
+    return out
+
+
+def snapshot_repo(r: dict, backfill: bool = False, prev: dict | None = None) -> dict:
     full, default = r["full_name"], r.get("default_branch", "main")
     out: dict = {
         "full_name": full,
@@ -365,7 +382,7 @@ def snapshot_repo(r: dict, backfill: bool = False) -> dict:
         for i in issues
         if not i.get("assignees") and iso(i["updated_at"]) < cutoff
     ][:25]
-    out["workflows"] = snapshot_workflows(full, default, backfill)
+    out["workflows"] = keep_latest_runs(snapshot_workflows(full, default, backfill), (prev or {}).get("workflows", {}))
     out["red_workflows"] = [
         n for n, w in out["workflows"].items() if w["conclusion"] not in ("success", "skipped", None)
     ]
@@ -669,6 +686,10 @@ def render_md(snap: dict, summary: dict) -> str:
 
 def main() -> int:
     cfg = load_producers(OUT / "producers.json")
+    try:  # last committed snapshot: the floor under each workflow's latest run
+        prev = json.loads((OUT / "ecosystem.json").read_text(encoding="utf-8"))["repos"]
+    except (OSError, ValueError, KeyError):
+        prev = {}
     repos = list_repos()
     check_bare_names(r["full_name"] for r in repos)
     # producer, raw and package repos: consumer pages link their wf-* badges, and a
@@ -687,7 +708,7 @@ def main() -> int:
     }
     for r in repos:
         try:
-            snap["repos"][r["full_name"]] = snapshot_repo(r, r["full_name"] in backfill)
+            snap["repos"][r["full_name"]] = snapshot_repo(r, r["full_name"] in backfill, prev.get(r["full_name"]))
             print(f"  ok {r['full_name']} ({CALLS} calls)", file=sys.stderr)
         except Exception as e:  # one bad repo must not kill the snapshot
             print(f"  FAIL {r['full_name']}: {e}", file=sys.stderr)

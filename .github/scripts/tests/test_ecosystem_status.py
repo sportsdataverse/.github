@@ -363,6 +363,27 @@ class Badges(unittest.TestCase):
             es.badge_files(snap, es.build_summary(snap, fake_cfg(), NOW))
 
 
+class KeepLatestRuns(unittest.TestCase):
+    def test_stale_read_never_moves_a_run_backwards(self):
+        prev = {"Update WBB Data": wf("Update WBB Data", "daily_wbb.yml", "success", "2026-09-09T05:21:38Z")}
+        stale = {"Update WBB Data": wf("Update WBB Data", "daily_wbb.yml", "failure", "2026-07-12T20:34:32Z")}
+        got = es.keep_latest_runs(stale, prev)["Update WBB Data"]
+        self.assertEqual((got["conclusion"], got["created_at"]), ("success", "2026-09-09T05:21:38Z"))
+        missing = {"Update WBB Data": wf("Update WBB Data", "daily_wbb.yml")}
+        self.assertEqual(es.keep_latest_runs(missing, prev)["Update WBB Data"]["conclusion"], "success")
+
+    def test_newer_run_and_new_workflow_pass_through(self):
+        prev = {"x": wf("x", "x.yml", "success", "2026-09-01T00:00:00Z")}
+        new = {
+            "x": wf("x", "x.yml", "failure", "2026-09-02T00:00:00Z"),
+            "y": wf("y", "y.yml", "success", "2026-09-03T00:00:00Z"),
+        }
+        got = es.keep_latest_runs(new, prev)
+        self.assertEqual(got["x"]["conclusion"], "failure")
+        self.assertEqual(got["y"]["created_at"], "2026-09-03T00:00:00Z")
+        self.assertEqual(es.keep_latest_runs(new, {}), new)
+
+
 class RepoFilters(unittest.TestCase):
     def test_private_repos_are_dropped(self):
         repos = [
