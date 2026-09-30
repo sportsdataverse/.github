@@ -24,17 +24,25 @@ MUTATING = {
     "branch",
     "store",
     "create",
+    "import",
 }
 WRAPPERS = {"sudo", "command", "exec", "env", "time", "nohup"}
 PUNCT = set("();<>|&")
 ASSIGN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+SHELLS = {"bash", "sh", "zsh", "dash"}
+SHELL_C = re.compile(r"-[a-z]*c[a-z]*$")  # bash -c / -lc / -ec
+REPO_OPTS = ("-C", "--git-dir", "--work-tree")
 
 
 def segments(command):
-    """Split a shell command into simple-command token lists (quote-aware)."""
+    """Split a shell command into simple-command token lists (quote-aware).
+
+    Subshell parens come through as "(" / ")" markers so a `cd` inside one
+    does not leak into the commands after it.
+    """
     lex = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
     lex.whitespace_split = True
-    segs, cur, skip = [], [], False
+    items, cur, skip = [], [], False
     for tok in lex:
         if skip:
             skip = False
@@ -44,36 +52,57 @@ def segments(command):
                     cur.pop()
                 skip = True
             else:
-                segs.append(cur)
+                items.append(cur)
                 cur = []
+                items.extend(c for c in tok if c in "()")
         else:
             cur.append(tok)
-    segs.append(cur)
-    return [s for s in segs if s]
+    items.append(cur)
+    return [s for s in items if s]
 
 
 def stash_targets(command, cwd):
-    """Yield the repo dir of every mutating `git stash` invocation."""
-    here = cwd
+    """Yield (dir, repo-selecting git options, env) per mutating `git stash`."""
+    here, saved = cwd, []
     for seg in segments(command):
+        if seg == "(":
+            saved.append(here)
+            continue
+        if seg == ")":
+            here = saved.pop() if saved else here
+            continue
         i = 0
-        while i < len(seg) and (ASSIGN.match(seg[i]) or seg[i] in WRAPPERS):
+        while i < len(seg) and (
+            ASSIGN.match(seg[i])
+            or os.path.basename(seg[i]) in WRAPPERS
+            or (i and seg[i].startswith("-"))
+        ):
             i += 1
+        env = dict(t.split("=", 1) for t in seg[:i] if ASSIGN.match(t))
         seg = seg[i:]
         if not seg:
             continue
-        if seg[0] in ("cd", "pushd"):
+        name = os.path.basename(seg[0])
+        if name in ("cd", "pushd"):
             if len(seg) > 1 and seg[1] != "-":
                 here = os.path.join(here, os.path.expanduser(seg[1]))
             continue
-        if os.path.basename(seg[0]) not in ("git", "git.exe"):
+        if name in SHELLS:
+            flag = next((j for j, t in enumerate(seg) if SHELL_C.match(t)), None)
+            if flag is not None and flag + 1 < len(seg):
+                yield from stash_targets(seg[flag + 1], here)
             continue
-        repo, i = here, 1
+        if name not in ("git", "git.exe"):
+            continue
+        opts, i = [], 1
         while i < len(seg) and seg[i].startswith("-"):
-            if seg[i] == "-C" and i + 1 < len(seg):
-                repo = os.path.join(repo, os.path.expanduser(seg[i + 1]))
+            if seg[i] in REPO_OPTS and i + 1 < len(seg):
+                opts += [seg[i], os.path.expanduser(seg[i + 1])]
                 i += 2
-            elif seg[i] in ("-c", "--git-dir", "--work-tree", "--namespace"):
+            elif seg[i].split("=")[0] in REPO_OPTS:
+                opts.append(seg[i])
+                i += 1
+            elif seg[i] in ("-c", "--namespace"):
                 i += 2
             else:
                 i += 1
@@ -81,12 +110,14 @@ def stash_targets(command, cwd):
             continue
         rest = seg[i + 1 :]
         if not rest or rest[0].startswith("-") or rest[0] in MUTATING:
-            yield repo
+            yield here, opts, env
 
 
-def worktrees(repo):
+def worktrees(here, opts, env):
     out = subprocess.run(
-        ["git", "-C", repo, "worktree", "list", "--porcelain"],
+        ["git", *opts, "worktree", "list", "--porcelain"],
+        cwd=here,
+        env={**os.environ, **env},
         capture_output=True,
         text=True,
         timeout=10,
@@ -104,8 +135,8 @@ def main():
     if "stash" not in command:
         return 0
     cwd = data.get("cwd") or os.getcwd()
-    for repo in stash_targets(command, cwd):
-        trees = worktrees(repo)
+    for target in stash_targets(command, cwd):
+        trees = worktrees(*target)
         if len(trees) > 1:
             sys.stderr.write(
                 "BLOCKED: `git stash` is shared by all %d worktrees of %s — parallel "

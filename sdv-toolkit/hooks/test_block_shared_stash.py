@@ -91,6 +91,21 @@ class BlockSharedStashTest(unittest.TestCase):
         self.assertBlocked("git status; git stash 2>/dev/null || true", self.multi)
         self.assertBlocked("git stash -u", self.multi)
 
+    def test_subshell_cd_does_not_leak(self):
+        self.assertBlocked("(cd %s); git stash pop" % self.single, self.multi)
+        self.assertAllowed("(cd %s && git stash pop)" % self.single, self.multi)
+
+    def test_explicit_repo_selectors(self):
+        gd = self.multi / ".git"
+        self.assertBlocked("git --git-dir=%s stash clear" % gd, self.plain)
+        self.assertBlocked("git --git-dir %s stash clear" % gd, self.plain)
+        self.assertBlocked("GIT_DIR=%s git stash clear" % gd, self.plain)
+
+    def test_shell_dash_c_is_inspected(self):
+        self.assertBlocked("bash -c 'git stash pop'", self.multi)
+        self.assertBlocked('/bin/sh -lc "git stash import x"', self.multi)
+        self.assertAllowed("bash -c 'cd %s && git stash'" % self.single, self.multi)
+
     def test_list_and_show_allowed(self):
         self.assertAllowed("git stash list", self.multi)
         self.assertAllowed("git stash show -p stash@{0}", self.multi)
