@@ -23,7 +23,8 @@ get identical automation everywhere.
 - **Hooks** — block edits to codegen-generated (`# GENERATED`) files; block AI
   co-author/attribution trailers on commits; warn on unbounded capture/crawl loops;
   remind to regenerate after codegen-source edits, add a `returns_schema`, or
-  `devtools::document()` after R edits.
+  `devtools::document()` after R edits; block mutating `git stash` in a repo with more
+  than one worktree (the stash stack is shared, so parallel sessions pop each other's work).
 - **Skills** (`/sdv-toolkit:<name>`) — `add-provider-source`, `add-espn-league`,
   `add-sport-parser`, `add-fox-league`, `add-cbs-league`, `add-yahoo-source`,
   `gen-returns-schema`, `capture-endpoint`, `regen-docs`, `new-example-notebook`,
