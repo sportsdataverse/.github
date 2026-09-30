@@ -1,6 +1,6 @@
 # SportsDataverse ecosystem status
 
-_80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-status.yml` · machine-readable twins: `ecosystem.json`, `summary.json` · badges: `badges/`._
+_80 public repos · generated 2026-09-30T08:54Z by `.github/workflows/ecosystem-status.yml` · machine-readable twins: `ecosystem.json`, `summary.json` · badges: `badges/`._
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -13,12 +13,13 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 - [Release-asset freshness (data producers)](#release-asset-freshness-data-producers)
 - [Package repos — latest release](#package-repos--latest-release)
 - [Unmapped release tags](#unmapped-release-tags)
+- [Warnings](#warnings)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## sportsdataverse-data release tags — freshness
 
-367 tags on `sportsdataverse/sportsdataverse-data`, stalest first (tags with no assets last). `producer` comes from `producers.json`; `through season` is the newest standalone year in the tag's asset names (SDV end-year convention).
+367 tags on `sportsdataverse/sportsdataverse-data`, stalest first (tags with no assets last). `producer` comes from `producers.json`; `through season` is the newest season year in the tag's asset names (SDV end-year convention).
 
 | tag | producer | assets | newest asset | age (d) | through season |
 |---|---|---|---|---|---|
@@ -27,24 +28,24 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | pwhl_rosters | fastRhockey-pwhl-data | 13 | 2026-07-18T12:39 | 73.8 | 2026 |
 | pwhl_schedules | fastRhockey-pwhl-data | 19 | 2026-07-18T12:39 | 73.8 | 2026 |
 | nhl_rosters | fastRhockey-nhl-data | 55 | 2026-07-22T02:05 | 70.3 | 2026 |
-| pwhl_pbp | fastRhockey-pwhl-data | 14 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_shifts | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_skater_boxscores | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_goalie_boxscores | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_team_boxscores | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_game_info | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_game_rosters | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_scoring_summary | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_penalty_summary | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_three_stars | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_officials | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_shots_by_period | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_shootout | fastRhockey-pwhl-data | 7 | 2026-07-22T21:39 | 69.4 | 2026 |
-| pwhl_player_boxscores | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.4 | 2026 |
-| nhl_pbp_full | fastRhockey-nhl-data | 55 | 2026-07-23T00:02 | 69.3 | 2026 |
-| nhl_team_boxscores | fastRhockey-nhl-data | 55 | 2026-07-23T00:03 | 69.3 | 2026 |
-| nhl_pbp_lite | fastRhockey-nhl-data | 64 | 2026-07-23T00:03 | 69.3 | 2026 |
-| nhl_player_boxscores | fastRhockey-nhl-data | 55 | 2026-07-23T00:03 | 69.3 | 2026 |
+| pwhl_pbp | fastRhockey-pwhl-data | 14 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_shifts | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_skater_boxscores | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_goalie_boxscores | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_team_boxscores | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_game_info | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_game_rosters | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_scoring_summary | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_penalty_summary | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_three_stars | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_officials | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_shots_by_period | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_shootout | fastRhockey-pwhl-data | 7 | 2026-07-22T21:39 | 69.5 | 2026 |
+| pwhl_player_boxscores | fastRhockey-pwhl-data | 13 | 2026-07-22T21:39 | 69.5 | 2026 |
+| nhl_pbp_full | fastRhockey-nhl-data | 55 | 2026-07-23T00:02 | 69.4 | 2026 |
+| nhl_team_boxscores | fastRhockey-nhl-data | 55 | 2026-07-23T00:03 | 69.4 | 2026 |
+| nhl_pbp_lite | fastRhockey-nhl-data | 64 | 2026-07-23T00:03 | 69.4 | 2026 |
+| nhl_player_boxscores | fastRhockey-nhl-data | 55 | 2026-07-23T00:03 | 69.4 | 2026 |
 | cfb_recruiting_proj | cfbfastR-cfb-data | 11 | 2026-08-06T08:07 | 55.0 | 2025 |
 | wnba_stats_game_lineups | wehoop-wnba-stats-data | 91 | 2026-08-12T05:47 | 49.1 | 2026 |
 | wnba_stats_possessions | wehoop-wnba-stats-data | 91 | 2026-08-12T05:47 | 49.1 | 2026 |
@@ -96,12 +97,12 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | ncaa_mbb_rapm | ncaa-mbb-hoops-data | 52 | 2026-08-24T08:32 | 37.0 | 2026 |
 | cfb_team_info | cfbfastR-cfb-data | 52 | 2026-08-27T11:01 | 33.9 | 2026 |
 | espn_cfb_teams | cfbfastR-cfb-data | 78 | 2026-08-27T11:09 | 33.9 | 2026 |
-| ncaa_baseball_teams | baseballr-data | 9 | 2026-08-27T19:11 | 33.5 | 2026 |
-| ncaa_baseball_rosters | baseballr-data | 9 | 2026-08-27T19:11 | 33.5 | 2026 |
-| ncaa_baseball_linescore | baseballr-data | 9 | 2026-08-27T19:18 | 33.5 | 2026 |
-| ncaa_baseball_team_stats | baseballr-data | 9 | 2026-08-27T19:18 | 33.5 | 2026 |
-| ncaa_baseball_player_stats | baseballr-data | 9 | 2026-08-27T19:19 | 33.5 | 2026 |
-| ncaa_baseball_situational_stats | baseballr-data | 9 | 2026-08-27T19:19 | 33.5 | 2026 |
+| ncaa_baseball_teams | baseballr-data | 9 | 2026-08-27T19:11 | 33.6 | 2026 |
+| ncaa_baseball_rosters | baseballr-data | 9 | 2026-08-27T19:11 | 33.6 | 2026 |
+| ncaa_baseball_linescore | baseballr-data | 9 | 2026-08-27T19:18 | 33.6 | 2026 |
+| ncaa_baseball_team_stats | baseballr-data | 9 | 2026-08-27T19:18 | 33.6 | 2026 |
+| ncaa_baseball_player_stats | baseballr-data | 9 | 2026-08-27T19:19 | 33.6 | 2026 |
+| ncaa_baseball_situational_stats | baseballr-data | 9 | 2026-08-27T19:19 | 33.6 | 2026 |
 | ncaa_baseball_schedules | baseballr-data | 59 | 2026-08-27T19:51 | 33.5 | 2026 |
 | ncaa_baseball_pbp | baseballr-data | 39 | 2026-08-27T19:56 | 33.5 | 2026 |
 | ncaa_baseball_games | baseballr-data | 30 | 2026-08-27T19:56 | 33.5 | 2026 |
@@ -138,11 +139,11 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | espn_womens_college_basketball_team_season_stats | wehoop-wbb-data | 49 | 2026-09-09T04:42 | 21.2 | 2026 |
 | espn_womens_college_basketball_standings | wehoop-wbb-data | 68 | 2026-09-09T04:42 | 21.2 | 2026 |
 | espn_womens_college_basketball_game_rosters | wehoop-wbb-data | 71 | 2026-09-09T04:45 | 21.2 | 2026 |
-| espn_womens_college_basketball_officials | wehoop-wbb-data | 37 | 2026-09-09T04:47 | 21.1 | 2026 |
-| espn_nba_pbp | hoopR-nba-data | 79 | 2026-09-09T05:16 | 21.1 | 2026 |
-| espn_nba_team_boxscores | hoopR-nba-data | 79 | 2026-09-09T05:17 | 21.1 | 2026 |
-| espn_nba_player_boxscores | hoopR-nba-data | 79 | 2026-09-09T05:17 | 21.1 | 2026 |
-| espn_nba_player_core | hoopR-nba-data | 79 | 2026-09-09T05:18 | 21.1 | 2026 |
+| espn_womens_college_basketball_officials | wehoop-wbb-data | 37 | 2026-09-09T04:47 | 21.2 | 2026 |
+| espn_nba_pbp | hoopR-nba-data | 79 | 2026-09-09T05:16 | 21.2 | 2026 |
+| espn_nba_team_boxscores | hoopR-nba-data | 79 | 2026-09-09T05:17 | 21.2 | 2026 |
+| espn_nba_player_boxscores | hoopR-nba-data | 79 | 2026-09-09T05:17 | 21.2 | 2026 |
+| espn_nba_player_core | hoopR-nba-data | 79 | 2026-09-09T05:18 | 21.2 | 2026 |
 | espn_nba_shots | hoopR-nba-data | 80 | 2026-09-09T05:18 | 21.1 | 2026 |
 | espn_nba_player_season_stats | hoopR-nba-data | 80 | 2026-09-09T05:19 | 21.1 | 2026 |
 | espn_nba_team_season_stats | hoopR-nba-data | 80 | 2026-09-09T05:19 | 21.1 | 2026 |
@@ -165,8 +166,8 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | cfb_model_artifacts | cfbfastR-cfb-data | 25 | 2026-09-09T14:13 | 20.8 |  |
 | nhl_shifts | fastRhockey-nhl-data | 55 | 2026-09-09T22:14 | 20.4 | 2026 |
 | mlb_pitches | baseballr-data | 121 | 2026-09-10T04:38 | 20.2 | 2026 |
-| mlb_runners | baseballr-data | 121 | 2026-09-10T04:58 | 20.1 | 2026 |
-| mlb_pbp | baseballr-data | 121 | 2026-09-10T14:28 | 19.7 | 2026 |
+| mlb_runners | baseballr-data | 121 | 2026-09-10T04:58 | 20.2 | 2026 |
+| mlb_pbp | baseballr-data | 121 | 2026-09-10T14:28 | 19.8 | 2026 |
 | espn_nba_schedules | hoopR-nba-data | 88 | 2026-09-15T07:57 | 15.0 | 2027 |
 | espn_nba_rosters | hoopR-nba-data | 14 | 2026-09-15T07:57 | 15.0 | 2027 |
 | espn_nba_draft | hoopR-nba-data | 80 | 2026-09-15T07:57 | 15.0 | 2027 |
@@ -187,7 +188,7 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | mbb_groups | sdv-reference-data | 60 | 2026-09-28T13:33 | 1.8 | 2027 |
 | mlb_groups | sdv-reference-data | 260 | 2026-09-28T13:34 | 1.8 | 2026 |
 | wbb_groups | sdv-reference-data | 60 | 2026-09-28T13:34 | 1.8 | 2027 |
-| cfbfastR_cfb_pbp | cfbfastR-data | 54 | 2026-09-28T14:41 | 1.7 | 2026 |
+| cfbfastR_cfb_pbp | cfbfastR-data | 54 | 2026-09-28T14:41 | 1.8 | 2026 |
 | nfl_rosters | nfl-data | 29 | 2026-09-28T17:32 | 1.6 | 2026 |
 | nfl_players | nfl-data | 5 | 2026-09-28T17:33 | 1.6 |  |
 | nfl_player_stats | nfl-data | 5 | 2026-09-28T17:33 | 1.6 |  |
@@ -207,7 +208,7 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | espn_wnba_game_rosters | wehoop-wnba-data | 80 | 2026-09-29T10:42 | 0.9 | 2026 |
 | espn_wnba_officials | wehoop-wnba-data | 73 | 2026-09-29T10:42 | 0.9 | 2026 |
 | wnba_crosswalk | wehoop-wnba-data | 16 | 2026-09-29T10:43 | 0.9 | 2026 |
-| wnba_player_impact | wehoop-wnba-stats-data | 96 | 2026-09-29T14:31 | 0.7 | 2026 |
+| wnba_player_impact | wehoop-wnba-stats-data | 96 | 2026-09-29T14:31 | 0.8 | 2026 |
 | ncaa_mfb_teams | ncaa-mfb-football-data | 46 | 2026-09-29T15:33 | 0.7 | 2026 |
 | ncaa_mfb_schedule | ncaa-mfb-football-data | 46 | 2026-09-29T15:33 | 0.7 | 2026 |
 | ncaa_mfb_rosters | ncaa-mfb-football-data | 46 | 2026-09-29T15:33 | 0.7 | 2026 |
@@ -219,7 +220,7 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | ncaa_mfb_officials | ncaa-mfb-football-data | 46 | 2026-09-29T15:35 | 0.7 | 2026 |
 | ncaa_mfb_linescore | ncaa-mfb-football-data | 46 | 2026-09-29T15:35 | 0.7 | 2026 |
 | ncaa_mfb_qa | ncaa-mfb-football-data | 8 | 2026-09-29T15:35 | 0.7 | 2026 |
-| mlb_game_state | baseballr-data | 116 | 2026-09-29T17:10 | 0.6 | 2026 |
+| mlb_game_state | baseballr-data | 116 | 2026-09-29T17:10 | 0.7 | 2026 |
 | mlb_hitting_models | baseballr-data | 110 | 2026-09-29T18:00 | 0.6 | 2026 |
 | mlb_fielding_models | baseballr-data | 80 | 2026-09-29T18:01 | 0.6 | 2026 |
 | mlb_pitching_models | baseballr-data | 113 | 2026-09-29T18:03 | 0.6 | 2026 |
@@ -250,21 +251,21 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | espn_nba_depthcharts | cfbfastR-cfb-data | 3 | 2026-09-29T18:33 | 0.6 | 2027 |
 | espn_nfl_depthcharts | cfbfastR-cfb-data | 3 | 2026-09-29T18:33 | 0.6 | 2026 |
 | nfl_ratings_weekly | nfl-data | 32 | 2026-09-29T19:03 | 0.6 | 2026 |
-| wnba_stats_coaches | wehoop-wnba-stats-data | 92 | 2026-09-29T19:14 | 0.5 | 2026 |
-| wnba_stats_draft | wehoop-wnba-stats-data | 95 | 2026-09-29T19:14 | 0.5 | 2026 |
-| wnba_stats_game_rosters | wehoop-wnba-stats-data | 95 | 2026-09-29T19:14 | 0.5 | 2026 |
-| wnba_stats_lineups | wehoop-wnba-stats-data | 8 | 2026-09-29T19:14 | 0.5 | 2026 |
-| wnba_stats_officials | wehoop-wnba-stats-data | 74 | 2026-09-29T19:15 | 0.5 | 2026 |
-| wnba_stats_pbp | wehoop-wnba-stats-data | 99 | 2026-09-29T19:15 | 0.5 | 2026 |
-| wnba_stats_player_boxscores | wehoop-wnba-stats-data | 8 | 2026-09-29T19:15 | 0.5 | 2026 |
-| wnba_stats_player_game_logs | wehoop-wnba-stats-data | 95 | 2026-09-29T19:15 | 0.5 | 2026 |
-| wnba_stats_player_season_stats | wehoop-wnba-stats-data | 8 | 2026-09-29T19:15 | 0.5 | 2026 |
-| wnba_stats_rosters | wehoop-wnba-stats-data | 95 | 2026-09-29T19:16 | 0.5 | 2026 |
-| wnba_stats_schedules | wehoop-wnba-stats-data | 105 | 2026-09-29T19:16 | 0.5 | 2026 |
-| wnba_stats_shots | wehoop-wnba-stats-data | 95 | 2026-09-29T19:16 | 0.5 | 2026 |
-| wnba_stats_standings | wehoop-wnba-stats-data | 8 | 2026-09-29T19:16 | 0.5 | 2026 |
-| wnba_stats_team_boxscores | wehoop-wnba-stats-data | 8 | 2026-09-29T19:16 | 0.5 | 2026 |
-| wnba_stats_team_season_stats | wehoop-wnba-stats-data | 8 | 2026-09-29T19:17 | 0.5 | 2026 |
+| wnba_stats_coaches | wehoop-wnba-stats-data | 92 | 2026-09-29T19:14 | 0.6 | 2026 |
+| wnba_stats_draft | wehoop-wnba-stats-data | 95 | 2026-09-29T19:14 | 0.6 | 2026 |
+| wnba_stats_game_rosters | wehoop-wnba-stats-data | 95 | 2026-09-29T19:14 | 0.6 | 2026 |
+| wnba_stats_lineups | wehoop-wnba-stats-data | 8 | 2026-09-29T19:14 | 0.6 | 2026 |
+| wnba_stats_officials | wehoop-wnba-stats-data | 74 | 2026-09-29T19:15 | 0.6 | 2026 |
+| wnba_stats_pbp | wehoop-wnba-stats-data | 99 | 2026-09-29T19:15 | 0.6 | 2026 |
+| wnba_stats_player_boxscores | wehoop-wnba-stats-data | 8 | 2026-09-29T19:15 | 0.6 | 2026 |
+| wnba_stats_player_game_logs | wehoop-wnba-stats-data | 95 | 2026-09-29T19:15 | 0.6 | 2026 |
+| wnba_stats_player_season_stats | wehoop-wnba-stats-data | 8 | 2026-09-29T19:15 | 0.6 | 2026 |
+| wnba_stats_rosters | wehoop-wnba-stats-data | 95 | 2026-09-29T19:16 | 0.6 | 2026 |
+| wnba_stats_schedules | wehoop-wnba-stats-data | 105 | 2026-09-29T19:16 | 0.6 | 2026 |
+| wnba_stats_shots | wehoop-wnba-stats-data | 95 | 2026-09-29T19:16 | 0.6 | 2026 |
+| wnba_stats_standings | wehoop-wnba-stats-data | 8 | 2026-09-29T19:16 | 0.6 | 2026 |
+| wnba_stats_team_boxscores | wehoop-wnba-stats-data | 8 | 2026-09-29T19:16 | 0.6 | 2026 |
+| wnba_stats_team_season_stats | wehoop-wnba-stats-data | 8 | 2026-09-29T19:17 | 0.6 | 2026 |
 | cfb_groups | sdv-reference-data | 322 | 2026-09-29T22:30 | 0.4 | 2026 |
 | espn_nfl_pbp | nfl-data | 26 | 2026-09-29T23:32 | 0.4 | 2026 |
 | espn_nfl_qa | nfl-data | 3 | 2026-09-29T23:32 | 0.4 | 2026 |
@@ -308,26 +309,6 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | espn_nfl_coach_tendencies | nfl-data | 26 | 2026-09-29T23:35 | 0.4 | 2026 |
 | nfl_rolling_windows | nfl-data | 26 | 2026-09-29T23:35 | 0.4 | 2026 |
 | espn_nfl_coach_careers | nfl-data | 1 | 2026-09-29T23:35 | 0.4 |  |
-| espn_cfb_pbp | cfbfastR-cfb-data | 73 | 2026-09-30T01:33 | 0.3 | 2026 |
-| espn_cfb_play_participants | cfbfastR-cfb-data | 55 | 2026-09-30T01:34 | 0.3 | 2026 |
-| espn_cfb_team_box | cfbfastR-cfb-data | 95 | 2026-09-30T01:34 | 0.3 | 2026 |
-| espn_cfb_player_box | cfbfastR-cfb-data | 95 | 2026-09-30T01:35 | 0.3 | 2026 |
-| espn_cfb_drives | cfbfastR-cfb-data | 95 | 2026-09-30T01:35 | 0.3 | 2026 |
-| espn_cfb_game_rosters | cfbfastR-cfb-data | 95 | 2026-09-30T01:36 | 0.3 | 2026 |
-| espn_cfb_betting | cfbfastR-cfb-data | 95 | 2026-09-30T01:37 | 0.3 | 2026 |
-| espn_cfb_schedules | cfbfastR-cfb-data | 95 | 2026-09-30T01:37 | 0.3 | 2026 |
-| espn_cfb_linescores | cfbfastR-cfb-data | 95 | 2026-09-30T01:38 | 0.3 | 2026 |
-| espn_cfb_power_index | cfbfastR-cfb-data | 81 | 2026-09-30T01:38 | 0.3 | 2026 |
-| espn_cfb_adv_team | cfbfastR-cfb-data | 73 | 2026-09-30T01:39 | 0.3 | 2026 |
-| espn_cfb_adv_passing | cfbfastR-cfb-data | 73 | 2026-09-30T01:39 | 0.3 | 2026 |
-| espn_cfb_adv_rushing | cfbfastR-cfb-data | 73 | 2026-09-30T01:40 | 0.3 | 2026 |
-| espn_cfb_adv_receiving | cfbfastR-cfb-data | 73 | 2026-09-30T01:40 | 0.3 | 2026 |
-| espn_cfb_adv_defensive | cfbfastR-cfb-data | 73 | 2026-09-30T01:41 | 0.3 | 2026 |
-| espn_cfb_adv_turnover | cfbfastR-cfb-data | 73 | 2026-09-30T01:41 | 0.3 | 2026 |
-| espn_cfb_adv_drives | cfbfastR-cfb-data | 73 | 2026-09-30T01:41 | 0.3 | 2026 |
-| espn_cfb_adv_situational | cfbfastR-cfb-data | 73 | 2026-09-30T01:42 | 0.3 | 2026 |
-| espn_cfb_adv_defensive_players | cfbfastR-cfb-data | 73 | 2026-09-30T01:42 | 0.3 | 2026 |
-| espn_cfb_adv_specialists | cfbfastR-cfb-data | 73 | 2026-09-30T01:43 | 0.3 | 2026 |
 | espn_cfb_adv_player_usage | cfbfastR-cfb-data | 73 | 2026-09-30T01:46 | 0.3 | 2026 |
 | espn_cfb_adv_position_group_usage | cfbfastR-cfb-data | 43 | 2026-09-30T01:50 | 0.3 | 2026 |
 | espn_cfb_adv_tackles | cfbfastR-cfb-data | 43 | 2026-09-30T01:53 | 0.3 | 2026 |
@@ -339,15 +320,15 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | espn_cfb_usage_tackles | cfbfastR-cfb-data | 43 | 2026-09-30T02:14 | 0.3 | 2026 |
 | espn_cfb_usage_position_group_tackles | cfbfastR-cfb-data | 43 | 2026-09-30T02:17 | 0.3 | 2026 |
 | espn_cfb_usage_teams | cfbfastR-cfb-data | 73 | 2026-09-30T02:20 | 0.3 | 2026 |
-| espn_cfb_usage_drive_scripting | cfbfastR-cfb-data | 73 | 2026-09-30T02:23 | 0.2 | 2026 |
-| espn_cfb_adv_st_kickers | cfbfastR-cfb-data | 73 | 2026-09-30T02:27 | 0.2 | 2026 |
-| espn_cfb_adv_st_punters | cfbfastR-cfb-data | 73 | 2026-09-30T02:30 | 0.2 | 2026 |
-| espn_cfb_adv_st_returners | cfbfastR-cfb-data | 73 | 2026-09-30T02:33 | 0.2 | 2026 |
-| espn_cfb_adv_st_blocks | cfbfastR-cfb-data | 61 | 2026-09-30T02:36 | 0.2 | 2026 |
-| espn_cfb_adv_st_team | cfbfastR-cfb-data | 73 | 2026-09-30T02:39 | 0.2 | 2026 |
-| espn_cfb_usage_st_kickers | cfbfastR-cfb-data | 73 | 2026-09-30T02:43 | 0.2 | 2026 |
-| espn_cfb_usage_st_punters | cfbfastR-cfb-data | 73 | 2026-09-30T02:47 | 0.2 | 2026 |
-| espn_cfb_usage_st_returners | cfbfastR-cfb-data | 73 | 2026-09-30T02:51 | 0.2 | 2026 |
+| espn_cfb_usage_drive_scripting | cfbfastR-cfb-data | 73 | 2026-09-30T02:23 | 0.3 | 2026 |
+| espn_cfb_adv_st_kickers | cfbfastR-cfb-data | 73 | 2026-09-30T02:27 | 0.3 | 2026 |
+| espn_cfb_adv_st_punters | cfbfastR-cfb-data | 73 | 2026-09-30T02:30 | 0.3 | 2026 |
+| espn_cfb_adv_st_returners | cfbfastR-cfb-data | 73 | 2026-09-30T02:33 | 0.3 | 2026 |
+| espn_cfb_adv_st_blocks | cfbfastR-cfb-data | 61 | 2026-09-30T02:36 | 0.3 | 2026 |
+| espn_cfb_adv_st_team | cfbfastR-cfb-data | 73 | 2026-09-30T02:39 | 0.3 | 2026 |
+| espn_cfb_usage_st_kickers | cfbfastR-cfb-data | 73 | 2026-09-30T02:43 | 0.3 | 2026 |
+| espn_cfb_usage_st_punters | cfbfastR-cfb-data | 73 | 2026-09-30T02:47 | 0.3 | 2026 |
+| espn_cfb_usage_st_returners | cfbfastR-cfb-data | 73 | 2026-09-30T02:51 | 0.3 | 2026 |
 | espn_cfb_usage_st_blocks | cfbfastR-cfb-data | 61 | 2026-09-30T02:55 | 0.2 | 2026 |
 | espn_cfb_usage_st_team | cfbfastR-cfb-data | 73 | 2026-09-30T02:58 | 0.2 | 2026 |
 | espn_cfb_adv_team_gamelog | cfbfastR-cfb-data | 73 | 2026-09-30T02:59 | 0.2 | 2026 |
@@ -366,25 +347,45 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 | cfb_returning_production | cfbfastR-cfb-data | 25 | 2026-09-30T03:23 | 0.2 | 2026 |
 | espn_cfb_coach_careers | cfbfastR-cfb-data | 7 | 2026-09-30T03:24 | 0.2 |  |
 | wbb_ratings | wehoop-wbb-data | 23 | 2026-09-30T04:46 | 0.2 | 2026 |
-| mbb_ratings | hoopR-mbb-data | 26 | 2026-09-30T05:15 | 0.1 | 2026 |
-| mbb_player_value | hoopR-mbb-data | 27 | 2026-09-30T05:16 | 0.1 | 2026 |
-| wbb_player_value | wehoop-wbb-data | 19 | 2026-09-30T05:17 | 0.1 | 2026 |
+| mbb_ratings | hoopR-mbb-data | 26 | 2026-09-30T05:15 | 0.2 | 2026 |
+| mbb_player_value | hoopR-mbb-data | 27 | 2026-09-30T05:16 | 0.2 | 2026 |
+| wbb_player_value | wehoop-wbb-data | 19 | 2026-09-30T05:17 | 0.2 | 2026 |
 | nfl_model_pbp | nfl-data | 32 | 2026-09-30T05:27 | 0.1 | 2026 |
-| nfl_team_summaries | nfl-data | 30 | 2026-09-30T07:12 | 0.0 | 2026 |
-| nfl_passing | nfl-data | 30 | 2026-09-30T07:12 | 0.0 | 2026 |
-| nfl_rushing | nfl-data | 30 | 2026-09-30T07:13 | 0.0 | 2026 |
-| nfl_receiving | nfl-data | 30 | 2026-09-30T07:14 | 0.0 | 2026 |
-| nfl_percentiles | nfl-data | 30 | 2026-09-30T07:14 | 0.0 | 2026 |
-| nfl_player_percentiles | nfl-data | 30 | 2026-09-30T07:15 | 0.0 | 2026 |
-| nfl_league_averages | nfl-data | 30 | 2026-09-30T07:16 | 0.0 | 2026 |
-| nfl_team_opponent_splits | nfl-data | 30 | 2026-09-30T07:17 | 0.0 | 2026 |
-| cfb_league_averages | cfbfastR-cfb-data | 73 | 2026-09-30T08:18 | 0.0 | 2026 |
-| cfb_team_summaries_weekly | cfbfastR-cfb-data | 73 | 2026-09-30T08:23 | -0.0 | 2026 |
-| espn_cfb_percentiles | cfbfastR-cfb-data | 73 | 2026-09-30T08:24 | -0.0 | 2026 |
-| espn_cfb_team_summaries | cfbfastR-cfb-data | 73 | 2026-09-30T08:24 | -0.0 | 2026 |
-| espn_cfb_passing | cfbfastR-cfb-data | 73 | 2026-09-30T08:24 | -0.0 | 2026 |
-| espn_cfb_rushing | cfbfastR-cfb-data | 73 | 2026-09-30T08:24 | -0.0 | 2026 |
-| espn_cfb_receiving | cfbfastR-cfb-data | 73 | 2026-09-30T08:25 | -0.0 | 2026 |
+| nfl_team_summaries | nfl-data | 30 | 2026-09-30T07:12 | 0.1 | 2026 |
+| nfl_passing | nfl-data | 30 | 2026-09-30T07:12 | 0.1 | 2026 |
+| nfl_rushing | nfl-data | 30 | 2026-09-30T07:13 | 0.1 | 2026 |
+| nfl_receiving | nfl-data | 30 | 2026-09-30T07:14 | 0.1 | 2026 |
+| nfl_percentiles | nfl-data | 30 | 2026-09-30T07:14 | 0.1 | 2026 |
+| nfl_player_percentiles | nfl-data | 30 | 2026-09-30T07:15 | 0.1 | 2026 |
+| nfl_league_averages | nfl-data | 30 | 2026-09-30T07:16 | 0.1 | 2026 |
+| nfl_team_opponent_splits | nfl-data | 30 | 2026-09-30T07:17 | 0.1 | 2026 |
+| espn_cfb_percentiles | cfbfastR-cfb-data | 73 | 2026-09-30T08:24 | 0.0 | 2026 |
+| espn_cfb_team_summaries | cfbfastR-cfb-data | 73 | 2026-09-30T08:24 | 0.0 | 2026 |
+| espn_cfb_passing | cfbfastR-cfb-data | 73 | 2026-09-30T08:24 | 0.0 | 2026 |
+| espn_cfb_rushing | cfbfastR-cfb-data | 73 | 2026-09-30T08:24 | 0.0 | 2026 |
+| espn_cfb_receiving | cfbfastR-cfb-data | 73 | 2026-09-30T08:25 | 0.0 | 2026 |
+| cfb_league_averages | cfbfastR-cfb-data | 73 | 2026-09-30T08:25 | 0.0 | 2026 |
+| cfb_team_summaries_weekly | cfbfastR-cfb-data | 73 | 2026-09-30T08:28 | 0.0 | 2026 |
+| espn_cfb_pbp | cfbfastR-cfb-data | 73 | 2026-09-30T08:32 | 0.0 | 2026 |
+| espn_cfb_play_participants | cfbfastR-cfb-data | 55 | 2026-09-30T08:33 | 0.0 | 2026 |
+| espn_cfb_team_box | cfbfastR-cfb-data | 95 | 2026-09-30T08:34 | 0.0 | 2026 |
+| espn_cfb_player_box | cfbfastR-cfb-data | 95 | 2026-09-30T08:35 | 0.0 | 2026 |
+| espn_cfb_drives | cfbfastR-cfb-data | 95 | 2026-09-30T08:36 | 0.0 | 2026 |
+| espn_cfb_game_rosters | cfbfastR-cfb-data | 95 | 2026-09-30T08:37 | 0.0 | 2026 |
+| espn_cfb_betting | cfbfastR-cfb-data | 95 | 2026-09-30T08:37 | 0.0 | 2026 |
+| espn_cfb_schedules | cfbfastR-cfb-data | 95 | 2026-09-30T08:38 | 0.0 | 2026 |
+| espn_cfb_linescores | cfbfastR-cfb-data | 95 | 2026-09-30T08:39 | 0.0 | 2026 |
+| espn_cfb_power_index | cfbfastR-cfb-data | 81 | 2026-09-30T08:39 | 0.0 | 2026 |
+| espn_cfb_adv_team | cfbfastR-cfb-data | 73 | 2026-09-30T08:41 | 0.0 | 2026 |
+| espn_cfb_adv_passing | cfbfastR-cfb-data | 73 | 2026-09-30T08:41 | 0.0 | 2026 |
+| espn_cfb_adv_rushing | cfbfastR-cfb-data | 73 | 2026-09-30T08:42 | 0.0 | 2026 |
+| espn_cfb_adv_receiving | cfbfastR-cfb-data | 73 | 2026-09-30T08:43 | 0.0 | 2026 |
+| espn_cfb_adv_defensive | cfbfastR-cfb-data | 73 | 2026-09-30T08:43 | 0.0 | 2026 |
+| espn_cfb_adv_turnover | cfbfastR-cfb-data | 73 | 2026-09-30T08:44 | 0.0 | 2026 |
+| espn_cfb_adv_drives | cfbfastR-cfb-data | 73 | 2026-09-30T08:45 | 0.0 | 2026 |
+| espn_cfb_adv_situational | cfbfastR-cfb-data | 73 | 2026-09-30T08:46 | 0.0 | 2026 |
+| espn_cfb_adv_defensive_players | cfbfastR-cfb-data | 73 | 2026-09-30T08:46 | 0.0 | 2026 |
+| espn_cfb_adv_specialists | cfbfastR-cfb-data | 73 | 2026-09-30T08:47 | 0.0 | 2026 |
 | espn_cfb_player_boxscores | cfbfastR-data | 0 | empty |  |  |
 | espn_cfb_team_boxscores | cfbfastR-data | 0 | empty |  |  |
 | espn_mbb_injuries | cfbfastR-cfb-data | 0 | empty |  |  |
@@ -392,27 +393,27 @@ _80 public repos · generated 2026-09-30T08:22Z by `.github/workflows/ecosystem-
 
 ## Producers
 
-One row per repo that publishes to `sportsdataverse-data` (config: `producers.json`). `idle` = out of season, never an alarm.
+One row per repo that publishes to `sportsdataverse-data` (config: `producers.json`). `data updated` and `through season` follow the play-by-play tags; `any tag updated` is the newest asset across all of the producer's tags. `idle` = out of season, never an alarm.
 
-| repo | state | in season | data updated | through season | update workflows |
-|---|---|---|---|---|---|
-| [cfbfastR-cfb-data](https://github.com/sportsdataverse/cfbfastR-cfb-data) | fresh | yes | 2026-09-30 | 2026 | `daily_cfb.yml` success 2026-09-29<br>`cfb_ratings_cron.yml` success 2026-09-29<br>`cfb_fpi_weekly.yml` success 2026-09-29<br>`cfb_recruiting_proj_cron.yml` failure 2026-08-05<br>`cfb_model_pipeline.yml` no runs<br>`espn_daily_snapshots.yml` success 2026-09-29 |
-| [cfbfastR-data](https://github.com/sportsdataverse/cfbfastR-data) | fresh | yes | 2026-09-28 | 2026 | `daily_cfb.yml` success 2026-09-28 |
-| [ncaa-mfb-football-data](https://github.com/sportsdataverse/ncaa-mfb-football-data) | fresh | yes | 2026-09-29 | 2026 | `daily_ncaa_mfb_data.yml` success 2026-09-29 |
-| [nfl-data](https://github.com/sportsdataverse/nfl-data) | fresh | yes | 2026-09-30 | 2026 | `espn_nfl_cron.yml` success 2026-09-29<br>`nfl_pbp_cron.yml` success 2026-09-30<br>`nfl_ratings_weekly.yml` success 2026-09-29<br>`nfl_rosters_players_cron.yml` success 2026-09-28<br>`nfl_model_pipeline.yml` no runs |
-| [nfl-ngs-data](https://github.com/sportsdataverse/nfl-ngs-data) | fresh | yes | 2026-09-29 | 2026 | `daily_ngs.yml` success 2026-09-29 |
-| [hoopR-mbb-data](https://github.com/sportsdataverse/hoopR-mbb-data) | idle | no | 2026-09-30 | 2026 | `daily_mbb.yml` success 2026-08-07<br>`mbb_models_cron.yml` no runs |
-| [ncaa-mbb-hoops-data](https://github.com/sportsdataverse/ncaa-mbb-hoops-data) | idle | no | 2026-08-24 | 2026 | `ncaa_mbb_models.yml` no runs |
-| [hoopR-nba-data](https://github.com/sportsdataverse/hoopR-nba-data) | idle | no | 2026-09-15 | 2026 | `daily_nba.yml` cancelled 2026-09-09 |
-| [hoopR-nba-stats-data](https://github.com/sportsdataverse/hoopR-nba-stats-data) | idle | no | 2026-09-02 | 2026 | `daily_nba_stats.yml` success 2026-07-12<br>`nba_models.yml` no runs<br>`annual_nba_stats_draft.yml` no runs |
-| [wehoop-wbb-data](https://github.com/sportsdataverse/wehoop-wbb-data) | idle | no | 2026-09-30 | 2026 | `daily_wbb.yml` success 2026-09-09<br>`weekly_wbb.yml` success 2026-09-27<br>`wbb_models_cron.yml` no runs |
-| [ncaa-wbb-hoops-data](https://github.com/sportsdataverse/ncaa-wbb-hoops-data) | idle | no | 2026-08-24 | 2026 | `ncaa_wbb_models.yml` no runs |
-| [wehoop-wnba-data](https://github.com/sportsdataverse/wehoop-wnba-data) | fresh | yes | 2026-09-29 | 2026 | `daily_wnba.yml` success 2026-09-29<br>`weekly_wnba.yml` success 2026-09-27<br>`annual_wnba_draft.yml` success 2026-05-30 |
-| [wehoop-wnba-stats-data](https://github.com/sportsdataverse/wehoop-wnba-stats-data) | fresh | yes | 2026-09-29 | 2026 | `daily_wnba_stats.yml` success 2026-09-13<br>`wnba_models.yml` no runs<br>`annual_wnba_stats_draft.yml` success 2026-05-30 |
-| [fastRhockey-nhl-data](https://github.com/sportsdataverse/fastRhockey-nhl-data) | idle | no | 2026-09-09 | 2026 | `daily_nhl.yml` success 2026-07-22<br>`daily_nhl_python.yml` no runs<br>`nhl_model_pipeline.yml` no runs |
-| [fastRhockey-pwhl-data](https://github.com/sportsdataverse/fastRhockey-pwhl-data) | idle | no | 2026-09-02 | 2026 | `daily_pwhl.yml` success 2026-07-18<br>`daily_pwhl_python.yml` no runs<br>`pwhl_xg_cron.yml` no runs |
-| [baseballr-data](https://github.com/sportsdataverse/baseballr-data) | fresh | yes | 2026-09-29 | 2026 | `mlb_models_cron.yml` success 2026-09-29<br>`daily_ncaa_baseball.yml` failure 2026-08-01 |
-| [sdv-reference-data](https://github.com/sportsdataverse/sdv-reference-data) | fresh | yes | 2026-09-29 | 2027 | — |
+| repo | state | in season | data updated | any tag updated | through season | update workflows |
+|---|---|---|---|---|---|---|
+| [cfbfastR-cfb-data](https://github.com/sportsdataverse/cfbfastR-cfb-data) | fresh | yes | 2026-09-30 | 2026-09-30 | 2026 | `daily_cfb.yml` success 2026-09-29<br>`cfb_ratings_cron.yml` success 2026-09-29<br>`cfb_fpi_weekly.yml` success 2026-09-29<br>`cfb_recruiting_proj_cron.yml` failure 2026-08-05<br>`cfb_model_pipeline.yml` no runs<br>`espn_daily_snapshots.yml` success 2026-09-29 |
+| [cfbfastR-data](https://github.com/sportsdataverse/cfbfastR-data) | fresh | yes | 2026-09-28 | 2026-09-28 | 2026 | `daily_cfb.yml` success 2026-09-28 |
+| [ncaa-mfb-football-data](https://github.com/sportsdataverse/ncaa-mfb-football-data) | fresh | yes | 2026-09-29 | 2026-09-29 | 2026 | `daily_ncaa_mfb_data.yml` success 2026-09-29 |
+| [nfl-data](https://github.com/sportsdataverse/nfl-data) | fresh | yes | 2026-09-29 | 2026-09-30 | 2026 | `espn_nfl_cron.yml` success 2026-09-29<br>`nfl_pbp_cron.yml` success 2026-09-30<br>`nfl_ratings_weekly.yml` success 2026-09-29<br>`nfl_rosters_players_cron.yml` success 2026-09-28<br>`nfl_model_pipeline.yml` no runs |
+| [nfl-ngs-data](https://github.com/sportsdataverse/nfl-ngs-data) | fresh | yes | 2026-09-29 | 2026-09-29 | 2026 | `daily_ngs.yml` success 2026-09-29 |
+| [hoopR-mbb-data](https://github.com/sportsdataverse/hoopR-mbb-data) | idle | no | 2026-09-19 | 2026-09-30 | 2026 | `daily_mbb.yml` success 2026-08-07<br>`mbb_models_cron.yml` no runs |
+| [ncaa-mbb-hoops-data](https://github.com/sportsdataverse/ncaa-mbb-hoops-data) | idle | no | 2026-08-12 | 2026-08-24 | 2026 | `ncaa_mbb_models.yml` no runs |
+| [hoopR-nba-data](https://github.com/sportsdataverse/hoopR-nba-data) | idle | no | 2026-09-09 | 2026-09-15 | 2026 | `daily_nba.yml` cancelled 2026-09-09 |
+| [hoopR-nba-stats-data](https://github.com/sportsdataverse/hoopR-nba-stats-data) | idle | no | 2026-08-13 | 2026-09-02 | 2026 | `daily_nba_stats.yml` disabled 2026-07-12<br>`nba_models.yml` no runs<br>`annual_nba_stats_draft.yml` no runs |
+| [wehoop-wbb-data](https://github.com/sportsdataverse/wehoop-wbb-data) | idle | no | 2026-09-19 | 2026-09-30 | 2026 | `daily_wbb.yml` success 2026-09-09<br>`weekly_wbb.yml` success 2026-09-27<br>`wbb_models_cron.yml` no runs |
+| [ncaa-wbb-hoops-data](https://github.com/sportsdataverse/ncaa-wbb-hoops-data) | idle | no | 2026-08-18 | 2026-08-24 | 2026 | `ncaa_wbb_models.yml` no runs |
+| [wehoop-wnba-data](https://github.com/sportsdataverse/wehoop-wnba-data) | fresh | yes | 2026-09-29 | 2026-09-29 | 2026 | `daily_wnba.yml` success 2026-09-29<br>`weekly_wnba.yml` success 2026-09-27<br>`annual_wnba_draft.yml` success 2026-05-30 |
+| [wehoop-wnba-stats-data](https://github.com/sportsdataverse/wehoop-wnba-stats-data) | fresh | yes | 2026-09-29 | 2026-09-29 | 2026 | `daily_wnba_stats.yml` success 2026-09-29<br>`wnba_models.yml` no runs<br>`annual_wnba_stats_draft.yml` success 2026-05-30 |
+| [fastRhockey-nhl-data](https://github.com/sportsdataverse/fastRhockey-nhl-data) | idle | no | 2026-07-23 | 2026-09-09 | 2026 | `daily_nhl_python.yml` disabled 2026-07-22<br>`nhl_model_pipeline.yml` no runs |
+| [fastRhockey-pwhl-data](https://github.com/sportsdataverse/fastRhockey-pwhl-data) | idle | no | 2026-07-22 | 2026-09-02 | 2026 | `daily_pwhl_python.yml` no runs<br>`pwhl_xg_cron.yml` no runs |
+| [baseballr-data](https://github.com/sportsdataverse/baseballr-data) | stale | yes | 2026-09-10 | 2026-09-29 | 2026 | `mlb_models_cron.yml` success 2026-09-29<br>`daily_ncaa_baseball.yml` failure 2026-08-01 |
+| [sdv-reference-data](https://github.com/sportsdataverse/sdv-reference-data) | fresh | yes | 2026-09-29 | 2026-09-29 | 2027 | — |
 
 ## Red default-branch workflows
 
@@ -420,48 +421,46 @@ One row per repo that publishes to `sportsdataverse-data` (config: `producers.js
 |---|---|---|---|---|
 | sportsdataverse/baseballr-data | Update NCAA Baseball Data | failure | [run](https://github.com/sportsdataverse/baseballr-data/actions/runs/30698726326) | 59.9 |
 | sportsdataverse/baseballr-data | orphan-scripts | failure | [run](https://github.com/sportsdataverse/baseballr-data/actions/runs/36263141819) | 3.6 |
-| sportsdataverse/cfbfastR | R-hub | cancelled | [run](https://github.com/sportsdataverse/cfbfastR/actions/runs/32725263629) | 36.8 |
-| sportsdataverse/cfbfastR-cfb-data | CFB Recruiting Projections | failure | [run](https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/31015046584) | 55.7 |
+| sportsdataverse/cfbfastR | R-hub | cancelled | [run](https://github.com/sportsdataverse/cfbfastR/actions/runs/32725263629) | 36.9 |
+| sportsdataverse/cfbfastR-cfb-data | CFB Recruiting Projections | failure | [run](https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/31015046584) | 55.8 |
 | sportsdataverse/cfbfastR-cfb-raw | Scrape CFB Raw Data | cancelled | [run](https://github.com/sportsdataverse/cfbfastR-cfb-raw/actions/runs/33256748632) | 31.8 |
 | sportsdataverse/hoopR | R-hub | cancelled | [run](https://github.com/sportsdataverse/hoopR/actions/runs/27192006294) | 113.0 |
 | sportsdataverse/hoopR-nba-data | Update NBA Data | cancelled | [run](https://github.com/sportsdataverse/hoopR-nba-data/actions/runs/34314472849) | 21.1 |
-| sportsdataverse/hoopR-nba-data | tests | failure | [run](https://github.com/sportsdataverse/hoopR-nba-data/actions/runs/31059833392) | 55.3 |
 | sportsdataverse/ncaa-wbb-hoops-raw | orphan-scripts | failure | [run](https://github.com/sportsdataverse/ncaa-wbb-hoops-raw/actions/runs/34331662340) | 21.0 |
 | sportsdataverse/sportsdataverse-py | tests | failure | [run](https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/36672953834) | 0.1 |
-| sportsdataverse/sportsdataverse-web | Update data | failure | [run](https://github.com/sportsdataverse/sportsdataverse-web/actions/runs/33084519531) | 33.7 |
+| sportsdataverse/sportsdataverse-web | Update data | failure | [run](https://github.com/sportsdataverse/sportsdataverse-web/actions/runs/33084519531) | 33.8 |
 | sportsdataverse/wehoop-wbb-raw | Daily WBB Raw Scrape | failure | [run](https://github.com/sportsdataverse/wehoop-wbb-raw/actions/runs/25519402950) | 145.5 |
 | sportsdataverse/wehoop-wnba-raw | tests | failure | [run](https://github.com/sportsdataverse/wehoop-wnba-raw/actions/runs/36556464017) | 0.9 |
-| sportsdataverse/wehoop-wnba-stats-raw | tests | failure | [run](https://github.com/sportsdataverse/wehoop-wnba-stats-raw/actions/runs/36573019473) | 0.8 |
 
 ## Open PRs (most idle first)
 
 | repo | PR | author | age (d) | idle (d) | draft |
 |---|---|---|---|---|---|
-| BillPetti/baseballr | [#424](https://github.com/BillPetti/baseballr/pull/424) stats is Imports, not Suggests | MichaelChirico | 24.0 | 24.0 |  |
+| BillPetti/baseballr | [#424](https://github.com/BillPetti/baseballr/pull/424) stats is Imports, not Suggests | MichaelChirico | 24.1 | 24.1 |  |
 | sportsdataverse/sportypy | [#13](https://github.com/sportsdataverse/sportypy/pull/13) Fix boundary filtering for constrained statistical plots | bensynapse | 16.7 | 16.7 |  |
 | sportsdataverse/sportyR | [#42](https://github.com/sportsdataverse/sportyR/pull/42) first push - bwf specification for badminton court | AimanFariz | 493.2 | 14.4 |  |
 | sportsdataverse/sportsdataverse-py | [#617](https://github.com/sportsdataverse/sportsdataverse-py/pull/617) docs(tutorials): weekly refresh of executed notebook pages | github-actions[bot] | 1.4 | 1.4 |  |
 | sportsdataverse/sportyR | [#52](https://github.com/sportsdataverse/sportyR/pull/52) Add NCAA softball field via geom_softball() | billyfryer | 0.7 | 0.7 |  |
-| saiemgilani/game-on-paper-app | [#290](https://github.com/saiemgilani/game-on-paper-app/pull/290) fix(players): the game log's Live and QA badges in #270's Performance  | saiemgilani | 0.4 | 0.3 |  |
-| saiemgilani/game-on-paper-app | [#270](https://github.com/saiemgilani/game-on-paper-app/pull/270) Fixing design issues + Team Stats SSR + splitting Situational Metrics | akeaswaran | 10.3 | 0.3 | y |
+| saiemgilani/game-on-paper-app | [#290](https://github.com/saiemgilani/game-on-paper-app/pull/290) fix(players): the game log's Live and QA badges in #270's Performance  | saiemgilani | 0.4 | 0.4 |  |
+| saiemgilani/game-on-paper-app | [#270](https://github.com/saiemgilani/game-on-paper-app/pull/270) Fixing design issues + Team Stats SSR + splitting Situational Metrics | akeaswaran | 10.4 | 0.4 | y |
 | saiemgilani/game-on-paper-app | [#264](https://github.com/saiemgilani/game-on-paper-app/pull/264) test(tables): render-level contract tests, twin parity and aggregation | saiemgilani | 11.2 | 0.2 |  |
-| sportsdataverse/sportsdataverse-data | [#20](https://github.com/sportsdataverse/sportsdataverse-data/pull/20) docs(notes): wbb_ratings 2009-2012 correction and 2008 withdrawal | saiemgilani | 0.1 | 0.1 |  |
-| saiemgilani/game-on-paper-app | [#292](https://github.com/saiemgilani/game-on-paper-app/pull/292) fix(glossary): fourth-down, pace, finishing, third-down and neutral pa | saiemgilani | 0.1 | 0.1 |  |
+| sportsdataverse/sportsdataverse-py | [#626](https://github.com/sportsdataverse/sportsdataverse-py/pull/626) fix(cfb): overtime-aware win probability, decided end-of-regulation st | saiemgilani | 0.1 | 0.1 | y |
+| sportsdataverse/sportsdataverse-py | [#625](https://github.com/sportsdataverse/sportsdataverse-py/pull/625) feat(cfb): ship the gated xQBR retrain (served features, no spread) | saiemgilani | 0.1 | 0.1 | y |
+| sportsdataverse/cfbfastR-cfb-data | [#116](https://github.com/sportsdataverse/cfbfastR-cfb-data/pull/116) feat(models): gated xQBR retrain on the served box score, committed ES | saiemgilani | 0.1 | 0.1 |  |
+| saiemgilani/game-on-paper-app | [#293](https://github.com/saiemgilani/game-on-paper-app/pull/293) fix(game): turnover model to two decimals, Pass Breakups from the payl | saiemgilani | 0.2 | 0.1 |  |
+| saiemgilani/game-on-paper-app | [#292](https://github.com/saiemgilani/game-on-paper-app/pull/292) fix(glossary): fourth-down, pace, finishing, third-down and neutral pa | saiemgilani | 0.2 | 0.1 |  |
 | saiemgilani/game-on-paper-app | [#280](https://github.com/saiemgilani/game-on-paper-app/pull/280) fix(game): fit the drive chart to the screen instead of scrolling it | saiemgilani | 3.6 | 0.1 |  |
-| sportsdataverse/cfbfastR | [#166](https://github.com/sportsdataverse/cfbfastR/pull/166) docs(cfbd): SDV return tables for recent cfbd_* wrappers + box_advance | saiemgilani | 0.0 | 0.0 |  |
-| sportsdataverse/sportsdataverse-py | [#632](https://github.com/sportsdataverse/sportsdataverse-py/pull/632) feat(football)!: tackle share counts only the defense's own scrimmage  | saiemgilani | 0.0 | 0.0 |  |
-| sportsdataverse/sportsdataverse-py | [#631](https://github.com/sportsdataverse/sportsdataverse-py/pull/631) fix(cfb): a completion whose text states no gain takes ESPN's statYard | saiemgilani | 0.0 | 0.0 |  |
-| sportsdataverse/sportsdataverse-py | [#630](https://github.com/sportsdataverse/sportsdataverse-py/pull/630) feat(football)!: CFB situation-neutral reads the score-and-clock win p | saiemgilani | 0.0 | 0.0 |  |
-| sportsdataverse/sportsdataverse-py | [#629](https://github.com/sportsdataverse/sportsdataverse-py/pull/629) fix(football): pace counts regulation drives once, for the drive's own | saiemgilani | 0.0 | 0.0 |  |
-| sportsdataverse/sportsdataverse-py | [#628](https://github.com/sportsdataverse/sportsdataverse-py/pull/628) fix(football): a season usage table keeps one row per player | saiemgilani | 0.0 | 0.0 |  |
-| sportsdataverse/sportsdataverse-py | [#627](https://github.com/sportsdataverse/sportsdataverse-py/pull/627) fix(football): credit a tackle to the tackler's own team | saiemgilani | 0.0 | 0.0 |  |
-| sportsdataverse/sportsdataverse-py | [#626](https://github.com/sportsdataverse/sportsdataverse-py/pull/626) fix(cfb): overtime-aware win probability, decided end-of-regulation st | saiemgilani | 0.0 | 0.0 | y |
-| sportsdataverse/sportsdataverse-py | [#625](https://github.com/sportsdataverse/sportsdataverse-py/pull/625) feat(cfb): ship the gated xQBR retrain (served features, no spread) | saiemgilani | 0.0 | 0.0 | y |
+| sportsdataverse/cfbfastR | [#167](https://github.com/sportsdataverse/cfbfastR/pull/167) fix(cfbd): CFBD pbp team ids for the EPA/WPA engine + return player na | saiemgilani | 0.0 | 0.0 |  |
+| sportsdataverse/cfbfastR | [#166](https://github.com/sportsdataverse/cfbfastR/pull/166) docs(cfbd): SDV return tables for recent cfbd_* wrappers + box_advance | saiemgilani | 0.1 | 0.0 |  |
+| sportsdataverse/sportsdataverse-py | [#632](https://github.com/sportsdataverse/sportsdataverse-py/pull/632) feat(football)!: tackle share counts only the defense's own scrimmage  | saiemgilani | 0.1 | 0.0 |  |
+| sportsdataverse/sportsdataverse-py | [#631](https://github.com/sportsdataverse/sportsdataverse-py/pull/631) fix(cfb): a completion whose text states no gain takes ESPN's statYard | saiemgilani | 0.1 | 0.0 |  |
+| sportsdataverse/sportsdataverse-py | [#630](https://github.com/sportsdataverse/sportsdataverse-py/pull/630) feat(football)!: CFB situation-neutral reads the score-and-clock win p | saiemgilani | 0.1 | 0.0 |  |
+| sportsdataverse/sportsdataverse-py | [#629](https://github.com/sportsdataverse/sportsdataverse-py/pull/629) fix(football): pace counts regulation drives once, for the drive's own | saiemgilani | 0.1 | 0.0 |  |
+| sportsdataverse/sportsdataverse-py | [#628](https://github.com/sportsdataverse/sportsdataverse-py/pull/628) fix(football): a season usage table keeps one row per player | saiemgilani | 0.1 | 0.0 |  |
+| sportsdataverse/sportsdataverse-py | [#627](https://github.com/sportsdataverse/sportsdataverse-py/pull/627) fix(football): credit a tackle to the tackler's own team | saiemgilani | 0.1 | 0.0 |  |
 | sportsdataverse/sportsdataverse-py | [#624](https://github.com/sportsdataverse/sportsdataverse-py/pull/624) fix(football): a pick-six or fumble-return touchdown is not the offens | saiemgilani | 0.1 | 0.0 |  |
-| sportsdataverse/cfbfastR-cfb-data | [#116](https://github.com/sportsdataverse/cfbfastR-cfb-data/pull/116) feat(models): gated xQBR retrain on the served box score, committed ES | saiemgilani | 0.1 | 0.0 |  |
-| saiemgilani/game-on-paper-app | [#293](https://github.com/saiemgilani/game-on-paper-app/pull/293) fix(game): turnover model to two decimals, Pass Breakups from the payl | saiemgilani | 0.1 | 0.0 |  |
-| saiemgilani/game-on-paper-app | [#291](https://github.com/saiemgilani/game-on-paper-app/pull/291) fix(coaches): name split-season teams, rate third downs over expected, | saiemgilani | 0.1 | 0.0 |  |
-| saiemgilani/game-on-paper-app | [#286](https://github.com/saiemgilani/game-on-paper-app/pull/286) fix(sdv): key the Data API cache by each table's ingest stamp | saiemgilani | 2.4 | 0.0 |  |
+| saiemgilani/game-on-paper-app | [#291](https://github.com/saiemgilani/game-on-paper-app/pull/291) fix(coaches): name split-season teams, rate third downs over expected, | saiemgilani | 0.2 | 0.0 |  |
+| saiemgilani/game-on-paper-app | [#286](https://github.com/saiemgilani/game-on-paper-app/pull/286) fix(sdv): key the Data API cache by each table's ingest stamp | saiemgilani | 2.5 | 0.0 |  |
 | saiemgilani/game-on-paper-app | [#284](https://github.com/saiemgilani/game-on-paper-app/pull/284) feat(team): Five Factors table on the season team page (preview) | saiemgilani | 2.5 | 0.0 |  |
 
 ## Open issues
@@ -489,10 +488,10 @@ Stale = unassigned with no update for at least 7 days.
 
 | repo | latest tag | releases | newest asset | age (d) | last push (d) |
 |---|---|---|---|---|---|
-| sportsdataverse/wehoop-wnba-stats-raw | wnba-stats-raw-json | 1 | 2026-07-29T21:35 | 62.4 | 0.3 |
+| sportsdataverse/wehoop-wnba-stats-raw | wnba-stats-raw-json | 1 | 2026-07-29T21:35 | 62.5 | 0.3 |
 | sportsdataverse/hoopR-nba-stats-raw | nba-stats-raw-json | 1 | 2026-07-28T06:34 | 64.1 | 0.3 |
 | sportsdataverse/amf-location-data | amf_tracking_parquet | 2 | 2024-11-18T08:20 | 681.0 | 911.6 |
-| sportsdataverse/sportsdataverse-data | nfl_team_opponent_splits | 367 | 2026-09-30T08:25 | -0.0 | 0.1 |
+| sportsdataverse/sportsdataverse-data | nfl_team_opponent_splits | 367 | 2026-09-30T08:47 | 0.0 | 0.0 |
 | sportsdataverse/cfbfastR-cfb-data | espn_cfb_team_box | 19 |  | None | 0.0 |
 
 ## Package repos — latest release
@@ -503,7 +502,7 @@ Stale = unassigned with no update for at least 7 days.
 | sportsdataverse/cfbfastR | v3.0.0 | 2026-08-27 | 0.0 |
 | sportsdataverse/cfbseedR | v0.2.0 | 2026-09-09 | 4.1 |
 | sportsdataverse/fastRhockey | v1.0.0 | 2026-08-27 | 3.2 |
-| sportsdataverse/hoopR | v1.0.4 | 2021-05-21 | 0.1 |
+| sportsdataverse/hoopR | v3.1.0 | 2026-08-27 | 0.1 |
 | sportsdataverse/oddsapiR | v1.0.1 | 2026-08-28 | 4.1 |
 | sportsdataverse/sdvplotR | sdvplotr_infrastructure | 2026-09-26 | 0.3 |
 | sportsdataverse/sportsdataverse-js | v3.0.0 | 2026-06-17 | 4.1 |
@@ -521,3 +520,9 @@ Stale = unassigned with no update for at least 7 days.
 - `phf_player_boxscores`
 - `phf_schedules`
 - `phf_team_boxscores`
+
+## Warnings
+
+Config and collection problems found by this run.
+
+- none
