@@ -22,18 +22,25 @@ Public repositories only: the generator drops private repos explicitly.
 - `ecosystem.md` — the same as tables, with a doctoc table of contents. Sections, in
   order: sportsdataverse-data release tags (freshness, producer, through season),
   producers, red workflows, open PRs, open issues, release-asset freshness for
-  producer repos, package repos, unmapped release tags.
+  producer repos, package repos, unmapped release tags, warnings.
 - `summary.json` — compact and page-ready (read by sportsdataverse.org/status):
   - `release_tags[]` — one entry per `sportsdataverse-data` tag, **stalest first**,
     tags with no assets last: `tag`, `producer` (repo full name, or `null` when
     unmapped), `assets`, `newest_asset_at`, `max_season` (raw, per tag).
   - `producers[]` — `repo`, `label`, `sport`, `packages[]`, `raw_repo`, `schedule`,
-    `season`, `stale_after_days`, `in_season`, `updated_at`, `age_days`,
-    `through_season`, `data_state`, `state` (`fresh|idle|stale|failing|unknown`),
-    `tags` (a count), `tag_names[]`, `workflows[]` (`name`, `file`, `conclusion`,
-    `created_at`, `event`, `url`).
-  - `packages[]` — `repo`, `latest_release_tag`, `published_at`, `workflows[]`.
-  - `red_workflows[]`, `unmapped_tags[]`, `generated_at`, `totals`.
+    `season`, `stale_after_days`, `in_season`, `updated_at` (newest play-level
+    asset), `any_updated_at` (newest asset across all its tags), `age_days`,
+    `through_season`, `through_tags`, `data_state`, `state`
+    (`fresh|idle|stale|failing|unknown`), `tags` (a count), `tag_names[]`,
+    `badge_dir`, `carried_forward`, `workflows[]`.
+  - `packages[]` — `repo`, `latest_release_tag`, `published_at`, `badge_dir`,
+    `workflows[]`.
+  - Every workflow entry: `name`, `file`, `conclusion`, `created_at` (run start,
+    shown on badges), `completed_at` (what `failing` compares), `event`, `url`,
+    `state` (`active`, `disabled_manually`, …) and `badge` (its file under `badges/`).
+  - `red_workflows[]` (same fields plus `repo`; disabled workflows excluded),
+    `unmapped_tags[]`, `warnings[]` (config and collection problems as strings),
+    `generated_at`, `totals`.
 - `producers.json` — **hand-curated config, not generated** (see below).
 - `badges/<repo-name>/<key>.json` — shields.io endpoint badges (see below). The
   whole `badges/` tree is rebuilt every run, so a deleted workflow loses its badge.
@@ -45,16 +52,23 @@ Every file follows the shields endpoint schema: `schemaVersion: 1`, `label`,
 
 | key | label | message |
 |---|---|---|
-| `updated.json` | `data updated` | `YYYY-MM-DD` — newest release asset among the producer's tags |
-| `through.json` | `through` | `YYYY season` — newest standalone year in the asset names of the producer's `through_tags` (its play-by-play tags), else of all its tags |
+| `updated.json` | `data updated` | `YYYY-MM-DD` — newest release asset among the producer's play-level tags (`through_tags`), else all its counted tags |
+| `through.json` | `through` | `YYYY season` — newest season year in the asset names of those same tags (a span `2025-26` reads as 2026) |
 | `status.json` | `pipeline` | `fresh`, `idle (off-season)`, `stale Nd`, `failing`, `unknown` |
-| `wf-<workflow-file-stem>.json` | the workflow's name | `passing · YYYY-MM-DD`, `failing · …`, `cancelled · …`, `no runs` |
+| `wf-<workflow-file-stem>.json` | the workflow's name | `passing · YYYY-MM-DD`, `failing · …`, `cancelled · …`, `disabled · …`, `no runs` |
 
 `updated`, `through` and `status` exist for every producer in `producers.json`;
 `wf-*` exists for every non-dynamic workflow of every public repo in the snapshot
 (e.g. `badges/hoopR/wf-R-CMD-check.json`), including workflows with no completed
-default-branch run (`no runs`). Colors: passing/fresh `brightgreen`, idle `blue`,
-stale `orange`, failing `red`, cancelled `yellow`, unknown/no runs `lightgrey`.
+default-branch run (`no runs`). A disabled workflow reads `disabled`, never
+`passing`. Runs of fork or pull-request events are ignored. Colors: passing/fresh
+`brightgreen`, idle `blue`, stale `orange`, failing `red`, cancelled `yellow`,
+unknown / no runs / disabled `lightgrey`.
+
+The directory is the bare repo name; if two repos share it, the one outside the
+org uses `<owner>__<name>`. If two workflows of one repo share a file stem, the
+second badge uses the full file name (`wf-pkgdown.yml.json`). `summary.json`
+gives each workflow's exact `badge` path, so pages need not guess.
 
 Embed a badge with the URL-encoded raw file:
 
@@ -81,23 +95,36 @@ Append `&label=<text>` to override the label (shields query parameter).
   published daily by cfbfastR-cfb-data would otherwise mask a stalled pipeline).
 - `producers` — `repo`, `label`, `sport`, `packages` (loader packages that read its
   tags, bare repo names from `package_repos`), `raw_repo`, `schedule` (free text),
-  `season` (`start`/`end` as inclusive `MM-DD`; may wrap the year),
-  `stale_after_days`, `update_workflows` (workflow file names), and optional
-  `through_tags` (play-level tags that decide `through_season`, so a pre-season
-  schedule file cannot claim the next season).
+  `season` (`start`/`end` as inclusive `MM-DD`, starting at the first games; may
+  wrap the year), `stale_after_days` (sized to the league's normal in-season gaps:
+  all-star breaks, bye weeks), `update_workflows` (workflow file names; a disabled
+  one is kept only while it is still the documented update path), and optional
+  `through_tags` — the play-level tags that decide `through_season`, `updated_at`,
+  staleness and the `failing` comparison, so a pre-season schedule file cannot
+  claim the next season and an unrelated daily output cannot hide stalled
+  play-by-play.
 - `package_repos` — package repositories listed in `summary.json` `packages[]`.
   Their workflows, and those of every producer and `raw_repo`, are backfilled: an
   active workflow with no completed default-branch run among the latest 100 gets
   its own latest run, so its `wf-*` badge never says `no runs` wrongly.
 
-State: `failing` if an update workflow's latest run failed (failure, timed out or
-startup failure; never cancelled) **and** that run is newer than the producer's
-newest counted asset — if data landed after the failure the pipeline is delivering,
-though the workflow's own `wf-*` badge and `red_workflows` still show it; else
-`stale` if in season and the newest counted asset is older than `stale_after_days`;
-else `idle` if out of season (never red); else `fresh`; `unknown` without data.
-Every mapping was verified against the producer's own code; add a rule only with
-that evidence.
+State: `failing` if an active update workflow's latest run failed (failure, timed
+out or startup failure; never cancelled or disabled) **and** that run COMPLETED
+after the producer's newest play-level asset — if data landed after the failure the
+pipeline is delivering, though the workflow's own `wf-*` badge and `red_workflows`
+still show it; else `stale` if in season and the newest play-level asset is older
+than `stale_after_days` (the clock starts at the later of that asset and the season
+start, so opening day is not an alarm); else `idle` if out of season (never red);
+else `fresh`; `unknown` without data. Every mapping was verified against the
+producer's own code; add a rule only with that evidence.
+
+API failures never become output: only a genuine 404/410 (or a 403 that is not a
+rate limit) reads as "absent"; a rate limit, a 5xx or a failed later page raises.
+A repo that fails is carried forward from the previous committed snapshot
+(`carried_forward: true` plus the reason, and a warning) so its badges survive; the
+run exits non-zero and writes nothing when `sportsdataverse-data` fails or more than
+10% of repos fail. A stale run listing cannot move a workflow's latest run backwards:
+the previous run is kept if it still exists.
 
 ## Regenerating
 
@@ -107,6 +134,6 @@ private-repo filter keeps the output public):
 
 ```sh
 python .github/scripts/ecosystem_status.py        # prints its gh api call count
-npx --yes doctoc@2 status/ecosystem.md status/README.md --github
+npm_config_ignore_scripts=true npx --yes doctoc@2.5.0 status/ecosystem.md status/README.md --github
 python -m unittest discover -s .github/scripts/tests
 ```
