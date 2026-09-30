@@ -270,7 +270,7 @@ def snapshot_workflows(full: str, default: str, backfill: bool) -> dict:
     """{display key: workflow} for every non-dynamic workflow of the repo.
 
     Latest completed default-branch run per workflow FILE from a 100-run window;
-    for producer / package repos, an active workflow with no run in the window
+    for producer / raw / package repos, an active workflow with no run in the window
     gets one extra call for its own latest completed run."""
     runs = gh(f"repos/{full}/actions/runs?branch={default}&per_page=100") or {}
     by_file: dict = {}
@@ -671,7 +671,13 @@ def main() -> int:
     cfg = load_producers(OUT / "producers.json")
     repos = list_repos()
     check_bare_names(r["full_name"] for r in repos)
-    backfill = {p["repo"] for p in cfg["producers"]} | set(cfg["package_repos"])
+    # producer, raw and package repos: consumer pages link their wf-* badges, and a
+    # busy raw repo pushes a weekly workflow out of the 100-run window
+    backfill = (
+        {p["repo"] for p in cfg["producers"]}
+        | {p["raw_repo"] for p in cfg["producers"] if p.get("raw_repo")}
+        | set(cfg["package_repos"])
+    )
     print(f"{len(repos)} public repos", file=sys.stderr)
     snap = {
         "generated_at": NOW.isoformat(),

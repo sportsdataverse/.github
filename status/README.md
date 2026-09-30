@@ -85,8 +85,10 @@ Append `&label=<text>` to override the label (shields query parameter).
   `stale_after_days`, `update_workflows` (workflow file names), and optional
   `through_tags` (play-level tags that decide `through_season`, so a pre-season
   schedule file cannot claim the next season).
-- `package_repos` — package repositories whose workflows are backfilled and listed in
-  `summary.json` `packages[]`.
+- `package_repos` — package repositories listed in `summary.json` `packages[]`.
+  Their workflows, and those of every producer and `raw_repo`, are backfilled: an
+  active workflow with no completed default-branch run among the latest 100 gets
+  its own latest run, so its `wf-*` badge never says `no runs` wrongly.
 
 State: `failing` if an update workflow's latest run failed (failure, timed out or
 startup failure; never cancelled) **and** that run is newer than the producer's
