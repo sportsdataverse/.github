@@ -66,6 +66,7 @@ def fake_snap():
                 [],
                 {
                     "espn_wnba_pbp": rel("2026-09-29T00:00:00Z", 2026),
+                    "espn_wnba_schedules": rel("2026-09-28T00:00:00Z", 2027),  # pre-season file
                     "espn_wnba_injuries": rel("2026-09-30T00:00:00Z", 2027),
                     "espn_nba_pbp": rel("2026-06-20T00:00:00Z", 2026),
                     "phf_pbp": rel("2023-03-01T00:00:00Z", 2023),
@@ -111,6 +112,7 @@ def fake_cfg():
                 "season": {"start": "05-01", "end": "10-25"},
                 "stale_after_days": 5,
                 "update_workflows": ["daily_wnba.yml"],
+                "through_tags": ["espn_wnba_pbp"],
             },
             {
                 "repo": "sportsdataverse/cfbfastR-cfb-data",
@@ -207,6 +209,11 @@ class Rules(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 es.load_producers(p)
 
+    def test_through_tags_belong_to_their_producer(self):
+        for p in self.cfg["producers"]:
+            for t in p.get("through_tags", []):
+                self.assertEqual(self.owner(t), p["repo"], t)
+
     def test_every_producer_entry_is_complete(self):
         keys = {
             "repo",
@@ -237,12 +244,33 @@ class StateMachine(unittest.TestCase):
         self.assertEqual(self.ds("2026-09-01T00:00:00Z", date(2026, 12, 1)), "idle")
         self.assertEqual(self.ds(None, date(2026, 9, 30)), "unknown")
 
+    DATA = "2026-09-20T00:00:00Z"  # newest counted asset
+
+    @staticmethod
+    def wf_run(conclusion, created_at="2026-09-25T00:00:00Z"):
+        return {"conclusion": conclusion, "created_at": created_at}
+
     def test_failing_beats_stale_beats_idle(self):
-        self.assertEqual(es.producer_state("stale", ["success", "failure"]), "failing")
-        self.assertEqual(es.producer_state("idle", ["timed_out"]), "failing")
-        self.assertEqual(es.producer_state("stale", ["success", None, "cancelled"]), "stale")
-        self.assertEqual(es.producer_state("idle", ["success"]), "idle")
-        self.assertEqual(es.producer_state("unknown", []), "unknown")
+        r = self.wf_run
+        self.assertEqual(es.producer_state("stale", [r("success"), r("failure")], self.DATA), "failing")
+        self.assertEqual(es.producer_state("stale", [r("success"), r(None, None), r("cancelled")], self.DATA), "stale")
+        self.assertEqual(es.producer_state("idle", [r("success")], self.DATA), "idle")
+        self.assertEqual(es.producer_state("unknown", [], None), "unknown")
+
+    def test_failure_older_than_last_data_is_not_failing(self):
+        old = self.wf_run("failure", "2026-08-05T00:00:00Z")
+        self.assertEqual(es.producer_state("fresh", [old], self.DATA), "fresh")
+        self.assertEqual(es.producer_state("stale", [old], self.DATA), "stale")
+
+    def test_failure_newer_than_last_data_is_failing_even_off_season(self):
+        self.assertEqual(es.producer_state("idle", [self.wf_run("timed_out")], self.DATA), "failing")
+        self.assertEqual(es.producer_state("fresh", [self.wf_run("startup_failure")], self.DATA), "failing")
+
+    def test_failed_run_and_no_data_is_failing(self):
+        self.assertEqual(es.producer_state("unknown", [self.wf_run("failure")], None), "failing")
+
+    def test_cancelled_is_never_failing(self):
+        self.assertEqual(es.producer_state("fresh", [self.wf_run("cancelled")], self.DATA), "fresh")
 
     def test_idle_is_never_red(self):
         p = {
@@ -360,19 +388,35 @@ class Summary(unittest.TestCase):
         self.snap = fake_snap()
         self.summary = es.build_summary(self.snap, fake_cfg(), NOW)
 
-    def test_release_tags_stalest_first_with_producer(self):
+    def test_release_tags_stalest_first_empty_last(self):
         rt = self.summary["release_tags"]
         self.assertEqual(
-            [t["tag"] for t in rt], ["zzz_new", "phf_pbp", "espn_nba_pbp", "espn_wnba_pbp", "espn_wnba_injuries"]
+            [t["tag"] for t in rt],
+            ["phf_pbp", "espn_nba_pbp", "espn_wnba_schedules", "espn_wnba_pbp", "espn_wnba_injuries", "zzz_new"],
         )
         self.assertEqual(set(rt[0]), {"tag", "producer", "assets", "newest_asset_at", "max_season"})
-        self.assertIsNone(rt[1]["producer"])
+        self.assertIsNone(rt[0]["producer"])
         self.assertEqual(rt[3]["producer"], "sportsdataverse/wehoop-wnba-data")
-        self.assertEqual(self.summary["unmapped_tags"], ["zzz_new", "phf_pbp", "espn_nba_pbp"])
+        self.assertEqual(rt[2]["max_season"], 2027)  # per-tag max_season stays raw
+        self.assertEqual(self.summary["unmapped_tags"], ["phf_pbp", "espn_nba_pbp", "zzz_new"])
+
+    def test_through_tags_limit_through_season(self):
+        wnba = next(p for p in self.summary["producers"] if p["repo"].endswith("wehoop-wnba-data"))
+        self.assertEqual(wnba["through_season"], 2026)  # pbp only, not the 2027 schedule
+        cfg = fake_cfg()
+        del cfg["producers"][0]["through_tags"]
+        s = es.build_summary(fake_snap(), cfg, NOW)
+        wnba = next(p for p in s["producers"] if p["repo"].endswith("wehoop-wnba-data"))
+        self.assertEqual(wnba["through_season"], 2027)  # default: every counted tag
+
+    def test_tags_is_a_count_with_names_beside_it(self):
+        wnba = next(p for p in self.summary["producers"] if p["repo"].endswith("wehoop-wnba-data"))
+        self.assertEqual(wnba["tags"], 2)
+        self.assertEqual(wnba["tag_names"], ["espn_wnba_pbp", "espn_wnba_schedules"])
 
     def test_freshness_false_tags_do_not_count(self):
         cfb = next(p for p in self.summary["producers"] if p["repo"].endswith("cfbfastR-cfb-data"))
-        self.assertEqual(cfb["tags"], ["espn_wnba_injuries"])
+        self.assertEqual(cfb["tag_names"], ["espn_wnba_injuries"])
         self.assertIsNone(cfb["updated_at"])
         self.assertEqual(cfb["state"], "unknown")
         wnba = next(p for p in self.summary["producers"] if p["repo"].endswith("wehoop-wnba-data"))
@@ -390,6 +434,12 @@ class Markdown(unittest.TestCase):
     def setUp(self):
         snap = fake_snap()
         self.md = es.render_md(snap, es.build_summary(snap, fake_cfg(), NOW))
+
+    def test_empty_tags_print_empty_and_sort_last(self):
+        rows = [l for l in self.md.splitlines() if l.startswith("| ") and "|---" not in l]
+        tag_rows = rows[1:7]  # header, then the six release tags
+        self.assertTrue(tag_rows[-1].startswith("| zzz_new |"))
+        self.assertIn("| empty |", tag_rows[-1])
 
     def test_doctoc_markers_exactly_once(self):
         self.assertEqual(self.md.count(es.TOC_START), 1)

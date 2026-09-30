@@ -176,10 +176,19 @@ def data_state(updated_at, season: dict, stale_after_days: int, today: date, now
     return "fresh", age
 
 
-def producer_state(dstate: str, workflow_conclusions) -> str:
-    """failing (any update workflow failed) beats stale beats idle beats fresh."""
-    if any(c in FAILING for c in workflow_conclusions):
-        return "failing"
+def producer_state(dstate: str, workflows, updated_at) -> str:
+    """failing beats stale beats idle beats fresh (R-SV-8).
+
+    failing = an update workflow's latest run failed AND that run is newer than
+    the newest counted asset. If data has landed since the failure, the pipeline
+    is evidently delivering, so the data state stands (the workflow's own badge
+    and red_workflows still show the failure)."""
+    last_data = iso(updated_at)
+    for w in workflows:
+        if w.get("conclusion") in FAILING:
+            ran = iso(w.get("created_at"))
+            if last_data is None or ran is None or ran > last_data:
+                return "failing"
     return dstate
 
 
@@ -403,7 +412,8 @@ def build_summary(snap: dict, cfg: dict, now: datetime) -> dict:
             }
             for t, x in hub.items()
         ),
-        key=lambda d: (d["newest_asset_at"] or "", d["tag"]),
+        # stalest first; empty tags (no assets) are not "stale", so they go last
+        key=lambda d: (d["newest_asset_at"] is None, d["newest_asset_at"] or "", d["tag"]),
     )
     producers = []
     for p in cfg["producers"]:
@@ -414,7 +424,11 @@ def build_summary(snap: dict, cfg: dict, now: datetime) -> dict:
         tags = sorted(t for t, r in owner.items() if r and r["repo"] == p["repo"])
         counted = [t for t in tags if owner[t].get("freshness", True)]
         stamps = [hub[t]["newest_asset_at"] for t in counted if hub[t]["newest_asset_at"]]
-        seasons = [hub[t]["max_season"] for t in counted if hub[t].get("max_season")]
+        # R-SV-9: through = play-level tags when configured, else every counted tag
+        through_tags = p.get("through_tags", counted)
+        for t in set(through_tags) - set(tags):
+            print(f"WARN {p['repo']}: through tag {t} is not one of its tags", file=sys.stderr)
+        seasons = [hub[t]["max_season"] for t in through_tags if (hub.get(t) or {}).get("max_season")]
         updated_at = max(stamps, default=None)
         by_file = {PurePosixPath(w["file"]).name: w for w in d["workflows"].values()}
         wfs = []
@@ -440,8 +454,9 @@ def build_summary(snap: dict, cfg: dict, now: datetime) -> dict:
                 "age_days": age,
                 "through_season": max(seasons, default=None),
                 "data_state": ds,
-                "state": producer_state(ds, [w["conclusion"] for w in wfs]),
-                "tags": tags,
+                "state": producer_state(ds, wfs, updated_at),
+                "tags": len(tags),
+                "tag_names": tags,
                 "workflows": wfs,
             }
         )
@@ -535,7 +550,8 @@ def render_md(snap: dict, summary: dict) -> str:
     L += [
         RELEASE_TAGS_HEADING,
         "",
-        f"{len(rt)} tags on `{HUB}`, stalest first. `producer` comes from "
+        f"{len(rt)} tags on `{HUB}`, stalest first (tags with no assets last). "
+        "`producer` comes from "
         "`producers.json`; `through season` is the newest standalone year in the "
         "tag's asset names (SDV end-year convention).",
         "",
@@ -545,7 +561,7 @@ def render_md(snap: dict, summary: dict) -> str:
     for t in rt:
         L.append(
             f"| {t['tag']} | {bare(t['producer'])} | {t['assets']} | "
-            f"{(t['newest_asset_at'] or '')[:16]} | {_cell(age_days(t['newest_asset_at']))} | "
+            f"{(t['newest_asset_at'] or 'empty')[:16]} | {_cell(age_days(t['newest_asset_at']))} | "
             f"{_cell(t['max_season'])} |"
         )
     L += [
