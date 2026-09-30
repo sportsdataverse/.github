@@ -1,5 +1,5 @@
 {
- "_comment": "Hand-curated (NOT generated). Read by .github/scripts/ecosystem_status.py. rules: first matching prefix wins, and a rule may never be shadowed by an earlier rule whose prefix is a prefix of it (the generator fails loudly). repo null = deliberately unattributed (reported in unmapped_tags). freshness false = the tag is published by this repo but must not count toward its data updated / through / stale state (daily cross-league snapshots that would mask a stalled pipeline). through_tags (optional) = the producer's play-level tags; through_season uses only them (else every counted tag), so a pre-season schedule file cannot claim the next season. season start/end are MM-DD, inclusive, and may wrap the year. Every mapping was verified against the producer's own code; see status/README.md.",
+ "_comment": "Hand-curated (NOT generated). Read by .github/scripts/ecosystem_status.py. rules: first matching prefix wins, and a rule may never be shadowed by an earlier rule whose prefix is a prefix of it (the generator fails loudly). repo null = deliberately unattributed (reported in unmapped_tags). freshness false = the tag is published by this repo but must not count toward its data updated / through / stale state (daily cross-league snapshots that would mask a stalled pipeline). through_tags (optional) = the producer's play-level tags; through_season AND freshness (updated_at, stale, the failing comparison) use only them (else every counted tag), so a pre-season schedule file cannot claim the next season and an unrelated daily output cannot hide stalled play-by-play. season start/end are MM-DD, inclusive, may wrap the year, and start at the first games; the staleness clock starts at the later of the newest asset and the season start. Every mapping was verified against the producer's own code; see status/README.md.",
  "package_repos": [
   "sportsdataverse/cfbfastR",
   "sportsdataverse/hoopR",
@@ -79,8 +79,8 @@
    "packages": ["cfbfastR", "sportsdataverse-py"],
    "raw_repo": "sportsdataverse/cfbfastR-cfb-raw",
    "schedule": "Game days, late Aug-late Jan: produced by a droplet cron after each cfbfastR-cfb-raw scrape (daily_cfb.yml is only a manual fallback); ratings + FPI daily Aug-Jan; models early Feb; ESPN injury + depth-chart snapshots daily, all leagues",
-   "season": {"start": "08-20", "end": "01-25"},
-   "stale_after_days": 10,
+   "season": {"start": "08-27", "end": "01-22"},
+   "stale_after_days": 12,
    "update_workflows": ["daily_cfb.yml", "cfb_ratings_cron.yml", "cfb_fpi_weekly.yml", "cfb_recruiting_proj_cron.yml", "cfb_model_pipeline.yml", "espn_daily_snapshots.yml"],
    "through_tags": ["espn_cfb_pbp"]
   },
@@ -91,8 +91,8 @@
    "packages": ["cfbfastR", "sportsdataverse-py"],
    "raw_repo": null,
    "schedule": "Sat/Sun/Mon, Sep-Dec; monthly Jan-Aug (the legacy espn_cfb box-score stages are switched off)",
-   "season": {"start": "08-20", "end": "01-20"},
-   "stale_after_days": 10,
+   "season": {"start": "08-27", "end": "01-22"},
+   "stale_after_days": 12,
    "update_workflows": ["daily_cfb.yml"],
    "through_tags": ["cfbfastR_cfb_pbp"]
   },
@@ -103,8 +103,8 @@
    "packages": ["cfbfastR", "sportsdataverse-py"],
    "raw_repo": "sportsdataverse/ncaa-mfb-football-raw",
    "schedule": "Dispatched by ncaa-mfb-football-raw after each scrape, late Aug-late Jan",
-   "season": {"start": "08-20", "end": "01-25"},
-   "stale_after_days": 10,
+   "season": {"start": "08-27", "end": "01-22"},
+   "stale_after_days": 12,
    "update_workflows": ["daily_ncaa_mfb_data.yml"],
    "through_tags": ["ncaa_mfb_pbp"]
   },
@@ -114,8 +114,8 @@
    "sport": "football",
    "packages": ["sportsdataverse-py"],
    "raw_repo": "sportsdataverse/nfl-raw",
-   "schedule": "Weekly (Tue) Sep-Feb; rosters Mon; models Mar 1",
-   "season": {"start": "09-01", "end": "02-15"},
+   "schedule": "Weekly (Tue) Sep-Feb; rosters Mon; models Mar 1 (the season window closes after the conference-championship upload, so the two-week wait for the Super Bowl reads idle, not stale)",
+   "season": {"start": "09-09", "end": "01-28"},
    "stale_after_days": 10,
    "update_workflows": ["espn_nfl_cron.yml", "nfl_pbp_cron.yml", "nfl_ratings_weekly.yml", "nfl_rosters_players_cron.yml", "nfl_model_pipeline.yml"],
    "through_tags": ["espn_nfl_pbp"]
@@ -127,7 +127,7 @@
    "packages": ["sportsdataverse-py"],
    "raw_repo": "sportsdataverse/nfl-ngs-raw",
    "schedule": "Daily, Aug-Feb, plus a dispatch from nfl-ngs-raw after each scrape",
-   "season": {"start": "08-01", "end": "02-28"},
+   "season": {"start": "08-06", "end": "02-17"},
    "stale_after_days": 10,
    "update_workflows": ["daily_ngs.yml"]
   },
@@ -138,8 +138,8 @@
    "packages": ["hoopR", "sportsdataverse-py"],
    "raw_repo": "sportsdataverse/hoopR-mbb-raw",
    "schedule": "Daily, late Oct-Apr; models Nov-Apr",
-   "season": {"start": "10-18", "end": "04-30"},
-   "stale_after_days": 5,
+   "season": {"start": "11-03", "end": "04-08"},
+   "stale_after_days": 7,
    "update_workflows": ["daily_mbb.yml", "mbb_models_cron.yml"],
    "through_tags": ["espn_mens_college_basketball_pbp"]
   },
@@ -150,7 +150,7 @@
    "packages": ["hoopR", "sportsdataverse-py"],
    "raw_repo": "sportsdataverse/ncaa-mbb-hoops-raw",
    "schedule": "Season builds from ncaa-mbb-hoops-raw, Nov-Apr; models Apr 20",
-   "season": {"start": "11-01", "end": "04-30"},
+   "season": {"start": "11-03", "end": "04-08"},
    "stale_after_days": 14,
    "update_workflows": ["ncaa_mbb_models.yml"],
    "through_tags": ["ncaa_mbb_pbp"]
@@ -162,8 +162,8 @@
    "packages": ["hoopR", "sportsdataverse-py", "sportsdataverse-js"],
    "raw_repo": "sportsdataverse/hoopR-nba-raw",
    "schedule": "Daily, late Oct-mid Jul",
-   "season": {"start": "10-18", "end": "07-12"},
-   "stale_after_days": 5,
+   "season": {"start": "10-20", "end": "06-25"},
+   "stale_after_days": 8,
    "update_workflows": ["daily_nba.yml"],
    "through_tags": ["espn_nba_pbp"]
   },
@@ -173,9 +173,9 @@
    "sport": "basketball",
    "packages": ["hoopR", "sportsdataverse-py"],
    "raw_repo": "sportsdataverse/hoopR-nba-stats-raw",
-   "schedule": "Daily, late Oct-mid Jul; draft late Jun; models on demand",
-   "season": {"start": "10-18", "end": "07-12"},
-   "stale_after_days": 5,
+   "schedule": "Daily, late Oct-late Jun: the droplet runs the compile + publish processor (daily_nba_stats.yml is its CI twin, currently disabled); draft late Jun; models on demand",
+   "season": {"start": "10-20", "end": "06-25"},
+   "stale_after_days": 8,
    "update_workflows": ["daily_nba_stats.yml", "nba_models.yml", "annual_nba_stats_draft.yml"],
    "through_tags": ["nba_stats_pbp"]
   },
@@ -186,8 +186,8 @@
    "packages": ["wehoop", "sportsdataverse-py"],
    "raw_repo": "sportsdataverse/wehoop-wbb-raw",
    "schedule": "Daily, late Oct-mid Apr; rosters weekly; models Nov-Apr",
-   "season": {"start": "10-18", "end": "04-15"},
-   "stale_after_days": 5,
+   "season": {"start": "11-03", "end": "04-08"},
+   "stale_after_days": 7,
    "update_workflows": ["daily_wbb.yml", "weekly_wbb.yml", "wbb_models_cron.yml"],
    "through_tags": ["espn_womens_college_basketball_pbp"]
   },
@@ -198,7 +198,7 @@
    "packages": ["wehoop", "sportsdataverse-py"],
    "raw_repo": "sportsdataverse/ncaa-wbb-hoops-raw",
    "schedule": "Season builds from ncaa-wbb-hoops-raw, Nov-Apr; models Apr 20",
-   "season": {"start": "11-01", "end": "04-30"},
+   "season": {"start": "11-03", "end": "04-08"},
    "stale_after_days": 14,
    "update_workflows": ["ncaa_wbb_models.yml"],
    "through_tags": ["ncaa_wbb_pbp"]
@@ -210,8 +210,8 @@
    "packages": ["wehoop", "sportsdataverse-py", "sportsdataverse-js"],
    "raw_repo": "sportsdataverse/wehoop-wnba-raw",
    "schedule": "Daily, May-Oct (dispatched by wehoop-wnba-raw's droplet run); rosters weekly; draft mid Apr",
-   "season": {"start": "05-01", "end": "10-25"},
-   "stale_after_days": 5,
+   "season": {"start": "05-08", "end": "10-20"},
+   "stale_after_days": 7,
    "update_workflows": ["daily_wnba.yml", "weekly_wnba.yml", "annual_wnba_draft.yml"],
    "through_tags": ["espn_wnba_pbp"]
   },
@@ -222,8 +222,8 @@
    "packages": ["wehoop", "sportsdataverse-py"],
    "raw_repo": "sportsdataverse/wehoop-wnba-stats-raw",
    "schedule": "Daily, May-Oct 20; draft mid Apr; models on demand",
-   "season": {"start": "05-01", "end": "10-20"},
-   "stale_after_days": 5,
+   "season": {"start": "05-08", "end": "10-20"},
+   "stale_after_days": 7,
    "update_workflows": ["daily_wnba_stats.yml", "wnba_models.yml", "annual_wnba_stats_draft.yml"],
    "through_tags": ["wnba_stats_pbp"]
   },
@@ -233,10 +233,10 @@
    "sport": "hockey",
    "packages": ["fastRhockey", "sportsdataverse-py"],
    "raw_repo": "sportsdataverse/fastRhockey-nhl-raw",
-   "schedule": "Daily, Oct-Jun; models Jul 15",
-   "season": {"start": "10-01", "end": "06-30"},
-   "stale_after_days": 5,
-   "update_workflows": ["daily_nhl.yml", "daily_nhl_python.yml", "nhl_model_pipeline.yml"],
+   "schedule": "Daily, Oct-Jun: sdv-orch on the droplet runs the Python processor (daily_nhl_python.yml is its CI twin, currently disabled; the R daily_nhl.yml is retired); models Jul 15",
+   "season": {"start": "10-07", "end": "06-24"},
+   "stale_after_days": 8,
+   "update_workflows": ["daily_nhl_python.yml", "nhl_model_pipeline.yml"],
    "through_tags": ["nhl_pbp_full"]
   },
   {
@@ -245,10 +245,10 @@
    "sport": "hockey",
    "packages": ["fastRhockey", "sportsdataverse-py", "sportsdataverse-js"],
    "raw_repo": "sportsdataverse/fastRhockey-pwhl-raw",
-   "schedule": "Daily, Nov-May; xG daily Nov-May",
-   "season": {"start": "11-01", "end": "05-31"},
-   "stale_after_days": 7,
-   "update_workflows": ["daily_pwhl.yml", "daily_pwhl_python.yml", "pwhl_xg_cron.yml"],
+   "schedule": "Daily, late Nov-May (daily_pwhl_python.yml; the R daily_pwhl.yml is retired); xG daily Nov-May",
+   "season": {"start": "11-20", "end": "05-31"},
+   "stale_after_days": 10,
+   "update_workflows": ["daily_pwhl_python.yml", "pwhl_xg_cron.yml"],
    "through_tags": ["pwhl_pbp"]
   },
   {
@@ -258,7 +258,7 @@
    "packages": ["baseballr", "sportsdataverse-py", "sportsdataverse-js"],
    "raw_repo": null,
    "schedule": "MLB models daily Apr-Oct; college baseball dispatched in season (Feb-Jun)",
-   "season": {"start": "02-14", "end": "10-31"},
+   "season": {"start": "02-13", "end": "11-02"},
    "stale_after_days": 7,
    "update_workflows": ["mlb_models_cron.yml", "daily_ncaa_baseball.yml"],
    "through_tags": ["mlb_pbp", "ncaa_baseball_pbp"]
