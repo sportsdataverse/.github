@@ -1,5 +1,19 @@
 # [SportsDataverse](https://sportsdataverse.org/ "The home page of the SportsDataverse Organization")
 
+## Data and automation status
+
+Every SportsDataverse loader reads the `sportsdataverse-data` releases; how fresh each producer's data is and whether its pipeline is passing is on [sportsdataverse.org/status](https://sportsdataverse.org/status), rebuilt nightly from [status/ecosystem.md](https://github.com/sportsdataverse/.github/blob/main/status/ecosystem.md).
+
+[![WBB](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wbb-data%2Fstatus.json&label=WBB)](https://github.com/sportsdataverse/wehoop-wbb-data/actions)
+[![WNBA](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wnba-data%2Fstatus.json&label=WNBA)](https://github.com/sportsdataverse/wehoop-wnba-data/actions)
+[![MBB](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-mbb-data%2Fstatus.json&label=MBB)](https://github.com/sportsdataverse/hoopR-mbb-data/actions)
+[![NBA](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-nba-data%2Fstatus.json&label=NBA)](https://github.com/sportsdataverse/hoopR-nba-data/actions)
+[![CFB](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FcfbfastR-cfb-data%2Fstatus.json&label=CFB)](https://github.com/sportsdataverse/cfbfastR-cfb-data/actions)
+[![NFL](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fnfl-data%2Fstatus.json&label=NFL)](https://github.com/sportsdataverse/nfl-data/actions)
+[![NHL](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-nhl-data%2Fstatus.json&label=NHL)](https://github.com/sportsdataverse/fastRhockey-nhl-data/actions)
+[![PWHL](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-pwhl-data%2Fstatus.json&label=PWHL)](https://github.com/sportsdataverse/fastRhockey-pwhl-data/actions)
+[![MLB](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fbaseballr-data%2Fstatus.json&label=MLB)](https://github.com/sportsdataverse/baseballr-data/actions)
+
 
 ## R Packages
 
