@@ -24,13 +24,14 @@ Public repositories only: the generator drops private repos explicitly.
   producers, red workflows, open PRs, open issues, release-asset freshness for
   producer repos, package repos, unmapped release tags.
 - `summary.json` — compact and page-ready (read by sportsdataverse.org/status):
-  - `release_tags[]` — one entry per `sportsdataverse-data` tag, **stalest first**:
-    `tag`, `producer` (repo full name, or `null` when unmapped), `assets`,
-    `newest_asset_at`, `max_season`.
+  - `release_tags[]` — one entry per `sportsdataverse-data` tag, **stalest first**,
+    tags with no assets last: `tag`, `producer` (repo full name, or `null` when
+    unmapped), `assets`, `newest_asset_at`, `max_season` (raw, per tag).
   - `producers[]` — `repo`, `label`, `sport`, `packages[]`, `raw_repo`, `schedule`,
     `season`, `stale_after_days`, `in_season`, `updated_at`, `age_days`,
     `through_season`, `data_state`, `state` (`fresh|idle|stale|failing|unknown`),
-    `tags[]`, `workflows[]` (`name`, `file`, `conclusion`, `created_at`, `event`, `url`).
+    `tags` (a count), `tag_names[]`, `workflows[]` (`name`, `file`, `conclusion`,
+    `created_at`, `event`, `url`).
   - `packages[]` — `repo`, `latest_release_tag`, `published_at`, `workflows[]`.
   - `red_workflows[]`, `unmapped_tags[]`, `generated_at`, `totals`.
 - `producers.json` — **hand-curated config, not generated** (see below).
@@ -45,7 +46,7 @@ Every file follows the shields endpoint schema: `schemaVersion: 1`, `label`,
 | key | label | message |
 |---|---|---|
 | `updated.json` | `data updated` | `YYYY-MM-DD` — newest release asset among the producer's tags |
-| `through.json` | `through` | `YYYY season` — newest standalone year in those tags' asset names |
+| `through.json` | `through` | `YYYY season` — newest standalone year in the asset names of the producer's `through_tags` (its play-by-play tags), else of all its tags |
 | `status.json` | `pipeline` | `fresh`, `idle (off-season)`, `stale Nd`, `failing`, `unknown` |
 | `wf-<workflow-file-stem>.json` | the workflow's name | `passing · YYYY-MM-DD`, `failing · …`, `cancelled · …`, `no runs` |
 
@@ -81,11 +82,16 @@ Append `&label=<text>` to override the label (shields query parameter).
 - `producers` — `repo`, `label`, `sport`, `packages` (loader packages that read its
   tags, bare repo names from `package_repos`), `raw_repo`, `schedule` (free text),
   `season` (`start`/`end` as inclusive `MM-DD`; may wrap the year),
-  `stale_after_days`, `update_workflows` (workflow file names).
+  `stale_after_days`, `update_workflows` (workflow file names), and optional
+  `through_tags` (play-level tags that decide `through_season`, so a pre-season
+  schedule file cannot claim the next season).
 - `package_repos` — package repositories whose workflows are backfilled and listed in
   `summary.json` `packages[]`.
 
-State: `failing` if any update workflow's latest conclusion is a failure; else
+State: `failing` if an update workflow's latest run failed (failure, timed out or
+startup failure; never cancelled) **and** that run is newer than the producer's
+newest counted asset — if data landed after the failure the pipeline is delivering,
+though the workflow's own `wf-*` badge and `red_workflows` still show it; else
 `stale` if in season and the newest counted asset is older than `stale_after_days`;
 else `idle` if out of season (never red); else `fresh`; `unknown` without data.
 Every mapping was verified against the producer's own code; add a rule only with
