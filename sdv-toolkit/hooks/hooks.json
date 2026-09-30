@@ -29,6 +29,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/block_shared_stash.py\""
+          },
+          {
+            "type": "command",
             "command": "c=$(python -c \"import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))\" 2>/dev/null); printf '%s' \"$c\" | grep -qiE 'co-authored-by:[[:space:]]*.*(claude|copilot|gpt|gemini|cursor)|generated with \\[?claude|generated with claude' && { echo 'BLOCKED: AI co-author/attribution trailer detected. SDV rule: the human is the sole attributable contributor -- omit all Co-Authored-By / generated-with-AI trailers on commits and PRs.' >&2; exit 2; }; true"
           },
           {

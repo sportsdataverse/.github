@@ -54,7 +54,9 @@ Run the same three catalog commands locally before pushing a toolkit change, plu
   `docs/docs/*/reference/*`); **block AI co-author / "generated with AI" trailers**;
   warn on unbounded capture/crawl loops; remind to regenerate after codegen-source
   edits, to add a `returns_schema` when an endpoint declares a `parser`, and to
-  `devtools::document()` after R edits.
+  `devtools::document()` after R edits. `hooks/block_shared_stash.py` blocks mutating
+  `git stash` when the repo has more than one worktree (one stash stack per repo;
+  tests in `hooks/test_block_shared_stash.py`).
 - Two `README.md` files with distinct roles: the **root** one is the repo/marketplace
   page; **`profile/README.md`** is the rendered org profile. Edit the right one.
 
