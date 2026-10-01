@@ -75,10 +75,28 @@ why `sdv-paper-reviewer` is dispatched once per lens.
 | `market-mechanics-betting`, `scientific-brainstorming` | lens only | — | betting advice ("Place bet", Kelly stakes); computes edge with the vig still in |
 | `sports-betting-analyzer`, `timesfm-forecasting`, `data-storytelling`, `storytelling` | skip | — | a 59-line stub; an ~800 MB model download; a missing file; a UI-design skill mislabelled |
 
-The `scientific-agents` plugin (503 personas) costs about 100k tokens of agent
-descriptions **every session**, and only about 8 of them earned a place. Prefer
-dispatching those 8 by path, or folding their checks in here, which this file now
-does. Don't keep the whole plugin enabled.
+The `scientific-agents` marketplace ships 503 persona plugins, and each enabled one
+loads its agent description into **every session** (about 100k tokens for all of
+them). As of 2026-10-01, 30 stay enabled in `~/.claude/settings.json`; the other
+473 are set to `false` (backup: `settings.json.bak-2026-10-01-personas`):
+
+- **Statistics:** statistician, mathematical-statistician, bayesian-statistician, biostatistician, probabilist, actuarial-scientist (credibility and shrinkage)
+- **Design:** causal-inference-scientist, epidemiologist (observational design), computational-social-scientist
+- **Data and ML:** data-scientist, data-engineer, machine-learning-researcher, machine-learning-engineer, mlops-engineer, deep-learning-scientist, ai-researcher, reinforcement-learning-researcher, natural-language-processing-scientist (play-text parsing)
+- **Tracking data:** computer-vision-scientist, signal-processing-engineer
+- **Infrastructure:** research-software-engineer, high-performance-computing-specialist, database-systems-researcher
+- **Models and decisions:** network-scientist, operations-researcher, optimization-scientist, mathematical-modeler
+- **Sports:** sports-scientist, exercise-physiologist (injury and load)
+- **Apps:** human-computer-interaction-researcher
+
+The benchmarked keepers are statistician, causal-inference-scientist, data-scientist
+and research-software-engineer. The rest are kept for breadth and haven't been
+benchmarked. Re-enable any other persona by flipping its flag.
+
+science-superpowers was disabled for its SessionStart hook. Its two keepers were
+copied to `~/.claude/skills/` (`investigating-anomalous-results`,
+`preregistering-analysis`, under MIT, with a provenance note).
+`claude-scientific-writer` is disabled.
 
 ## Standing rules for any external research skill
 
