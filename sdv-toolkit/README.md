@@ -27,6 +27,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-port` | Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures. |
 | `/sdv-python-performance-optimization` | Profile and optimize Python code with cProfile and memory profilers to find and fix performance bottlenecks. |
 | `/sdv-regen-docs` | Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release. |
+| `/sdv-research-paper` | Runs a research paper or abstract (SSAC, CMSAC, JQAS, preprint) as a gated scientific process: design freeze with a prior-access ledger, number provenance including the abstract, a claim-to-evidence audit of every abstract and conclusion sentence, inference on the shared-state cluster unit with bounded nulls, benchmark-integrity, reproducibility, figure, citation and venue checks, then lens review. Includes a verdict table on the installed research-writing skills, personas and plugins, scored blind against a known-defect benchmark. |
 | `/sdv-review-pr` | Review one pull request in any SDV or saiemgilani repo: failure-path, test and environment ledgers first, then contracts, security and domain depth; verified findings with failure scenarios; posting needs confirmation. |
 | `/sdv-ship` | Land a change: regen docs, preflight, commit, push, bot-triage, codegen gate, merge, stack retarget, release. |
 | `/sdv-triage` | Sweep open issues and PRs across the org, classify each, act on tiers 0-1, propose tiers 2-4. |
@@ -41,6 +42,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `sdv-harness-triage` | Triage a validation-harness WARN by finding_type and emit a Verdict. |
 | `sdv-issue-triage` | Classify one open issue or PR into one of six verdicts, read-only, with evidence. |
 | `sdv-model-reviewer` | Audit new model/validation code: gates, leakage boundary, metric fit, silent no-op, sklearn contract, lineage, oracle joins. |
+| `sdv-paper-reviewer` | Hostile-referee review of a paper or abstract against its own code, numbers and history: holdout prior access, claim-to-evidence, cluster-consistent inference, benchmark integrity, reproducibility from a clean clone, figures, citations verified against sources, venue rules. |
 | `sdv-parity-reviewer` | Audit a cross-language port for ID-dtype, regex, indexing, null-semantics, and numeric-fidelity bug classes. |
 | `sdv-python-reviewer` | Python review by lens: polars \| http \| parser-contract \| docstring. |
 | `sdv-r-reviewer` | R review by lens; owns roxygen/pkgdown/parity, routes general R concerns upstream. |

@@ -461,6 +461,52 @@
         "pr"
       ],
       "dispatches": []
+    },
+    {
+      "name": "sdv-research-paper",
+      "kind": "skill",
+      "purpose": "Runs a research paper or abstract (SSAC, CMSAC, JQAS, preprint) as a gated scientific process: design freeze with a prior-access ledger, number provenance including the abstract, a claim-to-evidence audit of every abstract and conclusion sentence, inference on the shared-state cluster unit with bounded nulls, benchmark-integrity, reproducibility, figure, citation and venue checks, then lens review. Includes a verdict table on the installed research-writing skills, personas and plugins, scored blind against a known-defect benchmark.",
+      "archetypes": [
+        "all"
+      ],
+      "phases": [
+        "design-freeze",
+        "analysis",
+        "claims-audit",
+        "inference",
+        "figures",
+        "citations",
+        "benchmark",
+        "reproducibility",
+        "venue",
+        "review"
+      ],
+      "dispatches": [
+        "sdv-paper-reviewer"
+      ],
+      "pulls": [
+        "sdv-modeling",
+        "sdv-model-build"
+      ]
+    },
+    {
+      "name": "sdv-paper-reviewer",
+      "kind": "agent",
+      "purpose": "Hostile-referee review of a paper or abstract against its own code, numbers and history: holdout prior access, claim-to-evidence, cluster-consistent inference, benchmark integrity, reproducibility from a clean clone, figures, citations verified against sources, venue rules.",
+      "archetypes": [
+        "all"
+      ],
+      "lenses": [
+        "design",
+        "claims",
+        "inference",
+        "benchmark",
+        "reproducibility",
+        "figures",
+        "citations",
+        "venue",
+        "all"
+      ]
     }
   ]
 }
