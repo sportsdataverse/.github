@@ -1,6 +1,6 @@
 ---
 name: sdv-reprocess
-description: Use when a -raw corpus has to be rebuilt because sportsdataverse-py changed what it produces — after an sdv-py fix to play types, EPA/WPA or end states lands, on a SCHEMA_REV bump, or for "rev-N reprocess", "rebuild the finals", "bump the lock and reprocess", "re-run the corpus after the sdv-py fix". Phases — (1) gather every sdv-py PR the run must carry BEFORE bumping, because the processing stamp embeds the sdv-py commit and a later bump re-stales the whole corpus, (2) lock + SCHEMA_REV bump PRs in the -raw and -data repos under the shared locks, venv sync, stamp check, (3) clear the runway — the daily scrape/build chain, the :40 git_pull sweep, other sessions' rebuild jobs on the same locks, (4) launch `scripts/reprocess_chain.sh --data` detached and hand over watch commands, (5) the failure modes and their fixes (a season timing out on /tmp/git_pull_sdv.lock, a daemonized `git gc` holding it, git 2.25 ignoring GIT_CONFIG_COUNT, stopping by PID, a new sdv-py fix mid-run), (6) close-out. cfbfastR-cfb-raw / cfbfastR-cfb-data is the worked example.
+description: Use when a -raw corpus has to be rebuilt because sportsdataverse-py changed what it produces — after an sdv-py fix to play types, EPA/WPA or end states lands, on a SCHEMA_REV bump, or for "rev-N reprocess", "rebuild the finals", "bump the lock and reprocess", "re-run the corpus after the sdv-py fix". Phases — (1) gather every sdv-py PR the run must carry BEFORE bumping, because the processing stamp embeds the sdv-py commit and a later bump re-stales the whole corpus, (2) lock + SCHEMA_REV bump PRs in the -raw and -data repos under the shared locks, venv sync, stamp check, (3) clear the runway — the daily scrape/build chain, the :40 git_pull sweep, other sessions' rebuild jobs on the same locks, (4) launch `scripts/reprocess_chain.sh --data` detached and hand over watch commands, (5) the failure modes and their fixes (a season timing out on /tmp/git_pull_sdv.lock, a daemonized `git gc` or `credential-cache--daemon` holding it, git 2.25 ignoring GIT_CONFIG_COUNT, stopping by PID, a new sdv-py fix mid-run), (6) close-out. Also the two rules every -raw/-data repo keeps, in any sport — commit + push per season, and a lock holder runs git with the lock fd closed (`9>&-` / `flock -o`). cfbfastR-cfb-raw / cfbfastR-cfb-data is the worked example.
 ---
 
 # Reprocess a -raw corpus after an sdv-py change
@@ -12,6 +12,25 @@ repo recompiles and republishes every dataset from them. A full CFB run is ~23 s
 ~25-30 min each for the raw side, then hours per season for -data. Every step below cost a
 restart on 2026-10-01 (rev 13); the incidents are in the ClaudeCowork ledger
 `ledgers/2026-09-30-cfbd-return-docs/LEDGER.md`.
+
+## Two rules for every -raw / -data repo
+
+Not CFB rules: every sport's drivers keep them, and a new driver, backfill or chain must too.
+
+- **Commit and push per season.** A mass change (backfill, reprocess, re-parse, rename)
+  commits AND pushes one season at a time, subject `<Sport> … (Start: Y End: Y)` (the
+  dispatch parses that year; the format is load-bearing). Never `git add` a multi-season
+  tree into one commit. The daily drivers already loop `for i in $(seq START END)` and call
+  `sdv_commit_push` per season; copy that shape.
+- **A lock holder never lends its fd to git.** `exec 9>L; flock 9`, `( flock 9; cmd ) 9>L` and
+  `flock L cmd` all pass the lock fd to every child, and git daemonizes two children that
+  outlive the job: `gc --auto` (after commit, fetch, merge) and `credential-cache--daemon`
+  (~15 min after an https fetch/push; the droplet runs `credential.helper=cache`). Either keeps
+  the lock held after the job exits, so `flock -n` sweeps skip and `flock -w` waiters time out.
+  Run git-touching children with the fd closed, `cmd 9>&-` (or `flock -o L cmd`), while the
+  shell keeps the lock. `gc.auto=0` alone misses the credential daemon. Applied 2026-10-01 to
+  `bin/git_pull_cron.sh`, cfb-data `cron_daily_cfb.sh`, cfb-raw `reprocess_chain.sh` and the
+  `run_autocommit.sh` loops (ncaa-{mbb,wbb}-hoops-raw, pff-{cfb,nfl}-raw).
 
 ## Phase 1 — gather before you bump
 
@@ -33,7 +52,11 @@ restart on 2026-10-01 (rev 13); the incidents are in the ClaudeCowork ledger
 - Branch IN PLACE in the main checkout (never `git worktree add` cfbfastR-cfb-raw: a 4 GB
   checkout), holding the locks for the whole branch → PR → merge → switch-back cycle:
   `flock -w 600 /tmp/git_pull_sdv.lock bash -c '...'` (-data also holds
-  `/tmp/cfbfastR-cfb-data-build.lock`). Then `uv sync` both, and check the stamp:
+  `/tmp/cfbfastR-cfb-data-build.lock`). When the main checkout is busy (a chain runs in it),
+  a script fix still gets a branch without the 4 GB checkout:
+  `git worktree add --no-checkout -b <br> <scratch>/wt origin/main && git -C <scratch>/wt reset -q && git -C <scratch>/wt checkout -- <file>`,
+  then edit, commit that path, push, PR, `git worktree remove --force <scratch>/wt`.
+  Then `uv sync` both, and check the stamp:
   `.venv/bin/python -c 'import sys; sys.path.insert(0, "python"); from cfb_raw_scrape._cfb_raw_utils import PROCESSING_VERSION; print(PROCESSING_VERSION)'`
 
 ## Phase 3 — clear the runway
@@ -55,6 +78,9 @@ cd /mnt/sdv_repos/cfbfastR-cfb-raw
 setsid nohup bash scripts/reprocess_chain.sh --data >/dev/null 2>&1 </dev/null &
 ```
 
+Another sport has no `reprocess_chain.sh` yet: copy cfb-raw's and point it at that repo's
+per-season driver, keeping the per-season lock, the `9>&-` and the per-season commits.
+
 It prints its log path and a watch command and ends with `chain done` / `EXIT=`. Check the
 first season's log for `target processing_version : <new stamp>` and `to rebuild : <all>`.
 Give the user the watch commands. A background watcher caps at 2 h: re-arm it at most once —
@@ -65,7 +91,7 @@ the chain drives itself, and `--data` starts the -data side when the raw side is
 | Symptom | Cause | Fix |
 |---|---|---|
 | `season Y exit 1`, "no lock after Ns, held by:" | the :40 git_pull sweep, the daily chain, another job | the chain waits 3 h by default; rerun the listed seasons: `SEASONS="2011 2010" bash scripts/reprocess_chain.sh --data` |
-| the lock held by `git gc --auto` / `git repack` | a daemonized gc after a commit inherited the lock's fd (held it 45 min) | fixed in `scripts/_commit.sh` (gc.auto=0); if it recurs and no `.tmp-*` pack exists yet, killing it is safe |
+| the lock held by `git gc --auto` / `git repack` / `git credential-cache--daemon` | a git daemon inherited the lock's fd (a repack held it 45 min; the credential daemon lives ~15 min after an https push) | the holder must run git children with `9>&-` (see the two rules above); for a stray one now: killing a gc is safe while no `.tmp-*` pack exists, and `git credential-cache exit` ends the credential daemon |
 | `GIT_CONFIG_COUNT=…` had no effect | git 2.25 on the droplet; that variable is 2.31+ | `export GIT_CONFIG_PARAMETERS="'gc.auto=0'"`; check with `git config --get gc.auto` |
 | need to stop the chain | — | kill BY PID: `ps -eo pid,args \| awk '$3=="scripts/reprocess_chain.sh"'`. Never `pkill -f` a pattern your own shell's command line contains (exit 144, self-kill); never edit a running bash script — stop and relaunch |
 | a new sdv-py fix lands mid-run | — | stop between seasons, bump again (Phase 2), relaunch; finals already at the new stamp are skipped, so nothing finished is redone |
