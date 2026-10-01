@@ -35,6 +35,51 @@ references; this table is for deciding whether to load a skill directly.
 | presenting-conference-talks | ok | talk outline once a paper is accepted | systems-talk slots (architecture, demo, scalability) |
 | offer-k-dense-web | **remove** | none | an advert that tells the agent to run it every session; uninstall it |
 
+## Sweep 2 (2026-10-01): blind benchmark against a known answer key
+
+Seven clusters reviewed paper 05 **blind** (without sweep 1's findings or this skill)
+and were scored against its 22 known defects. Details are in
+`ClaudeCowork/notes/research-paper-skills/benchmark/`.
+
+- **Per-cluster recall was low:** 3–5 of 22 known defects each. No external cluster
+  caught the unclustered t, the calibration-test failure or the holdout power,
+  all of which this skill catches.
+- **The clusters found 11 new real defects together.** Three converged
+  independently, the strongest evidence a review can give. The holdout widening is
+  a time trend (4 clusters), the "before kickoff" claim covers future-season fits
+  (2), and the inputs are unpinned (2).
+- **One domain cluster found the biggest single defect:** the college benchmark's
+  composition changed in 2020.
+- **Those finds are now rules:** `benchmark.md`, `reproducibility.md`,
+  `inference.md` 11–15 and `design-freeze.md` 10–14.
+
+The lesson: no single reviewer, external or in-house, finds most defects. Run
+**independent lenses in parallel** and treat convergence as confirmation. That is
+why `sdv-paper-reviewer` is dispatched once per lens.
+
+| Skill / agent | Verdict | Use it for | Hazards |
+|---|---|---|---|
+| science-superpowers `investigating-anomalous-results` | **keep** | treating a surprising result (a holdout reversal) as something to explain before reporting it | none |
+| science-superpowers `preregistering-analysis` | audit mode only | `prereg.sh audit` checks freeze ordering | `freeze` mode makes git commits on its own |
+| science-superpowers `verifying-results-before-claiming`, `requesting-red-team-review`, `receiving-critical-review`, `designing-the-analysis`, `framing-research-questions`, `establishing-feasibility-first`, `surveying-prior-work`, `setting-up-reproducible-analysis`, `reporting-and-archiving-findings` | lens only | their questions, now folded in here | `reporting-and-archiving` ends with a git menu (local merge, `branch -D`); the setup skill uses venv/pip/chmod |
+| science-superpowers `using-science-superpowers` | **disable** | — | SessionStart hook injecting "1% chance, you MUST invoke" into every session, which gates routine pipeline work |
+| science-superpowers `executing-analysis`, `subagent-driven-analysis`, `dispatching-parallel-investigations`, `writing-science-skills` | skip for papers | — | duplicates superpowers/sdv workflows |
+| `claude-scientific-writer` plugin 2.22.0 | **uninstall** | — | older duplicates of the `~/.agents` K-Dense skills, with all 5 hazards still present; `scientific-writer-init` writes a 23.7 KB CLAUDE.md that routes web search through a paid service. Keep only `pptx-posters` (local) and `markitdown` (local; it runs words together, so use `.qmd` for our own papers) |
+| persona `statistician` | **keep** | 7 of 10 findings at about 4.5k tokens | — |
+| persona `causal-inference-scientist` | **keep** | 7 of 9 findings in its cluster: rival explanations, causal verbs | — |
+| persona `data-scientist`, `research-software-engineer` | **keep** | benchmark-side and reproducibility defects | RSE is about half HPC material |
+| persona `mathematical-statistician`, `bayesian-statistician`, `machine-learning-researcher`, `operations-researcher`, `computational-social-scientist` | occasional | bootstrap/ratio papers; state-space models; ML grids; papers aimed at teams or bettors; built indices | — |
+| persona `probabilist`, `ai-researcher`, `sports-scientist` | skip | sports-scientist covers strength and conditioning, so use it only for injury or load papers | — |
+| mimeo `judea-pearl`, `andrej-karpathy-mimeo`, `andrew-ng`, `david-silver` | skip | style without substance; Pearl is a weaker subset of the causal persona | — |
+| `statsmodels`, `statistical-power` | **keep** | power/MDE (it found the holdout's real detectable difference) | — |
+| `market-mechanics-betting`, `scientific-brainstorming` | lens only | — | betting advice ("Place bet", Kelly stakes); computes edge with the vig still in |
+| `sports-betting-analyzer`, `timesfm-forecasting`, `data-storytelling`, `storytelling` | skip | — | a 59-line stub; an ~800 MB model download; a missing file; a UI-design skill mislabelled |
+
+The `scientific-agents` plugin (503 personas) costs about 100k tokens of agent
+descriptions **every session**, and only about 8 of them earned a place. Prefer
+dispatching those 8 by path, or folding their checks in here, which this file now
+does. Don't keep the whole plugin enabled.
+
 ## Standing rules for any external research skill
 
 1. Never let a skill send draft text, figures or data to an external

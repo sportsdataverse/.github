@@ -73,6 +73,13 @@ FAIL a row when:
     other. *Paper 15 calls closing football lines calibrated; paper 05 finds
     them miscalibrated on overlapping seasons.*
 
+16. **Scope claims cover every number they cover.** A blanket claim about the
+    method ("uses only information available before kickoff") must hold for every
+    forecast the paper reports, including leave-one-season-out blends fit on
+    future seasons. Otherwise scope it ("the open model uses …").
+17. **No generalising from a narrow variant set.** "Play-by-play features don't
+    help" can't rest on 3 college-only variants. State the set tried.
+
 ## 3. Reasoning pass on Discussion and Conclusion
 
 Flag: argument from ignorance ("didn't help here → won't help"), post hoc

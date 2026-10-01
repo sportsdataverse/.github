@@ -56,8 +56,25 @@ On games nested in seasons and teams that misleads; ignore those defaults.
 10. **Selection optimism.** A grid winner reports the optimism of picking the
     best of k (leave-one-season-out re-selection is a cheap check). Any
     winning value on the edge of its grid is reported.
-11. **Stability is measured.** "Stable across seasons" needs per-season
-    dispersion or a heterogeneity statistic. A holdout shift attributed to a
-    cause needs that cause sized.
-12. **Precision follows uncertainty.** Round the uncertainty to 1–2
+11. **Stability is measured.** "Stable across seasons" needs a trend test and
+    a heterogeneity statistic, not just a per-season figure. A holdout shift
+    attributed to a cause needs that cause sized.
+12. **Trend before pooling.** If the per-season series has a slope, print the
+    recent-era estimate next to the pooled one. Before blaming a tune-to-holdout
+    shift on selection or overfitting, compare it with (i) the last k tune
+    seasons (k = holdout length), (ii) the trend's extrapolation, and (iii) a
+    change in benchmark composition (`benchmark.md` check 1). *Paper 05 credited
+    the holdout widening to picking the best of many configurations, but four
+    blind reviewers found the gap already that wide in 2017–21. Measured, the
+    selection effect was about 0.0003.*
+13. **Calibration has more than one number.** Report calibration slope (and
+    intercept) or the Brier reliability term with an interval, alongside ECE.
+    ECE depends on how predictions are binned; slope does not.
+14. **Shared inputs, shared answers.** Agreement between estimators that share an
+    input (for example, all built from final scores) is partly by construction,
+    so it isn't evidence of "one latent quantity". Compared predictors are put
+    on the same scale and range before ranking them.
+15. **Replacing is not adding.** Swapping one input for another doesn't test
+    whether adding that information helps. Test the addition.
+16. **Precision follows uncertainty.** Round the uncertainty to 1–2
     significant figures, then the estimate to the same decimal place.

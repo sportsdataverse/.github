@@ -1,6 +1,6 @@
 ---
 name: sdv-research-paper
-description: Runs a SportsDataverse research paper (SSAC, CMSAC, JQAS, an arXiv preprint, a model write-up) from question to submission as a gated scientific process, so every claim in the abstract survives a hostile reviewer with the paper's own data. Phases - design-freeze (DESIGN.md committed before the first holdout read, a cross-repo prior-access ledger, the holdout guard covering choices + data fingerprint + script hash), analysis (numbered stages, numbers.json, no hand-typed numbers, abstract included), claims-audit (every sentence of the abstract and conclusion mapped to a key, every comparative and universal word backed by a computed value, conclusion never contradicts the largest result), inference (intervals at the shared-state cluster unit and every printed t/p/SE on that same unit, nulls only with a smallest effect of interest or the holdout's power, calibration tested against simulated perfect calibration, multiplicity families declared, grid-edge and selection-optimism reported), figures (vector, no overprint, 7pt floor, color never the only cue, the figure shows the claim it is cited for), citations (bib keys equal cited keys, DOI matched to Crossref on title/author/year, every attributed finding quoted from where it was read, "a simplification of" when the code departs from the cited model), venue (the official rules recorded with URL and date before submission), and review (dispatch sdv-paper-reviewer per lens, five-field comments, fix or disclose). Built from applying 22 installed research-writing skills (Orchestra ml-paper-writing family, K-Dense scientific family) to SSAC27 paper 05, which surfaced four false abstract sentences that `ssac check` passed; references/external-skills.md records which of those skills to reach for and which to avoid. Pairs with sdv-modeling (what is statistically correct) and sdv-model-build (building the model the paper reports). Invoke for "write a paper", "research paper", "SSAC", "Sloan paper", "CMSAC", "abstract", "manuscript", "preprint", "paper rigor", "pre-register", "pre-registration", "design freeze", "holdout discipline", "is this claim supported", "review my paper", "review my abstract", "reviewer 2", "claims audit", "check the citations", "related work", "is this figure publication quality", "camera-ready", or before submitting any write-up whose numbers come from SDV data.
+description: Runs a SportsDataverse research paper (SSAC, CMSAC, JQAS, an arXiv preprint, a model write-up) from question to submission as a gated scientific process, so every claim in the abstract survives a hostile reviewer with the paper's own data. Phases - design-freeze (DESIGN.md committed before the first holdout read, a cross-repo prior-access ledger, the holdout guard covering choices + data fingerprint + script hash), analysis (numbered stages, numbers.json, no hand-typed numbers, abstract included), claims-audit (every sentence of the abstract and conclusion mapped to a key, every comparative and universal word backed by a computed value, conclusion never contradicts the largest result), inference (intervals at the shared-state cluster unit and every printed t/p/SE on that same unit, nulls only with a smallest effect of interest or the holdout's power, calibration tested against simulated perfect calibration, multiplicity families declared, grid-edge and selection-optimism reported), benchmark (the benchmark's composition is constant across compared windows or the change is reported; "closing" lines are evidenced per league; aggregators are excluded from book medians; spread/moneyline orientation and sum gates; fixed conversions state their bias; market-informed inputs are never credited to the open model; market-specific rivals; coverage-thinning sensitivity; advice comes with an evaluated decision), reproducibility (inputs pinned not merely hashed, recorded provenance is what was actually fetched, hashes are checked on rerun, a clean-clone `uv sync --frozen` rerun reproduces every key, the holdout has a verify mode, Monte Carlo error sits below printed precision, known-effect simulations, the repository is public when the venue requires it), figures (vector, no overprint, 7pt floor, color never the only cue, the figure shows the claim it is cited for), citations (bib keys equal cited keys, DOI matched to Crossref on title/author/year, every attributed finding quoted from where it was read, "a simplification of" when the code departs from the cited model), venue (the official rules recorded with URL and date before submission), and review (dispatch sdv-paper-reviewer per lens, five-field comments, fix or disclose). Built from applying 22 installed research-writing skills (Orchestra ml-paper-writing family, K-Dense scientific family) to SSAC27 paper 05, which surfaced four false abstract sentences that `ssac check` passed; references/external-skills.md records which of those skills to reach for and which to avoid. Pairs with sdv-modeling (what is statistically correct) and sdv-model-build (building the model the paper reports). Invoke for "write a paper", "research paper", "SSAC", "Sloan paper", "CMSAC", "abstract", "manuscript", "preprint", "paper rigor", "pre-register", "pre-registration", "design freeze", "holdout discipline", "is this claim supported", "review my paper", "review my abstract", "reviewer 2", "claims audit", "check the citations", "related work", "is this figure publication quality", "camera-ready", or before submitting any write-up whose numbers come from SDV data.
 ---
 
 # Research papers as a gated scientific process
@@ -33,8 +33,10 @@ paper, never only in STATUS.
 | 4 | Inference | t/p/SE on a different cluster unit than the intervals; a null without SESOI/MDE; untested "well calibrated" | `references/inference.md` |
 | 5 | Figures | raster embed when vector exists; overprinted labels; claim not visible in the cited figure | `references/figures.md` |
 | 6 | Citations | unverified DOI; attributed finding with no quoted passage; missing prior test of the same comparison | `references/citations.md` |
-| 7 | Venue | the venue's official rules not recorded (URL + date) in the repo | `references/venue.md` |
-| 8 | Review | `sdv-paper-reviewer` not run per lens on the submitted text, or a FAIL left undispositioned | below |
+| 7 | Benchmark | benchmark composition changes across compared windows unreported; "closing" unevidenced; market-informed inputs credited to the open model | `references/benchmark.md` |
+| 8 | Reproducibility | inputs hashed but not pinned; no clean-clone rerun; holdout cannot be verified by a third party; Monte Carlo error above printed digits | `references/reproducibility.md` |
+| 9 | Venue | the venue's official rules not recorded (URL + date) in the repo; a hard rule broken (it blocks submission) | `references/venue.md` |
+| 10 | Review | `sdv-paper-reviewer` not run per lens on the submitted text, or a FAIL left undispositioned | below |
 
 ### Phase 1 — design freeze (do this first, or say honestly that you didn't)
 
@@ -46,7 +48,7 @@ confirmatory list, and commit it before any holdout read. A paper started
 without one writes `DESIGN.md` retroactively with a `Written after results`
 banner and may not use "frozen", "sealed", "scored once" or "untouched".
 
-### Phases 2–7 — while writing
+### Phases 2–9 — while writing
 
 Work through each reference's checklist on the section you are writing.
 The words that most often fail, in order of how often they did on paper 05:
@@ -54,11 +56,15 @@ The words that most often fail, in order of how often they did on paper 05:
 / more than / converge / adds nothing**. Each needs a key, an interval or a
 ledger entry behind it.
 
-### Phase 8 — review
+### Phase 10 — review
 
 Dispatch `sdv-paper-reviewer` once per lens (`design`, `claims`,
-`inference`, `figures`, `citations`, `venue`), or `lens: all` on an
-abstract. Lenses are independent; run them in parallel. The reviewer is
+`inference`, `benchmark`, `reproducibility`, `figures`, `citations`,
+`venue`), or `lens: all` on an abstract. Lenses are independent; run them in
+parallel. In a blind benchmark no single reviewer found more than about a quarter
+of a paper's known defects, while independent lenses together found most of them,
+and three found the same new defect. Treat agreement between independent lenses as
+confirmation, and never stop at one pass. The reviewer is
 read-only and returns five-field comments (location · observation ·
 evidence · why it matters · requested action). For each FAIL: fix, or add a
 sentence of disclosure **in the paper**. Abstract and title changes need

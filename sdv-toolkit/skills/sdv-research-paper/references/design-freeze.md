@@ -44,6 +44,25 @@ window it compares to a benchmark that an earlier run of yours already scored
    noise, each with one discriminating check that is run or explicitly
    deferred.
 9. **Dropped analyses disclosed in the paper,** not only in STATUS.
+10. **The freeze stays frozen.** After its freeze commit, `DESIGN.md` changes
+    only by appends to the deviation log (`git diff <freeze>..HEAD -- DESIGN.md`).
+    No results commit is an ancestor of the freeze. Re-run both checks at submission.
+11. **Plans are never deleted alongside results.** A pre-results plan file
+    (PLAN.md, a work plan, an early abstract) is never deleted in a commit that
+    adds results. *Paper 05's only pre-results plan was deleted in the same commit
+    that added every script and result, so git can't show the plan came first.*
+12. **Inheritance from earlier looks.** List every hyperparameter, grid range or
+    variant set carried over from a dev run or predecessor paper that saw the
+    holdout. Narrowing the grid using an earlier holdout result counts as a look.
+13. **Exploratory is labelled.** Everything not on the confirmatory list appears
+    under an "Exploratory" heading in the body, and the abstract leads with
+    confirmatory results.
+14. **Cuts cite measured costs.** A design cut made for compute cost (a smaller
+    grid, fewer seasons) cites a measured cost, not an estimate. *Paper 05 cut its
+    grid on an "hours on CPU" guess; the measured cost was 5–35 s per configuration.*
+
+Mechanical audit: science-superpowers' `prereg.sh audit` is a usable checker
+for 10–11. **Don't use its `freeze` mode**, which makes commits on its own.
 
 ## `DESIGN.md` template
 
