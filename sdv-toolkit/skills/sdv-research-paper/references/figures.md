@@ -1,6 +1,6 @@
 # Figures
 
-Check the **rendered PDF**, not the source plot. Paper 05's vector PDFs existed
+Check the **rendered PDF**, not the source plot. Paper A's vector PDFs existed
 but the build embedded PNGs.
 
 ## Checks (each one a FAIL)

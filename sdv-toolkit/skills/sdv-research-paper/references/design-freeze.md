@@ -7,9 +7,9 @@ deciding before looking, and recording every look.
 
 **Which checks apply.** A *predictive* study (anything tuned, selected or fit,
 then scored on held-out data) takes all of the checks below. A *descriptive*
-study (no model selection, no holdout) skips 2–4. It still owes 1 for every
+study (no model selection, no holdout) skips 2–4 and 12. It still owes 1 for every
 window it compares to a benchmark that an earlier run of yours already scored
-(paper 11's window had been scored by a 09-27 refit), plus 5–9.
+(paper B's window had been scored by a 09-27 refit), plus 5–11 and 13–14.
 
 ## Checks (each one a FAIL)
 
@@ -18,7 +18,7 @@ window it compares to a benchmark that an earlier run of yours already scored
    (date, repo, script, result seen). FAIL if the paper's holdout has an
    earlier entry the prose doesn't disclose. FAIL on "scored once", "frozen
    before", "sealed" or "untouched" unless the ledger shows exactly one look.
-   *Paper 05: an August CMSAC dev run had scored 2022–25; the paper said "scored once".*
+   *Paper A: an August CMSAC dev run had scored 2022–25; the paper said "scored once".*
 2. **Freeze precedes score in git.** `DESIGN.md`'s commit is earlier than the
    first commit of the scored holdout artifact. FAIL if the holdout script
    and its result land in the same commit: then git can't prove the order.
@@ -49,7 +49,7 @@ window it compares to a benchmark that an earlier run of yours already scored
     No results commit is an ancestor of the freeze. Re-run both checks at submission.
 11. **Plans are never deleted alongside results.** A pre-results plan file
     (PLAN.md, a work plan, an early abstract) is never deleted in a commit that
-    adds results. *Paper 05's only pre-results plan was deleted in the same commit
+    adds results. *Paper A's only pre-results plan was deleted in the same commit
     that added every script and result, so git can't show the plan came first.*
 12. **Inheritance from earlier looks.** List every hyperparameter, grid range or
     variant set carried over from a dev run or predecessor paper that saw the
@@ -58,11 +58,13 @@ window it compares to a benchmark that an earlier run of yours already scored
     under an "Exploratory" heading in the body, and the abstract leads with
     confirmatory results.
 14. **Cuts cite measured costs.** A design cut made for compute cost (a smaller
-    grid, fewer seasons) cites a measured cost, not an estimate. *Paper 05 cut its
+    grid, fewer seasons) cites a measured cost, not an estimate. *Paper A cut its
     grid on an "hours on CPU" guess; the measured cost was 5–35 s per configuration.*
 
-Mechanical audit: science-superpowers' `prereg.sh audit` is a usable checker
-for 10–11. **Don't use its `freeze` mode**, which makes commits on its own.
+Mechanical audit for 10–11: `git diff <freeze>..HEAD -- DESIGN.md` (only
+deviation-log appends) and `git merge-base --is-ancestor <freeze> <first-result-commit>`.
+If the `preregistering-analysis` skill is installed, its `prereg.sh audit` runs
+the same checks. **Never use its `freeze` mode**, which makes commits on its own.
 
 ## `DESIGN.md` template
 

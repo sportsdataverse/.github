@@ -2,7 +2,7 @@
 
 A numbers-provenance check (every numeral comes from `numbers.json`) catches
 hand-typed numbers. It does not catch a true number under a false word. All
-four false sentences in SSAC27 paper 05's abstract passed it.
+four false sentences in paper A's abstract passed it.
 
 ## 1. Provenance (phase 2)
 
@@ -24,15 +24,15 @@ FAIL a row when:
 1. **No key.** The sentence asserts a size or direction with nothing computed behind it.
 2. **Unbacked comparative or universal.** "more than", "larger", "stable",
    "every", "none", "converge", "nothing", "only", "always" with no computed
-   value or assertion. *Paper 05: "can move a Brier score by more than the gap" (0.0026 vs 0.0054).*
+   value or assertion. *Paper A: "can move a Brier score by more than the gap" (0.0026 vs 0.0054).*
 3. **Summary overreach.** A summary sentence that one result in the paper
    contradicts. Check each against the **largest** effects in the results.
-   *Paper 05: "techniques did not move the gap" while one closed 18%; "untested"
+   *Paper A: "techniques did not move the gap" while one closed 18%; "untested"
    for the roster/recruiting priors that were the largest single gain.*
 4. **One quantity, one name, one sign.** The same difference is called the same
    thing with the same sign in body, abstract, tables, CSVs and axes.
-   *Paper 05: a "blend minus line" difference is called a "gain", and a CSV prints it with the opposite sign.*
-   The converse also holds: one name means one quantity. *Paper 11: "consensus"
+   *Paper A: a "blend minus line" difference is called a "gain", and a CSV prints it with the opposite sign.*
+   The converse also holds: one name means one quantity. *Paper B: "consensus"
    meant both the market median and the four-system mean.*
 5. **Out-of-sample leads.** Any in-sample champion number in the abstract,
    introduction or conclusion has its holdout counterpart in the same
@@ -43,7 +43,7 @@ FAIL a row when:
    evidence they're equally accurate when their accuracy gaps are comparable to
    the headline effect.
 8. **Pointer integrity.** A claim cited to a figure or table must be visible
-   there. *Paper 05: "stable across seasons" cited to a figure in which the gap widens after 2016.*
+   there. *Paper A: "stable across seasons" cited to a figure in which the gap widens after 2016.*
 9. **Design constants.** Every fixed constant (blend weight, prior strength,
    sigma, de-vig method) gets a source, a reason, or a sensitivity check.
    Compared model families get the same knobs tuned.
@@ -51,26 +51,25 @@ FAIL a row when:
     prints the size from the pipeline.
 11. **The abstract uses the body's preferred measure.** If the body says a
     measure is biased and replaces it, the abstract reports the replacement.
-    *Paper 11: the abstract's convergence week came from a self-correlation the
-    body says flatters a slow-moving rater; the corrected measure moved FPI
-    from week 2 to week 8.*
+    *Paper B: the abstract's convergence week came from a self-correlation the
+    body says flatters a slow-moving rater; the corrected measure moved one
+    rater's convergence from week 2 to week 8.*
 12. **One sentence, one sample.** Numbers sharing a sentence come from the
     same sample (seasons, units, filters), or the sentence names each sample.
-    *Paper 11: team-weeks 2015–25 and games 2016–25 under one "same 6,082 games".*
+    *Paper B: team-weeks 2015–25 and games 2016–25 under one "same 6,082 games".*
 13. **No post-hoc reinstatement.** A result left out of an earlier draft (for
     example as "suggestive only") may not return to the abstract once its
     value is known, unless the paper says so. The same goes for a correction
-    family or test chosen after the p-value was seen. *Paper 15: a spread
+    family or test chosen after the p-value was seen. *Paper C: a spread
     result dropped on 09-30 came back with a three-contrast family picked after
     the fact (adjusted p 0.08).*
 14. **"Only" is a universal.** "Only in X" needs the same test run on every
     other unit and on both sides of each market, using the paper's own rule.
-    *Paper 15: "longshot bias only in men's college basketball", while NHL
-    longshots pass the paper's own Bonferroni cutoff; only the favorite side
-    had been tested.*
+    *Paper C: "only in league X", while league Y passed the paper's own
+    Bonferroni cutoff; only one side of the market had been tested.*
 15. **Sibling consistency.** Slate or program papers that rule on the same
     seasons and markets don't reach opposite verdicts without citing each
-    other. *Paper 15 calls closing football lines calibrated; paper 05 finds
+    other. *Paper C calls closing lines calibrated; paper A finds
     them miscalibrated on overlapping seasons.*
 
 16. **Scope claims cover every number they cover.** A blanket claim about the

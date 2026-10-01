@@ -1,7 +1,7 @@
 # Reproducibility: a stranger can regenerate every number
 
 "Code and results are in the repository" is a claim, and the paper owes it the same
-evidence as any other claim. Paper 05 recorded input hashes but fetched live
+evidence as any other claim. Paper A recorded input hashes but fetched live
 releases that keep changing, git-ignored the cache, and its holdout step either
 copied the stored result or refused to run. So "three commands regenerate this
 paper" held for nobody but the author.
@@ -24,9 +24,10 @@ paper" held for nobody but the author.
    neither copies the record nor refuses to run. Third parties can then reproduce
    it without breaking the single-look rule (the look ledger counts *new*
    scorings, not verifications).
-6. **Monte Carlo error is below printed precision.** Re-run bootstraps and
-   simulations with 2 or 3 other seeds. A printed digit must be steadier than the spread
-   across seeds. *Paper 05's 5-decimal interval endpoints moved by 1–2e-5.*
+6. **Monte Carlo error is below printed precision.** Estimate the Monte Carlo
+   SE of each printed bootstrap or simulation quantity (the SD over 10 or more
+   seeds, or raise B until the quantile SE is known). It must be under half a
+   unit of the last printed digit; otherwise drop a digit or raise B. *Paper A's 5-decimal interval endpoints moved by 1–2e-5.*
 7. **Known-effect simulation.** Every estimator and interval method the abstract
    relies on has a committed simulation. It recovers a planted effect, and its
    null coverage matches its nominal level. The output is checked into

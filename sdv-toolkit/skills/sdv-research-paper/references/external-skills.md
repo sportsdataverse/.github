@@ -1,7 +1,7 @@
 # Installed research-writing skills: what each did on a real paper
 
-Evaluated 2026-10-01 by applying each one, read-only, to SSAC27 paper 05
-(the forecasts vs the closing line). There were six lens clusters, with full reports in
+Evaluated 2026-10-01 by applying each one, read-only, to a 2026 conference
+submission ("paper A"). There were six lens clusters, with full reports in
 `ClaudeCowork/notes/research-paper-skills/eval/A–F`. The packs are Orchestra
 (`~/.orchestra/skills/20-ml-paper-writing`, `21-research-ideation`,
 `0-autoresearch-skill`) and K-Dense scientific (`~/.agents/skills/*`).
@@ -37,7 +37,7 @@ references; this table is for deciding whether to load a skill directly.
 
 ## Sweep 2 (2026-10-01): blind benchmark against a known answer key
 
-Seven clusters reviewed paper 05 **blind** (without sweep 1's findings or this skill)
+Seven clusters reviewed paper A **blind** (without sweep 1's findings or this skill)
 and were scored against its 22 known defects. Details are in
 `ClaudeCowork/notes/research-paper-skills/benchmark/`.
 
@@ -51,7 +51,7 @@ and were scored against its 22 known defects. Details are in
 - **One domain cluster found the biggest single defect:** the college benchmark's
   composition changed in 2020.
 - **Those finds are now rules:** `benchmark.md`, `reproducibility.md`,
-  `inference.md` 11–15 and `design-freeze.md` 10–14.
+  `inference.md` 11–15, `claims.md` 16–17 and `design-freeze.md` 10–14.
 
 The lesson: no single reviewer, external or in-house, finds most defects. Run
 **independent lenses in parallel** and treat convergence as confirmation. That is
@@ -76,27 +76,9 @@ why `sdv-paper-reviewer` is dispatched once per lens.
 | `sports-betting-analyzer`, `timesfm-forecasting`, `data-storytelling`, `storytelling` | skip | — | a 59-line stub; an ~800 MB model download; a missing file; a UI-design skill mislabelled |
 
 The `scientific-agents` marketplace ships 503 persona plugins, and each enabled one
-loads its agent description into **every session** (about 100k tokens for all of
-them). As of 2026-10-01, 30 stay enabled in `~/.claude/settings.json`; the other
-473 are set to `false` (backup: `settings.json.bak-2026-10-01-personas`):
-
-- **Statistics:** statistician, mathematical-statistician, bayesian-statistician, biostatistician, probabilist, actuarial-scientist (credibility and shrinkage)
-- **Design:** causal-inference-scientist, epidemiologist (observational design), computational-social-scientist
-- **Data and ML:** data-scientist, data-engineer, machine-learning-researcher, machine-learning-engineer, mlops-engineer, deep-learning-scientist, ai-researcher, reinforcement-learning-researcher, natural-language-processing-scientist (play-text parsing)
-- **Tracking data:** computer-vision-scientist, signal-processing-engineer
-- **Infrastructure:** research-software-engineer, high-performance-computing-specialist, database-systems-researcher
-- **Models and decisions:** network-scientist, operations-researcher, optimization-scientist, mathematical-modeler
-- **Sports:** sports-scientist, exercise-physiologist (injury and load)
-- **Apps:** human-computer-interaction-researcher
-
-The benchmarked keepers are statistician, causal-inference-scientist, data-scientist
-and research-software-engineer. The rest are kept for breadth and haven't been
-benchmarked. Re-enable any other persona by flipping its flag.
-
-science-superpowers was disabled for its SessionStart hook. Its two keepers were
-copied to `~/.claude/skills/` (`investigating-anomalous-results`,
-`preregistering-analysis`, under MIT, with a provenance note).
-`claude-scientific-writer` is disabled.
+loads its description into **every session** (about 100k tokens for all of them).
+Keep 30 or fewer enabled. The benchmarked keepers are `statistician`,
+`causal-inference-scientist`, `data-scientist` and `research-software-engineer`.
 
 ## Standing rules for any external research skill
 
