@@ -340,6 +340,24 @@
       ]
     },
     {
+      "name": "sdv-reprocess",
+      "kind": "skill",
+      "purpose": "Rebuild a -raw corpus after an sdv-py change: gather the PRs, lock + SCHEMA_REV bump, clear the runway, launch the reprocess chain, recover, close out.",
+      "archetypes": [
+        "raw",
+        "data",
+        "sdv-py"
+      ],
+      "phases": [
+        "gather",
+        "bump",
+        "clear-runway",
+        "launch",
+        "recover",
+        "close-out"
+      ]
+    },
+    {
       "name": "sdv-issue-triage",
       "kind": "agent",
       "purpose": "Classify one open issue or PR into one of six verdicts, read-only, with evidence.",
