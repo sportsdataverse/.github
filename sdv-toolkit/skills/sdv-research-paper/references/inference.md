@@ -1,0 +1,63 @@
+# Inference checks for panel sports data
+
+Which test, metric and resample is correct lives in `sdv-modeling`
+(`metrics-and-gates.md`, `resampling.md`). This file is the paper-side
+checklist: what a printed inferential statement must carry.
+
+Generic statistics skills (statistical-analysis, exploratory-data-analysis)
+default to normality / equal-variance checks on rows treated as independent.
+On games nested in seasons and teams that misleads; ignore those defaults.
+
+## Checks (each one a FAIL)
+
+1. **One cluster unit.** Every printed t, p and SE uses the same resampling or
+   cluster unit as the paper's intervals. *Paper 05: abstract t = 2.49 used
+   unclustered SEs (`_common.py`); season-clustered t = 1.87, p = 0.08.*
+2. **Cluster ≥ shared state.** The resample unit is at or above the level
+   where model state or conditions are shared: season for a season-carried
+   filter or rating, game for play-level work. A limitation that calls the
+   finer interval "slightly narrow" must cite the measured SE ratio across
+   candidate units. *Paper 05: season clustering widened SEs 11–43%.*
+   **With few clusters (under about 15 seasons),** the cluster interval is itself
+   noisy and can come out narrower than the row-level one. *Paper 11, 10
+   seasons: 0.58× to 1.17× as wide, depending on the statistic.* Compute both,
+   and quote the wider one for any null bound or headline interval.
+3. **Nulls are bounded on the scale the conclusion acts on.** "No effect / adds
+   nothing / did not help" needs a pre-declared smallest effect of interest δ
+   with an interval compared to ±δ (equivalence), or the minimum detectable
+   effect at the achieved n. Never just "CI covers 0" or a t-stat. The bound
+   must be on the scale of the conclusion: a null on rank correlation does not
+   support a conclusion about points or money. *Paper 11: bounded on ρ, but in
+   points the line could still be 0.69 worse, twice FPI's whole gap.*
+4. **Holdout power.** A holdout sign flip or "did not replicate" is reported
+   with the holdout's power for the in-sample effect. *Paper 05: MDE was 5.9×
+   the in-sample effect, power ~8%, and a sign flip had a 32% chance even if
+   the effect were real.*
+5. **Calibration is tested.** "Well calibrated" requires the calibration
+   error (quantile bins) to be compared with its distribution under simulated
+   perfect calibration. "Discrimination, not calibration" requires the Brier
+   reliability/resolution decomposition. *Paper 05: market ECE 0.024 > null
+   95th percentile (0.014 college / 0.019 NFL).*
+6. **Bounds are bounds.** No point estimate is phrased as a bound ("at most
+   18%"); every ratio or share gets an interval (that 18% ran ~10–26%).
+7. **Interval label.** Each interval states level, method and resample unit
+   where it first appears, and in the abstract.
+8. **Differences get intervals.** A comparison of two estimates prints an
+   interval on the difference, not two separate intervals.
+9. **Multiplicity declared, and applied to every member.** Name each family
+   of tests and its size (configurations, techniques × leagues, subgroups).
+   More than 5 members: correct, or label "exploratory". The family and
+   correction are fixed before the p-values are seen. The reviewer applies the
+   paper's own decision rule to **every** member of the family, not only the
+   ones the prose reports.
+   **Significance is not a difference.** Ranking groups by which interval
+   excludes the null ("A is calibrated, B is not") is not a test that A and B
+   differ. Test the difference.
+10. **Selection optimism.** A grid winner reports the optimism of picking the
+    best of k (leave-one-season-out re-selection is a cheap check). Any
+    winning value on the edge of its grid is reported.
+11. **Stability is measured.** "Stable across seasons" needs per-season
+    dispersion or a heterogeneity statistic. A holdout shift attributed to a
+    cause needs that cause sized.
+12. **Precision follows uncertainty.** Round the uncertainty to 1–2
+    significant figures, then the estimate to the same decimal place.
