@@ -26,7 +26,8 @@
   <a href="https://sportsdataverse.r-universe.dev">R-universe</a> ·
   <a href="https://github.com/sportsdataverse/sportsdataverse-data/releases">Data releases</a> ·
   <a href="https://sportsdataverse.org/status">Data status</a> ·
-  <a href="https://sportsdataverse.org/join">Join the list</a>
+  <a href="https://sportsdataverse.org/join">Join the list</a> ·
+  <a href="https://www.patreon.com/sportsdataverse">Patreon</a>
 </p>
 
 ## Get started
@@ -188,6 +189,7 @@ was selected as the winner of the Data and Software contribution, Open Track, in
 
 Release notes and new-dataset announcements by email: **[sportsdataverse.org/join](https://sportsdataverse.org/join)**
 
+[![Become a member on Patreon](https://img.shields.io/badge/Patreon-become%20a%20member-F96854?logo=patreon&logoColor=white&style=for-the-badge)](https://www.patreon.com/sportsdataverse)
 [![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=kofi&logoColor=white&style=for-the-badge)](https://ko-fi.com/G2G0KJ588)
 
 [![DigitalOcean referral](https://img.shields.io/badge/DigitalOcean-referral-0080FF?logo=digitalocean&logoColor=white&style=for-the-badge)](https://www.digitalocean.com/?refcode=38816e14651f&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
