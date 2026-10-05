@@ -1,43 +1,33 @@
-# [SportsDataverse](https://sportsdataverse.org/ "The home page of the SportsDataverse Organization")
+<p align="center">
+  <a href="https://sportsdataverse.org/" title="The home page of the SportsDataverse Organization"><img src="https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-gh.png" width="640" alt="SportsDataverse"/></a>
+</p>
 
-**Open sports data for R, Python and JavaScript.** Tidy play-by-play, box scores, schedules, rosters and fitted
-models (expected points, win probability, expected goals) for college and pro football, basketball, hockey and
-baseball, published by automated pipelines that every package reads from.
+<p align="center">
+  <b>Open sports data for R, Python and JavaScript.</b><br/>
+  Tidy play-by-play, box scores, schedules, rosters and fitted models (expected points, win probability, expected goals)
+  for college and pro football, basketball, hockey and baseball, published by automated pipelines that every package reads from.
+</p>
 
-[![GitHub stars](https://img.shields.io/github/stars/sportsdataverse?label=stars&logo=github)](https://github.com/sportsdataverse)
-[![R-universe packages](https://sportsdataverse.r-universe.dev/badges/:packages)](https://sportsdataverse.r-universe.dev)
-[![PyPI downloads](https://img.shields.io/pypi/dm/sportsdataverse?label=PyPI&logo=python&logoColor=white)](https://pypi.org/project/sportsdataverse/)
-[![npm downloads](https://img.shields.io/npm/dm/sportsdataverse?label=npm&logo=npm)](https://www.npmjs.com/package/sportsdataverse)
+<p align="center">
+  <a href="https://github.com/sportsdataverse"><img src="https://img.shields.io/github/followers/sportsdataverse?style=social&label=Follow" alt="GitHub followers"/></a>
+  <a href="https://github.com/sportsdataverse"><img src="https://img.shields.io/github/stars/sportsdataverse?style=social&label=Stars" alt="GitHub stars"/></a>
+  <a href="https://bsky.app/profile/sportsdataverse.org"><img src="https://img.shields.io/bluesky/followers/sportsdataverse.org?style=social&logo=bluesky&label=Bluesky" alt="Bluesky followers"/></a>
+  <a href="https://x.com/sportsdataverse"><img src="https://img.shields.io/twitter/follow/sportsdataverse?style=social" alt="Follow on X"/></a>
+  <br/>
+  <a href="https://sportsdataverse.r-universe.dev"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fecosystem%2Fcran-downloads.json" alt="CRAN downloads"/></a>
+  <a href="https://pepy.tech/project/sportsdataverse"><img src="https://img.shields.io/pepy/dt/sportsdataverse?label=PyPI%20downloads&logo=python&logoColor=white&color=blue" alt="PyPI downloads"/></a>
+  <a href="https://www.npmjs.com/package/sportsdataverse"><img src="https://img.shields.io/npm/dt/sportsdataverse?label=npm%20downloads&logo=npm&color=blue" alt="npm downloads"/></a>
+  <a href="https://sportsdataverse.r-universe.dev"><img src="https://sportsdataverse.r-universe.dev/badges/:packages" alt="R-universe packages"/></a>
+</p>
 
-[Website](https://sportsdataverse.org/) · [Data status](https://sportsdataverse.org/status) · [Cheat sheets](https://sportsdataverse.org/cheatsheets) · [R-universe](https://sportsdataverse.r-universe.dev) · [Data releases](https://github.com/sportsdataverse/sportsdataverse-data/releases) · [Join the list](https://sportsdataverse.org/join)
-
-## Data and automation status
-
-Every SportsDataverse loader (`load_cfb_pbp()`, `load_nba_pbp()` and their siblings) reads the
-[`sportsdataverse-data`](https://github.com/sportsdataverse/sportsdataverse-data) releases. How fresh each producer's
-data is and whether its pipeline is passing is on [sportsdataverse.org/status](https://sportsdataverse.org/status),
-rebuilt nightly from [status/ecosystem.md](https://github.com/sportsdataverse/.github/blob/main/status/ecosystem.md).
-A league out of season reads **idle**, never red; a badge turns red only when an update run fails after the newest data.
-
-| Data | Pipeline | Updated | Through | Read it with |
-| --- | --- | --- | --- | --- |
-| **College football** · [ESPN](https://github.com/sportsdataverse/cfbfastR-cfb-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FcfbfastR-cfb-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/cfbfastR-cfb-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FcfbfastR-cfb-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FcfbfastR-cfb-data%2Fthrough.json&label=) | cfbfastR · sportsdataverse-py |
-| **College football** · [CollegeFootballData](https://github.com/sportsdataverse/cfbfastR-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FcfbfastR-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/cfbfastR-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FcfbfastR-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FcfbfastR-data%2Fthrough.json&label=) | cfbfastR · sportsdataverse-py |
-| **College football** · [stats.ncaa.org](https://github.com/sportsdataverse/ncaa-mfb-football-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fncaa-mfb-football-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/ncaa-mfb-football-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fncaa-mfb-football-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fncaa-mfb-football-data%2Fthrough.json&label=) | cfbfastR · sportsdataverse-py |
-| **NFL** · [ESPN](https://github.com/sportsdataverse/nfl-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fnfl-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/nfl-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fnfl-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fnfl-data%2Fthrough.json&label=) | sportsdataverse-py |
-| **NFL** · [Next Gen Stats](https://github.com/sportsdataverse/nfl-ngs-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fnfl-ngs-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/nfl-ngs-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fnfl-ngs-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fnfl-ngs-data%2Fthrough.json&label=) | sportsdataverse-py |
-| **NBA** · [ESPN](https://github.com/sportsdataverse/hoopR-nba-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-nba-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/hoopR-nba-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-nba-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-nba-data%2Fthrough.json&label=) | hoopR · sportsdataverse-py |
-| **NBA** · [NBA Stats API](https://github.com/sportsdataverse/hoopR-nba-stats-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-nba-stats-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/hoopR-nba-stats-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-nba-stats-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-nba-stats-data%2Fthrough.json&label=) | hoopR · sportsdataverse-py |
-| **Men's college basketball** · [ESPN](https://github.com/sportsdataverse/hoopR-mbb-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-mbb-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/hoopR-mbb-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-mbb-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-mbb-data%2Fthrough.json&label=) | hoopR · sportsdataverse-py |
-| **Men's college basketball** · [stats.ncaa.org](https://github.com/sportsdataverse/ncaa-mbb-hoops-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fncaa-mbb-hoops-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/ncaa-mbb-hoops-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fncaa-mbb-hoops-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fncaa-mbb-hoops-data%2Fthrough.json&label=) | hoopR · sportsdataverse-py |
-| **WNBA** · [ESPN](https://github.com/sportsdataverse/wehoop-wnba-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wnba-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/wehoop-wnba-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wnba-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wnba-data%2Fthrough.json&label=) | wehoop · sportsdataverse-py |
-| **WNBA** · [WNBA Stats API](https://github.com/sportsdataverse/wehoop-wnba-stats-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wnba-stats-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wnba-stats-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wnba-stats-data%2Fthrough.json&label=) | wehoop · sportsdataverse-py |
-| **Women's college basketball** · [ESPN](https://github.com/sportsdataverse/wehoop-wbb-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wbb-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/wehoop-wbb-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wbb-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wbb-data%2Fthrough.json&label=) | wehoop · sportsdataverse-py |
-| **Women's college basketball** · [stats.ncaa.org](https://github.com/sportsdataverse/ncaa-wbb-hoops-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fncaa-wbb-hoops-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/ncaa-wbb-hoops-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fncaa-wbb-hoops-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fncaa-wbb-hoops-data%2Fthrough.json&label=) | wehoop · sportsdataverse-py |
-| **NHL** · [NHL API](https://github.com/sportsdataverse/fastRhockey-nhl-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-nhl-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/fastRhockey-nhl-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-nhl-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-nhl-data%2Fthrough.json&label=) | fastRhockey · sportsdataverse-py |
-| **PWHL** · [HockeyTech](https://github.com/sportsdataverse/fastRhockey-pwhl-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-pwhl-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/fastRhockey-pwhl-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-pwhl-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-pwhl-data%2Fthrough.json&label=) | fastRhockey · sportsdataverse-py |
-| **MLB and college baseball** · [MLB Stats API, NCAA](https://github.com/sportsdataverse/baseballr-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fbaseballr-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/baseballr-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fbaseballr-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fbaseballr-data%2Fthrough.json&label=) | baseballr · sportsdataverse-py |
-| **Reference** · [conferences, divisions, ballparks](https://github.com/sportsdataverse/sdv-reference-data) | [![pipeline status](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fsdv-reference-data%2Fstatus.json&label=)](https://github.com/sportsdataverse/sdv-reference-data/actions) | ![data updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fsdv-reference-data%2Fupdated.json&label=) | ![through season](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fsdv-reference-data%2Fthrough.json&label=) | every R package |
+<p align="center">
+  <a href="https://sportsdataverse.org/">Website</a> ·
+  <a href="https://sportsdataverse.org/cheatsheets">Cheat sheets</a> ·
+  <a href="https://sportsdataverse.r-universe.dev">R-universe</a> ·
+  <a href="https://github.com/sportsdataverse/sportsdataverse-data/releases">Data releases</a> ·
+  <a href="https://sportsdataverse.org/status">Data status</a> ·
+  <a href="https://sportsdataverse.org/join">Join the list</a>
+</p>
 
 ## Get started
 
@@ -61,7 +51,7 @@ npm install sportsdataverse
 
 ## R Packages
 
-<p align="center"><a href='https://r.sportsdataverse.org/'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-hex-wall.png' width='520' alt='The SportsDataverse R package hex wall'/></a></p>
+<p align="center"><a href='https://r.sportsdataverse.org/'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-hex-wall.png' width='560' alt='The SportsDataverse R package hex wall'/></a></p>
 
 | Package | Covers | Version | Downloads | Cheat sheet |
 | --- | --- | --- | --- | --- |
@@ -75,7 +65,7 @@ npm install sportsdataverse
 | [cfbseedR](https://cfbseedR.sportsdataverse.org/) | College football season simulation: conference tiebreakers and CFP seeding | [![CRAN version](https://img.shields.io/cran/v/cfbseedR?label=CRAN)](https://CRAN.R-project.org/package=cfbseedR) | [![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/cfbseedR)](https://CRAN.R-project.org/package=cfbseedR) | [PDF](https://sportsdataverse.org/cheatsheets/cfbplotR-cfb4th-cfbseedR.pdf) |
 | [cfb4th](https://cfb4th.sportsdataverse.org/) | College football fourth-down decisions | [![R-universe version](https://sportsdataverse.r-universe.dev/badges/cfb4th)](https://sportsdataverse.r-universe.dev/cfb4th) | | [PDF](https://sportsdataverse.org/cheatsheets/cfbplotR-cfb4th-cfbseedR.pdf) |
 | [cfbplotR](https://cfbplotr.sportsdataverse.org/) | College football logos and colors for ggplot2 | [![R-universe version](https://sportsdataverse.r-universe.dev/badges/cfbplotR)](https://sportsdataverse.r-universe.dev/cfbplotR) | | [PDF](https://sportsdataverse.org/cheatsheets/cfbplotR-cfb4th-cfbseedR.pdf) |
-| [sdvplotR](https://sdvplotr.sportsdataverse.org/) | **New:** team logos, colors, headshots and themes across leagues for ggplot2, gt and reactable | [![R-universe version](https://sportsdataverse.r-universe.dev/badges/sdvplotR)](https://sportsdataverse.r-universe.dev/sdvplotR) | | |
+| [sdvplotR](https://sdvplotr.sportsdataverse.org/) | **New:** team logos, wordmarks, headshots and colors across leagues for ggplot2, gt and reactable | [![R-universe version](https://sportsdataverse.r-universe.dev/badges/sdvplotR)](https://sportsdataverse.r-universe.dev/sdvplotR) | | |
 | [recruitR](https://recruitr.sportsdataverse.org/) | College football recruiting (CollegeFootballData, 247Sports) | [![R-universe version](https://sportsdataverse.r-universe.dev/badges/recruitR)](https://sportsdataverse.r-universe.dev/recruitR) | | |
 | [usfootballR](https://usfootballr.sportsdataverse.org/) | MLS and NWSL play-by-play (ESPN) | [![R-universe version](https://sportsdataverse.r-universe.dev/badges/usfootballR)](https://sportsdataverse.r-universe.dev/usfootballR) | | |
 | [softballR](https://github.com/sportsdataverse/softballR) | College softball (NCAA, ESPN) | [![R-universe version](https://sportsdataverse.r-universe.dev/badges/softballR)](https://sportsdataverse.r-universe.dev/softballR) | | |
@@ -112,35 +102,53 @@ All of them install from [sportsdataverse.r-universe.dev](https://sportsdatavers
 
 ESPN, 247Sports and NCAA endpoints for Node.js. [**Documentation**](https://js.sportsdataverse.org/) · [**Cheat sheet (PDF)**](https://sportsdataverse.org/cheatsheets/sportsdataverse-js.pdf)
 
+## Data releases and status
+
+Every `load_*()` function reads the automated
+[`sportsdataverse-data` releases](https://github.com/sportsdataverse/sportsdataverse-data/releases), free to download
+directly. Freshness and pipeline health for every producer are on
+**[sportsdataverse.org/status](https://sportsdataverse.org/status)**, rebuilt nightly; leagues out of season read *idle*, never red.
+
+[![CFB](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FcfbfastR-cfb-data%2Fstatus.json&label=CFB)](https://sportsdataverse.org/status)
+[![NFL](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fnfl-data%2Fstatus.json&label=NFL)](https://sportsdataverse.org/status)
+[![NBA](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-nba-data%2Fstatus.json&label=NBA)](https://sportsdataverse.org/status)
+[![MBB](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FhoopR-mbb-data%2Fstatus.json&label=MBB)](https://sportsdataverse.org/status)
+[![WNBA](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wnba-data%2Fstatus.json&label=WNBA)](https://sportsdataverse.org/status)
+[![WBB](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fwehoop-wbb-data%2Fstatus.json&label=WBB)](https://sportsdataverse.org/status)
+[![NHL](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-nhl-data%2Fstatus.json&label=NHL)](https://sportsdataverse.org/status)
+[![PWHL](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2FfastRhockey-pwhl-data%2Fstatus.json&label=PWHL)](https://sportsdataverse.org/status)
+[![MLB](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsportsdataverse%2F.github%2Fmain%2Fstatus%2Fbadges%2Fbaseballr-data%2Fstatus.json&label=MLB)](https://sportsdataverse.org/status)
+
 ## Built on the SportsDataverse
 
-- [**Game on Paper**](https://gameonpaper.com/cfb "Game on Paper: live analytics for the modern age") — live college
+- [**Game on Paper**](https://gameonpaper.com/cfb "Game on Paper: live analytics for the modern age"): live college
   football analytics on the same expected-points and win-probability models the packages ship.
-- [**sportsdataverse.org/status**](https://sportsdataverse.org/status) — nightly freshness and pipeline health for
-  every data producer.
-- [**sportsdataverse-data releases**](https://github.com/sportsdataverse/sportsdataverse-data/releases) — the
-  parquet, RDS and CSV files behind every `load_*()` function, free to download directly.
+- [**sdv-toolkit**](https://github.com/sportsdataverse/.github/tree/main/sdv-toolkit): a [Claude Code](https://claude.com/claude-code)
+  plugin with skills, agents, hooks and an MCP server encoding the SDV engineering conventions (codegen-safe edit guards,
+  multi-provider league scaffolding, returns-schema and docstring auditors, polars 1.x and parser-contract reviewers,
+  R pkgdown/roxygen helpers).
 
-## Claude Code plugin
+  ```sh
+  claude plugin marketplace add sportsdataverse/sportsdataverse
+  claude plugin install sdv-toolkit@sportsdataverse
+  ```
 
-The SportsDataverse ships a [Claude Code](https://claude.com/claude-code) plugin,
-**`sdv-toolkit`**, with skills, agents, hooks, and an MCP server encoding the SDV
-engineering conventions (codegen-safe edit guards, multi-provider league scaffolding,
-returns-schema and docstring auditors, polars 1.x and parser-contract reviewers, and
-R pkgdown/roxygen helpers).
+## Contributors
 
-```sh
-claude plugin marketplace add sportsdataverse/sportsdataverse
-claude plugin install sdv-toolkit@sportsdataverse
-```
+Thank you to everyone who has filed an issue, sent a fix or added a league.
+
+<a href="https://github.com/sportsdataverse/sportsdataverse-py/graphs/contributors"><img src="https://contrib.rocks/image?repo=sportsdataverse/sportsdataverse-py&max=48&columns=16" alt="sportsdataverse-py contributors"/></a>
+<a href="https://github.com/sportsdataverse/hoopR/graphs/contributors"><img src="https://contrib.rocks/image?repo=sportsdataverse/hoopR&max=48&columns=16" alt="hoopR contributors"/></a>
+<a href="https://github.com/sportsdataverse/cfbfastR/graphs/contributors"><img src="https://contrib.rocks/image?repo=sportsdataverse/cfbfastR&max=48&columns=16" alt="cfbfastR contributors"/></a>
+<a href="https://github.com/sportsdataverse/wehoop/graphs/contributors"><img src="https://contrib.rocks/image?repo=sportsdataverse/wehoop&max=48&columns=16" alt="wehoop contributors"/></a>
 
 ## Cheat sheets
 
-Printable one-page references for every package: the function families, the
-loaders, and what each one returns. Free to download, print and hand out; every
-sheet ships light and dark on US Letter landscape.
-
+Printable one-page references for every package: the function families, the loaders, and what each one returns. Free to
+download, print and hand out; every sheet ships light and dark on US Letter landscape.
 **[Browse them all at sportsdataverse.org/cheatsheets](https://sportsdataverse.org/cheatsheets)**
+
+<details><summary>Every sheet</summary>
 
 | Sheet | Covers |
 | --- | --- |
@@ -158,23 +166,26 @@ sheet ships light and dark on US Letter landscape.
 | [sportypy](https://sportsdataverse.org/cheatsheets/sportypy.pdf) | playing surfaces in Python |
 | [mlbplotR](https://sportsdataverse.org/cheatsheets/mlbplotR.pdf) | MLB logos for ggplot2 + gt |
 
+</details>
+
 ## About the SportsDataverse
 
-The SportsDataverse is led by [Saiem Gilani](https://github.com/saiemgilani), who authors or maintains
-most of the packages above with a community of contributors. The first conversation on the SportsDataverse
-projects happened at the [Carnegie Mellon Sports Analytics Conference](https://www.stat.cmu.edu/cmsac/conference/2021/)
-in 2021, where the paper was selected as the winner of the Data and Software contribution, Open Track, in the
-reproducible research competition.
+The SportsDataverse is led by [Saiem Gilani](https://github.com/saiemgilani), who authors or maintains most of the
+packages above with a community of contributors. The first conversation on the SportsDataverse projects happened at the
+[Carnegie Mellon Sports Analytics Conference](https://www.stat.cmu.edu/cmsac/conference/2021/) in 2021, where the paper
+was selected as the winner of the Data and Software contribution, Open Track, in the reproducible research competition:
+[Slides](https://saiemgilani.github.io/The_SportsDataverse_Initiative/) ·
+[Repository](https://github.com/saiemgilani/The_SportsDataverse_Initiative) ·
+[Paper](https://www.stat.cmu.edu/cmsac/conference/2021/assets/pdf/SaiemGilani.pdf)
 
-The conference materials can be found here:
-  - [Slides](https://saiemgilani.github.io/The_SportsDataverse_Initiative/)
-  - [Repository](https://github.com/saiemgilani/The_SportsDataverse_Initiative)
-  - [Paper](https://www.stat.cmu.edu/cmsac/conference/2021/assets/pdf/SaiemGilani.pdf)
+## Connect with us
 
-<h3 align="left">Connect with us:</h3>
-<a href="https://x.com/sportsdataverse" target="blank"><img src="https://img.shields.io/twitter/follow/sportsdataverse?color=blue&label=%40sportsdataverse&logo=x&style=for-the-badge" alt="sportsdataverse" /></a> <a href="https://x.com/cfbfastR" target="blank"><img src="https://img.shields.io/twitter/follow/cfbfastR?color=blue&label=%40cfbfastR&logo=x&style=for-the-badge" alt="cfbfastR" /></a> <a href="https://x.com/saiemgilani" target="blank"><img src="https://img.shields.io/twitter/follow/saiemgilani?color=blue&label=%40saiemgilani&logo=x&style=for-the-badge" alt="saiemgilani" /></a>
+<a href="https://bsky.app/profile/sportsdataverse.org"><img src="https://img.shields.io/badge/Bluesky-%40sportsdataverse.org-0285FF?style=for-the-badge&logo=bluesky&logoColor=white" alt="Bluesky @sportsdataverse.org"/></a>
+<a href="https://x.com/sportsdataverse"><img src="https://img.shields.io/badge/%40sportsdataverse-000000?style=for-the-badge&logo=x&logoColor=white" alt="X @sportsdataverse"/></a>
+<a href="https://x.com/cfbfastR"><img src="https://img.shields.io/badge/%40cfbfastR-000000?style=for-the-badge&logo=x&logoColor=white" alt="X @cfbfastR"/></a>
+<a href="https://sportsdataverse.org/join"><img src="https://img.shields.io/badge/Newsletter-join-2b6cb0?style=for-the-badge&logo=maildotru&logoColor=white" alt="Join the newsletter"/></a>
 
-Get release notes and new-dataset announcements by email: **[sportsdataverse.org/join](https://sportsdataverse.org/join)**
+Release notes and new-dataset announcements by email: **[sportsdataverse.org/join](https://sportsdataverse.org/join)**
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G0KJ588)
 

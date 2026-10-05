@@ -831,5 +831,32 @@ class Markdown(Base):
                 self.assertIsNone(re.search(r"\d", l), l)
 
 
+class CranDownloads(Base):
+    def test_sums_valid_r_package_names_only(self):
+        seen = []
+
+        def fetch(url):
+            seen.append(url)
+            return [{"package": "hoopR", "downloads": 1_200_000}, {"package": "wehoop", "downloads": 34_567}]
+
+        b = es.cran_downloads_badge(
+            ["sportsdataverse/hoopR", "sportsdataverse/wehoop", "sportsdataverse/sportsdataverse-py"], fetch
+        )
+        self.assertEqual(seen, [es.CRANLOGS + "hoopR,wehoop"])  # a hyphenated name 404s the whole query
+        self.assertEqual((b["label"], b["message"], b["namedLogo"]), ("CRAN downloads", "1.2M", "r"))
+
+    def test_failed_fetch_is_none_never_zero(self):
+        def down(url):
+            raise OSError("cranlogs down")
+
+        self.assertIsNone(es.cran_downloads_badge(["sportsdataverse/hoopR"], down))
+        # cranlogs answers a bad query with an error object, not a list
+        self.assertIsNone(es.cran_downloads_badge(["sportsdataverse/hoopR"], lambda url: {"error": "Invalid query"}))
+        self.assertTrue(any("cranlogs" in w for w in es.WARNINGS))
+
+    def test_human_count(self):
+        self.assertEqual([es.human_count(n) for n in (999, 287_487, 1_234_567)], ["999", "287k", "1.2M"])
+
+
 if __name__ == "__main__":
     unittest.main()

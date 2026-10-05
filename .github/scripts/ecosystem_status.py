@@ -28,6 +28,7 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
 
@@ -60,6 +61,11 @@ COLORS = {
 TOC_START = "<!-- START doctoc generated TOC please keep comment here to allow auto update -->"
 TOC_END = "<!-- END doctoc generated TOC please keep comment here to allow auto update -->"
 RELEASE_TAGS_HEADING = "## sportsdataverse-data release tags — freshness"
+# All-time CRAN downloads (RStudio mirror) per package; one invalid package name
+# makes cranlogs reject the whole query, so only valid R names are sent.
+CRANLOGS = "https://cranlogs.r-pkg.org/downloads/total/2012-10-01:last-day/"
+R_PKG_RE = re.compile(r"^[A-Za-z][A-Za-z0-9.]*[A-Za-z0-9]$")
+CRAN_BADGE = "ecosystem/cran-downloads.json"
 
 
 def warn(msg: str) -> None:
@@ -280,6 +286,28 @@ def badge(label: str, message: str, color: str) -> dict:
         "color": color,
         "namedLogo": "github",
     }
+
+
+def human_count(n: int) -> str:
+    if n >= 1_000_000:
+        return f"{n / 1_000_000:.1f}M"
+    return f"{n // 1000}k" if n >= 1000 else str(n)
+
+
+def cran_downloads_badge(package_repos, fetch=None) -> dict | None:
+    """Combined all-time CRAN downloads of the package repos (repo name = package
+    name; non-R names such as sportsdataverse-py are skipped). None when cranlogs
+    can't be read, so a failed fetch never publishes a zero."""
+    pkgs = sorted({r.split("/")[-1] for r in package_repos if R_PKG_RE.match(r.split("/")[-1])})
+    # cranlogs answers 403 to urllib's default "Python-urllib" User-Agent
+    ua = {"User-Agent": "sportsdataverse-ecosystem-status (+https://sportsdataverse.org/status)"}
+    fetch = fetch or (lambda url: json.load(urllib.request.urlopen(urllib.request.Request(url, headers=ua), timeout=30)))
+    try:
+        total = sum(int(row.get("downloads") or 0) for row in fetch(CRANLOGS + ",".join(pkgs)))
+    except (OSError, ValueError, TypeError, AttributeError) as e:
+        warn(f"cranlogs downloads not read: {e}")
+        return None
+    return {**badge("CRAN downloads", human_count(total), "blue"), "namedLogo": "r"}
 
 
 def wf_badge(wf: dict) -> dict:
@@ -890,6 +918,14 @@ def main() -> int:
     dirs = badge_dirs(snap["repos"])
     summary = build_summary(snap, cfg, NOW, dirs)
     files = badge_files(snap, summary, dirs)
+    cran = cran_downloads_badge(cfg["package_repos"])
+    if cran is None:  # badges/ is wiped below: carry last night's number forward
+        try:
+            cran = json.loads((OUT / "badges" / CRAN_BADGE).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
+    if cran:
+        files[CRAN_BADGE] = cran
     OUT.mkdir(parents=True, exist_ok=True)
     write_json(OUT / "ecosystem.json", snap)
     write_json(OUT / "summary.json", summary)

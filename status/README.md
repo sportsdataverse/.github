@@ -56,6 +56,7 @@ Every file follows the shields endpoint schema: `schemaVersion: 1`, `label`,
 | `through.json` | `through` | `YYYY season` — newest season year in the asset names of those same tags (a span `2025-26` reads as 2026) |
 | `status.json` | `pipeline` | `fresh`, `idle (off-season)`, `stale Nd`, `failing`, `unknown` |
 | `wf-<workflow-file-stem>.json` | the workflow's name | `passing · YYYY-MM-DD`, `failing · …`, `cancelled · …`, `disabled · …`, `no runs` |
+| `ecosystem/cran-downloads.json` | `CRAN downloads` | all-time CRAN downloads (RStudio mirror, via cranlogs) summed over `package_repos` with valid R package names, e.g. `252k`; `namedLogo: "r"`; a failed cranlogs read carries the previous number forward |
 
 `updated`, `through` and `status` exist for every producer in `producers.json`;
 `wf-*` exists for every non-dynamic workflow of every public repo in the snapshot
