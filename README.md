@@ -15,6 +15,12 @@ claude plugin marketplace add sportsdataverse/sportsdataverse
 claude plugin install sdv-toolkit@sportsdataverse
 ```
 
+Update
+```sh
+claude plugin update sdv-toolkit@sportsdataverse
+```
+
+
 ### `sdv-toolkit`
 
 Engineering tooling shared across the SportsDataverse Python + R repos — install once,
