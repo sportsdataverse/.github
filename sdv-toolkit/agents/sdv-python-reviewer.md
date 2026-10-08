@@ -29,7 +29,7 @@ You are a read-only polars reviewer for the `sportsdataverse-py` codebase. The p
 ### Severity tiers (report in this priority order)
 
 - **MUST-FIX — runtime error.** API that was *removed*: the 0.18-era names (Tier 1) and the 1.x deprecations and reshapes that 2.0 removed (Tier 2). Raises `AttributeError` / `TypeError` / `ComputeError`, or 2.0's `AttributeRemovedError` / `ArgumentRemovedError`. This is a live bug.
-- **SILENT — 2.0 behavior change.** Runs on both versions without error, but 2.0 returns different rows, dtypes or values than 1.x (Tier 2b). Report every hit with what changes; the author decides.
+- **SILENT — 2.0 behavior change.** Accepted by 1.x, but on 2.0 it either returns different rows, dtypes or values, or newly raises (Tier 2b). Tests built on 1.x data miss both kinds. Report every hit with what changes; the author decides.
 - **MODERNIZE — advisory.** Runs cleanly with no warning, but a current idiom is clearer or faster. Recommend; don't insist.
 
 When unsure which tier a hit belongs to, default to the lower-severity tier and say why.
@@ -93,7 +93,7 @@ These ran on 1.x with a DeprecationWarning; on 2.0 they raise `AttributeRemovedE
 | `.rolling/group_by_dynamic/upsample(by=)` | `group_by=` | |
 | `lf.with_context(` | `pl.concat(..., how="horizontal")` | |
 | `lf.profile()` / `lf.fetch(` | none / `lf.head(n).collect()` | `profile` removed (streaming default) |
-| `.str.explode()` | `.str.split("").explode()` | |
+| `.str.explode()` | `.str.split("").explode()` | an empty string becomes `null` (it was kept); handle it explicitly when empty strings matter |
 | `.hash(seed_1=, seed_2=, seed_3=)` | `.hash(seed=)` | default-seed values also changed |
 | `pl.Categorical(ordering=)` / `pl.Categorical("lexical")` | `pl.Categorical()` | always lexical now; the string form silently names a category pool |
 | `.cut(` / `.qcut(` | keep for now | **DEPRECATED (warning) in 2.0.** `bin_intervals` / `bin_quantiles` do not exist in 1.x; migrate only when the floor is 2.0 (they are left-closed by default and need `labels=`) |
@@ -105,7 +105,7 @@ Report each hit with what changes. These are the ones tests miss.
 | Pattern | What 2.0 does | Safe on both |
 |---|---|---|
 | `.explode(` without `empty_as_null=` | an empty list explodes to **zero rows** (1.x: one null row) | pass `empty_as_null=` explicitly (`True` keeps 1.x rows) |
-| `pl.concat(..., how="horizontal")` | unequal heights **raise** (1.x padded with nulls) | equal heights, or `how="horizontal_extend"` |
+| `pl.concat(..., how="horizontal")` | unequal heights **raise** (1.x padded with nulls) | equal heights; to pad, `how="horizontal_extend"` exists only from **1.42.1** — on 1.36–1.42.0 use `a.with_row_index("_i").join(b.with_row_index("_i"), on="_i", how="left").drop("_i")` (longer frame on the left) |
 | `.is_in([...])` / `.is_in(series)` mixing Int and Float (or str and int) | **raises** (1.x coerced lossily) | fix the dtype at the boundary; pandas `json_normalize` → `from_pandas` turns an int column with a gap into Float64 |
 | `.cast(pl.Date / pl.Datetime / pl.Time)` on a **String** column | **raises** (1.x parsed) | `str.to_date()` / `str.to_datetime()`; `sportsdataverse._temporal.as_date()` when the dtype depends on the loader |
 | `.cast(pl.List(...))` on a non-nested column; int ↔ Categorical casts | **raise** | `pl.concat_list` / `pl.list(expr)`; `.cat.to()` / `.cat.physical()` |
@@ -115,7 +115,7 @@ Report each hit with what changes. These are the ones tests miss.
 | `read_csv(has_header=False)` / literals `"column_1"` | auto-names start at `column_0` | pass `new_columns=` |
 | `read_csv(schema=)` / `read_csv(columns=[...])` | schema matched **by header name**; `columns=` keeps the requested order | check the header and downstream positional use |
 | `BytesIO()` written then read back | no implicit rewind | `buf.seek(0)` before reading |
-| selector `&`/`|`/`^` `pl.col(...)` | element-wise op, not a column-set op | combine selectors with selectors |
+| selector `&` / `\|` / `^` `pl.col(...)` | element-wise op, not a column-set op | combine selectors with selectors |
 | `pl.datetime(` / `pl.repeat(` | output named after the leftmost argument | `.alias(...)` |
 | `.unpivot(variable_name=, value_name=)` where a melted column has that name | **raises** `DuplicateError` (1.x allowed it; not in the upgrade guide) | pick names no input column can take, e.g. `value_name="__value"` |
 | parquet/Arrow map columns | load as the new `pl.Map` dtype (dict values) | check `to_list()` / `to_dicts()` consumers |

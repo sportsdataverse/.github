@@ -181,7 +181,7 @@ result = pl.concat([df1, df2], how="diagonal")
 df1 = pl.DataFrame({"a": [1, 2, 3]})
 df2 = pl.DataFrame({"b": [4, 5, 6]})
 
-# Stack columns (2.0 requires equal heights; how="horizontal_extend" pads the shorter frame with nulls)
+# Stack columns (2.0 requires equal heights; how="horizontal_extend", polars 1.42.1+, pads the shorter frame with nulls)
 result = pl.concat([df1, df2], how="horizontal")
 # Result: 3 rows, columns a and b
 ```

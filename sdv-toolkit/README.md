@@ -23,8 +23,8 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-learn` | Promote a durable session finding into the right toolkit surface, with its detection test. |
 | `/sdv-model-build` | Runs an oracle-gated model build to completion: capture the oracle, worktree, harness, per-task TDD, the never-lower gates, league-shim parity, close-out. Renamed from sdv-model-spine in 0.8.0. |
 | `/sdv-modeling` | The single modeling reference, 8.4k lines across 22 reference files plus 7 per-sport inventories: which method fits, what data feeds it, what was tried, how to write the fit, which learner to pick, how to explain it, how to put an honest interval on it, how to pool across entities, what the literature says, how to play a Kaggle-style leaderboard with clean leak-free inputs, how to work with tracking data and computer vision, how to model against betting markets, and how to transform, combine, generate and stack features so more real signal reaches the model. |
-| `/sdv-polars` | High-performance polars DataFrame patterns for ETL and analytics -- lazy queries, streaming, and Arrow interop. |
-| `/sdv-port` | Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures. |
+| `/sdv-polars` | High-performance polars DataFrame patterns for ETL and analytics -- lazy queries, streaming, and Arrow interop; code runs on polars 1.x and 2.x. |
+| `/sdv-port` | Port logic between R, Python, and pandas/polars (1.x and 2.x), parity-test-first against real fixtures. |
 | `/sdv-python-performance-optimization` | Profile and optimize Python code with cProfile and memory profilers to find and fix performance bottlenecks. |
 | `/sdv-regen-docs` | Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release. |
 | `/sdv-reprocess` | Rebuild a -raw corpus after an sdv-py change: gather the PRs, lock + SCHEMA_REV bump, clear the runway, launch the reprocess chain, recover, close out. |
@@ -45,5 +45,5 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `sdv-model-reviewer` | Audit new model/validation code: gates, leakage boundary, metric fit, silent no-op, sklearn contract, lineage, oracle joins. |
 | `sdv-paper-reviewer` | Hostile-referee review of a paper or abstract against its own code, numbers and history: holdout prior access, claim-to-evidence, cluster-consistent inference, benchmark integrity, reproducibility from a clean clone, figures, citations verified against sources, venue rules. |
 | `sdv-parity-reviewer` | Audit a cross-language port for ID-dtype, regex, indexing, null-semantics, and numeric-fidelity bug classes. |
-| `sdv-python-reviewer` | Python review by lens: polars \| http \| parser-contract \| docstring. |
+| `sdv-python-reviewer` | Python review by lens: polars (1.x + 2.x hazards) \| http \| parser-contract \| docstring. |
 | `sdv-r-reviewer` | R review by lens; owns roxygen/pkgdown/parity, routes general R concerns upstream. |

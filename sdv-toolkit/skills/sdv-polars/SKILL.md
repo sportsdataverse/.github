@@ -263,7 +263,7 @@ Stack DataFrames:
 # Vertical (stack rows)
 pl.concat([df1, df2], how="vertical")
 
-# Horizontal (add columns) — 2.0 requires equal heights; how="horizontal_extend" pads with nulls
+# Horizontal (add columns) — 2.0 requires equal heights; how="horizontal_extend" (polars 1.42.1+) pads with nulls
 pl.concat([df1, df2], how="horizontal")
 
 # Diagonal (union with different schemas)

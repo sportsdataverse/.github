@@ -73,7 +73,7 @@ target is polars `main`, which runs on both 1.x and 2.x. This direction is entir
 | `pd.merge(a, b, how="outer")` | `a.join(b, on="k", how="full", coalesce=True)` |
 | `df.merge(o, left_on=, right_on=)` | `df.join(o, left_on=, right_on=)` |
 | `pd.concat([a, b])` (stack rows) | `pl.concat([a, b])` — use `how="diagonal_relaxed"` when schemas differ |
-| `pd.concat([a, b], axis=1)` (cols) | `pl.concat([a, b], how="horizontal")` |
+| `pd.concat([a, b], axis=1)` (cols) | `pl.concat([a, b], how="horizontal")` — **equal heights only** on 2.0 (pandas aligns on the index and pads). To pad: `how="horizontal_extend"` (1.42.1+) or `a.with_row_index("_i").join(b.with_row_index("_i"), on="_i", how="left").drop("_i")` (longer frame on the left) |
 
 ### Missing data (null vs NaN — read shift #3)
 | pandas | polars |
