@@ -118,7 +118,7 @@ Report each hit with what changes. These are the ones tests miss.
 | selector `&` / `\|` / `^` `pl.col(...)` | element-wise op, not a column-set op | combine selectors with selectors |
 | `pl.datetime(` / `pl.repeat(` | output named after the leftmost argument | `.alias(...)` |
 | `.unpivot(variable_name=, value_name=)` where a melted column has that name | **raises** `DuplicateError` (1.x allowed it; not in the upgrade guide) | pick names no input column can take, e.g. `value_name="__value"` |
-| `pl.read_parquet(url)` / `pl.scan_parquet(url)` / `pl.read_parquet_schema(url)` (and the `_ipc` twins) on a GitHub **release URL** | **raises** `OSError ... 501 Not Implemented`: 2.0's own HTTP reader asks for the footer with a suffix range (`Range: bytes=-N`), which the release CDN refuses (1.x worked; not in the upgrade guide). Inside a best-effort `try/except` it fails **silently** (a drift gate that returns `None` goes dark) | `pl.read_parquet(url, use_pyarrow=True)` (1.x and 2.x, with or without fsspec); footer only: `pl.read_parquet_schema(fsspec.open(url, "rb").open())`. A local path or `BytesIO` is fine |
+| `pl.read_parquet(url)` / `pl.scan_parquet(url)` / `pl.read_parquet_schema(url)` on a GitHub **release URL** (verified for parquet; IPC readers are untested, and `scan_ipc` has no `use_pyarrow`) | **raises** `OSError ... 501 Not Implemented`: 2.0's own HTTP reader asks for the footer with a suffix range (`Range: bytes=-N`), which the release CDN refuses (1.x worked; not in the upgrade guide). Inside a best-effort `try/except` it fails **silently** (a drift gate that returns `None` goes dark) | `pl.read_parquet(url, use_pyarrow=True)` (1.x and 2.x, with or without fsspec); footer only: `pl.read_parquet_schema(fsspec.open(url, "rb").open())`. A local path or `BytesIO` is fine |
 | parquet/Arrow map columns | load as the new `pl.Map` dtype (dict values) | check `to_list()` / `to_dicts()` consumers |
 
 ### Tier 3 — MODERNIZE / performance advisories (no warning, but worth a nudge)
@@ -147,8 +147,9 @@ grep -nE "\.melt\(|\.pivot\([^)]*columns=|streaming=True|\.map_dict\(|\.clip_min
 
 # Tier 2b — SILENT 2.0 behavior changes (review each hit)
 grep -nE "\.explode\(|how=['\"]horizontal['\"]|\.is_in\(|\.cast\(pl\.(Date|Datetime|Time|List|Categorical|Enum)\b|pl\.DataFrame\(\)\.|\.hash(_rows)?\(|has_header=False|['\"]column_1['\"]|BytesIO\(\)|pl\.(datetime|repeat)\(" <file>
-# remote reads by polars' own reader (2.0 raises 501 on GitHub release URLs) -- keep hits without use_pyarrow=True whose argument is a URL
-grep -nE "pl\.(read|scan)_(parquet|ipc)(_schema)?\([^)]*(http|url|URL|release|asset)" <file> | grep -v "use_pyarrow=True"
+# remote parquet reads by polars' own reader (2.0 raises 501 on GitHub release URLs) -- keep hits without use_pyarrow=True whose argument is a URL
+# multi-line calls: also read the full argument list of every read_parquet( / scan_parquet( / read_parquet_schema( call
+grep -nE "pl\.(read|scan)_parquet(_schema)?\([^)]*(http|url|URL|release|asset)" <file> | grep -v "use_pyarrow=True"
 
 # Tier 2 — ambiguous tokens (CONFIRM the receiver is a polars Expr/Series/DataFrame before flagging)
 grep -nE "\.take\(|\.map\(|\.apply\(|\.replace\([^)]*(default=|return_dtype=)|\.shift\([^)]*periods=" <file>
