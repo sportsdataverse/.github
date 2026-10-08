@@ -1,6 +1,6 @@
 ---
 name: sdv-python-reviewer
-description: Use after writing or editing Python in sdv-py, dispatched with a lens. Lenses — polars (code must run on both polars 1.x and 2.x: pin >=1.0,<3, the lock resolves 2.0 on Python >=3.10 and 1.36 on 3.9; flags MUST-FIX removed API that raises — 0.18-era names such as groupby/with_row_count/apply/pl.count/cumsum/set_at_idx/how=outer/str.strip, the 1.x deprecations 2.0 removed such as melt/pivot-columns/collect-streaming/map_dict/min_periods/str.concat/join_nulls, and 2.0 reshapes such as list.to_struct(upper_bound=) — SILENT 2.0 behavior changes such as explode on empty lists, horizontal-concat heights, is_in dtype mixing, String->Date casts, zero-width frames and hash values, and perf advisories such as map_elements UDFs and eager reads in hot paths, plus the bool-mask, lookaround-regex, and numpy-scalar conventions); http (dl_utils.download and capture/crawl retry, pooling, backoff, and bounding conventions); parser-contract (the universal ESPN parser contract and ENDPOINT_PARSERS coverage); docstring (Google-style napoleon Args/Returns/Raises/Example and See-Also completeness, and raw >>> doctest prompts). Read-only; reports findings with file:line.
+description: Use after writing or editing Python in sdv-py, dispatched with a lens. Lenses — polars (code must run on both polars 1.x and 2.x: pin >=1.0,<3, the lock resolves 2.0 on Python >=3.10 and 1.36 on 3.9; flags MUST-FIX removed API that raises — 0.18-era names such as groupby/with_row_count/apply/pl.count/cumsum/set_at_idx/how=outer/str.strip, the 1.x deprecations 2.0 removed such as melt/pivot-columns/collect-streaming/map_dict/min_periods/str.concat/join_nulls, and 2.0 reshapes such as list.to_struct(upper_bound=) — SILENT 2.0 behavior changes such as explode on empty lists, horizontal-concat heights, is_in dtype mixing, String->Date casts, zero-width frames, hash values, and polars-native reads of a GitHub release URL (HTTP 501), and perf advisories such as map_elements UDFs and eager reads in hot paths, plus the bool-mask, lookaround-regex, and numpy-scalar conventions); http (dl_utils.download and capture/crawl retry, pooling, backoff, and bounding conventions); parser-contract (the universal ESPN parser contract and ENDPOINT_PARSERS coverage); docstring (Google-style napoleon Args/Returns/Raises/Example and See-Also completeness, and raw >>> doctest prompts). Read-only; reports findings with file:line.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -118,12 +118,13 @@ Report each hit with what changes. These are the ones tests miss.
 | selector `&` / `\|` / `^` `pl.col(...)` | element-wise op, not a column-set op | combine selectors with selectors |
 | `pl.datetime(` / `pl.repeat(` | output named after the leftmost argument | `.alias(...)` |
 | `.unpivot(variable_name=, value_name=)` where a melted column has that name | **raises** `DuplicateError` (1.x allowed it; not in the upgrade guide) | pick names no input column can take, e.g. `value_name="__value"` |
+| `pl.read_parquet(url)` / `pl.scan_parquet(url)` / `pl.read_parquet_schema(url)` on a GitHub **release URL** (verified for parquet; IPC readers are untested, and `scan_ipc` has no `use_pyarrow`) | **raises** `OSError ... 501 Not Implemented`: 2.0's own HTTP reader asks for the footer with a suffix range (`Range: bytes=-N`), which the release CDN refuses (1.x worked; not in the upgrade guide). Inside a best-effort `try/except` it fails **silently** (a drift gate that returns `None` goes dark) | `pl.read_parquet(url, use_pyarrow=True)` (1.x and 2.x, with or without fsspec); footer only: `pl.read_parquet_schema(fsspec.open(url, "rb").open())`. A local path or `BytesIO` is fine |
 | parquet/Arrow map columns | load as the new `pl.Map` dtype (dict values) | check `to_list()` / `to_dicts()` consumers |
 
 ### Tier 3 — MODERNIZE / performance advisories (no warning, but worth a nudge)
 
 - **`.map_elements(` is a Python UDF.** It is the *correct* replacement for the removed `.apply` (Tier 1), so it is **not a bug** — but every call serializes execution and defeats polars' vectorized, multi-threaded engine. For each hit, ask: can this be expressed with native expressions (`pl.when().then().otherwise()`, arithmetic, `.str.*`, `.list.*`, `.dt.*`)? If yes, recommend the native form. If the UDF is genuinely irreducible, leave it but confirm `return_dtype=` is set.
-- **Eager read in a hot path.** `pl.read_csv(` / `pl.read_parquet(` immediately followed by `.filter(` / `.select(`, or inside a loop, leaves predicate/projection pushdown on the table. Recommend `pl.scan_csv(` / `pl.scan_parquet(` + lazy chain + `.collect()` so polars only materializes the needed rows/cols.
+- **Eager read in a hot path.** `pl.read_csv(` / `pl.read_parquet(` immediately followed by `.filter(` / `.select(`, or inside a loop, leaves predicate/projection pushdown on the table. Recommend `pl.scan_csv(` / `pl.scan_parquet(` + lazy chain + `.collect()` so polars only materializes the needed rows/cols. Not for a remote GitHub release URL: `scan_parquet(url)` raises on 2.0 (see Tier 2b), so keep `read_parquet(url, use_pyarrow=True)` there.
 - **Streaming.** On 2.0 a lazy `.collect()` already runs the streaming engine; on 1.x it needs `engine="streaming"`. Passing `engine="streaming"` explicitly is right for large scans that must stay in batches on both versions. (`collect(streaming=True)` raises on 2.0 — Tier 2.)
 
 ### Always-on correctness checks (project conventions, every review)
@@ -146,6 +147,9 @@ grep -nE "\.melt\(|\.pivot\([^)]*columns=|streaming=True|\.map_dict\(|\.clip_min
 
 # Tier 2b — SILENT 2.0 behavior changes (review each hit)
 grep -nE "\.explode\(|how=['\"]horizontal['\"]|\.is_in\(|\.cast\(pl\.(Date|Datetime|Time|List|Categorical|Enum)\b|pl\.DataFrame\(\)\.|\.hash(_rows)?\(|has_header=False|['\"]column_1['\"]|BytesIO\(\)|pl\.(datetime|repeat)\(" <file>
+# remote parquet reads by polars' own reader (2.0 raises 501 on GitHub release URLs) -- keep hits without use_pyarrow=True whose argument is a URL
+# multi-line calls: also read the full argument list of every read_parquet( / scan_parquet( / read_parquet_schema( call
+grep -nE "pl\.(read|scan)_parquet(_schema)?\([^)]*(http|url|URL|release|asset)" <file> | grep -v "use_pyarrow=True"
 
 # Tier 2 — ambiguous tokens (CONFIRM the receiver is a polars Expr/Series/DataFrame before flagging)
 grep -nE "\.take\(|\.map\(|\.apply\(|\.replace\([^)]*(default=|return_dtype=)|\.shift\([^)]*periods=" <file>
