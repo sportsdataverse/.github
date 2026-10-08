@@ -232,6 +232,12 @@ result = lf.filter(...).select(...).collect()
 ```python
 df = pl.read_parquet("file.parquet")
 df.write_parquet("output.parquet")
+
+# A GitHub release URL: always use_pyarrow=True. polars 2.0's own reader asks for the
+# footer with a suffix range, which the release CDN answers with 501 (1.x worked).
+df = pl.read_parquet(url, use_pyarrow=True)
+# footer-only schema of a release asset (bounded ranges; needs fsspec[http])
+schema = pl.read_parquet_schema(fsspec.open(url, "rb").open())
 ```
 
 **JSON:**
