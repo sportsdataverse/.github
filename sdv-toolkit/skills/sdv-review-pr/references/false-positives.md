@@ -18,7 +18,7 @@ question named in the right-hand column.
 | "Fix" a verbatim R port so it diverges from the R oracle (mean-of-rates, coalesce order, defaults) | Parity against R output is the contract | Open an upstream issue; partition assertions if a divergence is deliberate |
 | Edit verbatim raw captures or immutable run-log manifests | Captures are evidence; editing them corrupts provenance | none |
 | `btoa` / `AbortSignal.timeout` "may not exist"; Next.js route `params` "is not a Promise" | Node ≥22 and Workers have both; Next 15+/16 `params` is a Promise | none |
-| "polars `str.replace` defaults to literal"; "avoid `empty_as_null` before polars 1.36" | Wrong: it defaults to regex; the lock pins polars 1.42 | Check the installed version before any polars API claim |
+| "polars `str.replace` defaults to literal"; "avoid `empty_as_null` before polars 1.36" | Wrong: it defaults to regex; sdv-py's lock pins polars 2.0 (1.36.1 on Python 3.9), and both have `empty_as_null` | Check the installed version before any polars API claim |
 | Route every HTTP read through `dl_utils.download()` | Wrong for remote columnar (Arrow/parquet) reads and status-based retry; sdv-py CLAUDE.md documents the exception | Status classification (PY-10) |
 | Re-level markdown headings in NEWS.md / docs against file-wide convention | Breaks the file's existing structure | none |
 | Apply a repo rule outside its scope ("no HTTP in this repo" on a capture-only path; a sibling repo's sparse-checkout list) | Rules have scopes | Quote the rule's scope before citing it |

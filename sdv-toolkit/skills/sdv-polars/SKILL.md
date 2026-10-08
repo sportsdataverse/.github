@@ -3,7 +3,7 @@ name: sdv-polars
 description: High-performance DataFrame library for Python ETL, analytics, and pandas migration. Use for expression-based data manipulation with lazy query optimization, parallel execution, streaming out-of-core processing, Arrow interoperability, and optional GPU execution.
 license: https://github.com/pola-rs/polars/blob/main/LICENSE
 allowed-tools: Read
-compatibility: Requires Python 3.10+ for polars 1.41.x. Install with uv pip install; optional extras enable Excel, database, cloud, pandas/NumPy, and GPU integrations.
+compatibility: polars 2.x requires Python 3.10+ (1.36 is the last release for 3.9); SDV code must run on both 1.x and 2.x. Install with uv pip install; optional extras enable Excel, database, cloud, pandas/NumPy, and GPU integrations.
 metadata:
   version: "1.1"
   skill-author: K-Dense Inc.
@@ -21,12 +21,12 @@ Polars is a lightning-fast DataFrame library for Python and Rust built on Apache
 
 Install the current stable Polars release verified during this refresh:
 ```bash
-uv pip install "polars==1.41.2"
+uv pip install "polars==2.0.0"
 ```
 
 Install optional integrations only when needed:
 ```bash
-uv pip install "polars[excel,database,fsspec,pandas,numpy]==1.41.2"
+uv pip install "polars[excel,database,fsspec,pandas,numpy]==2.0.0"
 ```
 
 Basic DataFrame creation and operations:
@@ -263,7 +263,7 @@ Stack DataFrames:
 # Vertical (stack rows)
 pl.concat([df1, df2], how="vertical")
 
-# Horizontal (add columns)
+# Horizontal (add columns) — 2.0 requires equal heights; how="horizontal_extend" pads with nulls
 pl.concat([df1, df2], how="horizontal")
 
 # Diagonal (union with different schemas)
@@ -337,7 +337,7 @@ For comprehensive migration guide, load `references/pandas_migration.md`.
    - Use `.map_elements()` only when necessary
    - Prefer native Polars operations
 
-3. **Use streaming for very large data:**
+3. **Use streaming for very large data** (the default for lazy `collect()` in 2.0; explicit on 1.x):
    ```python
    lf.collect(engine="streaming")
    ```

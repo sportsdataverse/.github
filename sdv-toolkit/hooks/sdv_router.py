@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 ARCHETYPE_BINDINGS = {
-    "sdv-py": "polars 1.x only · codegen output is never hand-edited · returns descriptions "
+    "sdv-py": "polars 1.x + 2.x (code runs on both) · codegen output is never hand-edited · returns descriptions "
     "live in manual_column_descriptions.yaml · pin one dtype per join key",
     "raw": "scraping only · commit per-game JSON · keep parallelism low (ESPN Core v2 403s) "
     "· never re-scrape captured games",

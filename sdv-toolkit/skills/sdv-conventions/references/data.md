@@ -62,5 +62,6 @@
   dependency into its OWN `.venv`. Editing the local sdv-py checkout changes
   nothing for that repo — mutate
   `{repo}/.venv/Lib/site-packages/sportsdataverse/...` instead, then restore.
-- polars 1.x; snake_case columns; one canonical dtype per id at the
+- polars 1.x and 2.x (code runs on both; a repo that depends on sdv-py leaves the polars range to it, and no
+  repo adds its own `<2` cap); snake_case columns; one canonical dtype per id at the
   boundary; empty frames carry the documented schema.

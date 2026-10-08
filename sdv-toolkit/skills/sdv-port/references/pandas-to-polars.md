@@ -1,7 +1,7 @@
-# Direction: pandas → polars 1.x
+# Direction: pandas → polars (1.x and 2.x)
 
 Source is pandas/numpy code (a live pandas parser/loader, or the sdv-py `0.36-live` branch);
-target is polars 1.x `main`. This direction is entirely inside sdv-py, so the review gate is
+target is polars `main`, which runs on both 1.x and 2.x. This direction is entirely inside sdv-py, so the review gate is
 `sdv-python-reviewer` with the `polars` lens plus `sdv-parity-reviewer`.
 
 > **Sibling directions — don't reach for this file if:** the source is **R** (use
@@ -23,10 +23,10 @@ target is polars 1.x `main`. This direction is entirely inside sdv-py, so the re
    `drop_nulls` **and** `fill_nan`/`is_nan`. Translating only the null half is the single
    most common silent bug.
 
-## Idiom map (pandas → polars 1.x)
+## Idiom map (pandas → polars)
 
 ### Select / filter / sort
-| pandas | polars 1.x |
+| pandas | polars |
 |---|---|
 | `df[df.x > 0]` | `df.filter(pl.col("x") > 0)` |
 | `df.loc[mask, "c"]` | `df.filter(mask).select("c")` |
@@ -37,7 +37,7 @@ target is polars 1.x `main`. This direction is entirely inside sdv-py, so the re
 | `df.nlargest(k, "x")` | `df.top_k(k, by="x")` |
 
 ### Create / mutate columns
-| pandas | polars 1.x |
+| pandas | polars |
 |---|---|
 | `df["c"] = expr` | `df = df.with_columns(expr.alias("c"))` |
 | `df.assign(c=..., d=...)` | `df.with_columns(c=..., d=...)` |
@@ -50,14 +50,14 @@ target is polars 1.x `main`. This direction is entirely inside sdv-py, so the re
 | `df.apply(fn, axis=1)` | prefer a vectorized expr; last resort `pl.struct(...).map_elements(fn, return_dtype=...)` |
 
 ### Conditionals
-| pandas / numpy | polars 1.x |
+| pandas / numpy | polars |
 |---|---|
 | `np.where(cond, a, b)` | `pl.when(cond).then(a).otherwise(b)` |
 | `np.select(conds, choices, default)` | chained `pl.when(c1).then(v1).when(c2).then(v2)...otherwise(default)` |
 | `df["x"].clip(lo, hi)` | `pl.col("x").clip(lo, hi)` |
 
 ### Group-by / window
-| pandas | polars 1.x |
+| pandas | polars |
 |---|---|
 | `df.groupby("g").agg({"x": "sum"})` | `df.group_by("g").agg(pl.col("x").sum())` |
 | `df.groupby("g")["x"].transform("sum")` | `pl.col("x").sum().over("g")` (keeps row count) |
@@ -67,7 +67,7 @@ target is polars 1.x `main`. This direction is entirely inside sdv-py, so the re
 | `df["x"].rolling(3).mean()` | `pl.col("x").rolling_mean(window_size=3)` |
 
 ### Join / concat
-| pandas | polars 1.x |
+| pandas | polars |
 |---|---|
 | `df.merge(o, on="k", how="left")` | `df.join(o, on="k", how="left")` |
 | `pd.merge(a, b, how="outer")` | `a.join(b, on="k", how="full", coalesce=True)` |
@@ -76,7 +76,7 @@ target is polars 1.x `main`. This direction is entirely inside sdv-py, so the re
 | `pd.concat([a, b], axis=1)` (cols) | `pl.concat([a, b], how="horizontal")` |
 
 ### Missing data (null vs NaN — read shift #3)
-| pandas | polars 1.x |
+| pandas | polars |
 |---|---|
 | `df.fillna(0)` | `df.fill_null(0)` — and `.fill_nan(0)` if floats carry NaN |
 | `df.dropna()` | `df.drop_nulls()` |
@@ -85,7 +85,7 @@ target is polars 1.x `main`. This direction is entirely inside sdv-py, so the re
 | `df["x"].ffill()` | `pl.col("x").forward_fill()` |
 
 ### Strings (Rust regex — **no lookaround**)
-| pandas | polars 1.x |
+| pandas | polars |
 |---|---|
 | `s.str.contains(pat)` | `pl.col("s").str.contains(pat)` |
 | `s.str.replace(a, b)` / `replace(..., regex=True)` | `.str.replace(a, b)` (first) / `.str.replace_all(a, b)` |
@@ -95,14 +95,14 @@ target is polars 1.x `main`. This direction is entirely inside sdv-py, so the re
 | `a + " " + b` (concat) | `pl.concat_str(["a", "b"], separator=" ")` |
 
 ### Dates
-| pandas | polars 1.x |
+| pandas | polars |
 |---|---|
 | `pd.to_datetime(s, format=f)` | `pl.col("s").str.to_datetime(f)` (or `.str.to_date(f)`) |
 | `s.dt.year` (attribute) | `pl.col("s").dt.year()` (**method call**) |
 | `s.dt.strftime(f)` | `pl.col("s").dt.strftime(f)` |
 
 ### Reshape / interop
-| pandas | polars 1.x |
+| pandas | polars |
 |---|---|
 | `df.pivot_table(index=, columns=, values=, aggfunc=)` | `df.pivot(on=, index=, values=, aggregate_function=)` — first arg is **`on=`** (was `columns=` pre-1.0) |
 | `df.melt(id_vars=, value_vars=)` | `df.unpivot(index=, on=, variable_name=, value_name=)` — `melt` **deprecated at 1.0** |
@@ -135,8 +135,9 @@ target is polars 1.x `main`. This direction is entirely inside sdv-py, so the re
   regex even though Python's `re` (which pandas `.str` methods use) supports it. Stop a
   capture at a stopword with the inline case toggle: `(?i)prefix(?-i: NAMES)`.
 - **Explicit boolean masks.** `pl.col("c") == True`, never bare `pl.col("c")` / `~pl.col(...)`.
-- **1.x surface only.** No `groupby` / `with_row_count` / `.apply(` / `pl.count()` /
-  `cumsum` / `set_at_idx` / `how="outer"` / `str.strip` / `shift_and_fill`.
+- **1.x/2.x surface only.** No `groupby` / `with_row_count` / `.apply(` / `pl.count()` /
+  `cumsum` / `set_at_idx` / `how="outer"` / `str.strip` / `shift_and_fill`, and follow
+  the 2.0 rules (explicit `explode(empty_as_null=)`, no String->Date `cast`, matching `is_in` dtypes, `list.to_struct(fields=)`).
 - **Float64 model outputs.** Cast explicitly; a `pl.Series(numpy_f32)` silently downcasts.
 - **Scalar from numpy** is `pl.lit(np_array).first()`, not `pl.lit(np_array)` (1.x no longer
   auto-broadcasts).
