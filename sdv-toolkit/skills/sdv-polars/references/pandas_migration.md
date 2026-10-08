@@ -132,7 +132,7 @@ df.with_columns(
 | Operation | Pandas | Polars |
 |-----------|--------|--------|
 | Vertical | `pd.concat([df1, df2], axis=0)` | `pl.concat([df1, df2], how="vertical")` |
-| Horizontal | `pd.concat([df1, df2], axis=1)` | `pl.concat([df1, df2], how="horizontal")` |
+| Horizontal | `pd.concat([df1, df2], axis=1)` | `pl.concat([df1, df2], how="horizontal")` — equal heights required in 2.0 (pandas aligns and pads; `how="horizontal_extend"`, 1.42.1+, pads) |
 
 ### Sorting
 

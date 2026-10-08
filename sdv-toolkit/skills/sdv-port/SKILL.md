@@ -19,7 +19,7 @@ a surprise after it.
 |---|---|---|
 | `r-to-python` | R package (nflfastR / cfbfastR / cfbscrapR / baseballr / hoopR / bigballR) → sdv-py (polars) | `references/r-to-python.md` |
 | `python-to-r` | sdv-py (polars) → an SDV R package (cfbfastR / hoopR / wehoop / baseballr / fastRhockey / softballR) | `references/python-to-r.md` |
-| `pandas-to-polars` | pandas/numpy (incl. the sdv-py `0.36-live` branch) → polars 1.x `main` | `references/pandas-to-polars.md` |
+| `pandas-to-polars` | pandas/numpy (incl. the sdv-py `0.36-live` branch) → polars (1.x and 2.x) `main` | `references/pandas-to-polars.md` |
 
 Read the matching reference file now — it has the canonical source locations, the idiom
 map, and the bug-class table for your direction. Steps 1–6 below are the spine that's

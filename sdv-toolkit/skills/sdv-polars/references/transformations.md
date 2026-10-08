@@ -181,7 +181,7 @@ result = pl.concat([df1, df2], how="diagonal")
 df1 = pl.DataFrame({"a": [1, 2, 3]})
 df2 = pl.DataFrame({"b": [4, 5, 6]})
 
-# Stack columns
+# Stack columns (2.0 requires equal heights; how="horizontal_extend", polars 1.42.1+, pads the shorter frame with nulls)
 result = pl.concat([df1, df2], how="horizontal")
 # Result: 3 rows, columns a and b
 ```
@@ -345,8 +345,8 @@ df = pl.DataFrame({
     "values": [[1, 2, 3], [4, 5]]
 })
 
-# Explode list into rows
-exploded = df.explode("values")
+# Explode list into rows (set empty_as_null explicitly: 2.0 drops empty lists by default, 1.x kept a null row)
+exploded = df.explode("values", empty_as_null=False)
 # Result:
 # id | values
 # 1  | 1

@@ -54,7 +54,7 @@
     {
       "name": "sdv-port",
       "kind": "skill",
-      "purpose": "Port logic between R, Python, and pandas/polars, parity-test-first against real fixtures.",
+      "purpose": "Port logic between R, Python, and pandas/polars (1.x and 2.x), parity-test-first against real fixtures.",
       "archetypes": [
         "sdv-py",
         "r-package",
@@ -162,7 +162,7 @@
     {
       "name": "sdv-python-reviewer",
       "kind": "agent",
-      "purpose": "Python review by lens: polars | http | parser-contract | docstring.",
+      "purpose": "Python review by lens: polars (1.x + 2.x hazards) | http | parser-contract | docstring.",
       "archetypes": [
         "sdv-py",
         "raw",
@@ -429,7 +429,7 @@
     {
       "name": "sdv-polars",
       "kind": "skill",
-      "purpose": "High-performance polars DataFrame patterns for ETL and analytics -- lazy queries, streaming, and Arrow interop.",
+      "purpose": "High-performance polars DataFrame patterns for ETL and analytics -- lazy queries, streaming, and Arrow interop; code runs on polars 1.x and 2.x.",
       "archetypes": [
         "sdv-py",
         "data"

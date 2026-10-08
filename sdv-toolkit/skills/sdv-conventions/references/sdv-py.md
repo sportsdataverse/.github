@@ -1,6 +1,7 @@
 # sdv-py conventions
 
-- polars 1.x modern API only: `group_by` not `groupby`, `with_row_index`,
+- polars 1.x and 2.x (`>=1.0,<3`; the lock is 2.0, 1.36 on Python 3.9), so code runs on both;
+  modern API only, plus the 2.0 rules (explicit `explode(empty_as_null=)`, no String->Date `cast`, matching `is_in` dtypes, `list.to_struct(fields=)`): `group_by` not `groupby`, `with_row_index`,
   `map_elements(f, return_dtype=)`, `pl.len()`, `how="full", coalesce=True`,
   `cum_sum`, `str.strip_chars`. A 0.18-era call is a bug, not a style choice.
 - Bool masks explicit: `pl.col("c") == True` / `== False` (not bare `~col`).

@@ -902,7 +902,7 @@ existing package layout govern over this table — read them first.
 
 2. **Build** — a builder module per dataset in `<x>_data_build/` (mirror the
    existing builders' signature/CLI), following Phase 2's stage-numbering and
-   idempotency contract. polars 1.x; snake_case columns; one canonical dtype
+   idempotency contract. polars 1.x/2.x; snake_case columns; one canonical dtype
    per id at the boundary; empty frames carry the documented schema;
    partition output like the released dataset (per-season parquet is the
    norm).

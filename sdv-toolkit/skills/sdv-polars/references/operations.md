@@ -526,8 +526,9 @@ df.with_columns(
     sorted_items=pl.col("items").list.sort()
 )
 
-# Explode lists to rows
-df.explode("items")
+# Explode lists to rows (2.0: an empty list gives zero rows; pass empty_as_null=True to keep a null row,
+# and set it explicitly so 1.x and 2.x agree)
+df.explode("items", empty_as_null=False)
 
 # For element-wise list filtering, use Polars' native list-expression
 # methods with pl.element(); avoid Python callbacks in hot paths.
