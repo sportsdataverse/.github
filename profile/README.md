@@ -48,6 +48,7 @@ pbp = load_cfb_pbp(seasons=[2025])  # a polars DataFrame; return_as_pandas=True 
 ```sh
 # Node.js
 npm install sportsdataverse
+npm install @sportsdataverse/sdvplot @sportsdataverse/sporty @sportsdataverse/sdvtables  # plots and tables
 ```
 
 ## R Packages
@@ -88,7 +89,7 @@ All of them install from [sportsdataverse.r-universe.dev](https://sportsdatavers
 | Package | Covers | Version | Downloads |
 | --- | --- | --- | --- |
 | [sportsdataverse](https://py.sportsdataverse.org/) | 29 leagues across ESPN, NBA/WNBA Stats, HockeyTech, stats.ncaa.org, MLB Statcast and more, plus every release loader and the EP/WP models · [cheat sheet](https://sportsdataverse.org/cheatsheets/sportsdataverse-py.pdf) | [![PyPI version](https://img.shields.io/pypi/v/sportsdataverse?label=PyPI&style=for-the-badge)](https://pypi.org/project/sportsdataverse/) | [![PyPI downloads](https://img.shields.io/pepy/dt/sportsdataverse?label=downloads&color=blue&style=for-the-badge)](https://pepy.tech/project/sportsdataverse) |
-| [sdvplot](https://sdvplot.sportsdataverse.org/) | **New, pre-release:** team logos, wordmarks, headshots and colors for matplotlib, plotnine and table plots ([source](https://github.com/sportsdataverse/sdvplot)) | not yet on PyPI | |
+| [sdvplot](https://sdvplot.sportsdataverse.org/) | **New:** team logos, wordmarks, headshots and colors for matplotlib, plotnine and table plots ([source](https://github.com/sportsdataverse/sdvplot)) | [![PyPI version](https://img.shields.io/pypi/v/sdvplot?label=PyPI&style=for-the-badge)](https://pypi.org/project/sdvplot/) | [![PyPI downloads](https://img.shields.io/pepy/dt/sdvplot?label=downloads&color=blue&style=for-the-badge)](https://pepy.tech/project/sdvplot) |
 | [sportypy](https://sportypy.sportsdataverse.org/) | Regulation playing surfaces in Python, the companion to sportyR · [cheat sheet](https://sportsdataverse.org/cheatsheets/sportypy.pdf) | [![PyPI version](https://img.shields.io/pypi/v/sportypy?label=PyPI&style=for-the-badge)](https://pypi.org/project/sportypy/) | [![PyPI downloads](https://img.shields.io/pepy/dt/sportypy?label=downloads&color=blue&style=for-the-badge)](https://pepy.tech/project/sportypy) |
 | [collegebaseball](https://collegebaseball.readthedocs.io/en/latest/) | College baseball data and analysis (NCAA, Boyd's World) | | |
 | [nwslpy](https://github.com/nwslR/nwslpy) | National Women's Soccer League data | | |
@@ -102,6 +103,16 @@ All of them install from [sportsdataverse.r-universe.dev](https://sportsdatavers
 [![npm](https://img.shields.io/npm/v/sportsdataverse?style=for-the-badge)](https://js.sportsdataverse.org/)  [![npm](https://img.shields.io/npm/dm/sportsdataverse?style=for-the-badge)](https://www.npmjs.com/package/sportsdataverse)
 
 ESPN, 247Sports and NCAA endpoints for Node.js. [**Documentation**](https://js.sportsdataverse.org/) · [**Cheat sheet (PDF)**](https://sportsdataverse.org/cheatsheets/sportsdataverse-js.pdf)
+
+[**sdvplot-js**](https://plot.sportsdataverse.org/) is **new**: the JavaScript and TypeScript port of sdvplot and sdvplotR, in three npm packages ([source](https://github.com/sportsdataverse/sdvplot-js)).
+
+| Package | Covers | Version | Downloads |
+| --- | --- | --- | --- |
+| [@sportsdataverse/sdvplot](https://plot.sportsdataverse.org/api/sdvplot/) | Team identity, colors, logos, wordmarks and headshots, with marks for Observable Plot, d3, React, Chart.js, Plotly, Vega-Lite and ECharts; shot charts and PNG export | [![npm version](https://img.shields.io/npm/v/@sportsdataverse/sdvplot?label=npm&style=for-the-badge)](https://www.npmjs.com/package/@sportsdataverse/sdvplot) | [![npm downloads](https://img.shields.io/npm/dm/@sportsdataverse/sdvplot?style=for-the-badge)](https://www.npmjs.com/package/@sportsdataverse/sdvplot) |
+| [@sportsdataverse/sporty](https://plot.sportsdataverse.org/api/sporty/) | Playing surfaces (courts, rinks, fields) as plain geometry, rendered to SVG, canvas, Observable Plot or d3; the port of sportyR and sportypy | [![npm version](https://img.shields.io/npm/v/@sportsdataverse/sporty?label=npm&style=for-the-badge)](https://www.npmjs.com/package/@sportsdataverse/sporty) | [![npm downloads](https://img.shields.io/npm/dm/@sportsdataverse/sporty?style=for-the-badge)](https://www.npmjs.com/package/@sportsdataverse/sporty) |
+| [@sportsdataverse/sdvtables](https://plot.sportsdataverse.org/api/sdvtables/) | Publication tables: a serializable `TableSpec` rendered to static or interactive HTML and to PNG, with team logos, headshots, colors and themes | [![npm version](https://img.shields.io/npm/v/@sportsdataverse/sdvtables?label=npm&style=for-the-badge)](https://www.npmjs.com/package/@sportsdataverse/sdvtables) | [![npm downloads](https://img.shields.io/npm/dm/@sportsdataverse/sdvtables?style=for-the-badge)](https://www.npmjs.com/package/@sportsdataverse/sdvtables) |
+
+[**Documentation**](https://plot.sportsdataverse.org/)
 
 ## Data releases and status
 
