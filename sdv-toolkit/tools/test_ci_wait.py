@@ -98,13 +98,16 @@ def inline(id, login, body="Consider X", path="a.py", line=3, reply_to=None):
     }
 
 
-def review(login, at=T0_ISO, body="**Actionable comments posted: 1**"):
-    return {
+def review(login, at=T0_ISO, body="**Actionable comments posted: 1**", commit_id=None):
+    r = {
         "user": {"login": login},
         "state": "COMMENTED",
         "submitted_at": at,
         "body": body,
     }
+    if commit_id:
+        r["commit_id"] = commit_id
+    return r
 
 
 def routes(
@@ -124,13 +127,21 @@ def routes(
     return {
         "%s/pulls/%d" % (base, n): pr_ if pr_ is not None else pr(),
         "%s/commits/%s/check-runs?per_page=100" % (base, SHA): checks_ or checks(),
-        "%s/commits/%s/status" % (base, SHA): status_ or status(),
+        "%s/commits/%s/status?per_page=100" % (base, SHA): status_ or status(),
         "%s/issues/%d/comments?per_page=100" % (base, n): list(comments),
         "%s/pulls/%d/comments?per_page=100" % (base, n): list(inline_),
         "%s/pulls/%d/reviews?per_page=100" % (base, n): list(reviews),
         "user": {"login": user},
         "rate_limit": {"resources": {"core": {"reset": reset or 0}}},
     }
+
+
+def add_head(table, repo, sha, checks_, status_=None):
+    """Serve check-runs and status for a second head SHA (a push mid-wait)."""
+    base = "repos/%s/commits/%s" % (repo, sha)
+    table[base + "/check-runs?per_page=100"] = checks_
+    table[base + "/status?per_page=100"] = status_ or status()
+    return table
 
 
 class Seq:
@@ -149,17 +160,22 @@ class FakeGh:
         self.post_ok = post_ok
         self.gets = []
         self.posts = []
+        self.post_times = []
+        self.clock = None
 
     def __call__(self, argv):
         if argv[0] == "pr" or "-X" in argv:
             self.posts.append(argv)
+            self.post_times.append(self.clock.t if self.clock else None)
             return (0, "{}", "") if self.post_ok else (1, "", "HTTP 422")
         path = argv[1]
         self.gets.append(path)
         value = self.table[path]
         if isinstance(value, Seq):
             value = value.next()
-        if isinstance(value, tuple):  # (returncode, stdout, stderr) failure
+        if isinstance(value, BaseException):
+            raise value
+        if isinstance(value, tuple):  # (returncode, stdout, stderr) raw reply
             return value
         return (0, json.dumps(value), "")
 
@@ -180,6 +196,7 @@ class Clock:
 def go(repo, table, *args, start=T0, env=None, post_ok=True):
     fake = FakeGh(table, post_ok=post_ok)
     clock = Clock(start)
+    fake.clock = clock
     out = io.StringIO()
     argv = [repo, "--pr", "7", "--interval", "60s", *args]
     gh = cw.Gh(fake, now=clock.now, sleep=clock.sleep)
@@ -235,6 +252,18 @@ class Verdicts(unittest.TestCase):
         rc, out, _, _ = go(PY, table)
         self.assertEqual(rc, 1)
         self.assertIn("FAILED: ci/legacy", out)
+
+    def test_failed_status_on_page_two_is_not_missed(self):
+        # The combined-status endpoint pages `statuses` (30 by default).
+        page1 = status(*[("ci/ctx-%03d" % i, "success") for i in range(100)])
+        page1["total_count"] = 101
+        table = routes(PY, checks_=GREEN, status_=page1)
+        table["repos/%s/commits/%s/status?per_page=100&page=2" % (PY, SHA)] = status(
+            ("ci/late", "failure")
+        )
+        rc, out, _, _ = go(PY, table)
+        self.assertEqual(rc, 1, out)
+        self.assertIn("FAILED: ci/late", out)
 
     def test_all_green_ready(self):
         table = routes(
@@ -481,15 +510,28 @@ class CopilotRule(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertTrue(out.rstrip().endswith("VERDICT: ready"))
 
-    def test_post_fails_falls_back_then_reports(self):
+    def test_post_fails_asks_user_without_graphql_fallback(self):
+        # `gh pr edit --add-reviewer` is GraphQL: never fall back to it.
         table = self.limited(PY)
         rc, out, fake, _ = go(
             PY, table, "--timeout", "2m", start=T0 + 360, post_ok=False
         )
-        self.assertEqual(len(fake.posts), 2)
-        self.assertEqual(fake.posts[1][:2], ["pr", "edit"])
-        self.assertIn("both failed", out)
+        self.assertEqual(len(fake.posts), 1)
+        self.assertEqual(fake.posts[0][:3], ["api", "-X", "POST"])
+        action = [
+            l for l in out.splitlines() if l.startswith("ACTION:") and "HTTP 422" in l
+        ]
+        self.assertEqual(len(action), 1, out)
         self.assertEqual(rc, 4)
+        self.assertTrue(out.rstrip().endswith("VERDICT: ask-user"))
+
+    def test_requested_copilot_that_never_appears_is_let_go_after_grace(self):
+        # POST succeeded but Copilot never shows in requested_reviewers or reviews.
+        rc, out, fake, clock = go(PY, self.limited(PY), start=T0 + 360)
+        self.assertEqual(len(fake.posts), 1)
+        self.assertEqual(rc, 0)
+        self.assertTrue(out.rstrip().endswith("VERDICT: ready"))
+        self.assertEqual(clock.t, T0 + 360 + 300)  # waited the 5m grace, not --timeout
 
     def test_env_listed_actor_is_allowed(self):
         table = self.limited(PY, user="helper")
@@ -538,6 +580,112 @@ class CopilotRule(unittest.TestCase):
         rc, out, _, clock = go(PY, table, start=T0 + 60)
         self.assertEqual(rc, 4)
         self.assertGreater(clock.t - T0, 300)
+
+
+NEW = "def456"
+
+
+class HeadChanges(unittest.TestCase):
+    def test_push_mid_wait_restarts_the_cap_clock(self):
+        # Push at minute 14; at minute 15 the new head's checks have run 1 minute.
+        table = routes(
+            PY, checks_=checks(run_("slow", status="in_progress")), reviews=[review(CR)]
+        )
+        table["repos/%s/pulls/7" % PY] = Seq(*([pr()] * 14), pr(sha=NEW))
+        add_head(table, PY, NEW, checks(run_("slow", status="in_progress")))
+        rc, out, _, clock = go(PY, table, "--cap", "15m")
+        self.assertIn("head moved abc123 -> def456", out)
+        self.assertEqual(rc, 0)
+        self.assertTrue(out.rstrip().endswith("VERDICT: ready-capped"))
+        self.assertEqual(clock.t - T0, 14 * 60 + 15 * 60)
+
+    def test_push_mid_wait_rearms_the_copilot_rule(self):
+        # Copilot reviewed the OLD head; after the push both bots are still
+        # limited, so the rule must fire again, 5m after the push (not at once).
+        limited = [comment(CR, CR_LIMITED), comment(SOURCERY, SOURCERY_BUDGET)]
+        table = routes(PY, checks_=GREEN, comments=limited)
+        table["repos/%s/pulls/7" % PY] = Seq(
+            pr(), pr(requested=["Copilot"]), pr(sha=NEW)
+        )
+        table["repos/%s/pulls/7/reviews?per_page=100" % PY] = Seq(
+            [], [], [review(COPILOT_BOT, iso(T0 + 400), commit_id=SHA)]
+        )
+        add_head(table, PY, NEW, GREEN, status(("CodeRabbit", "success")))
+        rc, out, fake, _ = go(PY, table, "--timeout", "30m", start=T0 + 360)
+        self.assertEqual(fake.post_times, [T0 + 360, T0 + 480 + 360])
+
+
+class Staleness(unittest.TestCase):
+    def test_review_of_an_older_commit_waits_out_the_grace(self):
+        # Sourcery has no commit status: its review of the previous commit must
+        # not count as a review of this head.
+        table = routes(
+            PY,
+            checks_=GREEN,
+            status_=status(("CodeRabbit", "success")),
+            reviews=[review(CR, commit_id=SHA), review(SOURCERY, commit_id="0ld0ld")],
+        )
+        rc, out, _, clock = go(PY, table)
+        self.assertEqual(rc, 0)
+        self.assertTrue(out.rstrip().endswith("VERDICT: ready"))
+        self.assertEqual(clock.t - T0, 300)
+
+    def test_bots_grace_flag(self):
+        table = routes(PY, checks_=GREEN, reviews=[review(CR)])
+        rc, out, _, clock = go(PY, table, "--bots-grace", "0s")
+        self.assertEqual((rc, clock.t), (0, T0))
+        rc, out, _, clock = go(PY, table, "--bots-grace", "2m")
+        self.assertEqual((rc, clock.t - T0), (0, 120))
+
+    def test_bot_states_marks_a_stale_review_absent(self):
+        def st(*reviews):
+            snap = {
+                "pr": pr(),
+                "sha": SHA,
+                "comments": [],
+                "inline": [],
+                "reviews": list(reviews),
+                "statuses": [],
+            }
+            return cw.bot_states(snap)["Sourcery"][0]
+
+        self.assertEqual(st(review(SOURCERY, commit_id="0ld0ld")), "absent")
+        self.assertEqual(st(review(SOURCERY, commit_id=SHA)), "reviewed")
+        self.assertEqual(st(review(SOURCERY)), "reviewed")  # no commit_id: trust it
+        self.assertEqual(
+            st(
+                review(SOURCERY, commit_id=SHA),
+                review(SOURCERY, iso(T0 + 60), commit_id="0ld0ld"),
+            ),
+            "absent",
+        )
+
+
+class UnexpectedErrors(unittest.TestCase):
+    def test_bad_payloads_end_in_error_not_a_traceback(self):
+        cases = {
+            "pr without head": ("repos/%s/pulls/7" % PY, {}),
+            "bad json": ("repos/%s/pulls/7" % PY, (0, "<html>not json", "")),
+            "bad timestamp": (
+                "repos/%s/issues/7/comments?per_page=100" % PY,
+                [comment(CR, CR_LIMITED, at="yesterday")],
+            ),
+        }
+        for name, (path, value) in cases.items():
+            with self.subTest(name):
+                table = routes(PY, checks_=GREEN)
+                table[path] = value
+                rc, out, _, _ = go(PY, table)
+                self.assertEqual(rc, 6)
+                errors = [l for l in out.splitlines() if l.startswith("ERROR:")]
+                self.assertEqual(len(errors), 1, out)
+                self.assertTrue(out.rstrip().endswith("VERDICT: error"))
+
+    def test_keyboard_interrupt_still_propagates(self):
+        table = routes(PY)
+        table["repos/%s/pulls/7" % PY] = KeyboardInterrupt()
+        with self.assertRaises(KeyboardInterrupt):
+            go(PY, table)
 
 
 class GhRetries(unittest.TestCase):

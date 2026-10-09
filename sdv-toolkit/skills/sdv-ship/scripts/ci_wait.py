@@ -13,8 +13,11 @@ REST only (`gh api`): `gh pr checks` / `gh pr view` burn the shared GraphQL quot
 
 Usage:
     python3 ci_wait.py owner/repo (--pr N | --sha SHA) [--interval 60s] [--cap 15m]
-        [--timeout 60m] [--bots-limited-after 5m] [--copilot auto|ask|never]
-        [--package | --no-package]
+        [--timeout 60m] [--bots-limited-after 5m] [--bots-grace 5m]
+        [--copilot auto|ask|never] [--package | --no-package]
+
+A push restarts --cap and --bots-grace (CodeRabbit/Sourcery with no review of the
+current head count as pending for --bots-grace); --timeout never restarts.
 
 Exit: 0 ready / ready-capped / merged, 1 failed, 2 conflict, 3 timeout, 4 ask-user,
       5 bots-unaddressed, 6 error (including usage errors), 7 closed without merging.
@@ -111,21 +114,22 @@ class Gh:
         return min(wait if wait > 0 else 60, 300)
 
     def get_list(self, path):
-        """Page a per_page=100 list (or check-runs object) until a short page."""
+        """Page a per_page=100 list (or check-runs / status object) to a short page."""
         items, page = [], 1
         while True:
             chunk = self.get(path if page == 1 else "%s&page=%d" % (path, page))
-            rows = (
-                chunk.get("check_runs", []) if isinstance(chunk, dict) else chunk or []
-            )
+            if isinstance(chunk, dict):  # check-runs / combined status wrap the list
+                rows = chunk.get("check_runs", chunk.get("statuses")) or []
+            else:
+                rows = chunk or []
             items.extend(rows)
             if len(rows) < 100:
                 return items
             page += 1
 
     def request_copilot(self, repo, n):
-        """Return (ok, how). Tries REST, then `gh pr edit` (which uses GraphQL)."""
-        rc, _, err1 = self.runner(
+        """Return (ok, detail). REST only: `gh pr edit --add-reviewer` is GraphQL."""
+        rc, _, err = self.runner(
             [
                 "api",
                 "-X",
@@ -135,21 +139,7 @@ class Gh:
                 "reviewers[]=" + COPILOT_REVIEWER,
             ]
         )
-        if rc == 0:
-            return True, "REST requested_reviewers"
-        rc, _, err2 = self.runner(
-            ["pr", "edit", str(n), "-R", repo, "--add-reviewer", "@copilot"]
-        )
-        if rc == 0:
-            return (
-                True,
-                "gh pr edit --add-reviewer @copilot (REST failed: %s)"
-                % err1.strip()[:120],
-            )
-        return False, "both failed (REST: %s; gh pr edit: %s)" % (
-            err1.strip()[:120],
-            err2.strip()[:120],
-        )
+        return rc == 0, "REST requested_reviewers" if rc == 0 else one_line(err)
 
 
 def duration(text):
@@ -157,6 +147,10 @@ def duration(text):
     if not m:
         raise argparse.ArgumentTypeError("bad duration %r (use 90s, 15m, 1h)" % text)
     return int(m.group(1)) * {"": 1, "s": 1, "m": 60, "h": 3600}[m.group(2)]
+
+
+def one_line(text, limit=200):
+    return " ".join(str(text).split())[:limit]
 
 
 def ts(s):
@@ -188,8 +182,10 @@ def snapshot(gh, repo, n, sha):
         if key not in latest or r["id"] > latest[key]["id"]:
             latest[key] = r
     snap["runs"] = sorted(latest.values(), key=lambda r: r["name"])
-    combined = gh.get("repos/%s/commits/%s/status" % (repo, sha)) or {}
-    snap["statuses"] = combined.get("statuses") or []
+    # combined status: latest per context, but `statuses` is paged (30 by default)
+    snap["statuses"] = gh.get_list(
+        "repos/%s/commits/%s/status?per_page=100" % (repo, sha)
+    )
     return snap
 
 
@@ -205,11 +201,17 @@ def bot_states(snap):
         wrote = [c for c in snap["comments"] if login(c) in logins]
         said = [c for c in wrote if GUIDE not in (c.get("body") or "")]
         # An in-thread reply is an empty-body review + an inline reply: not a review.
-        done = [
-            ts(r.get("submitted_at"))
+        real = [
+            r
             for r in snap["reviews"]
             if login(r) in logins and (r.get("body") or "").strip()
         ]
+        latest = max(real, key=lambda r: ts(r.get("submitted_at")) or 0, default=None)
+        head = snap.get("sha")
+        stale = bool(
+            head and latest and latest.get("commit_id") not in (None, "", head)
+        )
+        done = [ts(r.get("submitted_at")) for r in real]
         done += [
             ts(c.get("created_at"))
             for c in snap["inline"]
@@ -232,7 +234,8 @@ def bot_states(snap):
             states[bot] = ("rate-limited", limited)
         elif status == "pending" or newest(PENDING.get(bot)) or requested & logins:
             states[bot] = ("pending", None)
-        elif last_review or status == "success" or wrote:
+        elif status == "success" or (not stale and (last_review or wrote)):
+            # status is per-commit; a review of an older commit is not one of this head
             states[bot] = ("reviewed", None)
         else:
             states[bot] = ("absent", None)
@@ -268,6 +271,7 @@ def parse_args(argv):
     p.add_argument("--cap", type=duration, default=15 * 60)
     p.add_argument("--timeout", type=duration, default=60 * 60)
     p.add_argument("--bots-limited-after", type=duration, default=5 * 60)
+    p.add_argument("--bots-grace", type=duration, default=5 * 60)
     p.add_argument("--copilot", choices=("auto", "ask", "never"), default="auto")
     p.add_argument("--package", dest="package", action="store_true")
     p.add_argument("--no-package", dest="package", action="store_false")
@@ -313,28 +317,35 @@ def run(
         say("VERDICT: " + verdict)
         return EXIT[verdict]
 
-    start, last_sha, both_since, actor, copilot_tried, snap = (
-        now(),
-        None,
-        None,
-        None,
-        False,
-        None,
-    )
+    t0 = now()  # --timeout clock: never restarts
+    cap_start = head_seen = t0  # --cap and bot-grace clocks: restart on a push
+    head_moved_at = last_sha = both_since = actor = copilot_asked_at = snap = None
+    copilot_tried = False
     while True:
         try:
             snap = snapshot(gh, a.repo, a.pr, a.sha)
-            elapsed = now() - start
+            elapsed = now() - t0
             if last_sha and snap["sha"] != last_sha:
-                say("head moved %s -> %s" % (last_sha[:7], snap["sha"][:7]))
+                say(
+                    "head moved %s -> %s: --cap, bot grace and the Copilot rule restart"
+                    % (last_sha[:7], snap["sha"][:7])
+                )
+                cap_start = head_seen = head_moved_at = now()
+                both_since, copilot_tried, copilot_asked_at = None, False, None
             last_sha = snap["sha"]
             state = (snap["pr"] or {}).get("state")
-            if a.pr and state == "closed":  # merged mid-wait (PR 736): a stuck bot status would hold it to --timeout
+            if (
+                a.pr and state == "closed"
+            ):  # merged mid-wait (PR 736): a stuck bot status would hold it to --timeout
                 merged = bool((snap["pr"] or {}).get("merged"))
                 return finish(
                     "merged" if merged else "closed",
                     snap,
-                    ["PR is merged: nothing left to wait for" if merged else "PR was closed without merging"],
+                    [
+                        "PR is merged: nothing left to wait for"
+                        if merged
+                        else "PR was closed without merging"
+                    ],
                 )
             runs = snap["runs"]
             ci = [s for s in snap["statuses"] if s["context"] != "CodeRabbit"]
@@ -386,9 +397,26 @@ def run(
                 )
 
             waiting = [b for b, st in bots.items() if st[0] == "pending"]
+            # An auto-reviewer with no review of THIS head may still be coming;
+            # once the grace is over, absent means "not installed".
+            if now() - head_seen < a.bots_grace:
+                waiting += [
+                    b
+                    for b in ("CodeRabbit", "Sourcery")
+                    if bots.get(b, ("",))[0] == "absent"
+                ]
+            if (  # we requested Copilot but it never showed up: stop after the grace
+                copilot_asked_at is not None
+                and bots["Copilot"][0] == "absent"
+                and now() - copilot_asked_at < a.bots_grace
+            ):
+                waiting.append("Copilot")
             cr, so = bots.get("CodeRabbit", ("",))[0], bots.get("Sourcery", ("",))[0]
             if cr == so == "rate-limited":
-                seen = max(bots["CodeRabbit"][1], bots["Sourcery"][1])
+                # after a push the 5m window starts at the push, not at old notices
+                seen = max(
+                    bots["CodeRabbit"][1], bots["Sourcery"][1], head_moved_at or 0
+                )
                 both_since = seen if both_since is None else min(both_since, seen)
             else:
                 both_since = None
@@ -421,10 +449,15 @@ def run(
                         return finish(
                             "ask-user",
                             snap,
-                            ["ACTION: Copilot review request: " + how, ask],
+                            [
+                                "ACTION: Copilot review request failed (REST: %s)"
+                                % how,
+                                ask,
+                            ],
                             threads,
                         )
                     say("ACTION: requested Copilot review (%s)" % how)
+                    copilot_asked_at = now()
                     waiting.append("Copilot")
 
             if not waiting and not pending:
@@ -439,7 +472,7 @@ def run(
                         threads,
                     )
                 return finish("ready", snap, [], threads)
-            if not waiting and not threads and elapsed >= a.cap:
+            if not waiting and not threads and now() - cap_start >= a.cap:
                 return finish("ready-capped", snap, ["PENDING: " + n for n in pending])
             if elapsed >= a.timeout:
                 return finish(
@@ -450,7 +483,14 @@ def run(
                     threads,
                 )
         except GhError as e:
-            return finish("error", snap, ["ERROR: %s" % e])
+            return finish("error", snap, ["ERROR: " + one_line(e, 300)])
+        # A bad payload must not traceback: exit 1 would read as "CI failed".
+        except Exception as e:
+            return finish(
+                "error",
+                None,
+                ["ERROR: unexpected %s: %s" % (type(e).__name__, one_line(e))],
+            )
         sleep(a.interval)
 
 
