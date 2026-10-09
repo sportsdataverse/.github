@@ -168,6 +168,7 @@ Then:
 | `.py` in a producer | `sdv-python-reviewer` lens `polars`; producer network code is reviewed against U-FAIL here (the `http` lens covers sdv-py's `dl_utils` only) |
 | `R/`, `man/`, `_pkgdown.yml`, roxygen | `sdv-r-reviewer` with the matching lens |
 | A port between R/Python/TS | `sdv-parity-reviewer` |
+| A metric's definition, a percentile/rank ladder, or a display-to-ladder mapping (box rates, summaries, `BinionBoxScore` maps) | `/sdv-metric-parity` (run `ladder_parity.py` on one real season) |
 | Model, gate, backtest, or validation code | `sdv-model-reviewer` with the matching lens |
 | sdv-py returns tables / codegen schemas, R `@return` tables | `sdv-docs-reviewer` (audit mode); a producer's own `column_descriptions.yaml` is reviewed inline |
 | A new or renamed release tag | `sdv-dataset-coverage-auditor` |
