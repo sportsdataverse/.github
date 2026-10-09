@@ -94,8 +94,11 @@ and bot triage for your own PR → `sdv-ship`.
   added/changed/**REMOVED** counts per frame; REMOVED is 0 or justified column by
   column; String ids checked for `"123.0"` (#415 225 bogus errors from a stale
   snapshot; #484 "REMOVED=0" as the load-bearing fact).
-- **PY-17** `[minor]` Side artifacts: `CHANGELOG.md` edits include the synced
-  `docs/src/pages/CHANGELOG.md`; exports added/renamed get a cheat-sheet revision note;
+- **PY-17** `[minor]` Side artifacts: in a repo with `changelog.d/` (sdv-py since #735)
+  a user-facing change adds a `changelog.d/<slug>.<group>.md` fragment and leaves
+  `CHANGELOG.md` alone (an `## Unreleased` edit there fails codegen; only a release
+  commit edits `CHANGELOG.md`). Elsewhere, `CHANGELOG.md` edits include the synced
+  `docs/src/pages/CHANGELOG.md`. Exports added/renamed get a cheat-sheet revision note;
   the 10 MB large-file guard is not raised (only `cfb/models/fd_model.ubj` is exempt).
 
 ## Verify (worktree at the PR head)

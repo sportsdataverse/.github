@@ -75,8 +75,20 @@ are starting at, then proceed forward from there.
 
 2. **Update changelog / docs / tutorials (conditional — skip only if truly N/A).**
    - **User-facing change** (new function, renamed/removed surface, behavior or
-     dependency change)? Add a `CHANGELOG.md` entry under the unreleased heading
-     (the `sync-docs-changelog` pre-commit hook mirrors it into the docs site).
+     dependency change)? Write the changelog entry:
+     - **The repo has a `changelog.d/` directory** (sdv-py since #735): add a
+       fragment, `changelog.d/<slug>.<group>.md`, and do **not** edit
+       `CHANGELOG.md`. The group is `breaking`, `added`, `changed`, `deprecated`,
+       `removed`, `fixed`, `security` or `data`; the slug is any lowercase name
+       (the branch name will do). The file holds one bullet per change,
+       `- **<Area>:** <what changed for a user>. (#<PR>)`, with continuation
+       lines indented two spaces. A change in two groups is two files. An
+       `## Unreleased` section in `CHANGELOG.md` fails codegen and the tests, and
+       so does a misnamed or malformed fragment. `changelog.d/README.md` has the
+       format. A branch cut before the switch that edited `## Unreleased` moves
+       that bullet into a fragment when it merges main.
+     - **Otherwise**: add a `CHANGELOG.md` entry under the unreleased heading
+       (the `sync-docs-changelog` pre-commit hook mirrors it into the docs site).
    - **New/changed public surface**? Check whether the relevant example notebook
      (`examples/notebooks/0X_<sport>_intro.ipynb`) or a hand-authored conceptual
      doc page mentions the old surface — update it. Generated reference pages are
@@ -640,7 +652,27 @@ e.g. 0.0.66 → 0.0.69).
    line — which made every pre-push hook fail with "files were modified by
    this hook" (2026-09-01). The bump and its lock travel in one commit.
 
-3. **Write the CHANGELOG entry.** Add a new section at the **top** of
+3. **Write the CHANGELOG entry.**
+
+   **The repo has a `changelog.d/` directory** (sdv-py since #735): don't write
+   the section by hand. Fold the fragments in:
+
+   ```sh
+   uv run python tools/release_changelog.py 0.0.X   # --date YYYY-MM-DD for a date other than today
+   ```
+
+   It writes `## 0.0.X Release: <Month D, YYYY>` above the newest release, with
+   the groups in their fixed order and each group's bullets sorted, then
+   deletes the fragments and stages both. It refuses to run when there are no
+   fragments, when the version is already released, or when the result is a
+   heading the docs renderer can't read (`v0.0.X`). Then write the
+   `**Highlights**` paragraph under the new heading, run
+   `npx --yes doctoc@2 --github CHANGELOG.md`, and regenerate with
+   `uv run python tools/codegen/generate.py`. Check the list against the
+   Conventional-Commit subjects since the last tag (below); a user-facing
+   change with no fragment gets one now.
+
+   **Otherwise:** add a new section at the **top** of
    `CHANGELOG.md` (immediately below the doctoc TOC comment block), matching the
    existing shape exactly:
 
@@ -680,7 +712,7 @@ e.g. 0.0.66 → 0.0.69).
 5. **Commit** everything in one release commit:
 
    ```sh
-   git add pyproject.toml CHANGELOG.md docs/
+   git add pyproject.toml uv.lock CHANGELOG.md docs/   # plus changelog.d/ (the deleted fragments) where it exists
    git commit -m "chore(release): 0.0.X"
    ```
 
