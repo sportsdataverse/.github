@@ -393,5 +393,30 @@ class CodeRabbitFixes(unittest.TestCase):
             self.assertIn("season 2025", out.getvalue())
 
 
+class SplitPerSeason(unittest.TestCase):
+    def test_each_checked_season_gets_its_own_split_verdict(self):
+        # CodeRabbit on #50: pooled, 30 summing 2024 rows + 70 weighted 2025 rows read OK.
+        rows = [{"season": 2024, "o": 0.5, "a": 0.3, "b": 0.2} for _ in range(30)]
+        rows += [{"season": 2025, "o": 0.5, "a": 0.55, "b": 0.44} for _ in range(70)]
+        rows += [{"season": 2019, "o": 0.5, "a": 0.3, "b": 0.2} for _ in range(5)]  # not in the ladder: ignored
+        ladder = _ladder_rows({"k": _ladder(0, 1)}, season=2024) + _ladder_rows({"k": _ladder(0, 1)}, season=2025)
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            for name, rs in (("v.csv", rows), ("l.csv", ladder)):
+                with (d / name).open("w", newline="", encoding="utf-8") as fh:
+                    w = csv.DictWriter(fh, fieldnames=list(rs[0]))
+                    w.writeheader()
+                    w.writerows(rs)
+            out = io.StringIO()
+            with redirect_stdout(out), redirect_stderr(io.StringIO()):
+                code = lp.main(["--values", str(d / "v.csv"), "--ladder", str(d / "l.csv"), "--map", "o=k",
+                                "--split", "o=a+b"])
+        text = out.getvalue()
+        self.assertEqual(code, 1)
+        self.assertIn("split o = a + b: SPLIT-SUMS (season 2024", text)
+        self.assertIn("split o = a + b: OK (season 2025", text)
+        self.assertNotIn("season 2019", text)
+
+
 if __name__ == "__main__":
     unittest.main()

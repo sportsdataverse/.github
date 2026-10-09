@@ -144,6 +144,14 @@ class RenderFailureTest(unittest.TestCase):
         self.assertIn("render says no", err.getvalue())
 
 
+def _symlink(test, link, target, **kw):
+    """Create a symlink, or skip the test where the platform refuses (Windows without the privilege)."""
+    try:
+        link.symlink_to(target, **kw)
+    except (OSError, NotImplementedError) as e:
+        test.skipTest("cannot create symlinks here: %s" % e)
+
+
 class MirrorTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -200,15 +208,26 @@ class MirrorTest(unittest.TestCase):
     def test_a_symlinked_dest_file_is_refused_and_its_target_untouched(self):
         # Copilot on #50: following a dest symlink would overwrite a file outside dest.
         outside = _write(self.base / "outside.txt", b"precious")
-        (self.dest / "README.md").symlink_to(outside)
+        _symlink(self, self.dest / "README.md", outside)
         with self.assertRaisesRegex(ValueError, "symlink"):
             self._mirror()
         self.assertEqual(outside.read_bytes(), b"precious")
 
+    def test_a_dest_that_is_itself_a_symlink_is_refused(self):
+        # CodeRabbit on #50: with --allow-non-git, a symlink named sdv-toolkit to an outside dir must not pass.
+        real = self.base / "outside" / "sdv-toolkit"
+        _write(real / "keep.txt", b"precious")
+        link_parent = self.base / "links"
+        link_parent.mkdir()
+        _symlink(self, link_parent / "sdv-toolkit", real, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            self._mirror(dest=link_parent / "sdv-toolkit", allow_non_git=True)
+        self.assertEqual((real / "keep.txt").read_bytes(), b"precious")
+
     def test_a_symlinked_dest_directory_is_refused(self):
         elsewhere = self.base / "elsewhere"
         elsewhere.mkdir()
-        (self.dest / "pkg").symlink_to(elsewhere, target_is_directory=True)
+        _symlink(self, self.dest / "pkg", elsewhere, target_is_directory=True)
         with self.assertRaisesRegex(ValueError, "symlink"):
             self._mirror()
         self.assertEqual(list(elsewhere.iterdir()), [])

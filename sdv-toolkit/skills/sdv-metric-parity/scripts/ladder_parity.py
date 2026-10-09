@@ -286,8 +286,13 @@ def main(argv: list[str] | None = None) -> int:
         results = check(
             values, ladder, mapping, season=a.season, tol=a.tol, side_col=a.side_col, side_tol=a.side_tol
         )
-        split_rows = [r for r in values if a.season is None or str(_season(r)) == str(a.season)]
-        splits = [split_sums(split_rows, o, ps, eps=a.split_eps) for o, ps in split_specs]
+        # One split verdict per season the parity check covered: pooling seasons hides a summing one.
+        checked = sorted({r.season for r in results}, key=str)
+        splits = [
+            (season, split_sums([r for r in values if _season(r) == season], o, ps, eps=a.split_eps))
+            for season in checked
+            for o, ps in split_specs
+        ]
     except (ValueError, OSError) as e:  # a bad map, a missing column or an unreadable file: exit 2, no traceback
         print(f"ladder_parity: {e}", file=sys.stderr)
         return 2
@@ -312,12 +317,12 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
         )
-    for s in splits:
+    for season, s in splits:
         print(
-            f"split {s.overall} = {' + '.join(s.parts)}: {s.verdict} (season {a.season or 'all'}: parts sum to "
+            f"split {s.overall} = {' + '.join(s.parts)}: {s.verdict} (season {season}: parts sum to "
             f"the whole on {_fmt(100 * s.share_summing)}% of {s.n} rows)"
         )
-    verdicts = {r.verdict for r in results} | {s.verdict for s in splits}
+    verdicts = {r.verdict for r in results} | {s.verdict for _, s in splits}
     # NO-DATA fails too: a check that found nothing to check is not a pass.
     word = ("mismatch" if verdicts & {"MISMATCH", "SIDE-ASYMMETRY", "SPLIT-SUMS"}
             else "no-data" if "NO-DATA" in verdicts else "ok")

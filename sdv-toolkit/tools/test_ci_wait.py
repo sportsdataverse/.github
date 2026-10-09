@@ -559,6 +559,15 @@ class CopilotRule(unittest.TestCase):
         self.assertEqual(self.kinds(fake), ["api"])
         self.assertIn("ACTION: requested Copilot review (REST", out)
 
+    def test_a_request_removed_afterwards_is_not_confirmed(self):
+        # CodeRabbit on #50: review_requested then review_request_removed must not count.
+        table = self.limited(PY)
+        table["POST"] = NOBODY_ADDED
+        removed = {**requested_event(iso(T0 + 362)), "event": "review_request_removed"}
+        table[TIMELINE % PY] = [requested_event(iso(T0 + 361)), removed]
+        rc, out, fake, _ = go(PY, table, "--timeout", "2m", start=T0 + 360)
+        self.assertIn("pr", self.kinds(fake))  # not confirmed: the one GraphQL fallback ran
+
     def test_rest_reply_without_copilot_but_requested_on_reread_needs_no_fallback(self):
         table = self.limited(PY)
         table["POST"] = NOBODY_ADDED
@@ -605,7 +614,7 @@ class CopilotRule(unittest.TestCase):
         table["POST"] = NOBODY_ADDED  # and the re-read shows no Copilot either
         rc, out, fake, _ = go(PY, table, start=T0 + 360)
         self.assertEqual(self.kinds(fake), ["api", "pr"])
-        action = [l for l in out.splitlines() if l.startswith("ACTION: Copilot")]
+        action = [line for line in out.splitlines() if line.startswith("ACTION: Copilot")]
         self.assertEqual(len(action), 1, out)
         self.assertIn("REST:", action[0])
         self.assertIn("gh pr edit:", action[0])
@@ -615,7 +624,7 @@ class CopilotRule(unittest.TestCase):
     def test_both_paths_error_asks_user_with_both_errors(self):
         rc, out, fake, _ = go(PY, self.limited(PY), start=T0 + 360, post_ok=False)
         self.assertEqual(self.kinds(fake), ["api", "pr"])
-        action = [l for l in out.splitlines() if l.startswith("ACTION: Copilot")]
+        action = [line for line in out.splitlines() if line.startswith("ACTION: Copilot")]
         self.assertEqual(len(action), 1, out)
         self.assertIn("HTTP 422", action[0])
         self.assertIn("Could not add reviewer", action[0])
@@ -773,7 +782,7 @@ class UnexpectedErrors(unittest.TestCase):
                 table[path] = value
                 rc, out, _, _ = go(PY, table)
                 self.assertEqual(rc, 6)
-                errors = [l for l in out.splitlines() if l.startswith("ERROR:")]
+                errors = [line for line in out.splitlines() if line.startswith("ERROR:")]
                 self.assertEqual(len(errors), 1, out)
                 self.assertTrue(out.rstrip().endswith("VERDICT: error"))
 

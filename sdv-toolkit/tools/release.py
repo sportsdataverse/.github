@@ -245,6 +245,8 @@ def _roots(path: Path) -> set[str]:
 
 
 def _guard(src: Path, dest: Path, allow_non_git: bool) -> None:
+    if dest.is_symlink():  # resolving it would pass every check below while writing into the link's target
+        raise ValueError("--dest %s is a symlink; pass the real directory" % dest)
     s, d = src.resolve(), dest.resolve()
     if d.name != s.name:
         raise ValueError("--dest must end in /%s, got %s" % (s.name, dest))

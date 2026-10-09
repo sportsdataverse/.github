@@ -136,12 +136,17 @@ class Gh:
         base = "repos/%s/" % repo
         if copilot_requested(self.get(base + "pulls/%d" % n)):
             return True
-        return any(
-            e.get("event") == "review_requested"
+        # The LATEST Copilot request/removal event since the request decides: a removal cancels it.
+        events = [
+            e
+            for e in self.get_list(base + "issues/%d/timeline?per_page=100" % n)
+            if e.get("event") in ("review_requested", "review_request_removed")
             and (e.get("requested_reviewer") or {}).get("login") in COPILOT_LOGINS
             and (ts(e.get("created_at")) or 0) >= since - 60
-            for e in self.get_list(base + "issues/%d/timeline?per_page=100" % n)
-        )
+        ]
+        if not events:
+            return False
+        return max(events, key=lambda e: ts(e.get("created_at")) or 0)["event"] == "review_requested"
 
     def request_copilot(self, repo, n):
         """Return (ok, detail): (a) the REST reply lists Copilot; else (b) a REST
