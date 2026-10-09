@@ -60,7 +60,7 @@ Every skill or agent directory needs a matching `catalog.json` row —
 hand-format the whole file:
 
 ```bash
-cd /c/Users/saiem/Documents/GitHub-Data/sdv-dev/sportsdataverse-org/sdv-toolkit
+cd <org checkout>/sdv-toolkit   # droplet /mnt/sdv_repos/sportsdataverse-org, Windows .../sdv-dev/sportsdataverse-org
 python - <<'PY'
 import json, pathlib
 p = pathlib.Path("catalog.json")
@@ -88,17 +88,23 @@ check for hooks, only the catalog row.
 
 ## Step 5 — Hand back the sync sequence
 
-Changes do not take effect until the plugin is republished and the session
-restarts. Output these commands for the user to run:
+Nothing takes effect until the org repo and its dotfiles mirror are both updated, the installed plugin is
+updated, and the session restarts. `tools/release.py` does the mechanical part and knows the traps. The org copy
+of `plugin.json`, `README.md` and `marketplace.json` is CRLF, while `render.py` writes LF. The dotfiles mirror is
+`eol=lf`. Hooks drop `.omc/` and cache dirs into the tree. Never `cp -r` the tree.
 
-    cd /c/Users/saiem/Documents/GitHub-Data/sdv-dev/sportsdataverse-org
-    # bump sdv-toolkit/.claude-plugin/plugin.json "version", then:
-    python sdv-toolkit/tools/render.py
-    git add -- sdv-toolkit .claude-plugin && git commit -m "feat(toolkit): <finding>"
-    git push
-    # mirror (separate repository):
-    cp -r sdv-toolkit/* /c/Users/saiem/Documents/GitHub-Data/sdv-dev/dotfiles_saiemgilani/claude/plugins/sdv-toolkit/
-    cd /c/Users/saiem/Documents/GitHub-Data/sdv-dev/dotfiles_saiemgilani && git add -- claude/plugins/sdv-toolkit && git commit -m "chore(plugins): sync sdv-toolkit" && git push
-    # then, by full path (claude is not on PATH in the VSCode-extension shell):
-    "$(cygpath -u "$LOCALAPPDATA")/Programs/claude/claude.exe" plugin update sdv-toolkit
-    # then restart the session
+Run from `sdv-toolkit/` on a branch of the org checkout (droplet `/mnt/sdv_repos/sportsdataverse-org`, Windows
+`.../sdv-dev/sportsdataverse-org`):
+
+    python tools/release.py bump minor        # or patch / X.Y.Z; only the version bytes change
+    python tools/release.py render            # render.py, then CRLF restored on every CRLF-indexed file
+    python tools/release.py check             # catalog, render --check, tools + hooks tests
+    # commit, push, open the org PR, merge; then, in a dotfiles worktree off origin/main:
+    python tools/release.py mirror --dest <dotfiles worktree>/claude/plugins/sdv-toolkit
+    python tools/release.py verify --dest <dotfiles worktree>/claude/plugins/sdv-toolkit
+    python tools/release.py next-steps --dotfiles <dotfiles worktree>   # prints the commit/PR + plugin-update commands
+
+`next-steps` ends with the plugin update. On the droplet that is `/root/.local/bin/claude plugin marketplace update
+sportsdataverse && /root/.local/bin/claude plugin update sdv-toolkit@sportsdataverse`. On Windows it is
+`"$(cygpath -u "$LOCALAPPDATA")/Programs/claude/claude.exe" plugin update sdv-toolkit`, because `claude` is not on
+PATH in the VS Code shell. Then restart the session.
