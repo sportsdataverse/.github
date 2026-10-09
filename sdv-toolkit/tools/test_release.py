@@ -97,6 +97,32 @@ class RestoreCrlfTest(unittest.TestCase):
             self.assertEqual(release.restore_crlf(repo, lambda: None), [])
             self.assertEqual(crlf.read_bytes(), b"a\r\nb\r\nc\r\n")
 
+    def test_leaves_crlf_indexed_binary_byte_identical(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _git(repo, "init", "-q")
+            latin1 = _write(repo / "latin1.txt", b"caf\xe9\r\nna\xefve\r\n")
+            blob = _write(repo / "blob.dat", b"a\r\nb\r\n")
+            _git(repo, "add", "latin1.txt", "blob.dat")
+            self.assertEqual(
+                sorted(release.crlf_paths(repo)), ["blob.dat", "latin1.txt"]
+            )
+            latin1_new = b"caf\xe9\nna\xefve\r\n"  # bare LF, not UTF-8
+            blob_new = b"\x00\x01\n\x02"  # bare LF, NUL
+
+            def fake_render():
+                latin1.write_bytes(latin1_new)
+                blob.write_bytes(blob_new)
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                restored = release.restore_crlf(repo, fake_render)
+            self.assertEqual(restored, [])
+            self.assertEqual(latin1.read_bytes(), latin1_new)
+            self.assertEqual(blob.read_bytes(), blob_new)
+            self.assertIn("latin1.txt", out.getvalue())
+            self.assertIn("blob.dat", out.getvalue())
+
 
 class RenderFailureTest(unittest.TestCase):
     def test_render_failure_prints_output_and_exits_2(self):

@@ -79,6 +79,17 @@ def bump(path: Path, spec: str) -> str:
 # -- render ------------------------------------------------------------------
 
 
+def _is_text(data: bytes) -> bool:
+    """UTF-8 decodable and no NUL byte."""
+    if b"\0" in data:
+        return False
+    try:
+        data.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    return True
+
+
 def crlf_paths(repo: Path) -> list[str]:
     """Repo-relative paths whose index copy has CRLF line endings."""
     out = subprocess.run(
@@ -105,7 +116,11 @@ def restore_crlf(repo: Path, render_step: Callable[[], object]) -> list[str]:
         if not path.is_file():
             continue
         data = path.read_bytes()
-        if _BARE_LF.search(data):
+        if not _BARE_LF.search(data):
+            continue
+        if not _is_text(data):
+            print("skipped CRLF restore (binary): %s" % rel)
+        else:
             path.write_bytes(data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
             restored.append(rel)
     return restored
@@ -218,13 +233,7 @@ def _warn_uncommitted(src: Path) -> None:
 
 def _lf(data: bytes) -> bytes:
     """CRLF -> LF for text (UTF-8, no NUL); binaries unchanged."""
-    if b"\0" in data:
-        return data
-    try:
-        data.decode("utf-8")
-    except UnicodeDecodeError:
-        return data
-    return data.replace(b"\r\n", b"\n")
+    return data.replace(b"\r\n", b"\n") if _is_text(data) else data
 
 
 def _exec_bits(path: Path) -> int:
