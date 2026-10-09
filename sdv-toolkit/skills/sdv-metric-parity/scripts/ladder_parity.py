@@ -1,7 +1,7 @@
 """Check that a metric shown against a percentile ladder means the same thing as that ladder.
 
 The core test is "mean shown": rank every value computed with the DISPLAY's definition against the ladder it is
-displayed with. A ladder built from the same definition and population averages ~49.5; the 2026-10-08 audit found
+displayed with. A ladder built from the same definition and population averages ~50; the 2026-10-08 audit found
 the CFB Def Run Stuff Rate (rushes only) ranked against an all-plays ladder averaging 13.4, so a 13% stuff rate
 showed 1st instead of ~34th. Two more checks catch the other classes the audit found: a home/away gap in mean
 shown (a home-relative yard line made home red-zone plays invisible) and parts that sum to the whole (pass and
@@ -28,7 +28,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-MATCHED = 49.5  # mean percentile a matched ladder shows under midrank ranking of 99 breakpoints
+MATCHED = 50.0  # mean percentile a matched sample shows under midrank ranking (GOP's floor lookup reads ~49.5)
+_TRUE, _FALSE = {"1", "1.0", "t", "true", "y", "yes"}, {"0", "0.0", "f", "false", "n", "no"}
 
 
 def _num(v):
@@ -52,9 +53,11 @@ def percentile_of(value: float, breakpoints: list[float]) -> float:
 def mean_shown(values, breakpoints) -> tuple[float, float, int]:
     """(mean, median, n) of the percentiles ``values`` would display against ``breakpoints``; nulls skipped."""
     bps = sorted(b for b in (_num(x) for x in breakpoints) if b is not None)
+    if not bps:  # an all-null ladder column: nothing to rank against (and no division by zero)
+        return math.nan, math.nan, 0
     shown = [percentile_of(v, bps) for v in (_num(x) for x in values) if v is not None]
-    if not shown or not bps:
-        return math.nan, math.nan, len(shown)
+    if not shown:
+        return math.nan, math.nan, 0
     return statistics.fmean(shown), statistics.median(shown), len(shown)
 
 
@@ -72,10 +75,16 @@ class Result:
     note: str = ""
 
 
+def _flag(v):
+    """1 / 0 for a side column cell (0/1, or psql's t/f), None otherwise."""
+    s = str(v).strip().lower() if v is not None else ""
+    return 1 if s in _TRUE else (0 if s in _FALSE else None)
+
+
 def _season(row: dict):
     s = row.get("season", row.get("year"))
     f = _num(s)
-    return int(f) if f is not None and f == int(f) else s
+    return int(f) if f is not None and math.isfinite(f) and f == int(f) else s
 
 
 def check(
@@ -114,6 +123,14 @@ def check(
     for s in seasons:
         vrows = [r for r in values if _season(r) == s]
         lrows = [r for r in ladder if _season(r) == s]
+        if len(lrows) not in (99, 100, 101):
+            print(f"ladder_parity: warning: season {s} has {len(lrows)} ladder rows (a 1-99 ladder has 99): "
+                  "pooled groups or a partial ladder?", file=sys.stderr)
+        if side_col:
+            for flag in (0, 1):
+                if not any(_flag(r.get(side_col)) == flag for r in vrows):
+                    raise ValueError(f"--side-col {side_col}: no rows with {side_col}={flag} in season {s} "
+                                     "(values must be 0/1 or t/f)")
         for metric, key in mapping.items():
             bps = [r[key] for r in lrows]
             vals = [r[metric] for r in vrows]
@@ -133,7 +150,7 @@ def check(
             if side_col:  # more specific than MISMATCH: it names the orientation class
                 sides = {}
                 for flag in (0, 1):
-                    sv = [r[metric] for r in vrows if _num(r.get(side_col)) == flag]
+                    sv = [r[metric] for r in vrows if _flag(r.get(side_col)) == flag]
                     sides[flag] = mean_shown(sv, bps)[0]
                 if (
                     not any(math.isnan(x) for x in sides.values())
@@ -157,11 +174,13 @@ class SplitResult:
 
 
 def split_sums(
-    rows: list[dict], overall: str, parts: list[str], *, eps: float = 1e-6
+    rows: list[dict], overall: str, parts: list[str], *, eps: float = 1e-3
 ) -> SplitResult:
     """Flag parts that add up to the overall rate on most rows: each part was divided by the WHOLE population.
 
     Rates on their own denominators combine as a weighted mean, which lies between the parts, never at their sum.
+    ``eps`` is relative and loose enough for rates stored at 4 dp. A genuine additive decomposition (explosive rate =
+    pass part + rush part, both over all plays) is flagged too: read the definitions before calling it a bug.
     """
     n = hits = 0
     for r in rows:
@@ -224,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
         "--tol",
         type=float,
         default=4.0,
-        help="MISMATCH when mean shown is further than this from 49.5",
+        help="MISMATCH when mean shown is further than this from 50",
     )
     ap.add_argument(
         "--side-tol",
@@ -240,6 +259,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--split", action="append", default=[], help="overall=part1+part2 (repeatable)"
     )
+    ap.add_argument("--split-eps", type=float, default=1e-3, help="relative tolerance for parts summing to the whole")
     a = ap.parse_args(argv)
     try:
         spec = (
@@ -248,18 +268,26 @@ def main(argv: list[str] | None = None) -> int:
             else a.map
         )
         mapping = _pairs(spec)
+        if not mapping:
+            raise ValueError("--map names no display=key pair: nothing would be checked")
+        for name, v in (("--tol", a.tol), ("--side-tol", a.side_tol), ("--split-eps", a.split_eps)):
+            if not math.isfinite(v) or v <= 0:
+                raise ValueError(f"{name} must be a positive number, got {v}")
         values, ladder = _read(a.values), _read(a.ladder)
+        split_specs = []
+        for s in a.split:
+            overall, sep, rest = s.partition("=")
+            parts = [x.strip() for x in rest.split("+") if x.strip()]
+            if not sep or not overall.strip() or len(parts) < 2:
+                raise ValueError(f"--split {s!r} is not overall=part1+part2")
+            missing = [c for c in [overall.strip(), *parts] if values and c not in values[0]]
+            if missing:
+                raise ValueError(f"--split {s!r}: values have no column {', '.join(missing)}")
+            split_specs.append((overall.strip(), parts))
         results = check(
             values, ladder, mapping, season=a.season, tol=a.tol, side_col=a.side_col, side_tol=a.side_tol
         )
-        splits = []
-        for s in a.split:
-            overall, _, rest = s.partition("=")
-            splits.append(
-                split_sums(
-                    values, overall.strip(), [p.strip() for p in rest.split("+")]
-                )
-            )
+        splits = [split_sums(values, o, ps, eps=a.split_eps) for o, ps in split_specs]
     except (ValueError, OSError) as e:  # a bad map, a missing column or an unreadable file: exit 2, no traceback
         print(f"ladder_parity: {e}", file=sys.stderr)
         return 2
@@ -289,11 +317,12 @@ def main(argv: list[str] | None = None) -> int:
             f"split {s.overall} = {' + '.join(s.parts)}: {s.verdict} (parts sum to the whole on "
             f"{_fmt(100 * s.share_summing)}% of {s.n} rows)"
         )
-    bad = [r for r in results if r.verdict in ("MISMATCH", "SIDE-ASYMMETRY")] + [
-        s for s in splits if s.verdict == "SPLIT-SUMS"
-    ]
-    print(f"VERDICT: {'mismatch' if bad else 'ok'}")
-    return 1 if bad else 0
+    verdicts = {r.verdict for r in results} | {s.verdict for s in splits}
+    # NO-DATA fails too: a check that found nothing to check is not a pass.
+    word = ("mismatch" if verdicts & {"MISMATCH", "SIDE-ASYMMETRY", "SPLIT-SUMS"}
+            else "no-data" if "NO-DATA" in verdicts else "ok")
+    print(f"VERDICT: {word}")
+    return 0 if word == "ok" else 1
 
 
 if __name__ == "__main__":

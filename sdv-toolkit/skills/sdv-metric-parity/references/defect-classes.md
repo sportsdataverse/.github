@@ -9,7 +9,7 @@ the symptom, the test that catches it, and the real case.
 The display and the ladder divide by different row sets: the same numerator over rushes in one place and over all
 plays in the other.
 
-- **Symptom:** mean shown far from 49.5; the median value lands at the 3rd or 95th percentile.
+- **Symptom:** mean shown far from 50; the median value lands at the 3rd or 95th percentile.
 - **Test:** `ladder_parity.py` → `MISMATCH`. Quick manual version: compare the box value's p50 with the ladder
   p50 for the same season; they should be within a few percent.
 - **Cases:** CFB F1, Def Run Stuff Rate (`rushing_stuff_rate`, rushes, p50 .161) ranked against `play_stuffed`

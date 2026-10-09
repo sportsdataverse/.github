@@ -256,5 +256,94 @@ class Main(unittest.TestCase):
             self.assertEqual(code, 2)
 
 
+class ReviewFixes(unittest.TestCase):
+    """2026-10-09 review: every way the script could report ok while checking nothing."""
+
+    def _main(self, values, ladder, *args):
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            for name, rows in (("v.csv", values), ("l.csv", ladder)):
+                with (d / name).open("w", newline="", encoding="utf-8") as fh:
+                    w = csv.DictWriter(fh, fieldnames=list(rows[0]))
+                    w.writeheader()
+                    w.writerows(rows)
+            out, err = io.StringIO(), io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                code = lp.main(["--values", str(d / "v.csv"), "--ladder", str(d / "l.csv"), *args])
+            return code, out.getvalue(), err.getvalue()
+
+    def test_no_data_fails_the_run(self):
+        code, out, _ = self._main(_rows({"m": [None] * 5}), _ladder_rows({"k": _ladder(0, 1)}), "--map", "m=k")
+        self.assertEqual(code, 1)
+        self.assertIn("NO-DATA", out)
+        self.assertNotIn("VERDICT: ok", out)
+
+    def test_a_split_naming_a_missing_column_is_exit_2(self):
+        code, _, err = self._main(
+            _rows({"m": _uniform(0, 1, 10)}), _ladder_rows({"k": _ladder(0, 1)}), "--map", "m=k", "--split", "m=m+typo"
+        )
+        self.assertEqual(code, 2)
+        self.assertIn("typo", err)
+
+    def test_a_split_without_equals_is_exit_2(self):
+        code, _, _ = self._main(_rows({"m": _uniform(0, 1, 10)}), _ladder_rows({"k": _ladder(0, 1)}), "--map", "m=k",
+                                "--split", "m+m")
+        self.assertEqual(code, 2)
+
+    def test_psql_t_f_booleans_drive_the_side_check(self):
+        # psql \copy writes booleans as t/f; without ::int the side check must still run, not silently skip.
+        n = 1000
+        side = ["t" if i % 2 else "f" for i in range(n)]
+        rz = [0.0 if s == "t" else v for s, v in zip(side, _uniform(0.0, 0.4, n))]
+        [res] = lp.check(_rows({"rz": rz}, extra={"home": side}), _ladder_rows({"k": _ladder(0.0, 0.4)}),
+                         {"rz": "k"}, side_col="home")
+        self.assertEqual(res.verdict, "SIDE-ASYMMETRY")
+
+    def test_a_side_column_with_one_side_empty_is_an_error(self):
+        values = _rows({"m": _uniform(0, 1, 10)}, extra={"home": ["yes"] * 10})
+        with self.assertRaisesRegex(ValueError, "home"):
+            lp.check(values, _ladder_rows({"k": _ladder(0, 1)}), {"m": "k"}, side_col="home")
+
+    def test_a_non_positive_or_nan_tolerance_is_exit_2(self):
+        for bad in ("-1", "nan", "0"):
+            code, _, _ = self._main(_rows({"m": _uniform(0, 1, 10)}), _ladder_rows({"k": _ladder(0, 1)}),
+                                    "--map", "m=k", "--tol", bad)
+            self.assertEqual(code, 2, bad)
+
+    def test_a_matched_ladder_centres_on_50(self):
+        self.assertEqual(lp.MATCHED, 50.0)
+
+    def test_rounded_parts_still_sum_to_the_whole(self):
+        # Stored at 4 dp, parts divided by the whole population miss the overall rate by ~1e-4.
+        rows = [{"o": 0.3333, "a": 0.1111, "b": 0.2223} for _ in range(10)]
+        self.assertEqual(lp.split_sums(rows, "o", ["a", "b"]).verdict, "SPLIT-SUMS")
+
+    def test_a_pooled_ladder_warns(self):
+        ladder = _ladder_rows({"k": _ladder(0, 1)}) + _ladder_rows({"k": _ladder(0, 1)})  # 198 rows in one season
+        code, out, err = self._main(_rows({"m": _uniform(0, 1, 50)}), ladder, "--map", "m=k")
+        self.assertIn("198 ladder rows", err)
+
+
+class BotThreadFixes(unittest.TestCase):
+    """PR #50 review threads."""
+
+    def test_an_all_null_ladder_column_is_no_data_not_a_crash(self):
+        values = _rows({"m": _uniform(0, 1, 10)})
+        ladder = _ladder_rows({"k": [None] * 99})
+        [res] = lp.check(values, ladder, {"m": "k"})
+        self.assertEqual(res.verdict, "NO-DATA")
+
+    def test_an_empty_map_is_exit_2(self):
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            (d / "v.csv").write_text("season,m\n2025,0.1\n", encoding="utf-8")
+            (d / "l.csv").write_text("season,pctile,k\n2025,1,0.1\n", encoding="utf-8")
+            (d / "empty.map").write_text("\n", encoding="utf-8")
+            for spec in ("", " , ", f"@{d / 'empty.map'}"):
+                with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                    code = lp.main(["--values", str(d / "v.csv"), "--ladder", str(d / "l.csv"), "--map", spec])
+                self.assertEqual(code, 2, repr(spec))
+
+
 if __name__ == "__main__":
     unittest.main()

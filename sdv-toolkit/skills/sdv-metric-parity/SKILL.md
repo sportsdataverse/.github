@@ -49,12 +49,12 @@ production. Parquet inputs work with `uv run --with polars`. Exit 0 = OK/WATCH o
 
 | Verdict | Meaning | Usual class |
 |---|---|---|
-| `OK` | mean shown within `--tol` (4) of 49.5 | matched |
+| `OK` | mean shown within `--tol` (4) of 50 | matched |
 | `WATCH` | within 2-4 points | small definition drift (sack yards, INT returns, kneels) |
 | `MISMATCH` | further than 4 | population or definition mismatch |
 | `SIDE-ASYMMETRY` | home and away mean shown differ by > `--side-tol` (25) | orientation (home-relative yard line) |
 | `SPLIT-SUMS` | parts add to the whole on most rows | parts divided by the whole population |
-| `NO-DATA` | no non-null values for the season | a stage that produced nothing |
+| `NO-DATA` | no non-null values for the season; fails the run | a stage that produced nothing |
 
 Worked example (sdv-db, 2026-10-09, before the cfb-data #139 ladder was republished) — the audit's findings,
 reproduced in one command:
@@ -82,7 +82,7 @@ ranked against a full-game ladder.
 
 - Fix the layer that disagrees with the display's definition, usually the ladder. Change the definition in one
   place per repo and keep the column name honest (rename an all-plays column rather than redefining it silently).
-- Re-run step 2 on the rebuilt ladder. `OK` with mean shown near 49.5 is the acceptance test; paste the table into
+- Re-run step 2 on the rebuilt ladder. `OK` with mean shown near 50 is the acceptance test; paste the table into
   the PR. A changed definition also means a republish: see `/sdv-reprocess` and `/sdv-dataset-lifecycle`, and note
   that sdv-db's nightly ingest reloads only the current and prior season.
 - A definition change that alters published numbers needs a changelog entry in each package repo.
