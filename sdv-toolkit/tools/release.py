@@ -109,20 +109,22 @@ def crlf_paths(repo: Path) -> list[str]:
 def restore_crlf(repo: Path, render_step: Callable[[], object]) -> list[str]:
     """Run render_step, then put CRLF back on CRLF-indexed files it left LF."""
     targets = crlf_paths(repo)
-    render_step()
     restored = []
-    for rel in targets:
-        path = repo / rel
-        if not path.is_file():
-            continue
-        data = path.read_bytes()
-        if not _BARE_LF.search(data):
-            continue
-        if not _is_text(data):
-            print("skipped CRLF restore (binary): %s" % rel)
-        else:
-            path.write_bytes(data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
-            restored.append(rel)
+    try:
+        render_step()
+    finally:  # a render that writes LF and then fails must not leave LF behind
+        for rel in targets:
+            path = repo / rel
+            if not path.is_file():
+                continue
+            data = path.read_bytes()
+            if not _BARE_LF.search(data):
+                continue
+            if not _is_text(data):
+                print("skipped CRLF restore (binary): %s" % rel)
+            else:
+                path.write_bytes(data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+                restored.append(rel)
     return restored
 
 
@@ -205,7 +207,12 @@ def _source_files(src: Path) -> dict[str, Path]:
     out = _git(src, "ls-files", "-z")
     if out is None:
         raise ValueError("mirror source %s is not a git checkout" % src)
-    return {rel: src / rel for rel in _zlist(out) if (src / rel).is_file()}
+    rels = _zlist(out)
+    # is_file() follows a symlink, so a tracked link would copy a file from outside src
+    links = [rel for rel in rels if (src / rel).is_symlink()]
+    if links:
+        raise ValueError("mirror source tracks symlinks: %s" % ", ".join(links))
+    return {rel: src / rel for rel in rels if (src / rel).is_file()}
 
 
 def _owned(dest: Path) -> dict[str, Path]:

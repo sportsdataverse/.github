@@ -750,6 +750,24 @@ class Staleness(unittest.TestCase):
         rc, out, _, clock = go(PY, table, "--bots-grace", "2m")
         self.assertEqual((rc, clock.t - T0), (0, 120))
 
+    def test_an_inline_comment_written_on_an_older_head_is_not_a_review_of_this_one(self):
+        # Copilot on dotfiles #28. GitHub moves commit_id forward to the new head;
+        # original_commit_id keeps the commit the bot actually commented on.
+        def st(**ids):
+            snap = {
+                "pr": pr(),
+                "sha": SHA,
+                "comments": [],
+                "inline": [dict(inline(1, COPILOT_BOT), **ids)],
+                "reviews": [],
+                "statuses": [],
+            }
+            return cw.bot_states(snap)["Copilot"][0]
+
+        self.assertEqual(st(commit_id=SHA, original_commit_id="0ld0ld"), "absent")
+        self.assertEqual(st(commit_id=SHA, original_commit_id=SHA), "reviewed")
+        self.assertEqual(st(), "reviewed")  # no commit ids: trust it
+
     def test_bot_states_marks_a_stale_review_absent(self):
         def st(*reviews):
             snap = {
@@ -813,6 +831,15 @@ class GhRetries(unittest.TestCase):
         self.assertIn("rate_limit", fake.gets)
         self.assertEqual(fake.gets.count(key), 2)
         self.assertEqual(rc, 0)
+
+    def test_rate_limit_backoff_never_sleeps_past_the_timeout(self):
+        # Copilot on dotfiles #28: 12 x 300s of backoff must not outlive --timeout 3m.
+        table = routes(PY, checks_=GREEN, reviews=[review(CR)], reset=T0 + 1000)
+        table["repos/%s/pulls/7" % PY] = (1, "", "gh: API rate limit exceeded (HTTP 403)")
+        rc, out, _, clock = go(PY, table, "--timeout", "3m")
+        self.assertEqual(rc, 6)
+        self.assertIn("--timeout", out)
+        self.assertLessEqual(clock.t - T0, 180)
 
     def test_persistent_error_gives_error_verdict(self):
         table = routes(PY)

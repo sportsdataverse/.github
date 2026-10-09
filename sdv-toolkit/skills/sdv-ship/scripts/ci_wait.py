@@ -97,6 +97,7 @@ class Gh:
 
     def __init__(self, runner=_gh, now=time.time, sleep=time.sleep):
         self.runner, self.now, self.sleep = runner, now, sleep
+        self.deadline = None  # run() sets it to the --timeout deadline
 
     def get(self, path):
         failures = limited = 0
@@ -107,6 +108,11 @@ class Gh:
             if re.search(r"rate limit|HTTP 429", err, re.I) and limited < 12:
                 limited += 1
                 wait = self._reset_wait()
+                if self.deadline is not None and self.now() + wait > self.deadline:
+                    raise GhError(
+                        "gh api %s: rate-limited for %ds, past the --timeout deadline"
+                        % (path, wait)
+                    )
                 print("gh rate-limited; sleeping %ds" % wait, file=sys.stderr)
                 self.sleep(wait)
             elif failures < 3:
@@ -276,10 +282,15 @@ def bot_states(snap):
             head and latest and latest.get("commit_id") not in (None, "", head)
         )
         done = [ts(r.get("submitted_at")) for r in real]
+        # GitHub moves an inline comment's commit_id forward on a push;
+        # original_commit_id is the commit the bot actually commented on.
         done += [
             ts(c.get("created_at"))
             for c in snap["inline"]
-            if login(c) in logins and not c.get("in_reply_to_id")
+            if login(c) in logins
+            and not c.get("in_reply_to_id")
+            and (c.get("original_commit_id") or c.get("commit_id") or head)
+            in (None, head)
         ]
         last_review = max((t for t in done if t), default=None)
 
@@ -348,6 +359,7 @@ def run(
 ):
     a = parse_args(argv)
     gh = gh or Gh(now=now, sleep=sleep)
+    gh.deadline = now() + a.timeout  # API backoff must not outlive --timeout
     package = (
         a.package if a.package is not None else not re.search(r"-(raw|data)$", a.repo)
     )
