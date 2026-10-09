@@ -79,8 +79,9 @@ are starting at, then proceed forward from there.
      - **The repo has a `changelog.d/` directory** (sdv-py since #735): add a
        fragment, `changelog.d/<slug>.<group>.md`, and do **not** edit
        `CHANGELOG.md`. The group is `breaking`, `added`, `changed`, `deprecated`,
-       `removed`, `fixed`, `security` or `data`; the slug is any lowercase name
-       (the branch name will do). The file holds one bullet per change,
+       `removed`, `fixed`, `security` or `data`; the slug is lowercase letters,
+       digits, `.`, `_` and `-` only (no `/`: branch `fix/espn-rankings` becomes
+       `fix-espn-rankings`). The file holds one bullet per change,
        `- **<Area>:** <what changed for a user>. (#<PR>)`, with continuation
        lines indented two spaces. A change in two groups is two files. An
        `## Unreleased` section in `CHANGELOG.md` fails codegen and the tests, and
