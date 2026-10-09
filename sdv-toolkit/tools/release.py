@@ -245,7 +245,8 @@ def _roots(path: Path) -> set[str]:
 
 
 def _guard(src: Path, dest: Path, allow_non_git: bool) -> None:
-    if dest.is_symlink():  # resolving it would pass every check below while writing into the link's target
+    # resolving a symlinked dest would pass every check below while writing into its target
+    if dest.is_symlink():
         raise ValueError("--dest %s is a symlink; pass the real directory" % dest)
     s, d = src.resolve(), dest.resolve()
     if d.name != s.name:
@@ -272,7 +273,10 @@ def _no_symlinks(dest: Path, rels) -> None:
         for part in Path(rel).parts:
             p = p / part
             if p.is_symlink():
-                raise ValueError("--dest %s is a symlink; refusing to follow it outside %s" % (p, dest))
+                raise ValueError(
+                    "--dest %s is a symlink; refusing to follow it outside %s"
+                    % (p, dest)
+                )
 
 
 def mirror(
@@ -328,7 +332,11 @@ def mirror(
 
 def verify(src: Path, dest: Path) -> int:
     """Report every path mirror() would add, update or delete."""
+    if dest.is_symlink():
+        raise ValueError("--dest %s is a symlink; pass the real directory" % dest)
     want, owned = _source_files(src), _owned(dest)
+    # a tree mirror() refuses must not verify clean
+    _no_symlinks(dest, set(want) | set(owned))
     problems = []
     for rel in sorted(set(want) | set(owned)):
         out = dest / rel

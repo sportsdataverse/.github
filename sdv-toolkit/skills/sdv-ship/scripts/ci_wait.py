@@ -57,7 +57,15 @@ LIMITED = {
 }
 PENDING = {"CodeRabbit": re.compile(r"currently processing|review in progress", re.I)}
 GUIDE = "start review_guide"  # Sourcery's reviewer's guide summarises the PR text
-FAILED = {"failure", "timed_out", "cancelled", "action_required", "startup_failure", "stale"}  # stale never succeeded
+# stale: GitHub retired the check without it ever succeeding
+FAILED = {
+    "failure",
+    "timed_out",
+    "cancelled",
+    "action_required",
+    "startup_failure",
+    "stale",
+}
 EXIT = {
     "ready": 0,
     "ready-capped": 0,
@@ -146,7 +154,10 @@ class Gh:
         ]
         if not events:
             return False
-        return max(events, key=lambda e: ts(e.get("created_at")) or 0)["event"] == "review_requested"
+        return (
+            max(events, key=lambda e: ts(e.get("created_at")) or 0)["event"]
+            == "review_requested"
+        )
 
     def request_copilot(self, repo, n):
         """Return (ok, detail): (a) the REST reply lists Copilot; else (b) a REST
@@ -201,7 +212,9 @@ def one_line(text, limit=200):
 
 def copilot_requested(pr):
     users = pr.get("requested_reviewers") if isinstance(pr, dict) else None
-    return any(isinstance(u, dict) and u.get("login") in COPILOT_LOGINS for u in users or [])
+    return any(
+        isinstance(u, dict) and u.get("login") in COPILOT_LOGINS for u in users or []
+    )
 
 
 def ts(s):
@@ -448,6 +461,12 @@ def run(
                 )
 
             waiting = [b for b, st in bots.items() if st[0] == "pending"]
+            # GitHub returns mergeable null / "unknown" while it recomputes after a push;
+            # until then a conflict is undecided, so neither ready nor the cap may pass it.
+            if pr and (
+                pr.get("mergeable") is None or pr.get("mergeable_state") == "unknown"
+            ):
+                waiting.append("mergeability (GitHub is computing it)")
             # An auto-reviewer with no review of THIS head may still be coming;
             # once the grace is over, absent means "not installed".
             if now() - head_seen < a.bots_grace:

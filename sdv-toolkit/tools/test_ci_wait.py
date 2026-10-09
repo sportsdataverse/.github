@@ -54,7 +54,7 @@ def iso(epoch):
 def pr(state="clean", sha=SHA, requested=()):
     return {
         "head": {"sha": sha},
-        "mergeable": state != "dirty",
+        "mergeable": None if state == "unknown" else state != "dirty",
         "mergeable_state": state,
         "user": {"login": "saiemgilani"},
         "requested_reviewers": [{"login": r} for r in requested],
@@ -343,6 +343,14 @@ class Verdicts(unittest.TestCase):
         self.assertIn("no pull_request workflows will start", out)
         self.assertIn("merge the base branch first", out)
         self.assertTrue(out.rstrip().endswith("VERDICT: conflict"))
+
+    def test_unknown_mergeability_is_waited_on_and_the_cap_does_not_skip_it(self):
+        # Copilot on #50: GitHub returns mergeable null / "unknown" while it recomputes after a push.
+        table = routes(PY, pr_=pr("unknown"), checks_=checks(run_("lint")), reviews=[review(CR)])
+        rc, out, _, _ = go(PY, table, "--cap", "15m", "--timeout", "30m")
+        self.assertEqual(rc, 3)
+        self.assertIn("WAITING ON: mergeability", out)
+        self.assertNotIn("VERDICT: ready", out)
 
     def test_ready_capped_lists_pending(self):
         table = routes(

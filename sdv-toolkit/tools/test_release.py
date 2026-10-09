@@ -283,6 +283,16 @@ class MirrorTest(unittest.TestCase):
         self.assertIn("pkg/mod.py", out)
         self.assertNotIn("README.md", out)  # CRLF-only difference is ignored
 
+    def test_verify_refuses_a_symlink_mirror_would_refuse(self):
+        # Copilot on #50: a symlink to byte-identical outside content must not verify clean.
+        self._mirror()
+        readme = self.dest / "README.md"
+        outside = _write(self.base / "outside.md", readme.read_bytes())
+        readme.unlink()
+        _symlink(self, readme, outside)
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            self._verify()
+
     def test_verify_reports_missing_and_extra(self):
         self._mirror()
         (self.dest / "README.md").unlink()
