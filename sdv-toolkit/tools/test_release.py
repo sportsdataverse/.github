@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import release
 
@@ -19,9 +20,16 @@ PLUGIN = (
 )
 
 
+GIT_CFG = [
+    "-c", "core.autocrlf=false", "-c", "core.safecrlf=false",
+    "-c", "user.name=t", "-c", "user.email=t@example.com",
+    "-c", "commit.gpgsign=false",
+]  # fmt: skip
+
+
 def _git(repo: Path, *args: str) -> None:
     subprocess.run(
-        ["git", "-c", "core.autocrlf=false", "-c", "core.safecrlf=false", *args],
+        ["git", *GIT_CFG, *args],
         cwd=repo,
         check=True,
         capture_output=True,
@@ -90,12 +98,36 @@ class RestoreCrlfTest(unittest.TestCase):
             self.assertEqual(crlf.read_bytes(), b"a\r\nb\r\nc\r\n")
 
 
+class RenderFailureTest(unittest.TestCase):
+    def test_render_failure_prints_output_and_exits_2(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _git(repo, "init", "-q")
+            _write(
+                repo / "tools" / "render.py",
+                b"import sys\nprint('render says no')\nsys.exit(3)\n",
+            )
+            err = io.StringIO()
+            with mock.patch.object(release, "TOOLKIT", repo), mock.patch.object(
+                release, "REPO", repo
+            ), contextlib.redirect_stderr(err), contextlib.redirect_stdout(
+                io.StringIO()
+            ):
+                code = release.main(["render"])
+        self.assertEqual(code, 2)
+        self.assertIn("render says no", err.getvalue())
+
+
 class MirrorTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
-        base = Path(self._tmp.name)
-        self.src = base / "org" / "sdv-toolkit"
-        self.dest = base / "dotfiles" / "sdv-toolkit"
+        self.base = Path(self._tmp.name).resolve()
+        self.org = self.base / "org"
+        self.src = self.org / "sdv-toolkit"
+        self.dot = self.base / "dotfiles"
+        self.dest = self.dot / "sdv-toolkit"
+        # Source: an org checkout. Everything below is tracked, junk included,
+        # so the exclusions are tested against the tracked set.
         _write(self.src / "README.md", b"# t\r\nline\r\n")
         _write(self.src / "pkg" / "mod.py", b"x = 1\n")
         _write(self.src / "pkg" / "__pycache__" / "m.pyc", b"\x00pyc")
@@ -103,19 +135,35 @@ class MirrorTest(unittest.TestCase):
         _write(self.src / ".omc" / "x.json", b"{}")
         _write(self.src / ".pytest_cache" / "v", b"x")
         _write(self.src / ".ruff_cache" / "CACHEDIR.TAG", b"x")
+        _write(self.src / ".venv" / "lib.py", b"x")
         _write(self.src / "logo.bin", b"\x89PNG\r\n\x00\r\n")
         script = _write(self.src / "scripts" / "run.sh", b"#!/bin/sh\necho hi\n")
         script.chmod(0o755)
+        _git(self.org, "init", "-q")
+        _git(self.org, "add", "-f", "sdv-toolkit")
+        _git(self.org, "commit", "-q", "--no-verify", "-m", "init")
+        self.scratch = _write(self.src / "scratch.txt", b"untracked")
+        # Dest: the dotfiles checkout. Tracked files, plus one untracked file.
         _write(self.dest / "stale.txt", b"old")
         _write(self.dest / "gone" / "deep.txt", b"old")
         _write(self.dest / ".omc" / "keep", b"session")
+        _git(self.dot, "init", "-q")
+        _git(self.dot, "add", "-f", "sdv-toolkit")
+        self.notes = _write(self.dest / "local-notes.txt", b"mine")
 
     def tearDown(self):
         self._tmp.cleanup()
 
-    def _mirror(self, dry_run=False):
-        with contextlib.redirect_stdout(io.StringIO()):
-            return release.mirror(self.src, self.dest, dry_run=dry_run)
+    def _mirror(self, dry_run=False, dest=None, **kw):
+        err = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(
+            err
+        ):
+            result = release.mirror(
+                self.src, dest or self.dest, dry_run=dry_run, **kw
+            )
+        self.stderr = err.getvalue()
+        return result
 
     def _verify(self):
         out = io.StringIO()
@@ -132,25 +180,38 @@ class MirrorTest(unittest.TestCase):
         self.assertEqual(sorted(deleted), ["gone/deep.txt", "stale.txt"])
         self.assertEqual((self.dest / "README.md").read_bytes(), b"# t\nline\n")
         self.assertEqual((self.dest / "logo.bin").read_bytes(), b"\x89PNG\r\n\x00\r\n")
-        self.assertFalse((self.dest / ".omc" / "x.json").exists())
-        self.assertFalse((self.dest / "pkg" / "__pycache__").exists())
-        self.assertFalse((self.dest / "pkg" / "stray.pyc").exists())
-        self.assertFalse((self.dest / ".pytest_cache").exists())
-        self.assertFalse((self.dest / ".ruff_cache").exists())
+        for junk in (".omc/x.json", "pkg/__pycache__", "pkg/stray.pyc",
+                     ".pytest_cache", ".ruff_cache", ".venv", "scratch.txt"):
+            self.assertFalse((self.dest / junk).exists(), junk)
         self.assertFalse((self.dest / "stale.txt").exists())
         self.assertFalse((self.dest / "gone").exists())
         self.assertEqual((self.dest / ".omc" / "keep").read_bytes(), b"session")
+        self.assertEqual(self.notes.read_bytes(), b"mine")  # untracked: kept
         # Second run is a no-op.
         self.assertEqual(self._mirror(), ([], [], []))
+
+    def test_warns_about_uncommitted_source(self):
+        (self.src / "README.md").write_bytes(b"# edited\n")
+        self._mirror(dry_run=True)
+        self.assertIn("scratch.txt", self.stderr)
+        self.assertIn("README.md", self.stderr)
+        self.scratch.unlink()
+        _git(self.org, "checkout", "--", "sdv-toolkit/README.md")
+        self._mirror(dry_run=True)
+        self.assertEqual(self.stderr, "")  # clean checkout: no warning
 
     @unittest.skipIf(os.name == "nt", "no POSIX exec bit on Windows")
     def test_mirror_preserves_exec_bit(self):
         self._mirror()
         script = self.dest / "scripts" / "run.sh"
         self.assertTrue(script.stat().st_mode & stat.S_IXUSR)
-        script.chmod(0o644)  # mode-only drift is an update
+        script.chmod(0o644)  # mode-only drift is an update...
+        code, out = self._verify()  # ...and verify must see it too
+        self.assertEqual(code, 1)
+        self.assertIn("scripts/run.sh", out)
         self.assertEqual(self._mirror(), ([], ["scripts/run.sh"], []))
         self.assertTrue(script.stat().st_mode & stat.S_IXUSR)
+        self.assertEqual(self._verify(), (0, ""))
 
     def test_verify(self):
         self._mirror()
@@ -165,10 +226,12 @@ class MirrorTest(unittest.TestCase):
         self._mirror()
         (self.dest / "README.md").unlink()
         _write(self.dest / "extra.txt", b"x")
+        _git(self.dot, "add", "sdv-toolkit/extra.txt")
         code, out = self._verify()
         self.assertEqual(code, 1)
         self.assertIn("README.md", out)
         self.assertIn("extra.txt", out)
+        self.assertNotIn("local-notes.txt", out)  # untracked dest-only file
 
     def test_dry_run_writes_nothing(self):
         before = _snapshot(self.dest)
@@ -177,14 +240,27 @@ class MirrorTest(unittest.TestCase):
         self.assertEqual(_snapshot(self.dest), before)
 
     def test_refuses_dangerous_dest(self):
-        with self.assertRaises(ValueError):
-            self._mirror_to(self.dest.parent)  # wrong name: would wipe a repo root
-        with self.assertRaises(ValueError):
-            self._mirror_to(self.src)  # dest is the source
+        _git(self.org, "worktree", "add", "-q", str(self.base / "org-wt2"))
+        for dest in (
+            self.dot,  # wrong name: would wipe a repo root
+            self.src,  # dest is the source
+            self.org / "nested" / "sdv-toolkit",  # inside the org checkout
+            self.base / "org-wt2" / "sdv-toolkit",  # a second org worktree
+            self.base / "plain" / "sdv-toolkit",  # not a git work tree
+        ):
+            with self.assertRaises(ValueError, msg=str(dest)):
+                self._mirror(dry_run=True, dest=dest)
 
-    def _mirror_to(self, dest):
-        with contextlib.redirect_stdout(io.StringIO()):
-            release.mirror(self.src, dest, dry_run=True)
+    def test_non_git_dest_with_allow_flag(self):
+        plain = self.base / "plain" / "sdv-toolkit"
+        _write(plain / "stale.txt", b"old")
+        _write(plain / ".git" / "fake", b"not a repo")
+        if release._toplevel(plain) is not None:
+            self.skipTest("temp dir is inside a git work tree")
+        added, _, deleted = self._mirror(dest=plain, allow_non_git=True)
+        self.assertIn("README.md", added)
+        self.assertEqual(deleted, ["stale.txt"])  # non-git: every file is ours
+        self.assertTrue((plain / ".git" / "fake").exists())  # .git never touched
 
 
 if __name__ == "__main__":

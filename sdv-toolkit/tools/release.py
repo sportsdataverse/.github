@@ -4,15 +4,18 @@
 Line-ending rules: files the org repo's index stores as CRLF (README.md,
 plugin.json, marketplace.json, ...) stay CRLF after a render; the dotfiles
 mirror is LF (its .gitattributes forces eol=lf). A file is text when it
-decodes as UTF-8 and has no NUL byte; binaries are copied as-is. Tool state
-(.omc/, __pycache__/, .pytest_cache/, .ruff_cache/, *.pyc) is never
-mirrored, and the same paths in the mirror are never touched.
+decodes as UTF-8 and has no NUL byte; binaries are copied as-is. The mirror
+source is the git-tracked files under sdv-toolkit/; it deletes only files the
+dest checkout tracks. Tool state (.git/, .venv/, .omc/, __pycache__/,
+.pytest_cache/, .ruff_cache/, *.pyc) is never mirrored, and the same paths in
+the mirror are never touched.
 
 Subcommands (run from sdv-toolkit/):
   bump (patch|minor|major|X.Y.Z)   rewrite plugin.json's version only
   render                           tools/render.py, then restore CRLF
   check                            catalog, render --check, tools + hooks tests
-  mirror --dest DIR [--dry-run]    make DIR an LF copy of sdv-toolkit/
+  mirror --dest DIR [--dry-run] [--allow-non-git]
+                                   make DIR an LF copy of sdv-toolkit/
   verify --dest DIR                diff sdv-toolkit/ vs DIR ignoring CR
   next-steps [--dotfiles DIR]      print the commit/PR/plugin-update commands
 """
@@ -32,7 +35,14 @@ from typing import Callable
 TOOLKIT = Path(__file__).resolve().parents[1]
 REPO = TOOLKIT.parent
 PLUGIN_JSON = TOOLKIT / ".claude-plugin" / "plugin.json"
-EXCLUDED_DIRS = {".omc", "__pycache__", ".pytest_cache", ".ruff_cache"}
+EXCLUDED_DIRS = {
+    ".git",
+    ".venv",
+    ".omc",
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+}
 
 _VERSION = re.compile(rb'("version"\s*:\s*")(\d+\.\d+\.\d+)(")')
 _BARE_LF = re.compile(rb"(?<!\r)\n")
@@ -102,7 +112,14 @@ def restore_crlf(repo: Path, render_step: Callable[[], object]) -> list[str]:
 
 
 def _run_render() -> None:
-    subprocess.run([sys.executable, "tools/render.py"], cwd=TOOLKIT, check=True)
+    r = subprocess.run(
+        [sys.executable, "tools/render.py"],
+        cwd=TOOLKIT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    sys.stdout.write(r.stdout)
 
 
 # -- check -------------------------------------------------------------------
@@ -136,8 +153,25 @@ def _is_excluded(rel: str) -> bool:
     return rel.endswith(".pyc") or any(p in EXCLUDED_DIRS for p in parts)
 
 
+def _git(cwd: Path, *args: str) -> str | None:
+    """stdout of `git <args>` run in cwd (or its nearest existing parent)."""
+    while not cwd.exists():
+        cwd = cwd.parent
+    r = subprocess.run(["git", *args], cwd=cwd, capture_output=True)
+    return r.stdout.decode("utf-8") if r.returncode == 0 else None
+
+
+def _zlist(out: str | None) -> list[str]:
+    return [p for p in (out or "").split("\0") if p and not _is_excluded(p)]
+
+
+def _toplevel(path: Path) -> Path | None:
+    out = _git(path, "rev-parse", "--show-toplevel")
+    return Path(out.strip()).resolve() if out else None
+
+
 def _files(root: Path) -> dict[str, Path]:
-    """{posix relpath: path} for every non-excluded file under root."""
+    """{posix relpath: path} for every non-excluded file on disk under root."""
     found = {}
     if not root.is_dir():
         return found
@@ -149,6 +183,37 @@ def _files(root: Path) -> dict[str, Path]:
             if not _is_excluded(rel):
                 found[rel] = path
     return found
+
+
+def _source_files(src: Path) -> dict[str, Path]:
+    """The git-tracked, non-excluded files under src."""
+    out = _git(src, "ls-files", "-z")
+    if out is None:
+        raise ValueError("mirror source %s is not a git checkout" % src)
+    return {rel: src / rel for rel in _zlist(out) if (src / rel).is_file()}
+
+
+def _owned(dest: Path) -> dict[str, Path]:
+    """Dest files the mirror may delete: the tracked ones, if dest is in git."""
+    files = _files(dest)
+    if files and _toplevel(dest) is not None:
+        tracked = set(_zlist(_git(dest, "ls-files", "-z")))
+        files = {rel: p for rel, p in files.items() if rel in tracked}
+    return files
+
+
+def _warn_uncommitted(src: Path) -> None:
+    untracked = _zlist(_git(src, "ls-files", "-z", "--others", "--exclude-standard"))
+    changed = _zlist(_git(src, "diff", "--name-only", "-z", "--relative", "HEAD"))
+    if not (untracked or changed):
+        return
+    sys.stderr.write(
+        "warning: %s is not a clean checkout; untracked files are NOT mirrored, "
+        "uncommitted edits ARE (working-tree content):\n" % src
+    )
+    for label, rels in (("untracked", untracked), ("modified ", changed)):
+        for rel in rels:
+            sys.stderr.write("  %s  %s\n" % (label, rel))
 
 
 def _lf(data: bytes) -> bytes:
@@ -166,28 +231,46 @@ def _exec_bits(path: Path) -> int:
     return path.stat().st_mode & 0o111
 
 
-def _guard(src: Path, dest: Path) -> None:
+def _roots(path: Path) -> set[str]:
+    return set((_git(path, "rev-list", "--max-parents=0", "HEAD") or "").split())
+
+
+def _guard(src: Path, dest: Path, allow_non_git: bool) -> None:
     s, d = src.resolve(), dest.resolve()
     if d.name != s.name:
         raise ValueError("--dest must end in /%s, got %s" % (s.name, dest))
     if d == s or s in d.parents or d in s.parents:
         raise ValueError("--dest %s overlaps the source %s" % (dest, src))
+    dest_top = _toplevel(d)
+    if dest_top is None:
+        if not allow_non_git:
+            raise ValueError(
+                "--dest %s is not inside a git work tree (pass --allow-non-git)" % dest
+            )
+        return
+    # Same toplevel = the org checkout itself; shared root commits = another
+    # worktree or clone of the org repo. Neither is the dotfiles mirror.
+    if dest_top == _toplevel(s) or _roots(s) & _roots(d):
+        raise ValueError("--dest %s is a checkout of the source repo" % dest)
 
 
 def mirror(
-    src: Path, dest: Path, dry_run: bool = False
+    src: Path, dest: Path, dry_run: bool = False, allow_non_git: bool = False
 ) -> tuple[list[str], list[str], list[str]]:
-    _guard(src, dest)
-    have, want = _files(dest), _files(src)
+    _guard(src, dest, allow_non_git)
+    want = _source_files(src)
+    _warn_uncommitted(src)
     added, updated = [], []
     for rel, path in sorted(want.items()):
-        if rel not in have:
+        out = dest / rel
+        if not out.is_file():
             added.append(rel)
-        elif have[rel].read_bytes() != _lf(path.read_bytes()) or _exec_bits(
-            have[rel]
+        elif out.read_bytes() != _lf(path.read_bytes()) or _exec_bits(
+            out
         ) != _exec_bits(path):
             updated.append(rel)
-    deleted = sorted(set(have) - set(want))
+    owned = _owned(dest)
+    deleted = sorted(set(owned) - set(want))
 
     verb = "would " if dry_run else ""
     for label, rels in (("add", added), ("update", updated), ("delete", deleted)):
@@ -207,7 +290,7 @@ def mirror(
         return added, updated, deleted
 
     for rel in deleted:
-        have[rel].unlink()
+        owned[rel].unlink()
     for dirpath, _, _ in sorted(os.walk(dest), key=lambda w: -len(w[0])):
         d = Path(dirpath)
         rel = d.relative_to(dest).as_posix()
@@ -222,15 +305,19 @@ def mirror(
 
 
 def verify(src: Path, dest: Path) -> int:
-    a, b = _files(src), _files(dest)
+    """Report every path mirror() would add, update or delete."""
+    want, owned = _source_files(src), _owned(dest)
     problems = []
-    for rel in sorted(set(a) | set(b)):
-        if rel not in b:
-            problems.append("missing  %s" % rel)
-        elif rel not in a:
+    for rel in sorted(set(want) | set(owned)):
+        out = dest / rel
+        if rel not in want:
             problems.append("extra    %s" % rel)
-        elif _lf(a[rel].read_bytes()) != _lf(b[rel].read_bytes()):
+        elif not out.is_file():
+            problems.append("missing  %s" % rel)
+        elif _lf(want[rel].read_bytes()) != _lf(out.read_bytes()):
             problems.append("differs  %s" % rel)
+        elif _exec_bits(want[rel]) != _exec_bits(out):
+            problems.append("mode     %s" % rel)
     for line in problems:
         print(line)
     return 1 if problems else 0
@@ -287,6 +374,7 @@ def main(argv: list[str] | None = None) -> int:
     m = sub.add_parser("mirror")
     m.add_argument("--dest", required=True, type=Path)
     m.add_argument("--dry-run", action="store_true")
+    m.add_argument("--allow-non-git", action="store_true")
     sub.add_parser("verify").add_argument("--dest", required=True, type=Path)
     sub.add_parser("next-steps").add_argument("--dotfiles", default="<dotfiles>")
     args = ap.parse_args(argv)
@@ -300,13 +388,19 @@ def main(argv: list[str] | None = None) -> int:
         elif args.cmd == "check":
             return check()
         elif args.cmd == "mirror":
-            mirror(TOOLKIT, args.dest, dry_run=args.dry_run)
+            mirror(TOOLKIT, args.dest, args.dry_run, args.allow_non_git)
         elif args.cmd == "verify":
             return verify(TOOLKIT, args.dest)
         else:
             print(next_steps(args.dotfiles))
     except ValueError as e:
         sys.stderr.write("release.py: %s\n" % e)
+        return 2
+    except subprocess.CalledProcessError as e:
+        sys.stderr.write("release.py: %s failed (exit %d)\n" % (e.cmd, e.returncode))
+        for stream in (e.stdout, e.stderr):
+            if stream:
+                sys.stderr.write(stream if isinstance(stream, str) else stream.decode())
         return 2
     return 0
 
