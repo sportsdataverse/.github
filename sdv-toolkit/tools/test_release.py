@@ -97,6 +97,22 @@ class RestoreCrlfTest(unittest.TestCase):
             self.assertEqual(release.restore_crlf(repo, lambda: None), [])
             self.assertEqual(crlf.read_bytes(), b"a\r\nb\r\nc\r\n")
 
+    def test_restores_crlf_even_when_render_raises(self):
+        # Copilot on dotfiles #28: a render that writes LF and then fails must not leave LF behind.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _git(repo, "init", "-q")
+            crlf = _write(repo / "crlf.md", b"a\r\nb\r\n")
+            _git(repo, "add", "crlf.md")
+
+            def failing_render():
+                crlf.write_bytes(b"a\nb\nc\n")
+                raise RuntimeError("render says no")
+
+            with self.assertRaisesRegex(RuntimeError, "render says no"):
+                release.restore_crlf(repo, failing_render)
+            self.assertEqual(crlf.read_bytes(), b"a\r\nb\r\nc\r\n")
+
     def test_leaves_crlf_indexed_binary_byte_identical(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
@@ -204,6 +220,15 @@ class MirrorTest(unittest.TestCase):
         with contextlib.redirect_stdout(out):
             code = release.verify(self.src, self.dest)
         return code, out.getvalue()
+
+    def test_a_tracked_source_symlink_is_refused_and_its_target_not_copied(self):
+        # Copilot on dotfiles #28: is_file() follows a source symlink and would copy an outside file.
+        secret = _write(self.base / "secret.txt", b"outside the checkout")
+        _symlink(self, self.src / "leak.txt", secret)
+        _git(self.org, "add", "-f", "sdv-toolkit/leak.txt")
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            self._mirror()
+        self.assertFalse((self.dest / "leak.txt").exists())
 
     def test_a_symlinked_dest_file_is_refused_and_its_target_untouched(self):
         # Copilot on #50: following a dest symlink would overwrite a file outside dest.
