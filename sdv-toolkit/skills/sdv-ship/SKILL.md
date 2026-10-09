@@ -445,6 +445,23 @@ block a small, tested fix indefinitely either.
 9. **Report** a table: `thread | by | path:line | verdict (fixed/declined/answered) | resolved?`.
    Leave genuinely contentious threads unresolved and flag them for a human call.
 
+### Both review bots rate-limited: the Copilot fallback
+
+CodeRabbit runs out (about one review an hour, shared across the org) and so does Sourcery (250,000 diff characters
+a week). Owner rule, 2026-10-09: once **both** have been rate-limited for more than 5 minutes on a **package** PR
+(not a `-raw`/`-data` producer), request a GitHub Copilot review without asking if you are the owner (`saiemgilani`)
+or have Copilot PR review. Otherwise ask the user whether to request one. `ci_wait.py --copilot auto` does both,
+and its rate-limit detection reads the real notices, not the bots' green statuses. By hand:
+
+```sh
+gh api -X POST repos/<owner>/<repo>/pulls/<N>/requested_reviewers -f 'reviewers[]=copilot-pull-request-reviewer[bot]'
+# The REST call can succeed without adding Copilot: check that its response lists a Copilot login. If it
+# doesn't, use the one GraphQL call below, then confirm with a REST GET of pulls/<N> (requested_reviewers).
+gh pr edit <N> -R <owner>/<repo> --add-reviewer @copilot
+```
+
+Copilot's threads then get the same treatment as any bot's.
+
 ### Guardrails — decline suggestions that fight CLAUDE.md
 
 When a bot suggestion contradicts a documented repo convention, **decline with a
@@ -464,38 +481,42 @@ here:
 
 ## Phase 6 — CI gate
 
-**CI-green means the codegen gate only.** The remote pytest matrix is observed
-and reported, never waited on — Phase 3 already ran the full suite locally, so
-blocking on a slow/flaky remote matrix just serializes work that Phase 5
-should be running in parallel.
+Wait with `scripts/ci_wait.py` instead of `gh pr checks` loops. The script reads only the REST API: `gh pr
+checks` and `gh pr view` spend the shared GraphQL quota, which ran out on 2026-10-09 while REST was untouched. It
+prints every job line and encodes the owner's rules (2026-10-09):
 
 ```sh
-gh pr checks
+python <toolkit>/skills/sdv-ship/scripts/ci_wait.py <owner/repo> --pr <N>    # defaults: --cap 15m --copilot auto
 ```
 
-1. **Confirm the codegen drift gate job is green.** This is the required
-   signal to proceed to merge. If it's red, read the failing job, fix, and
-   loop back to Phase 1.
-2. **Observe and report the remaining jobs** (test matrix, docs build, etc.)
-   without blocking on them. Distinguish real failures from known repo flakes
-   (0-second Vercel previews; live-test timeout races) — call out a flake
-   explicitly rather than silently ignoring it.
-3. **Three watcher gotchas** carried over from prior incidents: a check run
-   started before a re-push can reflect the OLD head (re-fetch after any
-   push); after any merge the PR-branch run is superseded — the definitive
-   signal is **main's post-merge run** (`gh run list --branch main`); and a
-   settle condition of `gh pr checks | grep -qv pending` fires when ANY line
-   is non-pending (a `skipping` live-test row settles it instantly, 2026-09-01)
-   — loop until the count of `pending` rows is ZERO instead:
-   `pend=$(gh pr checks N | grep -c $'\tpending\t'); [ "$pend" -eq 0 ] && break`.
+| Verdict (exit) | Do |
+|---|---|
+| `ready` (0) | Merge per the repo's merge rule. |
+| `ready-capped` (0) | Nothing failed and every bot thread is answered, but some checks are still running 15 minutes after `ci_wait` first saw the current head. That is the owner's cap: merge without waiting longer. A push restarts the clock, and the cap only fires once the bot threads are answered. The still-pending jobs are listed. |
+| `failed` (1) | Read the named job, fix it and loop back to Phase 1. Never merge past a failure. |
+| `conflict` (2) | Merge the base branch first: a conflicting PR starts no `pull_request` workflows. |
+| `bots-unaddressed` (5) | Answer the listed bot threads (Phase 5), then run it again. |
+| `ask-user` (4) | Both review bots have been rate-limited for 5+ minutes on a package PR, and the acting login may lack Copilot review. Ask the user whether to request a Copilot review. |
+| `timeout` (3), `error` (6) | Report it. Don't merge on it. |
+| `merged` (0), `closed` (7) | Stop. |
+
+Two gotchas remain:
+- A check run started before a re-push reflects the OLD head. The script re-reads the head on every poll and says
+  when it moved.
+- After a merge, the definitive signal is **main's post-merge run** (`gh run list --branch main`), not the PR
+  branch's.
 
 If the codegen gate fails, report the failure and stop — do not silently
 retry or merge past a red gate.
 
 ## Phase 7 — Merge
 
-1. **Merge — only after the codegen drift gate (Phase 6) is green and bot
-   threads (Phase 5) are resolved.**
+1. **Merge once `ci_wait.py` says `ready` or `ready-capped` (Phase 6) and the bot threads (Phase 5) are
+   answered.** Owner rule, 2026-10-09: CI gets at most 15 minutes, counted from when `ci_wait` first sees the current
+   head (a push restarts it). The cap covers every job, the remote codegen gate included, and it fires only once the
+   bot threads are answered. What makes merging safe without it is that Phase 1 already ran
+   `generate.py --check` locally on this tree. If it didn't, run it before merging on `ready-capped`. A **failed**
+   job, or a red codegen gate, still blocks: the cap never overrides a failure.
 
    ```sh
    gh pr merge --squash        # or the project's preferred strategy

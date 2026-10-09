@@ -26,6 +26,14 @@
       ]
     },
     {
+      "name": "sdv-metric-parity",
+      "kind": "skill",
+      "purpose": "Check that a metric means the same thing at every layer that shows or ranks it (sdv-py box, -data ladder, sdv-db, GOP): mean-shown, side-asymmetry and split-sum checks on real data, plus the six defect classes.",
+      "archetypes": [
+        "all"
+      ]
+    },
+    {
       "name": "sdv-model-build",
       "kind": "skill",
       "purpose": "Runs an oracle-gated model build to completion: capture the oracle, worktree, harness, per-task TDD, the never-lower gates, league-shim parity, close-out. Renamed from sdv-model-spine in 0.8.0.",
