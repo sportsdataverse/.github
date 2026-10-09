@@ -131,6 +131,7 @@ def routes(
         "%s/issues/%d/comments?per_page=100" % (base, n): list(comments),
         "%s/pulls/%d/comments?per_page=100" % (base, n): list(inline_),
         "%s/pulls/%d/reviews?per_page=100" % (base, n): list(reviews),
+        "%s/issues/%d/timeline?per_page=100" % (base, n): [],
         "user": {"login": user},
         "rate_limit": {"resources": {"core": {"reset": reset or 0}}},
     }
@@ -142,6 +143,19 @@ def add_head(table, repo, sha, checks_, status_=None):
     table[base + "/check-runs?per_page=100"] = checks_
     table[base + "/status?per_page=100"] = status_ or status()
     return table
+
+
+# REST POST requested_reviewers reply that really added Copilot.
+COPILOT_ADDED = {"requested_reviewers": [{"login": "Copilot"}]}
+# REST 200 that silently added nobody (the CodeRabbit finding on PR #50).
+NOBODY_ADDED = (0, json.dumps({"requested_reviewers": []}), "")
+
+
+TIMELINE = "repos/%s/issues/7/timeline?per_page=100"
+
+
+def requested_event(at, who="Copilot"):
+    return {"event": "review_requested", "created_at": at, "requested_reviewer": {"login": who}}
 
 
 class Seq:
@@ -167,7 +181,14 @@ class FakeGh:
         if argv[0] == "pr" or "-X" in argv:
             self.posts.append(argv)
             self.post_times.append(self.clock.t if self.clock else None)
-            return (0, "{}", "") if self.post_ok else (1, "", "HTTP 422")
+            # Override with table["POST"] (REST) / table["EDIT"] (gh pr edit).
+            if argv[0] == "pr":
+                ok, key = (0, "", ""), "EDIT"
+                bad = (1, "", "GraphQL: Could not add reviewer")
+            else:
+                ok, key = (0, json.dumps(COPILOT_ADDED), ""), "POST"
+                bad = (1, "", "HTTP 422")
+            return self.table.get(key, ok if self.post_ok else bad)
         path = argv[1]
         self.gets.append(path)
         value = self.table[path]
@@ -510,20 +531,87 @@ class CopilotRule(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertTrue(out.rstrip().endswith("VERDICT: ready"))
 
-    def test_post_fails_asks_user_without_graphql_fallback(self):
-        # `gh pr edit --add-reviewer` is GraphQL: never fall back to it.
+    @staticmethod
+    def kinds(fake):
+        return [p[0] for p in fake.posts]  # "api" = REST POST, "pr" = gh pr edit
+
+    def test_rest_reply_listing_copilot_needs_no_fallback(self):
+        rc, out, fake, _ = go(PY, self.limited(PY), "--timeout", "2m", start=T0 + 360)
+        self.assertEqual(self.kinds(fake), ["api"])
+        self.assertNotIn(TIMELINE % PY, fake.gets)  # (a) is enough: no re-read
+        self.assertIn("ACTION: requested Copilot review (REST", out)
+
+    def test_rest_reply_without_copilot_but_timeline_event_needs_no_fallback(self):
+        # saiemgilani/dotfiles#27: the REST POST did add Copilot; only the
+        # timeline (review_requested Copilot) shows it.
         table = self.limited(PY)
-        rc, out, fake, _ = go(
-            PY, table, "--timeout", "2m", start=T0 + 360, post_ok=False
-        )
-        self.assertEqual(len(fake.posts), 1)
-        self.assertEqual(fake.posts[0][:3], ["api", "-X", "POST"])
-        action = [
-            l for l in out.splitlines() if l.startswith("ACTION:") and "HTTP 422" in l
+        table["POST"] = NOBODY_ADDED
+        table[TIMELINE % PY] = [requested_event(iso(T0 + 361))]
+        rc, out, fake, _ = go(PY, table, "--timeout", "2m", start=T0 + 360)
+        self.assertEqual(self.kinds(fake), ["api"])
+        self.assertIn("ACTION: requested Copilot review (REST", out)
+
+    def test_rest_reply_without_copilot_but_requested_on_reread_needs_no_fallback(self):
+        table = self.limited(PY)
+        table["POST"] = NOBODY_ADDED
+        table["repos/%s/pulls/7" % PY] = Seq(pr(), pr(requested=["Copilot"]), pr())
+        rc, out, fake, _ = go(PY, table, "--timeout", "2m", start=T0 + 360)
+        self.assertEqual(self.kinds(fake), ["api"])
+
+    def test_unconfirmed_rest_falls_back_once_then_reverifies(self):
+        table = self.limited(PY)
+        table["POST"] = NOBODY_ADDED
+        # A Copilot request from BEFORE this run's POST, or a human's request
+        # after it, must not count.
+        table[TIMELINE % PY] = [
+            requested_event(T0_ISO),
+            requested_event(iso(T0 + 361), who="alice"),
         ]
+        # poll 1, re-read after REST, re-read after gh pr edit, poll 2, then gone.
+        table["repos/%s/pulls/7" % PY] = Seq(
+            pr(), pr(), pr(requested=["Copilot"]), pr(requested=["Copilot"]), pr()
+        )
+        rc, out, fake, _ = go(PY, table, start=T0 + 360)
+        self.assertEqual(self.kinds(fake), ["api", "pr"])
+        self.assertEqual(fake.posts[1][:2], ["pr", "edit"])
+        self.assertIn("--add-reviewer", fake.posts[1])
+        self.assertIn("ACTION: requested Copilot review (gh pr edit", out)
+        self.assertEqual(rc, 0)
+
+    def test_fallback_runs_at_most_once_per_head(self):
+        table = self.limited(PY)
+        table["POST"] = NOBODY_ADDED
+        table["repos/%s/commits/%s/check-runs?per_page=100" % (PY, SHA)] = checks(
+            run_("slow", status="in_progress")
+        )
+        table["repos/%s/pulls/7" % PY] = Seq(
+            pr(), pr(), pr(requested=["Copilot"]), pr()
+        )
+        rc, out, fake, clock = go(PY, table, start=T0 + 360)  # runs to --cap
+        self.assertTrue(out.rstrip().endswith("VERDICT: ready-capped"))
+        self.assertGreater(clock.t - T0 - 360, 600)
+        self.assertEqual(self.kinds(fake).count("pr"), 1)
+
+    def test_both_paths_unverified_asks_user(self):
+        table = self.limited(PY)
+        table["POST"] = NOBODY_ADDED  # and the re-read shows no Copilot either
+        rc, out, fake, _ = go(PY, table, start=T0 + 360)
+        self.assertEqual(self.kinds(fake), ["api", "pr"])
+        action = [l for l in out.splitlines() if l.startswith("ACTION: Copilot")]
         self.assertEqual(len(action), 1, out)
+        self.assertIn("REST:", action[0])
+        self.assertIn("gh pr edit:", action[0])
         self.assertEqual(rc, 4)
         self.assertTrue(out.rstrip().endswith("VERDICT: ask-user"))
+
+    def test_both_paths_error_asks_user_with_both_errors(self):
+        rc, out, fake, _ = go(PY, self.limited(PY), start=T0 + 360, post_ok=False)
+        self.assertEqual(self.kinds(fake), ["api", "pr"])
+        action = [l for l in out.splitlines() if l.startswith("ACTION: Copilot")]
+        self.assertEqual(len(action), 1, out)
+        self.assertIn("HTTP 422", action[0])
+        self.assertIn("Could not add reviewer", action[0])
+        self.assertEqual(rc, 4)
 
     def test_requested_copilot_that_never_appears_is_let_go_after_grace(self):
         # POST succeeded but Copilot never shows in requested_reviewers or reviews.

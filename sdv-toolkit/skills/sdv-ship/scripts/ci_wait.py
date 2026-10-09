@@ -9,7 +9,9 @@ Owner rules:
      Copilot review when the actor is allowed (saiemgilani, or a login in
      SDV_COPILOT_REVIEWERS); otherwise stop and ask the user.
 
-REST only (`gh api`): `gh pr checks` / `gh pr view` burn the shared GraphQL quota.
+REST only (`gh api`), except this one call, made at most once per head:
+`gh pr edit --add-reviewer @copilot` (GraphQL), when the REST Copilot request did
+not take. `gh pr checks` / `gh pr view` would burn the shared GraphQL quota.
 
 Usage:
     python3 ci_wait.py owner/repo (--pr N | --sha SHA) [--interval 60s] [--cap 15m]
@@ -37,10 +39,11 @@ from collections import Counter
 
 OWNER = "saiemgilani"
 COPILOT_REVIEWER = "copilot-pull-request-reviewer[bot]"
+COPILOT_LOGINS = {COPILOT_REVIEWER, "Copilot", "copilot-pull-request-reviewer"}
 BOTS = {
     "CodeRabbit": {"coderabbitai[bot]"},
     "Sourcery": {"sourcery-ai[bot]"},
-    "Copilot": {COPILOT_REVIEWER, "Copilot"},
+    "Copilot": COPILOT_LOGINS,
 }
 # CodeRabbit's notice carries a hidden marker + heading. A bare "rate limit"
 # would also match its walkthrough of any PR that is ABOUT rate limits.
@@ -127,9 +130,26 @@ class Gh:
                 return items
             page += 1
 
+    def copilot_landed(self, repo, n, since):
+        """REST re-read: Copilot in requested_reviewers, or a review_requested
+        event for it no older than `since` (60 s of clock-skew slack)."""
+        base = "repos/%s/" % repo
+        if copilot_requested(self.get(base + "pulls/%d" % n)):
+            return True
+        return any(
+            e.get("event") == "review_requested"
+            and (e.get("requested_reviewer") or {}).get("login") in COPILOT_LOGINS
+            and (ts(e.get("created_at")) or 0) >= since - 60
+            for e in self.get_list(base + "issues/%d/timeline?per_page=100" % n)
+        )
+
     def request_copilot(self, repo, n):
-        """Return (ok, detail). REST only: `gh pr edit --add-reviewer` is GraphQL."""
-        rc, _, err = self.runner(
+        """Return (ok, detail): (a) the REST reply lists Copilot; else (b) a REST
+        re-read shows it; else (c) `gh pr edit --add-reviewer @copilot` -- GraphQL,
+        the one exception to REST-only, at most once per head (the caller) --
+        re-verified with (b); else (d) not ok, with both errors."""
+        asked = self.now()
+        rc, out, err = self.runner(
             [
                 "api",
                 "-X",
@@ -139,7 +159,28 @@ class Gh:
                 "reviewers[]=" + COPILOT_REVIEWER,
             ]
         )
-        return rc == 0, "REST requested_reviewers" if rc == 0 else one_line(err)
+        if rc == 0:
+            try:
+                if copilot_requested(json.loads(out or "{}")):
+                    return True, "REST requested_reviewers"
+            except ValueError:
+                pass
+            rest = "200 but the reply lists no Copilot"
+        else:
+            rest = one_line(err, 120)
+        if self.copilot_landed(repo, n, asked):
+            return True, "REST requested_reviewers, confirmed by re-read"
+        rc, _, err = self.runner(
+            ["pr", "edit", str(n), "-R", repo, "--add-reviewer", "@copilot"]
+        )
+        if rc != 0:
+            return False, "REST: %s; gh pr edit: %s" % (rest, one_line(err, 120))
+        if self.copilot_landed(repo, n, asked):
+            return True, "gh pr edit --add-reviewer @copilot; REST: %s" % rest
+        return False, (
+            "REST: %s; gh pr edit: ran, but Copilot is in neither"
+            " requested_reviewers nor the timeline" % rest
+        )
 
 
 def duration(text):
@@ -151,6 +192,11 @@ def duration(text):
 
 def one_line(text, limit=200):
     return " ".join(str(text).split())[:limit]
+
+
+def copilot_requested(pr):
+    users = pr.get("requested_reviewers") if isinstance(pr, dict) else None
+    return any(isinstance(u, dict) and u.get("login") in COPILOT_LOGINS for u in users or [])
 
 
 def ts(s):
@@ -450,8 +496,7 @@ def run(
                             "ask-user",
                             snap,
                             [
-                                "ACTION: Copilot review request failed (REST: %s)"
-                                % how,
+                                "ACTION: Copilot review request failed (%s)" % how,
                                 ask,
                             ],
                             threads,
