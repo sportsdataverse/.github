@@ -509,8 +509,11 @@ retry or merge past a red gate.
 
 ## Phase 7 — Merge
 
-1. **Merge — only after the codegen drift gate (Phase 6) is green and bot
-   threads (Phase 5) are resolved.**
+1. **Merge once `ci_wait.py` says `ready` or `ready-capped` (Phase 6) and the bot threads (Phase 5) are
+   answered.** Owner rule, 2026-10-09: CI gets at most 15 minutes after the bots are addressed, and that cap covers
+   every job, the remote codegen gate included. What makes merging safe without it is that Phase 1 already ran
+   `generate.py --check` locally on this tree. If it didn't, run it before merging on `ready-capped`. A **failed**
+   job, or a red codegen gate, still blocks: the cap never overrides a failure.
 
    ```sh
    gh pr merge --squash        # or the project's preferred strategy
