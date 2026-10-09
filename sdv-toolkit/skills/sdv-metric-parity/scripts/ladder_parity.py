@@ -152,10 +152,11 @@ def check(
                 for flag in (0, 1):
                     sv = [r[metric] for r in vrows if _flag(r.get(side_col)) == flag]
                     sides[flag] = mean_shown(sv, bps)[0]
-                if (
-                    not any(math.isnan(x) for x in sides.values())
-                    and abs(sides[1] - sides[0]) > side_tol
-                ):
+                empty = [f for f, x in sides.items() if math.isnan(x)]
+                if empty:  # no usable values on a side: the comparison never happened, so it is not a pass
+                    verdict = "NO-DATA"
+                    note = f"{side_col}={empty[0]} has no values for {metric}"
+                elif abs(sides[1] - sides[0]) > side_tol:
                     verdict = "SIDE-ASYMMETRY"
                     note = f"{side_col}=1 shows {sides[1]:.1f}, {side_col}=0 shows {sides[0]:.1f}"
             out.append(
@@ -201,9 +202,7 @@ def _read(path: str) -> list[dict]:
         try:
             import polars as pl
         except ImportError:
-            raise SystemExit(
-                f"{path}: reading parquet needs polars (uv run --with polars ...) or pass a CSV"
-            ) from None
+            raise ValueError(f"{path}: reading parquet needs polars (uv run --with polars ...) or pass a CSV") from None
         return pl.read_parquet(p).to_dicts()
     with p.open(newline="", encoding="utf-8") as fh:
         return list(csv.DictReader(fh))
@@ -287,7 +286,8 @@ def main(argv: list[str] | None = None) -> int:
         results = check(
             values, ladder, mapping, season=a.season, tol=a.tol, side_col=a.side_col, side_tol=a.side_tol
         )
-        splits = [split_sums(values, o, ps, eps=a.split_eps) for o, ps in split_specs]
+        split_rows = [r for r in values if a.season is None or str(_season(r)) == str(a.season)]
+        splits = [split_sums(split_rows, o, ps, eps=a.split_eps) for o, ps in split_specs]
     except (ValueError, OSError) as e:  # a bad map, a missing column or an unreadable file: exit 2, no traceback
         print(f"ladder_parity: {e}", file=sys.stderr)
         return 2
@@ -314,8 +314,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     for s in splits:
         print(
-            f"split {s.overall} = {' + '.join(s.parts)}: {s.verdict} (parts sum to the whole on "
-            f"{_fmt(100 * s.share_summing)}% of {s.n} rows)"
+            f"split {s.overall} = {' + '.join(s.parts)}: {s.verdict} (season {a.season or 'all'}: parts sum to "
+            f"the whole on {_fmt(100 * s.share_summing)}% of {s.n} rows)"
         )
     verdicts = {r.verdict for r in results} | {s.verdict for s in splits}
     # NO-DATA fails too: a check that found nothing to check is not a pass.

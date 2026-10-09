@@ -455,7 +455,9 @@ and its rate-limit detection reads the real notices, not the bots' green statuse
 
 ```sh
 gh api -X POST repos/<owner>/<repo>/pulls/<N>/requested_reviewers -f 'reviewers[]=copilot-pull-request-reviewer[bot]'
-# or: gh pr edit <N> -R <owner>/<repo> --add-reviewer @copilot
+# The REST call can succeed without adding Copilot: check that its response lists a Copilot login. If it
+# doesn't, use the one GraphQL call below, then confirm with a REST GET of pulls/<N> (requested_reviewers).
+gh pr edit <N> -R <owner>/<repo> --add-reviewer @copilot
 ```
 
 Copilot's threads then get the same treatment as any bot's.

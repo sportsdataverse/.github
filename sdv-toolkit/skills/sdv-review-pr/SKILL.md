@@ -174,7 +174,8 @@ Then:
 | A new or renamed release tag | `sdv-dataset-coverage-auditor` |
 
 When subagents are unavailable, read the agent's definition at
-`<this-skill-dir>/../../agents/<agent>.md` and apply the lens inline.
+`<this-skill-dir>/../../agents/<agent>.md` and apply the lens inline. A `/skill` row (such as `/sdv-metric-parity`)
+is a skill, not an agent: read `<this-skill-dir>/../<skill>/SKILL.md` and run it inline. It needs no subagent.
 
 **REVIEW-SIZE** — above ~40 files or ~3k changed lines, fan out one subagent per
 archetype or pass (cap 6), each given its reference file, its file subset, the head SHA,

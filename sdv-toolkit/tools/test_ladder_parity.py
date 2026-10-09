@@ -345,5 +345,53 @@ class BotThreadFixes(unittest.TestCase):
                 self.assertEqual(code, 2, repr(spec))
 
 
+class CodeRabbitFixes(unittest.TestCase):
+    """PR #50 CodeRabbit threads."""
+
+    def test_a_side_with_only_null_values_is_no_data(self):
+        n = 100
+        side = [1 if i % 2 else 0 for i in range(n)]
+        vals = [None if s else v for s, v in zip(side, _uniform(0, 1, n))]
+        [res] = lp.check(_rows({"m": vals}, extra={"home": side}), _ladder_rows({"k": _ladder(0, 1)}), {"m": "k"},
+                         side_col="home")
+        self.assertEqual(res.verdict, "NO-DATA")
+        self.assertIn("home=1", res.note)
+
+    def test_parquet_without_polars_is_exit_2(self):
+        saved = sys.modules.get("polars", "missing")
+        sys.modules["polars"] = None  # import polars raises ImportError
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                err = io.StringIO()
+                with redirect_stdout(io.StringIO()), redirect_stderr(err):
+                    code = lp.main(["--values", f"{d}/v.parquet", "--ladder", f"{d}/l.parquet", "--map", "a=b"])
+            self.assertEqual(code, 2)
+            self.assertIn("polars", err.getvalue())
+        finally:
+            if saved == "missing":
+                del sys.modules["polars"]
+            else:
+                sys.modules["polars"] = saved
+
+    def test_split_checks_use_only_the_selected_season(self):
+        summing = [{"season": 2024, "o": 0.5, "a": 0.3, "b": 0.2} for _ in range(30)]
+        weighted = [{"season": 2025, "o": 0.5, "a": 0.55, "b": 0.44} for _ in range(10)]
+        rows = summing + weighted
+        ladder = _ladder_rows({"k": _ladder(0, 1)}, season=2024) + _ladder_rows({"k": _ladder(0, 1)}, season=2025)
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            for name, rs in (("v.csv", rows), ("l.csv", ladder)):
+                with (d / name).open("w", newline="", encoding="utf-8") as fh:
+                    w = csv.DictWriter(fh, fieldnames=list(rs[0]))
+                    w.writeheader()
+                    w.writerows(rs)
+            base = ["--values", str(d / "v.csv"), "--ladder", str(d / "l.csv"), "--map", "o=k", "--split", "o=a+b"]
+            out = io.StringIO()
+            with redirect_stdout(out), redirect_stderr(io.StringIO()):
+                lp.main([*base, "--season", "2025"])
+            self.assertIn("split o = a + b: OK", out.getvalue())
+            self.assertIn("season 2025", out.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()
