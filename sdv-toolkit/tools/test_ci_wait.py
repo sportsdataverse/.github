@@ -299,6 +299,14 @@ class Verdicts(unittest.TestCase):
         self.assertIn("success\tCodeRabbit", out)
         self.assertTrue(out.rstrip().endswith("VERDICT: ready"))
 
+    def test_a_stale_check_run_is_a_failure_not_green(self):
+        # Copilot on #50: a completed run with conclusion `stale` never succeeded.
+        table = routes(PY, checks_=checks(run_("tests", conclusion="stale"), run_("lint", id=2)))
+        rc, out, _, _ = go(PY, table, "--bots-grace", "0s")
+        self.assertEqual(rc, 1)
+        self.assertIn("tests", out)
+        self.assertTrue(out.rstrip().endswith("VERDICT: failed"))
+
     def test_merged_pr_stops_at_once_even_with_a_stuck_bot(self):
         # PR 736 merged mid-review: CodeRabbit's status stayed pending and the wait ran to --timeout.
         merged = {**pr(), "state": "closed", "merged": True}

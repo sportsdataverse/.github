@@ -492,7 +492,7 @@ python <toolkit>/skills/sdv-ship/scripts/ci_wait.py <owner/repo> --pr <N>    # d
 | Verdict (exit) | Do |
 |---|---|
 | `ready` (0) | Merge per the repo's merge rule. |
-| `ready-capped` (0) | Nothing failed and every bot thread is answered, but some checks are still running 15 minutes in. That is the owner's cap: merge without waiting longer. The still-pending jobs are listed. |
+| `ready-capped` (0) | Nothing failed and every bot thread is answered, but some checks are still running 15 minutes after `ci_wait` first saw the current head. That is the owner's cap: merge without waiting longer. A push restarts the clock, and the cap only fires once the bot threads are answered. The still-pending jobs are listed. |
 | `failed` (1) | Read the named job, fix it and loop back to Phase 1. Never merge past a failure. |
 | `conflict` (2) | Merge the base branch first: a conflicting PR starts no `pull_request` workflows. |
 | `bots-unaddressed` (5) | Answer the listed bot threads (Phase 5), then run it again. |
@@ -512,8 +512,9 @@ retry or merge past a red gate.
 ## Phase 7 — Merge
 
 1. **Merge once `ci_wait.py` says `ready` or `ready-capped` (Phase 6) and the bot threads (Phase 5) are
-   answered.** Owner rule, 2026-10-09: CI gets at most 15 minutes after the bots are addressed, and that cap covers
-   every job, the remote codegen gate included. What makes merging safe without it is that Phase 1 already ran
+   answered.** Owner rule, 2026-10-09: CI gets at most 15 minutes, counted from when `ci_wait` first sees the current
+   head (a push restarts it). The cap covers every job, the remote codegen gate included, and it fires only once the
+   bot threads are answered. What makes merging safe without it is that Phase 1 already ran
    `generate.py --check` locally on this tree. If it didn't, run it before merging on `ready-capped`. A **failed**
    job, or a red codegen gate, still blocks: the cap never overrides a failure.
 

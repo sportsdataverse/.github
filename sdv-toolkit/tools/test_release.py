@@ -197,6 +197,22 @@ class MirrorTest(unittest.TestCase):
             code = release.verify(self.src, self.dest)
         return code, out.getvalue()
 
+    def test_a_symlinked_dest_file_is_refused_and_its_target_untouched(self):
+        # Copilot on #50: following a dest symlink would overwrite a file outside dest.
+        outside = _write(self.base / "outside.txt", b"precious")
+        (self.dest / "README.md").symlink_to(outside)
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            self._mirror()
+        self.assertEqual(outside.read_bytes(), b"precious")
+
+    def test_a_symlinked_dest_directory_is_refused(self):
+        elsewhere = self.base / "elsewhere"
+        elsewhere.mkdir()
+        (self.dest / "pkg").symlink_to(elsewhere, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            self._mirror()
+        self.assertEqual(list(elsewhere.iterdir()), [])
+
     def test_mirror(self):
         added, updated, deleted = self._mirror()
         self.assertEqual(

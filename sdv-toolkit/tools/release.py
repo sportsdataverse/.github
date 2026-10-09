@@ -263,11 +263,22 @@ def _guard(src: Path, dest: Path, allow_non_git: bool) -> None:
         raise ValueError("--dest %s is a checkout of the source repo" % dest)
 
 
+def _no_symlinks(dest: Path, rels) -> None:
+    """Refuse a path whose file or any parent below dest is a symlink: following it would write outside dest."""
+    for rel in rels:
+        p = dest
+        for part in Path(rel).parts:
+            p = p / part
+            if p.is_symlink():
+                raise ValueError("--dest %s is a symlink; refusing to follow it outside %s" % (p, dest))
+
+
 def mirror(
     src: Path, dest: Path, dry_run: bool = False, allow_non_git: bool = False
 ) -> tuple[list[str], list[str], list[str]]:
     _guard(src, dest, allow_non_git)
     want = _source_files(src)
+    _no_symlinks(dest, set(want) | set(_owned(dest)))
     _warn_uncommitted(src)
     added, updated = [], []
     for rel, path in sorted(want.items()):

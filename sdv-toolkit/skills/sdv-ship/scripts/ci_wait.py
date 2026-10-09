@@ -57,7 +57,7 @@ LIMITED = {
 }
 PENDING = {"CodeRabbit": re.compile(r"currently processing|review in progress", re.I)}
 GUIDE = "start review_guide"  # Sourcery's reviewer's guide summarises the PR text
-FAILED = {"failure", "timed_out", "cancelled", "action_required", "startup_failure"}
+FAILED = {"failure", "timed_out", "cancelled", "action_required", "startup_failure", "stale"}  # stale never succeeded
 EXIT = {
     "ready": 0,
     "ready-capped": 0,
