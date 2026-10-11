@@ -849,5 +849,90 @@ class GhRetries(unittest.TestCase):
         self.assertTrue(out.rstrip().endswith("VERDICT: error"))
 
 
+
+COPILOT_NO_QUOTA = (
+    "Copilot was unable to review this pull request because the user who requested the review has "
+    "reached their quota limit."
+)
+
+
+def credits(remaining, entitlement=7000, unlimited=False):
+    return {
+        "quota_reset_date": "2026-11-01",
+        "quota_snapshots": {
+            "premium_interactions": {
+                "remaining": remaining,
+                "entitlement": entitlement,
+                "unlimited": unlimited,
+                "percent_remaining": 100.0 * remaining / entitlement,
+            }
+        },
+    }
+
+
+class CopilotCredits(unittest.TestCase):
+    """sportsdataverse-py #764 (2026-10-11): Copilot was requested with 171 of 7,000 premium
+    credits left and answered with a quota refusal -- which bot_states read as a review."""
+
+    def limited(self, repo, **kw):
+        return CopilotRule.limited(self, repo, **kw)
+
+    def test_quota_refusal_is_not_a_review(self):
+        snap = BotStates.snap(BotStates(), reviews=[review(COPILOT_BOT, body=COPILOT_NO_QUOTA)])
+        self.assertEqual(cw.bot_states(snap)["Copilot"][0], "no-credits")
+
+    def test_low_credits_mean_self_review_not_a_request(self):
+        table = self.limited(PY)
+        table["copilot_internal/user"] = credits(171)
+        rc, out, fake, _ = go(PY, table, start=T0 + 360)
+        self.assertEqual(fake.posts, [])
+        self.assertEqual(rc, 8)
+        self.assertIn("171 of 7000", out)
+        self.assertIn("ACTION: run a self-review", out)
+        self.assertTrue(out.rstrip().endswith("VERDICT: self-review"))
+
+    def test_refusal_already_on_the_head_means_self_review(self):
+        table = self.limited(PY, reviews=[review(COPILOT_BOT, body=COPILOT_NO_QUOTA)])
+        rc, out, fake, _ = go(PY, table, start=T0 + 360)
+        self.assertEqual(fake.posts, [])
+        self.assertEqual(rc, 8)
+        self.assertIn("quota", out)
+
+    def test_enough_credits_still_requests(self):
+        table = self.limited(PY)
+        table["copilot_internal/user"] = credits(5000)
+        rc, out, fake, _ = go(PY, table, "--timeout", "2m", start=T0 + 360)
+        self.assertEqual(len(fake.posts), 1)
+        self.assertIn("ACTION: requested Copilot review (", out)
+
+    def test_threshold_is_configurable(self):
+        table = self.limited(PY)
+        table["copilot_internal/user"] = credits(5000)
+        rc, out, fake, _ = go(PY, table, start=T0 + 360, env={"SDV_COPILOT_MIN_CREDITS": "6000"})
+        self.assertEqual(fake.posts, [])
+        self.assertEqual(rc, 8)
+
+    def test_refusal_after_our_request_is_not_ready(self):
+        """Copilot was requested, then answered with a refusal: that is no review (Sourcery on #52)."""
+        table = self.limited(PY)
+        table["copilot_internal/user"] = credits(5000)
+        table["repos/%s/pulls/7" % PY] = Seq(pr(), pr(requested=["Copilot"]), pr())
+        table["repos/%s/pulls/7/reviews?per_page=100" % PY] = Seq(
+            [], [], [review(COPILOT_BOT, at="2026-10-09T08:20:00Z", body=COPILOT_NO_QUOTA)]
+        )
+        rc, out, fake, _ = go(PY, table, start=T0 + 360)
+        self.assertEqual(len(fake.posts), 1)
+        self.assertEqual(rc, 8)
+        self.assertTrue(out.rstrip().endswith("VERDICT: self-review"))
+
+    def test_bad_credit_floor_falls_back_to_the_default(self):
+        for bad in ("lots", "nan"):
+            table = self.limited(PY)
+            table["copilot_internal/user"] = credits(171)
+            rc, out, fake, _ = go(PY, table, start=T0 + 360, env={"SDV_COPILOT_MIN_CREDITS": bad})
+            self.assertEqual(rc, 8, bad)
+            self.assertEqual(fake.posts, [], bad)
+
+
 if __name__ == "__main__":
     unittest.main()
