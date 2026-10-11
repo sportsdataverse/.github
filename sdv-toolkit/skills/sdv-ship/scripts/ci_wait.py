@@ -8,6 +8,10 @@ Owner rules:
      are both rate-limited for more than --bots-limited-after, request a GitHub
      Copilot review when the actor is allowed (saiemgilani, or a login in
      SDV_COPILOT_REVIEWERS); otherwise stop and ask the user.
+  3. Copilot reviews spend the actor's premium credits. Before requesting, read
+     them (`copilot_internal/user`); below SDV_COPILOT_MIN_CREDITS (default 500)
+     -- or when Copilot already answered this PR with a quota refusal -- stop with
+     verdict `self-review`: run a fresh-context self-review and push its fixes.
 
 REST only (`gh api`), except this one call, made at most once per head:
 `gh pr edit --add-reviewer @copilot` (GraphQL), when the REST Copilot request did
@@ -22,7 +26,8 @@ A push restarts --cap and --bots-grace (CodeRabbit/Sourcery with no review of th
 current head count as pending for --bots-grace); --timeout never restarts.
 
 Exit: 0 ready / ready-capped / merged, 1 failed, 2 conflict, 3 timeout, 4 ask-user,
-      5 bots-unaddressed, 6 error (including usage errors), 7 closed without merging.
+      5 bots-unaddressed, 6 error (including usage errors), 7 closed without merging,
+      8 self-review (no bot can review: run a self-review and push its fixes).
 """
 
 from __future__ import annotations
@@ -55,6 +60,12 @@ LIMITED = {
     ),
     "Sourcery": re.compile(r"review budget|rate limit", re.I),
 }
+# Copilot answers a request it cannot pay for with a REVIEW whose body is this notice.
+# It has a body, so without this it read as "reviewed".
+COPILOT_NO_QUOTA = re.compile(r"unable to review this pull request because .{0,80}quota limit", re.I)
+#: A Copilot review spends premium credits; below this many left, do not ask.
+#: 171 of 7,000 was refused (sportsdataverse-py #764, 2026-10-11).
+COPILOT_MIN_CREDITS = 500
 PENDING = {"CodeRabbit": re.compile(r"currently processing|review in progress", re.I)}
 GUIDE = "start review_guide"  # Sourcery's reviewer's guide summarises the PR text
 # stale: GitHub retired the check without it ever succeeding
@@ -77,6 +88,7 @@ EXIT = {
     "error": 6,
     "merged": 0,
     "closed": 7,
+    "self-review": 8,
 }
 
 
@@ -164,6 +176,19 @@ class Gh:
             max(events, key=lambda e: ts(e.get("created_at")) or 0)["event"]
             == "review_requested"
         )
+
+    def copilot_credits(self):
+        """(remaining, entitlement, reset_date) of the actor's premium credits, or None
+        when unknown or unlimited. Unknown never blocks a request: the endpoint is
+        GitHub-internal, and a refusal on the PR is caught by bot_states anyway."""
+        try:
+            info = self.get("copilot_internal/user") or {}
+            q = (info.get("quota_snapshots") or {}).get("premium_interactions") or {}
+            if q.get("unlimited") or q.get("remaining") is None:
+                return None
+            return q["remaining"], q.get("entitlement"), info.get("quota_reset_date")
+        except Exception:
+            return None
 
     def request_copilot(self, repo, n):
         """Return (ok, detail): (a) the REST reply lists Copilot; else (b) a REST
@@ -305,7 +330,9 @@ def bot_states(snap):
 
         status = cr_status if bot == "CodeRabbit" else None
         limited = newest(LIMITED.get(bot))
-        if limited:
+        if bot == "Copilot" and latest and not stale and COPILOT_NO_QUOTA.search(latest.get("body") or ""):
+            states[bot] = ("no-credits", ts(latest.get("submitted_at")))
+        elif limited:
             states[bot] = ("rate-limited", limited)
         elif status == "pending" or newest(PENDING.get(bot)) or requested & logins:
             states[bot] = ("pending", None)
@@ -366,6 +393,11 @@ def run(
     ask = "ACTION: ask the user whether to request a GitHub Copilot review on %s#%s" % (
         a.repo,
         a.pr,
+    )
+    min_credits = float(env.get("SDV_COPILOT_MIN_CREDITS") or COPILOT_MIN_CREDITS)
+    self_review = (
+        "ACTION: run a self-review -- a fresh-context reviewer (the repo's sdv-*-reviewer) over the "
+        "whole diff -- fix Critical/Important findings test-first, push, and reply on the PR"
     )
     allowed = {OWNER} | {
         x.strip() for x in env.get("SDV_COPILOT_REVIEWERS", "").split(",") if x.strip()
@@ -506,7 +538,7 @@ def run(
                 both_since is not None
                 and package
                 and a.copilot != "never"
-                and bots["Copilot"][0] == "absent"
+                and bots["Copilot"][0] in ("absent", "no-credits")
                 and not copilot_tried
             ):
                 if now() - both_since <= a.bots_limited_after:
@@ -514,6 +546,14 @@ def run(
                 else:
                     if a.copilot == "auto" and actor is None:
                         actor = (gh.get("user") or {}).get("login", "")
+                    if bots["Copilot"][0] == "no-credits":
+                        return finish(
+                            "self-review",
+                            snap,
+                            ["CodeRabbit and Sourcery rate-limited; Copilot answered with a quota refusal",
+                             self_review],
+                            threads,
+                        )
                     if a.copilot == "ask" or actor not in allowed:
                         return finish(
                             "ask-user",
@@ -522,6 +562,18 @@ def run(
                                 "CodeRabbit and Sourcery both rate-limited > %ds"
                                 % a.bots_limited_after,
                                 ask,
+                            ],
+                            threads,
+                        )
+                    left = gh.copilot_credits()
+                    if left is not None and left[0] < min_credits:
+                        return finish(
+                            "self-review",
+                            snap,
+                            [
+                                "CodeRabbit and Sourcery rate-limited; Copilot has %g of %s premium "
+                                "credits left (need %g, resets %s)" % (left[0], left[1], min_credits, left[2]),
+                                self_review,
                             ],
                             threads,
                         )

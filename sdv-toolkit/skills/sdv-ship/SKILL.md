@@ -462,6 +462,21 @@ gh pr edit <N> -R <owner>/<repo> --add-reviewer @copilot
 
 Copilot's threads then get the same treatment as any bot's.
 
+**Check Copilot's credits first** (owner rule, 2026-10-11). A Copilot review spends the requester's premium
+credits, and with too few left Copilot answers with a review whose body is a quota refusal ("unable to review
+this pull request because the user who requested the review has reached their quota limit") -- 171 of 7,000
+was refused on sportsdataverse-py #764. Read the balance before requesting:
+
+```sh
+gh api copilot_internal/user --jq '.quota_snapshots.premium_interactions | {remaining, entitlement}, .quota_reset_date'
+```
+
+Below `SDV_COPILOT_MIN_CREDITS` (default 500), or once Copilot has already posted the refusal on the PR, no bot
+can review it: **run a self-review and push its fixes** instead. Dispatch a fresh-context reviewer (the repo's
+`sdv-*-reviewer`) over the whole diff, re-grade its findings by effect, fix Critical and Important ones test-first
+(the test fails before the fix), ledger or list the minors, and say on the PR that the review was a self-review.
+`ci_wait.py` does the check and returns the `self-review` verdict; it also no longer reads the refusal as a review.
+
 ### Guardrails — decline suggestions that fight CLAUDE.md
 
 When a bot suggestion contradicts a documented repo convention, **decline with a
@@ -496,6 +511,7 @@ python <toolkit>/skills/sdv-ship/scripts/ci_wait.py <owner/repo> --pr <N>    # d
 | `failed` (1) | Read the named job, fix it and loop back to Phase 1. Never merge past a failure. |
 | `conflict` (2) | Merge the base branch first: a conflicting PR starts no `pull_request` workflows. |
 | `bots-unaddressed` (5) | Answer the listed bot threads (Phase 5), then run it again. |
+| `self-review` (8) | No bot can review: CodeRabbit and Sourcery are rate-limited and Copilot is out of premium credits (or already refused). Run the self-review above, push its fixes, then run `ci_wait` again for CI. |
 | `ask-user` (4) | Both review bots have been rate-limited for 5+ minutes on a package PR, and the acting login may lack Copilot review. Ask the user whether to request a Copilot review. |
 | `timeout` (3), `error` (6) | Report it. Don't merge on it. |
 | `merged` (0), `closed` (7) | Stop. |
