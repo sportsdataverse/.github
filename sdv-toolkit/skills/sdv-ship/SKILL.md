@@ -468,7 +468,7 @@ this pull request because the user who requested the review has reached their qu
 was refused on sportsdataverse-py #764. Read the balance before requesting:
 
 ```sh
-gh api copilot_internal/user --jq '.quota_snapshots.premium_interactions | {remaining, entitlement}, .quota_reset_date'
+gh api copilot_internal/user --jq '{reset: .quota_reset_date} + (.quota_snapshots.premium_interactions | {remaining, entitlement})'
 ```
 
 Below `SDV_COPILOT_MIN_CREDITS` (default 500), or once Copilot has already posted the refusal on the PR, no bot

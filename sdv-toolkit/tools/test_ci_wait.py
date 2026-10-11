@@ -849,9 +849,6 @@ class GhRetries(unittest.TestCase):
         self.assertTrue(out.rstrip().endswith("VERDICT: error"))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 COPILOT_NO_QUOTA = (
     "Copilot was unable to review this pull request because the user who requested the review has "
@@ -914,3 +911,28 @@ class CopilotCredits(unittest.TestCase):
         rc, out, fake, _ = go(PY, table, start=T0 + 360, env={"SDV_COPILOT_MIN_CREDITS": "6000"})
         self.assertEqual(fake.posts, [])
         self.assertEqual(rc, 8)
+
+    def test_refusal_after_our_request_is_not_ready(self):
+        """Copilot was requested, then answered with a refusal: that is no review (Sourcery on #52)."""
+        table = self.limited(PY)
+        table["copilot_internal/user"] = credits(5000)
+        table["repos/%s/pulls/7" % PY] = Seq(pr(), pr(requested=["Copilot"]), pr())
+        table["repos/%s/pulls/7/reviews?per_page=100" % PY] = Seq(
+            [], [], [review(COPILOT_BOT, at="2026-10-09T08:20:00Z", body=COPILOT_NO_QUOTA)]
+        )
+        rc, out, fake, _ = go(PY, table, start=T0 + 360)
+        self.assertEqual(len(fake.posts), 1)
+        self.assertEqual(rc, 8)
+        self.assertTrue(out.rstrip().endswith("VERDICT: self-review"))
+
+    def test_bad_credit_floor_falls_back_to_the_default(self):
+        for bad in ("lots", "nan"):
+            table = self.limited(PY)
+            table["copilot_internal/user"] = credits(171)
+            rc, out, fake, _ = go(PY, table, start=T0 + 360, env={"SDV_COPILOT_MIN_CREDITS": bad})
+            self.assertEqual(rc, 8, bad)
+            self.assertEqual(fake.posts, [], bad)
+
+
+if __name__ == "__main__":
+    unittest.main()

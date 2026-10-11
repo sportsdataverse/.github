@@ -394,7 +394,13 @@ def run(
         a.repo,
         a.pr,
     )
-    min_credits = float(env.get("SDV_COPILOT_MIN_CREDITS") or COPILOT_MIN_CREDITS)
+    try:
+        min_credits = float(env.get("SDV_COPILOT_MIN_CREDITS") or COPILOT_MIN_CREDITS)
+    except ValueError:
+        min_credits = float("nan")
+    if not min_credits == min_credits or min_credits < 0:  # nonnumeric or nan: use the default
+        print("SDV_COPILOT_MIN_CREDITS is not a number; using %d" % COPILOT_MIN_CREDITS, file=sys.stderr)
+        min_credits = float(COPILOT_MIN_CREDITS)
     self_review = (
         "ACTION: run a self-review -- a fresh-context reviewer (the repo's sdv-*-reviewer) over the "
         "whole diff -- fix Critical/Important findings test-first, push, and reply on the PR"
@@ -525,6 +531,14 @@ def run(
                 and now() - copilot_asked_at < a.bots_grace
             ):
                 waiting.append("Copilot")
+            if bots["Copilot"][0] == "no-credits" and copilot_asked_at is not None:
+                # we asked, and Copilot answered with a quota refusal: no review is coming
+                return finish(
+                    "self-review",
+                    snap,
+                    ["Copilot answered the review request with a quota refusal", self_review],
+                    threads,
+                )
             cr, so = bots.get("CodeRabbit", ("",))[0], bots.get("Sourcery", ("",))[0]
             if cr == so == "rate-limited":
                 # after a push the 5m window starts at the push, not at old notices
