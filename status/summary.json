@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-11T15:52:19.779237+00:00",
+ "generated_at": "2026-10-12T19:13:04.849923+00:00",
  "packages": [
   {
    "badge_dir": "cfbfastR",
@@ -9,36 +9,36 @@
    "workflows": [
     {
      "badge": "cfbfastR/wf-R-CMD-check.json",
-     "completed_at": "2026-10-11T01:31:34Z",
+     "completed_at": "2026-10-12T13:36:00Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T00:58:21Z",
+     "created_at": "2026-10-12T12:55:54Z",
      "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR/actions/runs/38100228066"
+     "url": "https://github.com/sportsdataverse/cfbfastR/actions/runs/38252176523"
     },
     {
      "badge": "cfbfastR/wf-api-sync.json",
-     "completed_at": "2026-10-11T00:58:37Z",
+     "completed_at": "2026-10-12T12:56:12Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T00:58:21Z",
+     "created_at": "2026-10-12T12:55:55Z",
      "event": "push",
      "file": ".github/workflows/api-sync.yaml",
      "name": "api-sync",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR/actions/runs/38100228280"
+     "url": "https://github.com/sportsdataverse/cfbfastR/actions/runs/38252177349"
     },
     {
      "badge": "cfbfastR/wf-pkgdown.json",
-     "completed_at": "2026-10-11T01:19:34Z",
+     "completed_at": "2026-10-12T13:18:00Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T00:58:21Z",
+     "created_at": "2026-10-12T12:55:54Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR/actions/runs/38100227973"
+     "url": "https://github.com/sportsdataverse/cfbfastR/actions/runs/38252176538"
     },
     {
      "badge": "cfbfastR/wf-rhub.json",
@@ -61,36 +61,36 @@
    "workflows": [
     {
      "badge": "hoopR/wf-R-CMD-check.json",
-     "completed_at": "2026-10-11T15:25:06Z",
-     "conclusion": "success",
-     "created_at": "2026-10-11T14:56:37Z",
+     "completed_at": "2026-10-12T12:16:31Z",
+     "conclusion": "cancelled",
+     "created_at": "2026-10-12T10:09:31Z",
      "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38149228312"
+     "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38234544100"
     },
     {
      "badge": "hoopR/wf-api-sync.json",
-     "completed_at": "2026-10-11T14:56:54Z",
+     "completed_at": "2026-10-12T03:02:54Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T14:56:37Z",
+     "created_at": "2026-10-12T03:02:31Z",
      "event": "push",
      "file": ".github/workflows/api-sync.yaml",
      "name": "api-sync",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38149228710"
+     "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38198183874"
     },
     {
      "badge": "hoopR/wf-pkgdown.json",
-     "completed_at": "2026-10-11T15:22:11Z",
-     "conclusion": "success",
-     "created_at": "2026-10-11T14:56:37Z",
+     "completed_at": "2026-10-12T12:15:39Z",
+     "conclusion": "cancelled",
+     "created_at": "2026-10-12T10:09:30Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38149228343"
+     "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38234543919"
     },
     {
      "badge": "hoopR/wf-rhub.json",
@@ -113,25 +113,25 @@
    "workflows": [
     {
      "badge": "wehoop/wf-R-CMD-check.json",
-     "completed_at": "2026-10-10T23:26:27Z",
-     "conclusion": "success",
-     "created_at": "2026-10-10T23:03:05Z",
+     "completed_at": "2026-10-12T12:10:07Z",
+     "conclusion": "failure",
+     "created_at": "2026-10-12T10:09:26Z",
      "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop/actions/runs/38093658771"
+     "url": "https://github.com/sportsdataverse/wehoop/actions/runs/38234537075"
     },
     {
      "badge": "wehoop/wf-pkgdown.json",
-     "completed_at": "2026-10-10T23:29:57Z",
-     "conclusion": "success",
-     "created_at": "2026-10-10T23:03:05Z",
+     "completed_at": "2026-10-12T12:15:49Z",
+     "conclusion": "cancelled",
+     "created_at": "2026-10-12T10:09:26Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop/actions/runs/38093658765"
+     "url": "https://github.com/sportsdataverse/wehoop/actions/runs/38234536917"
     },
     {
      "badge": "wehoop/wf-rhub.json",
@@ -154,25 +154,25 @@
    "workflows": [
     {
      "badge": "fastRhockey/wf-R-CMD-check.json",
-     "completed_at": "2026-10-09T18:40:43Z",
-     "conclusion": "success",
-     "created_at": "2026-10-09T18:26:31Z",
-     "event": "schedule",
+     "completed_at": "2026-10-12T12:16:46Z",
+     "conclusion": "cancelled",
+     "created_at": "2026-10-12T10:09:39Z",
+     "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/fastRhockey/actions/runs/37973293100"
+     "url": "https://github.com/sportsdataverse/fastRhockey/actions/runs/38234559058"
     },
     {
      "badge": "fastRhockey/wf-pkgdown.json",
-     "completed_at": "2026-10-09T05:39:57Z",
+     "completed_at": "2026-10-12T12:11:11Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T05:25:26Z",
+     "created_at": "2026-10-12T10:09:39Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/fastRhockey/actions/runs/37888498873"
+     "url": "https://github.com/sportsdataverse/fastRhockey/actions/runs/38234559046"
     },
     {
      "badge": "fastRhockey/wf-rhub.json",
@@ -243,25 +243,25 @@
    "workflows": [
     {
      "badge": "oddsapiR/wf-R-CMD-check.json",
-     "completed_at": "2026-10-09T05:41:05Z",
+     "completed_at": "2026-10-12T12:04:00Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T05:25:01Z",
+     "created_at": "2026-10-12T10:10:04Z",
      "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/oddsapiR/actions/runs/37888464630"
+     "url": "https://github.com/sportsdataverse/oddsapiR/actions/runs/38234603630"
     },
     {
      "badge": "oddsapiR/wf-pkgdown.json",
-     "completed_at": "2026-10-09T05:38:39Z",
+     "completed_at": "2026-10-12T12:02:53Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T05:25:01Z",
+     "created_at": "2026-10-12T10:10:04Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/oddsapiR/actions/runs/37888464462"
+     "url": "https://github.com/sportsdataverse/oddsapiR/actions/runs/38234603599"
     },
     {
      "badge": "oddsapiR/wf-rhub.json",
@@ -284,25 +284,25 @@
    "workflows": [
     {
      "badge": "cfbseedR/wf-R-CMD-check.json",
-     "completed_at": "2026-10-09T18:33:24Z",
+     "completed_at": "2026-10-12T12:01:02Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T18:27:33Z",
-     "event": "schedule",
+     "created_at": "2026-10-12T10:10:28Z",
+     "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbseedR/actions/runs/37973411992"
+     "url": "https://github.com/sportsdataverse/cfbseedR/actions/runs/38234646881"
     },
     {
      "badge": "cfbseedR/wf-pkgdown.json",
-     "completed_at": "2026-10-09T04:46:51Z",
+     "completed_at": "2026-10-12T11:58:20Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T04:40:15Z",
+     "created_at": "2026-10-12T10:10:28Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbseedR/actions/runs/37884959920"
+     "url": "https://github.com/sportsdataverse/cfbseedR/actions/runs/38234646818"
     },
     {
      "badge": "cfbseedR/wf-rhub.json",
@@ -325,25 +325,25 @@
    "workflows": [
     {
      "badge": "cfb4th/wf-R-CMD-check.json",
-     "completed_at": "2026-10-09T18:34:43Z",
-     "conclusion": "success",
-     "created_at": "2026-10-09T18:26:43Z",
-     "event": "schedule",
+     "completed_at": "2026-10-12T12:09:42Z",
+     "conclusion": "cancelled",
+     "created_at": "2026-10-12T10:10:00Z",
+     "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfb4th/actions/runs/37973315852"
+     "url": "https://github.com/sportsdataverse/cfb4th/actions/runs/38234594263"
     },
     {
      "badge": "cfb4th/wf-pkgdown.json",
-     "completed_at": "2026-10-09T08:36:16Z",
+     "completed_at": "2026-10-12T11:41:44Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T08:33:22Z",
+     "created_at": "2026-10-12T10:10:00Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfb4th/actions/runs/37905673904"
+     "url": "https://github.com/sportsdataverse/cfb4th/actions/runs/38234594200"
     }
    ]
   },
@@ -355,25 +355,25 @@
    "workflows": [
     {
      "badge": "cfbplotR/wf-R-CMD-check.json",
-     "completed_at": "2026-10-09T18:29:20Z",
+     "completed_at": "2026-10-12T11:51:42Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T18:25:34Z",
-     "event": "schedule",
+     "created_at": "2026-10-12T10:10:23Z",
+     "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbplotR/actions/runs/37973181504"
+     "url": "https://github.com/sportsdataverse/cfbplotR/actions/runs/38234638054"
     },
     {
      "badge": "cfbplotR/wf-pkgdown.json",
-     "completed_at": "2026-10-09T05:29:02Z",
+     "completed_at": "2026-10-12T11:46:24Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T05:24:56Z",
+     "created_at": "2026-10-12T10:10:23Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbplotR/actions/runs/37888457565"
+     "url": "https://github.com/sportsdataverse/cfbplotR/actions/runs/38234638018"
     }
    ]
   },
@@ -385,25 +385,25 @@
    "workflows": [
     {
      "badge": "recruitR/wf-R-CMD-check.json",
-     "completed_at": "2026-10-09T05:34:33Z",
+     "completed_at": "2026-10-12T11:48:30Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T05:25:07Z",
+     "created_at": "2026-10-12T10:10:13Z",
      "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/recruitR/actions/runs/37888472269"
+     "url": "https://github.com/sportsdataverse/recruitR/actions/runs/38234620785"
     },
     {
      "badge": "recruitR/wf-pkgdown.json",
-     "completed_at": "2026-10-09T05:35:17Z",
+     "completed_at": "2026-10-12T11:58:33Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T05:25:07Z",
+     "created_at": "2026-10-12T10:10:14Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/recruitR/actions/runs/37888472314"
+     "url": "https://github.com/sportsdataverse/recruitR/actions/runs/38234621257"
     }
    ]
   },
@@ -415,25 +415,25 @@
    "workflows": [
     {
      "badge": "usfootballR/wf-R-CMD-check.json",
-     "completed_at": "2026-10-09T18:28:33Z",
+     "completed_at": "2026-10-12T11:48:55Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T18:25:44Z",
-     "event": "schedule",
+     "created_at": "2026-10-12T10:10:18Z",
+     "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/usfootballR/actions/runs/37973202767"
+     "url": "https://github.com/sportsdataverse/usfootballR/actions/runs/38234630211"
     },
     {
      "badge": "usfootballR/wf-pkgdown.json",
-     "completed_at": "2026-10-09T05:29:29Z",
+     "completed_at": "2026-10-12T11:55:50Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T05:25:18Z",
+     "created_at": "2026-10-12T10:10:22Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/usfootballR/actions/runs/37888489034"
+     "url": "https://github.com/sportsdataverse/usfootballR/actions/runs/38234635500"
     }
    ]
   },
@@ -445,14 +445,14 @@
    "workflows": [
     {
      "badge": "sdvplotR/wf-R-CMD-check.json",
-     "completed_at": "2026-10-09T18:40:33Z",
+     "completed_at": "2026-10-12T19:05:17Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T18:26:43Z",
-     "event": "schedule",
+     "created_at": "2026-10-12T18:58:23Z",
+     "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/37973317273"
+     "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38294500677"
     },
     {
      "badge": "sdvplotR/wf-automation-example.json",
@@ -467,47 +467,47 @@
     },
     {
      "badge": "sdvplotR/wf-pkgdown.json",
-     "completed_at": "2026-10-09T08:41:56Z",
-     "conclusion": "success",
-     "created_at": "2026-10-09T08:21:05Z",
+     "completed_at": "2026-10-12T18:56:29Z",
+     "conclusion": "failure",
+     "created_at": "2026-10-12T18:39:15Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/37904415271"
+     "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38292363547"
     },
     {
      "badge": "sdvplotR/wf-pr-commands.json",
-     "completed_at": "2026-10-09T07:09:45Z",
+     "completed_at": "2026-10-12T10:08:04Z",
      "conclusion": "skipped",
-     "created_at": "2026-10-09T07:09:44Z",
+     "created_at": "2026-10-12T10:07:58Z",
      "event": "issue_comment",
      "file": ".github/workflows/pr-commands.yaml",
      "name": "pr-commands",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/37897446741"
+     "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38234380331"
     },
     {
      "badge": "sdvplotR/wf-rhub.json",
-     "completed_at": null,
-     "conclusion": null,
-     "created_at": null,
-     "event": null,
+     "completed_at": "2026-10-12T15:53:24Z",
+     "conclusion": "failure",
+     "created_at": "2026-10-12T15:11:02Z",
+     "event": "workflow_dispatch",
      "file": ".github/workflows/rhub.yaml",
      "name": "R-hub",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sdvplotR/actions/workflows/rhub.yaml"
+     "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38268355722"
     },
     {
      "badge": "sdvplotR/wf-test-coverage.json",
-     "completed_at": "2026-10-09T08:25:02Z",
+     "completed_at": "2026-10-12T19:02:14Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T08:21:05Z",
+     "created_at": "2026-10-12T18:58:23Z",
      "event": "push",
      "file": ".github/workflows/test-coverage.yaml",
      "name": "test-coverage",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/37904415240"
+     "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38294500700"
     },
     {
      "badge": "sdvplotR/wf-update-headshot-map.json",
@@ -530,25 +530,25 @@
    "workflows": [
     {
      "badge": "sportsdataverse-R/wf-R-CMD-check.json",
-     "completed_at": "2026-10-09T18:28:50Z",
+     "completed_at": "2026-10-12T12:06:57Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T18:25:35Z",
-     "event": "schedule",
+     "created_at": "2026-10-12T10:10:09Z",
+     "event": "push",
      "file": ".github/workflows/R-CMD-check.yaml",
      "name": "R-CMD-check",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-R/actions/runs/37973184115"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-R/actions/runs/38234611333"
     },
     {
      "badge": "sportsdataverse-R/wf-pkgdown.json",
-     "completed_at": "2026-10-09T05:36:30Z",
+     "completed_at": "2026-10-12T11:46:23Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T05:25:13Z",
+     "created_at": "2026-10-12T10:10:09Z",
      "event": "push",
      "file": ".github/workflows/pkgdown.yaml",
      "name": "pkgdown",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-R/actions/runs/37888481066"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-R/actions/runs/38234611537"
     }
    ]
   },
@@ -560,58 +560,58 @@
    "workflows": [
     {
      "badge": "sportsdataverse-py/wf-codegen.json",
-     "completed_at": "2026-10-11T15:47:35Z",
+     "completed_at": "2026-10-12T16:17:31Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T15:40:01Z",
+     "created_at": "2026-10-12T16:06:42Z",
      "event": "push",
      "file": ".github/workflows/codegen.yml",
      "name": "codegen",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38152227941"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38275102789"
     },
     {
      "badge": "sportsdataverse-py/wf-conda-build.json",
-     "completed_at": "2026-10-11T15:44:30Z",
+     "completed_at": "2026-10-12T13:41:30Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T15:40:01Z",
+     "created_at": "2026-10-12T13:34:39Z",
      "event": "push",
      "file": ".github/workflows/conda-build.yml",
      "name": "conda-build",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38152227990"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38256646753"
     },
     {
      "badge": "sportsdataverse-py/wf-deploy-gop.json",
-     "completed_at": "2026-10-11T15:51:34Z",
+     "completed_at": "2026-10-12T16:06:49Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T15:51:28Z",
+     "created_at": "2026-10-12T16:06:42Z",
      "event": "push",
      "file": ".github/workflows/deploy-gop.yml",
      "name": "dispatch Game on Paper deploy (package pushes to main)",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38153033702"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38275102813"
     },
     {
      "badge": "sportsdataverse-py/wf-docs-deploy.json",
-     "completed_at": "2026-10-11T15:51:45Z",
-     "conclusion": "cancelled",
-     "created_at": "2026-10-11T15:40:01Z",
+     "completed_at": "2026-10-12T16:18:46Z",
+     "conclusion": "success",
+     "created_at": "2026-10-12T16:06:42Z",
      "event": "push",
      "file": ".github/workflows/docs-deploy.yml",
      "name": "docs-deploy",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38152227981"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38275102898"
     },
     {
      "badge": "sportsdataverse-py/wf-docs-index.json",
-     "completed_at": "2026-10-11T15:43:29Z",
+     "completed_at": "2026-10-12T16:08:39Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T15:40:01Z",
+     "created_at": "2026-10-12T16:06:42Z",
      "event": "push",
      "file": ".github/workflows/docs-index.yml",
      "name": "docs-index",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38152227908"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38275102700"
     },
     {
      "badge": "sportsdataverse-py/wf-great-docs.json",
@@ -648,25 +648,25 @@
     },
     {
      "badge": "sportsdataverse-py/wf-quality.json",
-     "completed_at": "2026-10-11T15:52:31Z",
+     "completed_at": "2026-10-12T16:07:50Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T15:51:28Z",
+     "created_at": "2026-10-12T16:06:42Z",
      "event": "push",
      "file": ".github/workflows/quality.yml",
      "name": "quality",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38153033700"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38275102742"
     },
     {
      "badge": "sportsdataverse-py/wf-tests.json",
-     "completed_at": "2026-10-11T15:51:46Z",
-     "conclusion": "cancelled",
-     "created_at": "2026-10-11T15:40:01Z",
+     "completed_at": "2026-10-12T17:18:03Z",
+     "conclusion": "failure",
+     "created_at": "2026-10-12T16:06:42Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38152227976"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38275102702"
     },
     {
      "badge": "sportsdataverse-py/wf-theme-drift.json",
@@ -700,25 +700,25 @@
    "workflows": [
     {
      "badge": "sportsdataverse-js/wf-ci.json",
-     "completed_at": "2026-10-09T06:15:39Z",
+     "completed_at": "2026-10-12T12:07:01Z",
      "conclusion": "success",
-     "created_at": "2026-10-09T06:11:17Z",
+     "created_at": "2026-10-12T10:09:05Z",
      "event": "push",
      "file": ".github/workflows/ci.yml",
      "name": "CI",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-js/actions/runs/37892238059"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-js/actions/runs/38234500134"
     },
     {
      "badge": "sportsdataverse-js/wf-live-smoke.json",
-     "completed_at": "2026-10-05T18:35:56Z",
+     "completed_at": "2026-10-12T19:11:10Z",
      "conclusion": "failure",
-     "created_at": "2026-10-05T18:33:20Z",
+     "created_at": "2026-10-12T19:07:20Z",
      "event": "schedule",
      "file": ".github/workflows/live-smoke.yml",
      "name": "Live smoke",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-js/actions/runs/37356819427"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-js/actions/runs/38295521880"
     },
     {
      "badge": "sportsdataverse-js/wf-npm-publish.json",
@@ -747,8 +747,8 @@
  ],
  "producers": [
   {
-   "age_days": 0.2,
-   "any_updated_at": "2026-10-11T13:18:13Z",
+   "age_days": 1.3,
+   "any_updated_at": "2026-10-12T10:41:29Z",
    "badge_dir": "cfbfastR-cfb-data",
    "carried_forward": false,
    "data_state": "fresh",
@@ -880,25 +880,25 @@
     },
     {
      "badge": "cfbfastR-cfb-data/wf-cfb_ratings_cron.json",
-     "completed_at": "2026-10-10T17:40:58Z",
+     "completed_at": "2026-10-11T17:56:13Z",
      "conclusion": "success",
-     "created_at": "2026-10-10T17:39:17Z",
+     "created_at": "2026-10-11T17:54:27Z",
      "event": "schedule",
      "file": ".github/workflows/cfb_ratings_cron.yml",
      "name": "CFB Ratings",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38072613816"
+     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38161590684"
     },
     {
      "badge": "cfbfastR-cfb-data/wf-cfb_fpi_weekly.json",
-     "completed_at": "2026-10-10T18:13:14Z",
+     "completed_at": "2026-10-11T18:37:10Z",
      "conclusion": "success",
-     "created_at": "2026-10-10T18:10:36Z",
+     "created_at": "2026-10-11T18:34:32Z",
      "event": "schedule",
      "file": ".github/workflows/cfb_fpi_weekly.yml",
      "name": "CFB FPI Weekly",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38074720267"
+     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38164388894"
     },
     {
      "badge": "cfbfastR-cfb-data/wf-cfb_recruiting_proj_cron.json",
@@ -924,20 +924,20 @@
     },
     {
      "badge": "cfbfastR-cfb-data/wf-espn_daily_snapshots.json",
-     "completed_at": "2026-10-10T17:44:41Z",
+     "completed_at": "2026-10-11T17:59:46Z",
      "conclusion": "success",
-     "created_at": "2026-10-10T17:40:22Z",
+     "created_at": "2026-10-11T17:55:11Z",
      "event": "schedule",
      "file": ".github/workflows/espn_daily_snapshots.yml",
      "name": "ESPN Daily Snapshots",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38072688494"
+     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38161640676"
     }
    ]
   },
   {
    "age_days": 0.1,
-   "any_updated_at": "2026-10-11T13:53:16Z",
+   "any_updated_at": "2026-10-12T16:27:34Z",
    "badge_dir": "cfbfastR-data",
    "carried_forward": false,
    "data_state": "fresh",
@@ -958,33 +958,31 @@
    "stale_after_days": 12,
    "state": "fresh",
    "tag_names": [
-    "cfbfastR_cfb_pbp",
-    "espn_cfb_player_boxscores",
-    "espn_cfb_team_boxscores"
+    "cfbfastR_cfb_pbp"
    ],
-   "tags": 3,
+   "tags": 1,
    "through_season": 2026,
    "through_tags": [
     "cfbfastR_cfb_pbp"
    ],
-   "updated_at": "2026-10-11T13:53:16Z",
+   "updated_at": "2026-10-12T16:27:34Z",
    "workflows": [
     {
      "badge": "cfbfastR-data/wf-daily_cfb.json",
-     "completed_at": "2026-10-11T13:53:32Z",
+     "completed_at": "2026-10-12T16:27:49Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T13:18:05Z",
+     "created_at": "2026-10-12T15:53:24Z",
      "event": "schedule",
      "file": ".github/workflows/daily_cfb.yml",
      "name": "Update CFB Data",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR-data/actions/runs/38142625143"
+     "url": "https://github.com/sportsdataverse/cfbfastR-data/actions/runs/38273493692"
     }
    ]
   },
   {
-   "age_days": 1.0,
-   "any_updated_at": "2026-10-10T15:13:48Z",
+   "age_days": 0.4,
+   "any_updated_at": "2026-10-12T12:31:58Z",
    "badge_dir": "ncaa-mfb-football-data",
    "carried_forward": false,
    "data_state": "fresh",
@@ -1022,24 +1020,24 @@
    "through_tags": [
     "ncaa_mfb_pbp"
    ],
-   "updated_at": "2026-10-10T15:12:18Z",
+   "updated_at": "2026-10-12T09:36:20Z",
    "workflows": [
     {
      "badge": "ncaa-mfb-football-data/wf-daily_ncaa_mfb_data.json",
-     "completed_at": "2026-10-10T15:13:57Z",
+     "completed_at": "2026-10-12T12:32:04Z",
      "conclusion": "success",
-     "created_at": "2026-10-10T15:06:17Z",
+     "created_at": "2026-10-12T10:58:41Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_ncaa_mfb_data.yml",
      "name": "Update NCAA MFB Data",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/ncaa-mfb-football-data/actions/runs/38062259476"
+     "url": "https://github.com/sportsdataverse/ncaa-mfb-football-data/actions/runs/38239681498"
     }
    ]
   },
   {
-   "age_days": 0.4,
-   "any_updated_at": "2026-10-11T05:20:20Z",
+   "age_days": 1.6,
+   "any_updated_at": "2026-10-12T18:54:44Z",
    "badge_dir": "nfl-data",
    "carried_forward": false,
    "data_state": "fresh",
@@ -1142,14 +1140,14 @@
     },
     {
      "badge": "nfl-data/wf-nfl_pbp_cron.json",
-     "completed_at": "2026-10-06T23:26:40Z",
+     "completed_at": "2026-10-12T02:46:34Z",
      "conclusion": "success",
-     "created_at": "2026-10-06T23:23:08Z",
-     "event": "schedule",
+     "created_at": "2026-10-12T02:43:26Z",
+     "event": "workflow_dispatch",
      "file": ".github/workflows/nfl_pbp_cron.yml",
      "name": "NFL model_pbp build + publish",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/37546258899"
+     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38196904094"
     },
     {
      "badge": "nfl-data/wf-nfl_ratings_weekly.json",
@@ -1164,14 +1162,14 @@
     },
     {
      "badge": "nfl-data/wf-nfl_rosters_players_cron.json",
-     "completed_at": "2026-10-05T18:18:12Z",
+     "completed_at": "2026-10-12T18:54:49Z",
      "conclusion": "success",
-     "created_at": "2026-10-05T18:12:15Z",
+     "created_at": "2026-10-12T18:50:02Z",
      "event": "schedule",
      "file": ".github/workflows/nfl_rosters_players_cron.yml",
      "name": "NFL rosters + players + player-stats + team-stats + QBR build + publish",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/37354170912"
+     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38293571704"
     },
     {
      "badge": "nfl-data/wf-nfl_model_pipeline.json",
@@ -1187,8 +1185,8 @@
    ]
   },
   {
-   "age_days": 0.2,
-   "any_updated_at": "2026-10-11T11:56:54Z",
+   "age_days": 0.3,
+   "any_updated_at": "2026-10-12T12:16:40Z",
    "badge_dir": "nfl-ngs-data",
    "carried_forward": false,
    "data_state": "fresh",
@@ -1228,24 +1226,24 @@
    "tags": 16,
    "through_season": 2026,
    "through_tags": null,
-   "updated_at": "2026-10-11T11:56:54Z",
+   "updated_at": "2026-10-12T12:16:40Z",
    "workflows": [
     {
      "badge": "nfl-ngs-data/wf-daily_ngs.json",
-     "completed_at": "2026-10-11T11:57:01Z",
+     "completed_at": "2026-10-12T12:32:57Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T11:46:45Z",
+     "created_at": "2026-10-12T12:15:44Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_ngs.yml",
      "name": "Update NFL NGS Data",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-ngs-data/actions/runs/38136808141"
+     "url": "https://github.com/sportsdataverse/nfl-ngs-data/actions/runs/38247922557"
     }
    ]
   },
   {
-   "age_days": 22.6,
-   "any_updated_at": "2026-10-11T15:01:59Z",
+   "age_days": 23.7,
+   "any_updated_at": "2026-10-12T06:14:47Z",
    "badge_dir": "hoopR-mbb-data",
    "carried_forward": false,
    "data_state": "idle",
@@ -1291,14 +1289,14 @@
    "workflows": [
     {
      "badge": "hoopR-mbb-data/wf-daily_mbb.json",
-     "completed_at": "2026-09-30T12:57:18Z",
+     "completed_at": "2026-10-12T11:22:56Z",
      "conclusion": "skipped",
-     "created_at": "2026-09-30T12:57:09Z",
+     "created_at": "2026-10-12T11:22:48Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_mbb.yml",
      "name": "Update MBB Data",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR-mbb-data/actions/runs/36718172374"
+     "url": "https://github.com/sportsdataverse/hoopR-mbb-data/actions/runs/38242264099"
     },
     {
      "badge": "hoopR-mbb-data/wf-mbb_models_cron.json",
@@ -1314,8 +1312,8 @@
    ]
   },
   {
-   "age_days": 60.3,
-   "any_updated_at": "2026-08-24T08:32:51Z",
+   "age_days": 61.5,
+   "any_updated_at": "2026-10-12T06:59:46Z",
    "badge_dir": "ncaa-mbb-hoops-data",
    "carried_forward": false,
    "data_state": "idle",
@@ -1371,8 +1369,8 @@
    ]
   },
   {
-   "age_days": 32.4,
-   "any_updated_at": "2026-10-11T15:53:55Z",
+   "age_days": 33.6,
+   "any_updated_at": "2026-10-12T19:04:04Z",
    "badge_dir": "hoopR-nba-data",
    "carried_forward": false,
    "data_state": "idle",
@@ -1417,20 +1415,20 @@
    "workflows": [
     {
      "badge": "hoopR-nba-data/wf-daily_nba.json",
-     "completed_at": "2026-10-11T12:05:46Z",
+     "completed_at": "2026-10-12T19:05:15Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T11:16:47Z",
+     "created_at": "2026-10-12T18:45:59Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_nba.yml",
      "name": "Update NBA Data",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR-nba-data/actions/runs/38134974422"
+     "url": "https://github.com/sportsdataverse/hoopR-nba-data/actions/runs/38293122207"
     }
    ]
   },
   {
-   "age_days": 59.4,
-   "any_updated_at": "2026-10-09T05:35:11Z",
+   "age_days": 60.6,
+   "any_updated_at": "2026-10-12T16:42:50Z",
    "badge_dir": "hoopR-nba-stats-data",
    "carried_forward": false,
    "data_state": "idle",
@@ -1509,20 +1507,20 @@
     },
     {
      "badge": "hoopR-nba-stats-data/wf-annual_nba_stats_draft.json",
-     "completed_at": null,
-     "conclusion": null,
-     "created_at": null,
-     "event": null,
+     "completed_at": "2026-10-12T03:05:50Z",
+     "conclusion": "success",
+     "created_at": "2026-10-12T03:04:02Z",
+     "event": "workflow_dispatch",
      "file": ".github/workflows/annual_nba_stats_draft.yml",
      "name": "Annual NBA Draft Update",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR-nba-stats-data/actions/workflows/annual_nba_stats_draft.yml"
+     "url": "https://github.com/sportsdataverse/hoopR-nba-stats-data/actions/runs/38198284447"
     }
    ]
   },
   {
-   "age_days": 22.6,
-   "any_updated_at": "2026-10-11T15:02:03Z",
+   "age_days": 23.8,
+   "any_updated_at": "2026-10-12T06:14:59Z",
    "badge_dir": "wehoop-wbb-data",
    "carried_forward": false,
    "data_state": "idle",
@@ -1602,8 +1600,8 @@
    ]
   },
   {
-   "age_days": 54.1,
-   "any_updated_at": "2026-08-24T08:32:50Z",
+   "age_days": 55.3,
+   "any_updated_at": "2026-10-12T07:08:31Z",
    "badge_dir": "ncaa-wbb-hoops-data",
    "carried_forward": false,
    "data_state": "idle",
@@ -1659,8 +1657,8 @@
    ]
   },
   {
-   "age_days": 0.2,
-   "any_updated_at": "2026-10-11T12:09:45Z",
+   "age_days": 1.4,
+   "any_updated_at": "2026-10-12T12:26:57Z",
    "badge_dir": "wehoop-wnba-data",
    "carried_forward": false,
    "data_state": "fresh",
@@ -1705,14 +1703,14 @@
    "workflows": [
     {
      "badge": "wehoop-wnba-data/wf-daily_wnba.json",
-     "completed_at": "2026-10-11T10:50:35Z",
+     "completed_at": "2026-10-12T12:27:58Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T10:34:17Z",
+     "created_at": "2026-10-12T12:05:28Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_wnba.yml",
      "name": "Update WNBA Data",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wnba-data/actions/runs/38132422566"
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-data/actions/runs/38246839726"
     },
     {
      "badge": "wehoop-wnba-data/wf-weekly_wnba.json",
@@ -1739,8 +1737,8 @@
    ]
   },
   {
-   "age_days": 0.1,
-   "any_updated_at": "2026-10-11T14:30:59Z",
+   "age_days": 0.2,
+   "any_updated_at": "2026-10-12T17:03:23Z",
    "badge_dir": "wehoop-wnba-stats-data",
    "carried_forward": false,
    "data_state": "fresh",
@@ -1788,18 +1786,18 @@
    "through_tags": [
     "wnba_stats_pbp"
    ],
-   "updated_at": "2026-10-11T14:01:28Z",
+   "updated_at": "2026-10-12T14:01:34Z",
    "workflows": [
     {
      "badge": "wehoop-wnba-stats-data/wf-daily_wnba_stats.json",
-     "completed_at": "2026-10-11T13:15:16Z",
+     "completed_at": "2026-10-12T13:16:30Z",
      "conclusion": "success",
-     "created_at": "2026-10-11T13:08:41Z",
+     "created_at": "2026-10-12T13:09:23Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_wnba_stats.yml",
      "name": "Update WNBA Stats Data",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/runs/38142006077"
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/runs/38253709710"
     },
     {
      "badge": "wehoop-wnba-stats-data/wf-wnba_models.json",
@@ -1826,8 +1824,8 @@
    ]
   },
   {
-   "age_days": 0.3,
-   "any_updated_at": "2026-10-11T14:52:12Z",
+   "age_days": 0.5,
+   "any_updated_at": "2026-10-12T08:01:34Z",
    "badge_dir": "fastRhockey-nhl-data",
    "carried_forward": false,
    "data_state": "fresh",
@@ -1873,7 +1871,7 @@
    "through_tags": [
     "nhl_pbp_full"
    ],
-   "updated_at": "2026-10-11T08:01:45Z",
+   "updated_at": "2026-10-12T06:46:51Z",
    "workflows": [
     {
      "badge": "fastRhockey-nhl-data/wf-daily_nhl_python.json",
@@ -1900,7 +1898,7 @@
    ]
   },
   {
-   "age_days": 3.1,
+   "age_days": 4.2,
    "any_updated_at": "2026-10-08T13:37:11Z",
    "badge_dir": "fastRhockey-pwhl-data",
    "carried_forward": false,
@@ -1972,11 +1970,11 @@
    ]
   },
   {
-   "age_days": 31.1,
-   "any_updated_at": "2026-10-10T17:09:19Z",
+   "age_days": 0.3,
+   "any_updated_at": "2026-10-12T12:40:45Z",
    "badge_dir": "baseballr-data",
    "carried_forward": false,
-   "data_state": "stale",
+   "data_state": "fresh",
    "in_season": true,
    "label": "MLB and college baseball",
    "packages": [
@@ -1992,7 +1990,7 @@
    },
    "sport": "baseball",
    "stale_after_days": 7,
-   "state": "stale",
+   "state": "fresh",
    "tag_names": [
     "mlb_fielding_models",
     "mlb_game_state",
@@ -2001,6 +1999,9 @@
     "mlb_pitches",
     "mlb_pitching_models",
     "mlb_runners",
+    "mlb_schedules",
+    "mlb_statcast",
+    "ncaa_baseball_crosswalk",
     "ncaa_baseball_games",
     "ncaa_baseball_linescore",
     "ncaa_baseball_pbp",
@@ -2011,24 +2012,24 @@
     "ncaa_baseball_team_stats",
     "ncaa_baseball_teams"
    ],
-   "tags": 16,
+   "tags": 19,
    "through_season": 2026,
    "through_tags": [
     "mlb_pbp",
     "ncaa_baseball_pbp"
    ],
-   "updated_at": "2026-09-10T14:28:54Z",
+   "updated_at": "2026-10-12T12:33:32Z",
    "workflows": [
     {
      "badge": "baseballr-data/wf-mlb_models_cron.json",
-     "completed_at": "2026-10-10T17:09:29Z",
+     "completed_at": "2026-10-11T17:46:47Z",
      "conclusion": "success",
-     "created_at": "2026-10-10T15:55:18Z",
+     "created_at": "2026-10-11T16:22:59Z",
      "event": "schedule",
      "file": ".github/workflows/mlb_models_cron.yml",
      "name": "MLB Model Datasets",
      "state": "active",
-     "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/38065559605"
+     "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/38155223806"
     },
     {
      "badge": "baseballr-data/wf-daily_ncaa_baseball.json",
@@ -2044,8 +2045,8 @@
    ]
   },
   {
-   "age_days": 0.0,
-   "any_updated_at": "2026-10-11T15:01:55Z",
+   "age_days": 0.2,
+   "any_updated_at": "2026-10-12T13:32:59Z",
    "badge_dir": "sdv-reference-data",
    "carried_forward": false,
    "data_state": "fresh",
@@ -2085,7 +2086,7 @@
    "tags": 11,
    "through_season": 2027,
    "through_tags": null,
-   "updated_at": "2026-10-11T15:01:55Z",
+   "updated_at": "2026-10-12T13:32:59Z",
    "workflows": []
   }
  ],
@@ -2103,16 +2104,16 @@
    "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/30698726326"
   },
   {
-   "badge": "baseballr-data/wf-orphan_scripts.json",
-   "completed_at": "2026-10-04T14:56:12Z",
-   "conclusion": "failure",
-   "created_at": "2026-10-04T14:56:03Z",
+   "badge": "cfb4th/wf-R-CMD-check.json",
+   "completed_at": "2026-10-12T12:09:42Z",
+   "conclusion": "cancelled",
+   "created_at": "2026-10-12T10:10:00Z",
    "event": "push",
-   "file": ".github/workflows/orphan_scripts.yml",
-   "name": "orphan-scripts",
-   "repo": "sportsdataverse/baseballr-data",
+   "file": ".github/workflows/R-CMD-check.yaml",
+   "name": "R-CMD-check",
+   "repo": "sportsdataverse/cfb4th",
    "state": "active",
-   "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/37211098016"
+   "url": "https://github.com/sportsdataverse/cfb4th/actions/runs/38234594263"
   },
   {
    "badge": "cfbfastR/wf-rhub.json",
@@ -2139,6 +2140,18 @@
    "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/31015046584"
   },
   {
+   "badge": "cfbfastR-cfb-data/wf-tests.json",
+   "completed_at": "2026-10-12T12:12:49Z",
+   "conclusion": "cancelled",
+   "created_at": "2026-10-12T10:41:39Z",
+   "event": "push",
+   "file": ".github/workflows/tests.yml",
+   "name": "tests",
+   "repo": "sportsdataverse/cfbfastR-cfb-data",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38237921422"
+  },
+  {
    "badge": "cfbfastR-cfb-raw/wf-orphan_scripts.json",
    "completed_at": "2026-10-01T17:57:12Z",
    "conclusion": "failure",
@@ -2163,6 +2176,42 @@
    "url": "https://github.com/sportsdataverse/cfbfastR-cfb-raw/actions/runs/33256748632"
   },
   {
+   "badge": "fastRhockey/wf-R-CMD-check.json",
+   "completed_at": "2026-10-12T12:16:46Z",
+   "conclusion": "cancelled",
+   "created_at": "2026-10-12T10:09:39Z",
+   "event": "push",
+   "file": ".github/workflows/R-CMD-check.yaml",
+   "name": "R-CMD-check",
+   "repo": "sportsdataverse/fastRhockey",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/fastRhockey/actions/runs/38234559058"
+  },
+  {
+   "badge": "hoopR/wf-R-CMD-check.json",
+   "completed_at": "2026-10-12T12:16:31Z",
+   "conclusion": "cancelled",
+   "created_at": "2026-10-12T10:09:31Z",
+   "event": "push",
+   "file": ".github/workflows/R-CMD-check.yaml",
+   "name": "R-CMD-check",
+   "repo": "sportsdataverse/hoopR",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38234544100"
+  },
+  {
+   "badge": "hoopR/wf-pkgdown.json",
+   "completed_at": "2026-10-12T12:15:39Z",
+   "conclusion": "cancelled",
+   "created_at": "2026-10-12T10:09:30Z",
+   "event": "push",
+   "file": ".github/workflows/pkgdown.yaml",
+   "name": "pkgdown",
+   "repo": "sportsdataverse/hoopR",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38234543919"
+  },
+  {
    "badge": "hoopR/wf-rhub.json",
    "completed_at": "2026-06-10T07:56:10Z",
    "conclusion": "cancelled",
@@ -2175,40 +2224,88 @@
    "url": "https://github.com/sportsdataverse/hoopR/actions/runs/27192006294"
   },
   {
-   "badge": "ncaa-wbb-hoops-raw/wf-orphan_scripts.json",
-   "completed_at": "2026-10-01T17:48:21Z",
+   "badge": "ncaa-mfb-football-raw/wf-tests.json",
+   "completed_at": "2026-10-12T10:57:09Z",
    "conclusion": "failure",
-   "created_at": "2026-10-01T17:48:12Z",
+   "created_at": "2026-10-12T10:07:08Z",
+   "event": "push",
+   "file": ".github/workflows/tests.yml",
+   "name": "tests",
+   "repo": "sportsdataverse/ncaa-mfb-football-raw",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/ncaa-mfb-football-raw/actions/runs/38234290182"
+  },
+  {
+   "badge": "ncaa-wbb-hoops-raw/wf-orphan_scripts.json",
+   "completed_at": "2026-10-12T08:16:45Z",
+   "conclusion": "failure",
+   "created_at": "2026-10-12T08:15:37Z",
    "event": "push",
    "file": ".github/workflows/orphan_scripts.yml",
    "name": "orphan-scripts",
    "repo": "sportsdataverse/ncaa-wbb-hoops-raw",
    "state": "active",
-   "url": "https://github.com/sportsdataverse/ncaa-wbb-hoops-raw/actions/runs/36902076422"
+   "url": "https://github.com/sportsdataverse/ncaa-wbb-hoops-raw/actions/runs/38222482361"
+  },
+  {
+   "badge": "nfl-raw/wf-tests.json",
+   "completed_at": "2026-10-12T17:57:33Z",
+   "conclusion": "failure",
+   "created_at": "2026-10-12T17:57:00Z",
+   "event": "push",
+   "file": ".github/workflows/tests.yml",
+   "name": "tests",
+   "repo": "sportsdataverse/nfl-raw",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/nfl-raw/actions/runs/38287620933"
+  },
+  {
+   "badge": "sdvplotR/wf-pkgdown.json",
+   "completed_at": "2026-10-12T18:56:29Z",
+   "conclusion": "failure",
+   "created_at": "2026-10-12T18:39:15Z",
+   "event": "push",
+   "file": ".github/workflows/pkgdown.yaml",
+   "name": "pkgdown",
+   "repo": "sportsdataverse/sdvplotR",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38292363547"
+  },
+  {
+   "badge": "sdvplotR/wf-rhub.json",
+   "completed_at": "2026-10-12T15:53:24Z",
+   "conclusion": "failure",
+   "created_at": "2026-10-12T15:11:02Z",
+   "event": "workflow_dispatch",
+   "file": ".github/workflows/rhub.yaml",
+   "name": "R-hub",
+   "repo": "sportsdataverse/sdvplotR",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38268355722"
+  },
+  {
+   "badge": "sportsdataverse-baseball-data/wf-pybaseball-pbp.json",
+   "completed_at": "2026-10-12T16:40:39Z",
+   "conclusion": "failure",
+   "created_at": "2026-10-12T16:30:42Z",
+   "event": "schedule",
+   "file": ".github/workflows/pybaseball-pbp.yml",
+   "name": "Update Statcast PBP",
+   "repo": "sportsdataverse/sportsdataverse-baseball-data",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/sportsdataverse-baseball-data/actions/runs/38277899052"
   },
   {
    "badge": "sportsdataverse-js/wf-live-smoke.json",
-   "completed_at": "2026-10-05T18:35:56Z",
+   "completed_at": "2026-10-12T19:11:10Z",
    "conclusion": "failure",
-   "created_at": "2026-10-05T18:33:20Z",
+   "created_at": "2026-10-12T19:07:20Z",
    "event": "schedule",
    "file": ".github/workflows/live-smoke.yml",
    "name": "Live smoke",
    "repo": "sportsdataverse/sportsdataverse-js",
    "state": "active",
-   "url": "https://github.com/sportsdataverse/sportsdataverse-js/actions/runs/37356819427"
-  },
-  {
-   "badge": "sportsdataverse-py/wf-docs-deploy.json",
-   "completed_at": "2026-10-11T15:51:45Z",
-   "conclusion": "cancelled",
-   "created_at": "2026-10-11T15:40:01Z",
-   "event": "push",
-   "file": ".github/workflows/docs-deploy.yml",
-   "name": "docs-deploy",
-   "repo": "sportsdataverse/sportsdataverse-py",
-   "state": "active",
-   "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38152227981"
+   "url": "https://github.com/sportsdataverse/sportsdataverse-js/actions/runs/38295521880"
   },
   {
    "badge": "sportsdataverse-py/wf-live-tests-cron.json",
@@ -2224,15 +2321,15 @@
   },
   {
    "badge": "sportsdataverse-py/wf-tests.json",
-   "completed_at": "2026-10-11T15:51:46Z",
-   "conclusion": "cancelled",
-   "created_at": "2026-10-11T15:40:01Z",
+   "completed_at": "2026-10-12T17:18:03Z",
+   "conclusion": "failure",
+   "created_at": "2026-10-12T16:06:42Z",
    "event": "push",
    "file": ".github/workflows/tests.yml",
    "name": "tests",
    "repo": "sportsdataverse/sportsdataverse-py",
    "state": "active",
-   "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38152227976"
+   "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38275102702"
   },
   {
    "badge": "sportsdataverse-web/wf-cron.json",
@@ -2245,6 +2342,54 @@
    "repo": "sportsdataverse/sportsdataverse-web",
    "state": "active",
    "url": "https://github.com/sportsdataverse/sportsdataverse-web/actions/runs/33084519531"
+  },
+  {
+   "badge": "sportyR/wf-R-CMD-check.json",
+   "completed_at": "2026-10-12T12:09:16Z",
+   "conclusion": "cancelled",
+   "created_at": "2026-10-12T10:10:37Z",
+   "event": "push",
+   "file": ".github/workflows/R-CMD-check.yaml",
+   "name": "R-CMD-check",
+   "repo": "sportsdataverse/sportyR",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/sportyR/actions/runs/38234662854"
+  },
+  {
+   "badge": "wehoop/wf-R-CMD-check.json",
+   "completed_at": "2026-10-12T12:10:07Z",
+   "conclusion": "failure",
+   "created_at": "2026-10-12T10:09:26Z",
+   "event": "push",
+   "file": ".github/workflows/R-CMD-check.yaml",
+   "name": "R-CMD-check",
+   "repo": "sportsdataverse/wehoop",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/wehoop/actions/runs/38234537075"
+  },
+  {
+   "badge": "wehoop/wf-pkgdown.json",
+   "completed_at": "2026-10-12T12:15:49Z",
+   "conclusion": "cancelled",
+   "created_at": "2026-10-12T10:09:26Z",
+   "event": "push",
+   "file": ".github/workflows/pkgdown.yaml",
+   "name": "pkgdown",
+   "repo": "sportsdataverse/wehoop",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/wehoop/actions/runs/38234536917"
+  },
+  {
+   "badge": "wehoop-wbb-data/wf-tests.json",
+   "completed_at": "2026-10-12T11:36:18Z",
+   "conclusion": "failure",
+   "created_at": "2026-10-12T10:07:44Z",
+   "event": "push",
+   "file": ".github/workflows/tests.yml",
+   "name": "tests",
+   "repo": "sportsdataverse/wehoop-wbb-data",
+   "state": "active",
+   "url": "https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/38234355188"
   },
   {
    "badge": "wehoop-wbb-data/wf-weekly_output_parity.json",
@@ -2352,13 +2497,6 @@
   {
    "assets": 51,
    "max_season": 2026,
-   "newest_asset_at": "2026-08-12T08:05:02Z",
-   "producer": "sportsdataverse/ncaa-mbb-hoops-data",
-   "tag": "ncaa_mbb_team_box"
-  },
-  {
-   "assets": 51,
-   "max_season": 2026,
    "newest_asset_at": "2026-08-12T08:08:12Z",
    "producer": "sportsdataverse/ncaa-mbb-hoops-data",
    "tag": "ncaa_mbb_possessions"
@@ -2397,13 +2535,6 @@
    "newest_asset_at": "2026-08-13T17:38:35Z",
    "producer": "sportsdataverse/hoopR-nba-stats-data",
    "tag": "nba_stats_coaches"
-  },
-  {
-   "assets": 90,
-   "max_season": 2026,
-   "newest_asset_at": "2026-08-13T17:39:07Z",
-   "producer": "sportsdataverse/hoopR-nba-stats-data",
-   "tag": "nba_stats_draft"
   },
   {
    "assets": 90,
@@ -2481,13 +2612,6 @@
    "newest_asset_at": "2026-08-18T12:45:10Z",
    "producer": "sportsdataverse/ncaa-wbb-hoops-data",
    "tag": "ncaa_wbb_player_box"
-  },
-  {
-   "assets": 51,
-   "max_season": 2026,
-   "newest_asset_at": "2026-08-18T12:45:50Z",
-   "producer": "sportsdataverse/ncaa-wbb-hoops-data",
-   "tag": "ncaa_wbb_team_box"
   },
   {
    "assets": 51,
@@ -2721,20 +2845,6 @@
    "tag": "espn_mens_college_basketball_officials"
   },
   {
-   "assets": 48,
-   "max_season": 2025,
-   "newest_asset_at": "2026-09-02T18:05:08Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_model_pbp"
-  },
-  {
-   "assets": 95,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-02T18:27:12Z",
-   "producer": "sportsdataverse/hoopR-nba-stats-data",
-   "tag": "nba_player_impact"
-  },
-  {
    "assets": 6,
    "max_season": null,
    "newest_asset_at": "2026-09-02T18:28:44Z",
@@ -2854,39 +2964,11 @@
    "tag": "espn_nba_pbp"
   },
   {
-   "assets": 79,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-09T05:17:17Z",
-   "producer": "sportsdataverse/hoopR-nba-data",
-   "tag": "espn_nba_team_boxscores"
-  },
-  {
-   "assets": 79,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-09T05:17:44Z",
-   "producer": "sportsdataverse/hoopR-nba-data",
-   "tag": "espn_nba_player_boxscores"
-  },
-  {
-   "assets": 79,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-09T05:18:03Z",
-   "producer": "sportsdataverse/hoopR-nba-data",
-   "tag": "espn_nba_player_core"
-  },
-  {
    "assets": 80,
    "max_season": 2026,
    "newest_asset_at": "2026-09-09T05:18:56Z",
    "producer": "sportsdataverse/hoopR-nba-data",
    "tag": "espn_nba_shots"
-  },
-  {
-   "assets": 80,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-09T05:19:35Z",
-   "producer": "sportsdataverse/hoopR-nba-data",
-   "tag": "espn_nba_player_season_stats"
   },
   {
    "assets": 80,
@@ -2922,34 +3004,6 @@
    "newest_asset_at": "2026-09-09T05:43:56Z",
    "producer": "sportsdataverse/wehoop-wbb-data",
    "tag": "espn_womens_college_basketball_schedules"
-  },
-  {
-   "assets": 25,
-   "max_season": null,
-   "newest_asset_at": "2026-09-09T14:13:20Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_model_artifacts"
-  },
-  {
-   "assets": 121,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-10T04:38:30Z",
-   "producer": "sportsdataverse/baseballr-data",
-   "tag": "mlb_pitches"
-  },
-  {
-   "assets": 121,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-10T04:58:23Z",
-   "producer": "sportsdataverse/baseballr-data",
-   "tag": "mlb_runners"
-  },
-  {
-   "assets": 121,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-10T14:28:54Z",
-   "producer": "sportsdataverse/baseballr-data",
-   "tag": "mlb_pbp"
   },
   {
    "assets": 88,
@@ -3001,13 +3055,6 @@
    "tag": "wnba_groups"
   },
   {
-   "assets": 16,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-29T10:43:45Z",
-   "producer": "sportsdataverse/wehoop-wnba-data",
-   "tag": "wnba_crosswalk"
-  },
-  {
    "assets": 322,
    "max_season": 2026,
    "newest_asset_at": "2026-09-29T22:30:50Z",
@@ -3048,13 +3095,6 @@
    "newest_asset_at": "2026-09-30T14:03:55Z",
    "producer": "sportsdataverse/cfbfastR-cfb-data",
    "tag": "espn_cfb_model_artifacts"
-  },
-  {
-   "assets": 794,
-   "max_season": 2026,
-   "newest_asset_at": "2026-09-30T14:05:29Z",
-   "producer": "sportsdataverse/hoopR-nba-stats-data",
-   "tag": "nba_stats_synergy"
   },
   {
    "assets": 90,
@@ -3127,41 +3167,6 @@
    "tag": "nba_stats_metric_curves"
   },
   {
-   "assets": 29,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-05T18:13:06Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_rosters"
-  },
-  {
-   "assets": 5,
-   "max_season": null,
-   "newest_asset_at": "2026-10-05T18:13:56Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_players"
-  },
-  {
-   "assets": 5,
-   "max_season": null,
-   "newest_asset_at": "2026-10-05T18:14:31Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_player_stats"
-  },
-  {
-   "assets": 5,
-   "max_season": null,
-   "newest_asset_at": "2026-10-05T18:15:00Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_team_stats"
-  },
-  {
-   "assets": 6,
-   "max_season": null,
-   "newest_asset_at": "2026-10-05T18:18:01Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_espn_qbr"
-  },
-  {
    "assets": 70,
    "max_season": 2026,
    "newest_asset_at": "2026-10-05T21:24:21Z",
@@ -3174,20 +3179,6 @@
    "newest_asset_at": "2026-10-06T19:16:47Z",
    "producer": "sportsdataverse/nfl-data",
    "tag": "nfl_ratings_weekly"
-  },
-  {
-   "assets": 32,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-06T23:26:23Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_metric_curves"
-  },
-  {
-   "assets": 32,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-06T23:26:33Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_defense_vs_position"
   },
   {
    "assets": 14,
@@ -3295,263 +3286,11 @@
    "tag": "pwhl_xg_pbp"
   },
   {
-   "assets": 32,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-09T05:32:09Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_model_pbp"
-  },
-  {
-   "assets": 30,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-09T05:32:19Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_team_summaries"
-  },
-  {
-   "assets": 30,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-09T05:32:23Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_passing"
-  },
-  {
-   "assets": 30,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-09T05:32:26Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_rushing"
-  },
-  {
-   "assets": 30,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-09T05:32:30Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_receiving"
-  },
-  {
-   "assets": 30,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-09T05:32:34Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_percentiles"
-  },
-  {
-   "assets": 30,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-09T05:32:38Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_player_percentiles"
-  },
-  {
-   "assets": 30,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-09T05:32:42Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_league_averages"
-  },
-  {
-   "assets": 30,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-09T05:32:46Z",
-   "producer": "sportsdataverse/nfl-data",
-   "tag": "nfl_team_opponent_splits"
-  },
-  {
    "assets": 94,
    "max_season": 2026,
    "newest_asset_at": "2026-10-09T05:35:11Z",
    "producer": "sportsdataverse/hoopR-nba-stats-data",
    "tag": "nba_stats_shots"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:11:40Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_teams"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:11:51Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_schedule"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:12:03Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_rosters"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:12:18Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_pbp"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:12:34Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_pbp_cfbfastr"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:12:46Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_team_stats"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:13:00Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_player_stats"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:13:12Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_drives"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:13:24Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_officials"
-  },
-  {
-   "assets": 46,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:13:35Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_linescore"
-  },
-  {
-   "assets": 60,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T15:13:48Z",
-   "producer": "sportsdataverse/ncaa-mfb-football-data",
-   "tag": "ncaa_mfb_qa"
-  },
-  {
-   "assets": 116,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T16:22:08Z",
-   "producer": "sportsdataverse/baseballr-data",
-   "tag": "mlb_game_state"
-  },
-  {
-   "assets": 110,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:06:57Z",
-   "producer": "sportsdataverse/baseballr-data",
-   "tag": "mlb_hitting_models"
-  },
-  {
-   "assets": 80,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:08:01Z",
-   "producer": "sportsdataverse/baseballr-data",
-   "tag": "mlb_fielding_models"
-  },
-  {
-   "assets": 113,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:09:19Z",
-   "producer": "sportsdataverse/baseballr-data",
-   "tag": "mlb_pitching_models"
-  },
-  {
-   "assets": 74,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:40:55Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_ratings"
-  },
-  {
-   "assets": 3,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:41:44Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_injuries"
-  },
-  {
-   "assets": 3,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:41:48Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_mlb_injuries"
-  },
-  {
-   "assets": 3,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-10T17:41:51Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_nba_injuries"
-  },
-  {
-   "assets": 3,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:41:55Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_nfl_injuries"
-  },
-  {
-   "assets": 4,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-10T17:41:59Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_nhl_injuries"
-  },
-  {
-   "assets": 3,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:42:03Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_wnba_injuries"
-  },
-  {
-   "assets": 3,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:44:30Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_mlb_depthcharts"
-  },
-  {
-   "assets": 3,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-10T17:44:34Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_nba_depthcharts"
-  },
-  {
-   "assets": 3,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T17:44:38Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_nfl_depthcharts"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T18:12:58Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_poll_analytics"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-10T18:13:09Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_poll_week_summary"
   },
   {
    "assets": 26,
@@ -3855,125 +3594,6 @@
    "tag": "nfl_paper_index_games"
   },
   {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:01:45Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_pbp_full"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:01:54Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_skater_boxscores"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:02:01Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_goalie_boxscores"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:02:10Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_team_boxscores"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:02:18Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_game_info"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:02:26Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_game_rosters"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:02:34Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_shifts"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:02:42Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_scoring"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:02:51Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_penalties"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:02:59Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_scratches"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:03:07Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_linescore"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:03:15Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_three_stars"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:03:22Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_officials"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:03:30Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_shots_by_period"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:03:38Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_shootout"
-  },
-  {
-   "assets": 58,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:03:54Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_player_boxscores"
-  },
-  {
-   "assets": 64,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T08:04:02Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_schedules"
-  },
-  {
    "assets": 79,
    "max_season": 2026,
    "newest_asset_at": "2026-10-11T10:39:16Z",
@@ -4063,13 +3683,6 @@
    "newest_asset_at": "2026-10-11T11:04:38Z",
    "producer": "sportsdataverse/cfbfastR-cfb-data",
    "tag": "espn_cfb_play_participants"
-  },
-  {
-   "assets": 95,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:05:15Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_team_box"
   },
   {
    "assets": 95,
@@ -4221,13 +3834,6 @@
   {
    "assets": 73,
    "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:37:01Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_adv_team_usage"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
    "newest_asset_at": "2026-10-11T11:41:03Z",
    "producer": "sportsdataverse/cfbfastR-cfb-data",
    "tag": "espn_cfb_adv_drive_scripting"
@@ -4240,55 +3846,6 @@
    "tag": "espn_cfb_usage_players"
   },
   {
-   "assets": 41,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:47:30Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_schedules"
-  },
-  {
-   "assets": 33,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:47:42Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_teams"
-  },
-  {
-   "assets": 27,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:47:57Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_passing"
-  },
-  {
-   "assets": 27,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:48:12Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_rushing"
-  },
-  {
-   "assets": 27,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:48:29Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_receiving"
-  },
-  {
-   "assets": 27,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:48:41Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_statboard_leaders"
-  },
-  {
-   "assets": 27,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:49:13Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_leaders"
-  },
-  {
    "assets": 43,
    "max_season": 2026,
    "newest_asset_at": "2026-10-11T11:49:26Z",
@@ -4296,88 +3853,11 @@
    "tag": "espn_cfb_usage_position_groups"
   },
   {
-   "assets": 41,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:49:40Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_gamecenter_passers"
-  },
-  {
-   "assets": 29,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:49:53Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_gamecenter_rushers"
-  },
-  {
-   "assets": 29,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:50:05Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_gamecenter_receivers"
-  },
-  {
-   "assets": 27,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:50:17Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_gamecenter_pass_rushers"
-  },
-  {
-   "assets": 27,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:50:29Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_gamecenter_leaders"
-  },
-  {
-   "assets": 23,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:50:45Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_highlights"
-  },
-  {
-   "assets": 23,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:53:25Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_highlight_participation"
-  },
-  {
    "assets": 43,
    "max_season": 2026,
    "newest_asset_at": "2026-10-11T11:53:41Z",
    "producer": "sportsdataverse/cfbfastR-cfb-data",
    "tag": "espn_cfb_usage_tackles"
-  },
-  {
-   "assets": 23,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:56:23Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_highlight_events"
-  },
-  {
-   "assets": 14,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T11:56:54Z",
-   "producer": "sportsdataverse/nfl-ngs-data",
-   "tag": "nfl_ngs_highlight_tracking"
-  },
-  {
-   "assets": 88,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T11:57:17Z",
-   "producer": "sportsdataverse/hoopR-nba-data",
-   "tag": "espn_nba_schedules"
-  },
-  {
-   "assets": 14,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T11:57:33Z",
-   "producer": "sportsdataverse/hoopR-nba-data",
-   "tag": "espn_nba_rosters"
   },
   {
    "assets": 80,
@@ -4396,44 +3876,9 @@
   {
    "assets": 73,
    "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:02:40Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_usage_teams"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
    "newest_asset_at": "2026-10-11T12:07:29Z",
    "producer": "sportsdataverse/cfbfastR-cfb-data",
    "tag": "espn_cfb_usage_drive_scripting"
-  },
-  {
-   "assets": 14,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:09:45Z",
-   "producer": "sportsdataverse/wehoop-wnba-data",
-   "tag": "espn_wnba_rosters"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:12:13Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_adv_st_kickers"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:16:17Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_adv_st_punters"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:20:24Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_adv_st_returners"
   },
   {
    "assets": 11,
@@ -4441,55 +3886,6 @@
    "newest_asset_at": "2026-10-11T12:22:31Z",
    "producer": "sportsdataverse/wehoop-wbb-data",
    "tag": "espn_womens_college_basketball_rosters"
-  },
-  {
-   "assets": 61,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:24:32Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_adv_st_blocks"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:28:51Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_adv_st_team"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:32:59Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_usage_st_kickers"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:37:11Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_usage_st_punters"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:41:24Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_usage_st_returners"
-  },
-  {
-   "assets": 61,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:45:16Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_usage_st_blocks"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:49:16Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_usage_st_team"
   },
   {
    "assets": 73,
@@ -4511,27 +3907,6 @@
    "newest_asset_at": "2026-10-11T12:49:52Z",
    "producer": "sportsdataverse/cfbfastR-cfb-data",
    "tag": "cfb_metric_curves"
-  },
-  {
-   "assets": 43,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:50:04Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_paper_index_games"
-  },
-  {
-   "assets": 96,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:56:12Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_qa"
-  },
-  {
-   "assets": 80,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:56:22Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_schedules"
   },
   {
    "assets": 73,
@@ -4564,72 +3939,9 @@
   {
    "assets": 73,
    "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:59:23Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_team_summaries"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:59:31Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_passing"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:59:40Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_rushing"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:59:48Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "espn_cfb_receiving"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T12:59:56Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_league_averages"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
    "newest_asset_at": "2026-10-11T13:00:22Z",
    "producer": "sportsdataverse/cfbfastR-cfb-data",
    "tag": "cfb_rolling_windows"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:00:47Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_ratings_weekly"
-  },
-  {
-   "assets": 73,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:01:27Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_team_summaries_weekly"
-  },
-  {
-   "assets": 16,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:01:40Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_defense_vs_position"
-  },
-  {
-   "assets": 43,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:05:43Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_matchup_features"
   },
   {
    "assets": 92,
@@ -4688,25 +4000,11 @@
    "tag": "wnba_stats_player_game_logs"
   },
   {
-   "assets": 8,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:13:54Z",
-   "producer": "sportsdataverse/wehoop-wnba-stats-data",
-   "tag": "wnba_stats_player_season_stats"
-  },
-  {
    "assets": 93,
    "max_season": 2026,
    "newest_asset_at": "2026-10-11T13:14:01Z",
    "producer": "sportsdataverse/wehoop-wnba-stats-data",
    "tag": "wnba_stats_rolling_windows"
-  },
-  {
-   "assets": 40,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:14:09Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_matchup_line"
   },
   {
    "assets": 95,
@@ -4723,13 +4021,6 @@
    "tag": "cfb_recruits"
   },
   {
-   "assets": 24,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:14:27Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_team_talent"
-  },
-  {
    "assets": 95,
    "max_season": 2026,
    "newest_asset_at": "2026-10-11T13:14:30Z",
@@ -4742,13 +4033,6 @@
    "newest_asset_at": "2026-10-11T13:14:39Z",
    "producer": "sportsdataverse/wehoop-wnba-stats-data",
    "tag": "wnba_stats_standings"
-  },
-  {
-   "assets": 25,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:14:46Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_returning_production"
   },
   {
    "assets": 8,
@@ -4779,76 +4063,6 @@
    "tag": "espn_cfb_coach_careers"
   },
   {
-   "assets": 34,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:18:13Z",
-   "producer": "sportsdataverse/cfbfastR-cfb-data",
-   "tag": "cfb_crosswalk"
-  },
-  {
-   "assets": 54,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T13:53:16Z",
-   "producer": "sportsdataverse/cfbfastR-data",
-   "tag": "cfbfastR_cfb_pbp"
-  },
-  {
-   "assets": 105,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T14:01:26Z",
-   "producer": "sportsdataverse/wehoop-wnba-stats-data",
-   "tag": "wnba_stats_schedules"
-  },
-  {
-   "assets": 99,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T14:01:28Z",
-   "producer": "sportsdataverse/wehoop-wnba-stats-data",
-   "tag": "wnba_stats_pbp"
-  },
-  {
-   "assets": 91,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T14:01:34Z",
-   "producer": "sportsdataverse/wehoop-wnba-stats-data",
-   "tag": "wnba_stats_possessions"
-  },
-  {
-   "assets": 91,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T14:01:40Z",
-   "producer": "sportsdataverse/wehoop-wnba-stats-data",
-   "tag": "wnba_stats_game_lineups"
-  },
-  {
-   "assets": 771,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T14:05:48Z",
-   "producer": "sportsdataverse/wehoop-wnba-stats-data",
-   "tag": "wnba_stats_leaguedash"
-  },
-  {
-   "assets": 96,
-   "max_season": 2026,
-   "newest_asset_at": "2026-10-11T14:30:59Z",
-   "producer": "sportsdataverse/wehoop-wnba-stats-data",
-   "tag": "wnba_player_impact"
-  },
-  {
-   "assets": 109,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T14:52:12Z",
-   "producer": "sportsdataverse/fastRhockey-nhl-data",
-   "tag": "nhl_pbp_lite"
-  },
-  {
-   "assets": 60,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T14:59:41Z",
-   "producer": "sportsdataverse/sdv-reference-data",
-   "tag": "mbb_groups"
-  },
-  {
    "assets": 260,
    "max_season": 2026,
    "newest_asset_at": "2026-10-11T15:00:21Z",
@@ -4864,66 +4078,1004 @@
   },
   {
    "assets": 122,
-   "max_season": 2027,
-   "newest_asset_at": "2026-10-11T15:00:45Z",
-   "producer": "sportsdataverse/sdv-reference-data",
-   "tag": "nba_groups"
-  },
-  {
-   "assets": 122,
    "max_season": 2026,
    "newest_asset_at": "2026-10-11T15:01:04Z",
    "producer": "sportsdataverse/sdv-reference-data",
    "tag": "nfl_groups"
   },
   {
-   "assets": 226,
+   "assets": 74,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-11T17:56:10Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_ratings"
+  },
+  {
+   "assets": 3,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-11T17:56:46Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_injuries"
+  },
+  {
+   "assets": 3,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-11T17:56:50Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_mlb_injuries"
+  },
+  {
+   "assets": 3,
    "max_season": 2027,
-   "newest_asset_at": "2026-10-11T15:01:43Z",
-   "producer": "sportsdataverse/sdv-reference-data",
-   "tag": "nhl_groups"
+   "newest_asset_at": "2026-10-11T17:56:54Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_nba_injuries"
+  },
+  {
+   "assets": 3,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-11T17:56:58Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_nfl_injuries"
+  },
+  {
+   "assets": 4,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-11T17:57:02Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_nhl_injuries"
+  },
+  {
+   "assets": 3,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-11T17:57:06Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_wnba_injuries"
+  },
+  {
+   "assets": 3,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-11T17:59:33Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_mlb_depthcharts"
+  },
+  {
+   "assets": 3,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-11T17:59:37Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_nba_depthcharts"
+  },
+  {
+   "assets": 3,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-11T17:59:41Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_nfl_depthcharts"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-11T18:36:55Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_poll_analytics"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-11T18:37:05Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_poll_week_summary"
+  },
+  {
+   "assets": 83,
+   "max_season": 2025,
+   "newest_asset_at": "2026-10-12T00:20:36Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_model_pbp"
+  },
+  {
+   "assets": 32,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:45:28Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_model_pbp"
+  },
+  {
+   "assets": 30,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:45:36Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_team_summaries"
+  },
+  {
+   "assets": 30,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:45:40Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_passing"
+  },
+  {
+   "assets": 30,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:45:45Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_rushing"
+  },
+  {
+   "assets": 30,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:45:49Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_receiving"
+  },
+  {
+   "assets": 30,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:45:53Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_percentiles"
+  },
+  {
+   "assets": 30,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:45:57Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_player_percentiles"
+  },
+  {
+   "assets": 30,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:46:02Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_league_averages"
+  },
+  {
+   "assets": 30,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:46:06Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_team_opponent_splits"
+  },
+  {
+   "assets": 32,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:46:16Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_metric_curves"
+  },
+  {
+   "assets": 32,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T02:46:26Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_defense_vs_position"
+  },
+  {
+   "assets": 95,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T03:05:45Z",
+   "producer": "sportsdataverse/hoopR-nba-stats-data",
+   "tag": "nba_stats_draft"
+  },
+  {
+   "assets": 43,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T06:10:29Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_defense_vs_position"
   },
   {
    "assets": 60,
    "max_season": 2027,
-   "newest_asset_at": "2026-10-11T15:01:55Z",
+   "newest_asset_at": "2026-10-12T06:14:45Z",
    "producer": "sportsdataverse/sdv-reference-data",
-   "tag": "wbb_groups"
+   "tag": "mbb_groups"
   },
   {
-   "assets": 100,
+   "assets": 151,
    "max_season": 2026,
-   "newest_asset_at": "2026-10-11T15:01:59Z",
+   "newest_asset_at": "2026-10-12T06:14:47Z",
    "producer": "sportsdataverse/hoopR-mbb-data",
    "tag": "mbb_crosswalk"
   },
   {
-   "assets": 88,
+   "assets": 60,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:14:57Z",
+   "producer": "sportsdataverse/sdv-reference-data",
+   "tag": "wbb_groups"
+  },
+  {
+   "assets": 103,
    "max_season": 2026,
-   "newest_asset_at": "2026-10-11T15:02:03Z",
+   "newest_asset_at": "2026-10-12T06:14:59Z",
    "producer": "sportsdataverse/wehoop-wbb-data",
    "tag": "wbb_crosswalk"
   },
   {
-   "assets": 82,
+   "assets": 794,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T06:16:08Z",
+   "producer": "sportsdataverse/hoopR-nba-stats-data",
+   "tag": "nba_stats_synergy"
+  },
+  {
+   "assets": 58,
    "max_season": 2027,
-   "newest_asset_at": "2026-10-11T15:53:55Z",
+   "newest_asset_at": "2026-10-12T06:46:51Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_pbp_full"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:46:59Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_skater_boxscores"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:47:08Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_goalie_boxscores"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:47:16Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_team_boxscores"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:47:25Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_game_info"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:47:33Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_game_rosters"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:47:42Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_shifts"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:47:51Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_scoring"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:47:59Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_penalties"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:48:08Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_scratches"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:48:16Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_linescore"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:48:24Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_three_stars"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:48:33Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_officials"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:48:41Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_shots_by_period"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:48:51Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_shootout"
+  },
+  {
+   "assets": 109,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:49:01Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_pbp_lite"
+  },
+  {
+   "assets": 58,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T06:49:11Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_player_boxscores"
+  },
+  {
+   "assets": 95,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T06:52:00Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_team_box"
+  },
+  {
+   "assets": 33,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T06:52:44Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_teams"
+  },
+  {
+   "assets": 51,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T06:59:46Z",
+   "producer": "sportsdataverse/ncaa-mbb-hoops-data",
+   "tag": "ncaa_mbb_team_box"
+  },
+  {
+   "assets": 55,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T07:08:31Z",
+   "producer": "sportsdataverse/ncaa-wbb-hoops-data",
+   "tag": "ncaa_wbb_team_box"
+  },
+  {
+   "assets": 122,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T07:11:52Z",
+   "producer": "sportsdataverse/sdv-reference-data",
+   "tag": "nba_groups"
+  },
+  {
+   "assets": 232,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T07:50:25Z",
+   "producer": "sportsdataverse/wehoop-wnba-data",
+   "tag": "wnba_crosswalk"
+  },
+  {
+   "assets": 5,
+   "max_season": null,
+   "newest_asset_at": "2026-10-12T07:55:07Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "ncaa_baseball_crosswalk"
+  },
+  {
+   "assets": 116,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T07:56:59Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "mlb_game_state"
+  },
+  {
+   "assets": 110,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T07:57:09Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "mlb_hitting_models"
+  },
+  {
+   "assets": 80,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T07:57:19Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "mlb_fielding_models"
+  },
+  {
+   "assets": 113,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T07:57:29Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "mlb_pitching_models"
+  },
+  {
+   "assets": 64,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T08:01:34Z",
+   "producer": "sportsdataverse/fastRhockey-nhl-data",
+   "tag": "nhl_schedules"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T08:58:10Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_adv_team_usage"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:22:08Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_usage_teams"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:32:00Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_adv_st_kickers"
+  },
+  {
+   "assets": 30,
+   "max_season": null,
+   "newest_asset_at": "2026-10-12T09:34:56Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_model_artifacts"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:35:45Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_teams"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:35:54Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_schedule"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:36:03Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_rosters"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:36:20Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_pbp"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:36:41Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_pbp_cfbfastr"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:36:52Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_team_stats"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:37:06Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_player_stats"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:37:18Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_drives"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:37:31Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_officials"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:37:34Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_adv_st_punters"
+  },
+  {
+   "assets": 46,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:37:41Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_linescore"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:43:12Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_adv_st_returners"
+  },
+  {
+   "assets": 61,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:48:14Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_adv_st_blocks"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:52:38Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_adv_st_team"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T09:57:40Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_usage_st_kickers"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:02:46Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_usage_st_punters"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:07:17Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_usage_st_returners"
+  },
+  {
+   "assets": 61,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:11:48Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_usage_st_blocks"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:16:09Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_usage_st_team"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:16:35Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_paper_index_games"
+  },
+  {
+   "assets": 96,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:22:47Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_qa"
+  },
+  {
+   "assets": 80,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:22:57Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_schedules"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:25:22Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_team_summaries"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:25:32Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_passing"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:25:42Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_rushing"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:25:52Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "espn_cfb_receiving"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:26:02Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_league_averages"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:26:37Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_ratings_weekly"
+  },
+  {
+   "assets": 73,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:27:22Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_team_summaries_weekly"
+  },
+  {
+   "assets": 43,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:31:07Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_matchup_features"
+  },
+  {
+   "assets": 40,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:39:52Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_matchup_line"
+  },
+  {
+   "assets": 24,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:40:08Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_team_talent"
+  },
+  {
+   "assets": 25,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:40:27Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_returning_production"
+  },
+  {
+   "assets": 34,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T10:41:29Z",
+   "producer": "sportsdataverse/cfbfastR-cfb-data",
+   "tag": "cfb_crosswalk"
+  },
+  {
+   "assets": 241,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T11:32:24Z",
    "producer": "sportsdataverse/hoopR-nba-data",
    "tag": "nba_crosswalk"
   },
   {
-   "assets": 0,
-   "max_season": null,
-   "newest_asset_at": null,
-   "producer": "sportsdataverse/cfbfastR-data",
-   "tag": "espn_cfb_player_boxscores"
+   "assets": 41,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:09:25Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_schedules"
   },
   {
-   "assets": 0,
-   "max_season": null,
-   "newest_asset_at": null,
+   "assets": 27,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:09:41Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_passing"
+  },
+  {
+   "assets": 27,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:09:55Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_rushing"
+  },
+  {
+   "assets": 27,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:10:10Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_receiving"
+  },
+  {
+   "assets": 27,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:10:22Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_statboard_leaders"
+  },
+  {
+   "assets": 27,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:10:44Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_leaders"
+  },
+  {
+   "assets": 41,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:11:08Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_gamecenter_passers"
+  },
+  {
+   "assets": 29,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:11:20Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_gamecenter_rushers"
+  },
+  {
+   "assets": 29,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:11:34Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_gamecenter_receivers"
+  },
+  {
+   "assets": 27,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:11:48Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_gamecenter_pass_rushers"
+  },
+  {
+   "assets": 27,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:12:04Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_gamecenter_leaders"
+  },
+  {
+   "assets": 23,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:12:22Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_highlights"
+  },
+  {
+   "assets": 23,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:14:09Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_highlight_participation"
+  },
+  {
+   "assets": 23,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:16:10Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_highlight_events"
+  },
+  {
+   "assets": 14,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:16:40Z",
+   "producer": "sportsdataverse/nfl-ngs-data",
+   "tag": "nfl_ngs_highlight_tracking"
+  },
+  {
+   "assets": 14,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:26:57Z",
+   "producer": "sportsdataverse/wehoop-wnba-data",
+   "tag": "espn_wnba_rosters"
+  },
+  {
+   "assets": 60,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:31:58Z",
+   "producer": "sportsdataverse/ncaa-mfb-football-data",
+   "tag": "ncaa_mfb_qa"
+  },
+  {
+   "assets": 121,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:33:32Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "mlb_pbp"
+  },
+  {
+   "assets": 121,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:34:59Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "mlb_pitches"
+  },
+  {
+   "assets": 121,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:35:27Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "mlb_runners"
+  },
+  {
+   "assets": 121,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:35:43Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "mlb_schedules"
+  },
+  {
+   "assets": 40,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T12:40:45Z",
+   "producer": "sportsdataverse/baseballr-data",
+   "tag": "mlb_statcast"
+  },
+  {
+   "assets": 14,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T12:45:10Z",
+   "producer": "sportsdataverse/hoopR-nba-data",
+   "tag": "espn_nba_rosters"
+  },
+  {
+   "assets": 8,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T13:15:56Z",
+   "producer": "sportsdataverse/wehoop-wnba-stats-data",
+   "tag": "wnba_stats_player_season_stats"
+  },
+  {
+   "assets": 226,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T13:32:59Z",
+   "producer": "sportsdataverse/sdv-reference-data",
+   "tag": "nhl_groups"
+  },
+  {
+   "assets": 105,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T14:01:32Z",
+   "producer": "sportsdataverse/wehoop-wnba-stats-data",
+   "tag": "wnba_stats_schedules"
+  },
+  {
+   "assets": 99,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T14:01:34Z",
+   "producer": "sportsdataverse/wehoop-wnba-stats-data",
+   "tag": "wnba_stats_pbp"
+  },
+  {
+   "assets": 91,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T14:01:36Z",
+   "producer": "sportsdataverse/wehoop-wnba-stats-data",
+   "tag": "wnba_stats_possessions"
+  },
+  {
+   "assets": 91,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T14:01:38Z",
+   "producer": "sportsdataverse/wehoop-wnba-stats-data",
+   "tag": "wnba_stats_game_lineups"
+  },
+  {
+   "assets": 771,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T14:04:26Z",
+   "producer": "sportsdataverse/wehoop-wnba-stats-data",
+   "tag": "wnba_stats_leaguedash"
+  },
+  {
+   "assets": 54,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T16:27:34Z",
    "producer": "sportsdataverse/cfbfastR-data",
-   "tag": "espn_cfb_team_boxscores"
+   "tag": "cfbfastR_cfb_pbp"
+  },
+  {
+   "assets": 96,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T16:42:50Z",
+   "producer": "sportsdataverse/hoopR-nba-stats-data",
+   "tag": "nba_player_impact"
+  },
+  {
+   "assets": 96,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T17:03:23Z",
+   "producer": "sportsdataverse/wehoop-wnba-stats-data",
+   "tag": "wnba_player_impact"
+  },
+  {
+   "assets": 29,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T18:50:54Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_rosters"
+  },
+  {
+   "assets": 5,
+   "max_season": null,
+   "newest_asset_at": "2026-10-12T18:51:30Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_players"
+  },
+  {
+   "assets": 5,
+   "max_season": null,
+   "newest_asset_at": "2026-10-12T18:51:55Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_player_stats"
+  },
+  {
+   "assets": 5,
+   "max_season": null,
+   "newest_asset_at": "2026-10-12T18:52:20Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_team_stats"
+  },
+  {
+   "assets": 6,
+   "max_season": null,
+   "newest_asset_at": "2026-10-12T18:54:44Z",
+   "producer": "sportsdataverse/nfl-data",
+   "tag": "nfl_espn_qbr"
+  },
+  {
+   "assets": 85,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T19:02:27Z",
+   "producer": "sportsdataverse/hoopR-nba-data",
+   "tag": "espn_nba_team_boxscores"
+  },
+  {
+   "assets": 85,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T19:02:48Z",
+   "producer": "sportsdataverse/hoopR-nba-data",
+   "tag": "espn_nba_player_boxscores"
+  },
+  {
+   "assets": 85,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T19:03:09Z",
+   "producer": "sportsdataverse/hoopR-nba-data",
+   "tag": "espn_nba_player_core"
+  },
+  {
+   "assets": 94,
+   "max_season": 2027,
+   "newest_asset_at": "2026-10-12T19:03:37Z",
+   "producer": "sportsdataverse/hoopR-nba-data",
+   "tag": "espn_nba_schedules"
+  },
+  {
+   "assets": 86,
+   "max_season": 2026,
+   "newest_asset_at": "2026-10-12T19:04:04Z",
+   "producer": "sportsdataverse/hoopR-nba-data",
+   "tag": "espn_nba_player_season_stats"
   },
   {
    "assets": 0,
@@ -4942,16 +5094,15 @@
  ],
  "totals": {
   "carried_forward": 0,
-  "open_prs": 25,
+  "open_prs": 28,
   "producers": {
-   "fresh": 9,
-   "idle": 7,
-   "stale": 1
+   "fresh": 10,
+   "idle": 7
   },
-  "red_workflows": 15,
-  "release_tags": 381,
+  "red_workflows": 27,
+  "release_tags": 382,
   "repos": 80,
-  "stale_unassigned_issues": 36,
+  "stale_unassigned_issues": 37,
   "unmapped_tags": 5
  },
  "unmapped_tags": [
