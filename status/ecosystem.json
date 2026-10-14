@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-13T17:03:34.924275+00:00",
+ "generated_at": "2026-10-14T14:36:09.958000+00:00",
  "org": "sportsdataverse",
  "repos": {
   "BillPetti/baseballr": {
@@ -11,10 +11,10 @@
    "open_issues": 7,
    "open_prs": [
     {
-     "age_days": 37.4,
+     "age_days": 38.3,
      "author": "MichaelChirico",
      "draft": false,
-     "idle_days": 37.4,
+     "idle_days": 38.3,
      "number": 424,
      "title": "stats is Imports, not Suggests",
      "updated_at": "2026-09-06T07:41:49Z",
@@ -22,7 +22,7 @@
     }
    ],
    "private": false,
-   "pushed_age_days": 4.5,
+   "pushed_age_days": 5.4,
    "pushed_at": "2026-10-09T04:49:18Z",
    "red_workflows": [],
    "releases": {
@@ -64,43 +64,43 @@
    },
    "stale_unassigned_issues": [
     {
-     "idle_days": 47.9,
+     "idle_days": 48.8,
      "number": 393,
      "title": "Unable to install baseballr",
      "url": "https://github.com/BillPetti/baseballr/issues/393"
     },
     {
-     "idle_days": 47.9,
+     "idle_days": 48.8,
      "number": 367,
      "title": "No 2025 College Data",
      "url": "https://github.com/BillPetti/baseballr/issues/367"
     },
     {
-     "idle_days": 47.9,
+     "idle_days": 48.8,
      "number": 345,
      "title": "load_umpire_ids()",
      "url": "https://github.com/BillPetti/baseballr/issues/345"
     },
     {
-     "idle_days": 47.9,
+     "idle_days": 48.8,
      "number": 329,
      "title": "Possible to update the data returned by load_umpire_ids()?",
      "url": "https://github.com/BillPetti/baseballr/issues/329"
     },
     {
-     "idle_days": 47.9,
+     "idle_days": 48.8,
      "number": 325,
      "title": "NCAA 2023 Season Missing Data",
      "url": "https://github.com/BillPetti/baseballr/issues/325"
     },
     {
-     "idle_days": 47.9,
+     "idle_days": 48.8,
      "number": 324,
      "title": "ncaa_game_logs issue with complete games",
      "url": "https://github.com/BillPetti/baseballr/issues/324"
     },
     {
-     "idle_days": 47.9,
+     "idle_days": 48.8,
      "number": 300,
      "title": "Umpire Data from load_umpire_ids() Ends with games 2022-09-07",
      "url": "https://github.com/BillPetti/baseballr/issues/300"
@@ -108,7 +108,7 @@
    ],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 3.9,
+     "age_days": 4.8,
      "completed_at": "2026-10-09T18:38:24Z",
      "conclusion": "success",
      "created_at": "2026-10-09T18:27:58Z",
@@ -120,7 +120,7 @@
      "url": "https://github.com/BillPetti/baseballr/actions/runs/37973461942"
     },
     "R-hub": {
-     "age_days": 47.9,
+     "age_days": 48.8,
      "completed_at": "2026-08-26T19:45:48Z",
      "conclusion": "success",
      "created_at": "2026-08-26T19:11:49Z",
@@ -132,7 +132,7 @@
      "url": "https://github.com/BillPetti/baseballr/actions/runs/33003859187"
     },
     "pkgdown": {
-     "age_days": 4.5,
+     "age_days": 5.4,
      "completed_at": "2026-10-09T04:49:22Z",
      "conclusion": "success",
      "created_at": "2026-10-09T04:33:45Z",
@@ -154,120 +154,120 @@
    "open_issues": 6,
    "open_prs": [
     {
-     "age_days": 4.5,
+     "age_days": 5.4,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 313,
      "title": "fix(percentiles): player game-log cohorts, midrank ties, position percentiles, leaderboard colours, trend band keys",
      "updated_at": "2026-10-12T21:15:10Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/313"
     },
     {
-     "age_days": 4.5,
+     "age_days": 5.4,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 312,
      "title": "fix(game): Binion box percentiles: per-season ladder, midrank ties, dash for missing, sack-inclusive Yards/Dropback, unranked spans",
      "updated_at": "2026-10-12T21:31:25Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/312"
     },
     {
-     "age_days": 5.4,
+     "age_days": 6.3,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.7,
+     "idle_days": 1.6,
      "number": 309,
      "title": "feat(share-card): GOP-rendered share card for every game state, with a spoiler-free link preview (preview)",
      "updated_at": "2026-10-13T00:43:45Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/309"
     },
     {
-     "age_days": 5.5,
+     "age_days": 6.4,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 308,
      "title": "feat(team): Results by Opponent bars on the season team page (preview)",
      "updated_at": "2026-10-12T21:11:28Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/308"
     },
     {
-     "age_days": 5.5,
+     "age_days": 6.4,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 307,
      "title": "feat(team): Situational Splits section on the season team page (preview)",
      "updated_at": "2026-10-12T21:16:25Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/307"
     },
     {
-     "age_days": 5.5,
+     "age_days": 6.4,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 306,
      "title": "feat(game): Paper Index factor impact on Deserved Win % (preview)",
      "updated_at": "2026-10-12T21:06:59Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/306"
     },
     {
-     "age_days": 5.6,
+     "age_days": 6.5,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 304,
      "title": "feat(header): typed site search in the header (preview)",
      "updated_at": "2026-10-12T21:12:54Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/304"
     },
     {
-     "age_days": 5.7,
+     "age_days": 6.6,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 303,
      "title": "feat(game): average starting field position in EP units in the Drives table",
      "updated_at": "2026-10-12T21:20:06Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/303"
     },
     {
-     "age_days": 5.7,
+     "age_days": 6.6,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 302,
      "title": "feat(leaderboards): last-updated stamps on the leaderboards and trends chart",
      "updated_at": "2026-10-12T21:14:12Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/302"
     },
     {
-     "age_days": 5.7,
+     "age_days": 6.6,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 301,
      "title": "feat(game): v2 WP chart download carries its title, URL and data time",
      "updated_at": "2026-10-12T21:08:46Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/301"
     },
     {
-     "age_days": 8.9,
+     "age_days": 9.8,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 297,
      "title": "feat(charts): Chart Builder v2 control bar with Plot, median crosshair and random axes (preview)",
      "updated_at": "2026-10-12T21:07:09Z",
      "url": "https://github.com/saiemgilani/game-on-paper-app/pull/297"
     },
     {
-     "age_days": 9.0,
+     "age_days": 9.9,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 296,
      "title": "feat(leaderboards): nearby-rank lists on the team and player season pages (preview)",
      "updated_at": "2026-10-12T21:01:45Z",
@@ -275,43 +275,43 @@
     }
    ],
    "private": false,
-   "pushed_age_days": 0.7,
+   "pushed_age_days": 1.6,
    "pushed_at": "2026-10-13T00:43:43Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 150,
      "title": "Conference filtering without choosing the week",
      "url": "https://github.com/saiemgilani/game-on-paper-app/issues/150"
     },
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 147,
      "title": "Create ability to track cumulative EPA stats for a given team over a given timeline",
      "url": "https://github.com/saiemgilani/game-on-paper-app/issues/147"
     },
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 142,
      "title": "Add a favicon",
      "url": "https://github.com/saiemgilani/game-on-paper-app/issues/142"
     },
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 140,
      "title": "Add an option to expand team names on the scoreboard cards",
      "url": "https://github.com/saiemgilani/game-on-paper-app/issues/140"
     },
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 139,
      "title": "Make entire card clickable to go to the stats view",
      "url": "https://github.com/saiemgilani/game-on-paper-app/issues/139"
     },
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 136,
      "title": "Favoriting function to pin games to the top of the scoreboard",
      "url": "https://github.com/saiemgilani/game-on-paper-app/issues/136"
@@ -331,16 +331,16 @@
      "url": "https://github.com/saiemgilani/game-on-paper-app/actions/workflows/copilot-setup-steps.yml"
     },
     "deploy": {
-     "age_days": 0.6,
-     "completed_at": "2026-10-13T03:35:32Z",
+     "age_days": 0.8,
+     "completed_at": "2026-10-13T20:21:18Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T03:33:25Z",
+     "created_at": "2026-10-13T20:19:03Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/deploy.yml",
      "name": "deploy",
-     "run_id": 38342269484,
+     "run_id": 38461849262,
      "state": "active",
-     "url": "https://github.com/saiemgilani/game-on-paper-app/actions/runs/38342269484"
+     "url": "https://github.com/saiemgilani/game-on-paper-app/actions/runs/38461849262"
     },
     "pr-evidence": {
      "age_days": null,
@@ -367,7 +367,7 @@
      "url": "https://github.com/saiemgilani/game-on-paper-app/actions/workflows/purge-game-cache.yml"
     },
     "test": {
-     "age_days": 0.9,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T20:37:26Z",
      "conclusion": "success",
      "created_at": "2026-10-12T20:36:43Z",
@@ -390,7 +390,7 @@
    "open_prs": [],
    "private": false,
    "pushed_age_days": 0.9,
-   "pushed_at": "2026-10-12T19:18:19Z",
+   "pushed_at": "2026-10-13T17:09:17Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
@@ -409,15 +409,15 @@
     },
     "ecosystem-status": {
      "age_days": 0.9,
-     "completed_at": "2026-10-12T19:18:23Z",
+     "completed_at": "2026-10-13T17:09:21Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T19:12:57Z",
+     "created_at": "2026-10-13T17:03:28Z",
      "event": "schedule",
      "file": ".github/workflows/ecosystem-status.yml",
      "name": "ecosystem-status",
-     "run_id": 38296145649,
+     "run_id": 38435554620,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/.github/actions/runs/38296145649"
+     "url": "https://github.com/sportsdataverse/.github/actions/runs/38435554620"
     },
     "orphan-scripts": {
      "age_days": null,
@@ -432,7 +432,7 @@
      "url": "https://github.com/sportsdataverse/.github/actions/workflows/orphan-scripts.yml"
     },
     "sdv-toolkit catalog": {
-     "age_days": 2.1,
+     "age_days": 3.0,
      "completed_at": "2026-10-11T14:17:45Z",
      "conclusion": "success",
      "created_at": "2026-10-11T14:17:31Z",
@@ -466,7 +466,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 398.9,
+   "pushed_age_days": 399.8,
    "pushed_at": "2025-09-09T19:22:38Z",
    "red_workflows": [],
    "releases": {},
@@ -477,12 +477,12 @@
    "default_branch": "main",
    "full_name": "sportsdataverse/amf-location-data",
    "latest_release_tag": "amf_tracking_parquet",
-   "newest_asset_age_days": 694.4,
+   "newest_asset_age_days": 695.3,
    "newest_asset_at": "2024-11-18T08:20:06Z",
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:20Z",
    "red_workflows": [],
    "releases": {
@@ -538,8 +538,8 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.2,
-   "pushed_at": "2026-10-13T12:32:45Z",
+   "pushed_age_days": 0.1,
+   "pushed_at": "2026-10-14T12:32:36Z",
    "red_workflows": [
     "Update NCAA Baseball Data"
    ],
@@ -548,18 +548,18 @@
    "workflows": {
     "MLB Model Datasets": {
      "age_days": 0.9,
-     "completed_at": "2026-10-12T21:15:21Z",
+     "completed_at": "2026-10-13T19:06:38Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T19:55:10Z",
+     "created_at": "2026-10-13T17:42:11Z",
      "event": "schedule",
      "file": ".github/workflows/mlb_models_cron.yml",
      "name": "MLB Model Datasets",
-     "run_id": 38300810096,
+     "run_id": 38440782722,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/38300810096"
+     "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/38440782722"
     },
     "Update NCAA Baseball Data": {
-     "age_days": 73.2,
+     "age_days": 74.1,
      "completed_at": "2026-08-01T12:03:46Z",
      "conclusion": "failure",
      "created_at": "2026-08-01T11:57:47Z",
@@ -571,7 +571,7 @@
      "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/30698726326"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T08:10:16Z",
      "conclusion": "success",
      "created_at": "2026-10-12T08:09:23Z",
@@ -583,16 +583,16 @@
      "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/38221858268"
     },
     "tests": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T12:33:17Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T12:33:15Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T12:32:48Z",
+     "created_at": "2026-10-14T12:32:39Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38398079695,
+     "run_id": 38564607851,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/38398079695"
+     "url": "https://github.com/sportsdataverse/baseballr-data/actions/runs/38564607851"
     }
    }
   },
@@ -605,14 +605,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:12Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:23:04Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:08:14Z",
@@ -634,7 +634,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:11:44Z",
    "red_workflows": [],
    "releases": {},
@@ -645,12 +645,12 @@
    "default_branch": "main",
    "full_name": "sportsdataverse/cfb4th",
    "latest_release_tag": "model_archive",
-   "newest_asset_age_days": 4.4,
+   "newest_asset_age_days": 5.3,
    "newest_asset_at": "2026-10-09T06:59:16Z",
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T11:41:40Z",
    "red_workflows": [
     "R-CMD-check"
@@ -667,7 +667,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:09:42Z",
      "conclusion": "cancelled",
      "created_at": "2026-10-12T10:10:00Z",
@@ -679,7 +679,7 @@
      "url": "https://github.com/sportsdataverse/cfb4th/actions/runs/38234594263"
     },
     "pkgdown": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:41:44Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:00Z",
@@ -701,7 +701,7 @@
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T13:17:50Z",
    "red_workflows": [
     "R-hub"
@@ -794,7 +794,7 @@
    },
    "stale_unassigned_issues": [
     {
-     "idle_days": 25.5,
+     "idle_days": 26.4,
      "number": 156,
      "title": "helper_pbp_add_yardage.R:235-240 reads 'punt for a loss of N' unsigned",
      "url": "https://github.com/sportsdataverse/cfbfastR/issues/156"
@@ -802,7 +802,7 @@
    ],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.2,
+     "age_days": 2.1,
      "completed_at": "2026-10-12T13:36:00Z",
      "conclusion": "success",
      "created_at": "2026-10-12T12:55:54Z",
@@ -814,7 +814,7 @@
      "url": "https://github.com/sportsdataverse/cfbfastR/actions/runs/38252176523"
     },
     "R-hub": {
-     "age_days": 50.2,
+     "age_days": 51.1,
      "completed_at": "2026-08-24T12:38:43Z",
      "conclusion": "cancelled",
      "created_at": "2026-08-24T12:05:57Z",
@@ -827,18 +827,18 @@
     },
     "api-sync": {
      "age_days": 0.9,
-     "completed_at": "2026-10-12T20:08:56Z",
+     "completed_at": "2026-10-13T17:55:44Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T20:06:11Z",
+     "created_at": "2026-10-13T17:55:28Z",
      "event": "schedule",
      "file": ".github/workflows/api-sync.yaml",
      "name": "api-sync",
-     "run_id": 38302015504,
+     "run_id": 38442577838,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR/actions/runs/38302015504"
+     "url": "https://github.com/sportsdataverse/cfbfastR/actions/runs/38442577838"
     },
     "pkgdown": {
-     "age_days": 1.2,
+     "age_days": 2.1,
      "completed_at": "2026-10-12T13:18:00Z",
      "conclusion": "success",
      "created_at": "2026-10-12T12:55:54Z",
@@ -860,8 +860,8 @@
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.3,
-   "pushed_at": "2026-10-13T10:23:32Z",
+   "pushed_age_days": 0.2,
+   "pushed_at": "2026-10-14T10:34:58Z",
    "red_workflows": [
     "CFB Recruiting Projections"
    ],
@@ -1004,15 +1004,15 @@
    "workflows": {
     "CFB FPI Weekly": {
      "age_days": 0.8,
-     "completed_at": "2026-10-12T21:59:32Z",
+     "completed_at": "2026-10-13T20:03:00Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T21:56:38Z",
+     "created_at": "2026-10-13T20:00:31Z",
      "event": "schedule",
      "file": ".github/workflows/cfb_fpi_weekly.yml",
      "name": "CFB FPI Weekly",
-     "run_id": 38313742933,
+     "run_id": 38459364418,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38313742933"
+     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38459364418"
     },
     "CFB Model Pipeline": {
      "age_days": null,
@@ -1040,18 +1040,18 @@
     },
     "CFB Ratings": {
      "age_days": 0.8,
-     "completed_at": "2026-10-12T21:35:49Z",
+     "completed_at": "2026-10-13T19:47:12Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T21:34:05Z",
+     "created_at": "2026-10-13T19:45:09Z",
      "event": "schedule",
      "file": ".github/workflows/cfb_ratings_cron.yml",
      "name": "CFB Ratings",
-     "run_id": 38311434852,
+     "run_id": 38457328331,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38311434852"
+     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38457328331"
     },
     "CFB Recruiting Projections": {
-     "age_days": 69.1,
+     "age_days": 70.0,
      "completed_at": "2026-08-05T14:33:30Z",
      "conclusion": "failure",
      "created_at": "2026-08-05T14:24:40Z",
@@ -1064,18 +1064,18 @@
     },
     "ESPN Daily Snapshots": {
      "age_days": 0.8,
-     "completed_at": "2026-10-12T21:40:54Z",
+     "completed_at": "2026-10-13T19:51:01Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T21:35:58Z",
+     "created_at": "2026-10-13T19:46:02Z",
      "event": "schedule",
      "file": ".github/workflows/espn_daily_snapshots.yml",
      "name": "ESPN Daily Snapshots",
-     "run_id": 38311628551,
+     "run_id": 38457447627,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38311628551"
+     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38457447627"
     },
     "Skeet Game Previews": {
-     "age_days": 26.7,
+     "age_days": 27.6,
      "completed_at": "2026-09-17T00:08:24Z",
      "conclusion": "failure",
      "created_at": "2026-09-17T00:02:14Z",
@@ -1087,7 +1087,7 @@
      "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/35164853294"
     },
     "Skeet Post-Week Content": {
-     "age_days": 28.9,
+     "age_days": 29.8,
      "completed_at": "2026-09-14T19:44:40Z",
      "conclusion": "failure",
      "created_at": "2026-09-14T19:42:43Z",
@@ -1099,7 +1099,7 @@
      "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/34888543691"
     },
     "Update CFB Data": {
-     "age_days": 14.0,
+     "age_days": 14.9,
      "completed_at": "2026-09-29T17:41:42Z",
      "conclusion": "success",
      "created_at": "2026-09-29T16:42:23Z",
@@ -1111,7 +1111,7 @@
      "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/36599666555"
     },
     "orphan-scripts": {
-     "age_days": 0.7,
+     "age_days": 1.6,
      "completed_at": "2026-10-13T00:05:54Z",
      "conclusion": "success",
      "created_at": "2026-10-13T00:05:46Z",
@@ -1123,16 +1123,16 @@
      "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38325528846"
     },
     "tests": {
-     "age_days": 0.3,
-     "completed_at": "2026-10-13T10:26:15Z",
+     "age_days": 0.2,
+     "completed_at": "2026-10-14T10:39:29Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T10:23:34Z",
+     "created_at": "2026-10-14T10:35:00Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38383036078,
+     "run_id": 38550579430,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38383036078"
+     "url": "https://github.com/sportsdataverse/cfbfastR-cfb-data/actions/runs/38550579430"
     }
    }
   },
@@ -1145,8 +1145,8 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.4,
-   "pushed_at": "2026-10-13T08:22:04Z",
+   "pushed_age_days": 0.3,
+   "pushed_at": "2026-10-14T08:23:26Z",
    "red_workflows": [
     "orphan-scripts",
     "Scrape CFB Raw Data"
@@ -1155,7 +1155,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "Scrape CFB Raw Data": {
-     "age_days": 45.1,
+     "age_days": 46.0,
      "completed_at": "2026-08-29T20:07:32Z",
      "conclusion": "cancelled",
      "created_at": "2026-08-29T14:07:12Z",
@@ -1167,7 +1167,7 @@
      "url": "https://github.com/sportsdataverse/cfbfastR-cfb-raw/actions/runs/33256748632"
     },
     "cfbfastR CFB Data trigger": {
-     "age_days": 14.4,
+     "age_days": 15.3,
      "completed_at": "2026-09-29T08:25:26Z",
      "conclusion": "success",
      "created_at": "2026-09-29T08:25:19Z",
@@ -1179,7 +1179,7 @@
      "url": "https://github.com/sportsdataverse/cfbfastR-cfb-raw/actions/runs/36542611583"
     },
     "orphan-scripts": {
-     "age_days": 12.0,
+     "age_days": 12.9,
      "completed_at": "2026-10-01T17:57:12Z",
      "conclusion": "failure",
      "created_at": "2026-10-01T17:57:01Z",
@@ -1201,13 +1201,13 @@
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.0,
+   "pushed_age_days": 1.9,
    "pushed_at": "2026-10-12T16:27:42Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 15,
      "title": "Unexpected Values in pos_score_pts field from load_cfb_pbp()",
      "url": "https://github.com/sportsdataverse/cfbfastR-data/issues/15"
@@ -1215,7 +1215,7 @@
    ],
    "workflows": {
     "Annual Roster Update": {
-     "age_days": 44.7,
+     "age_days": 45.6,
      "completed_at": "2026-08-30T00:34:00Z",
      "conclusion": "success",
      "created_at": "2026-08-30T00:24:54Z",
@@ -1227,7 +1227,7 @@
      "url": "https://github.com/sportsdataverse/cfbfastR-data/actions/runs/33283260159"
     },
     "Update CFB Data": {
-     "age_days": 1.0,
+     "age_days": 1.9,
      "completed_at": "2026-10-12T16:27:49Z",
      "conclusion": "success",
      "created_at": "2026-10-12T15:53:24Z",
@@ -1239,7 +1239,7 @@
      "url": "https://github.com/sportsdataverse/cfbfastR-data/actions/runs/38273493692"
     },
     "orphan-scripts": {
-     "age_days": 9.1,
+     "age_days": 10.0,
      "completed_at": "2026-10-04T14:56:18Z",
      "conclusion": "success",
      "created_at": "2026-10-04T14:56:09Z",
@@ -1261,7 +1261,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:16Z",
    "red_workflows": [],
    "releases": {},
@@ -1290,14 +1290,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T11:46:19Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:51:42Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:23Z",
@@ -1309,7 +1309,7 @@
      "url": "https://github.com/sportsdataverse/cfbplotR/actions/runs/38234638054"
     },
     "pkgdown": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:46:24Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:23Z",
@@ -1331,7 +1331,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T11:58:17Z",
    "red_workflows": [],
    "releases": {
@@ -1346,7 +1346,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:01:02Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:28Z",
@@ -1358,7 +1358,7 @@
      "url": "https://github.com/sportsdataverse/cfbseedR/actions/runs/38234646881"
     },
     "R-hub": {
-     "age_days": 47.6,
+     "age_days": 48.5,
      "completed_at": "2026-08-27T03:50:45Z",
      "conclusion": "success",
      "created_at": "2026-08-27T03:42:40Z",
@@ -1370,7 +1370,7 @@
      "url": "https://github.com/sportsdataverse/cfbseedR/actions/runs/33037177772"
     },
     "pkgdown": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:58:20Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:28Z",
@@ -1392,7 +1392,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.6,
+   "pushed_age_days": 1.5,
    "pushed_at": "2026-10-13T02:02:33Z",
    "red_workflows": [],
    "releases": {
@@ -1435,7 +1435,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 0.6,
+     "age_days": 1.5,
      "completed_at": "2026-10-13T02:19:11Z",
      "conclusion": "success",
      "created_at": "2026-10-13T01:44:02Z",
@@ -1447,7 +1447,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey/actions/runs/38333529652"
     },
     "R-hub": {
-     "age_days": 49.2,
+     "age_days": 50.1,
      "completed_at": "2026-08-25T12:06:03Z",
      "conclusion": "success",
      "created_at": "2026-08-25T11:19:20Z",
@@ -1459,7 +1459,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey/actions/runs/32841706669"
     },
     "pkgdown": {
-     "age_days": 0.6,
+     "age_days": 1.5,
      "completed_at": "2026-10-13T02:02:41Z",
      "conclusion": "success",
      "created_at": "2026-10-13T01:44:02Z",
@@ -1481,13 +1481,13 @@
    "open_issues": 2,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.4,
-   "pushed_at": "2026-10-13T08:04:15Z",
+   "pushed_age_days": 0.3,
+   "pushed_at": "2026-10-14T08:04:50Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [
     {
-     "idle_days": 12.5,
+     "idle_days": 13.4,
      "number": 16,
      "title": "nhl_pbp_full assets 2015 to 2018 are named by start year: 2014-15 absent, 2018-19 published twice",
      "url": "https://github.com/sportsdataverse/fastRhockey-nhl-data/issues/16"
@@ -1507,7 +1507,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-nhl-data/actions/workflows/nhl_model_pipeline.yml"
     },
     "Update NHL Data (Python)": {
-     "age_days": 83.7,
+     "age_days": 84.6,
      "completed_at": "2026-07-22T01:36:51Z",
      "conclusion": "success",
      "created_at": "2026-07-22T01:08:12Z",
@@ -1519,7 +1519,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-nhl-data/actions/runs/29882262600"
     },
     "Update NHL Data (R — retired)": {
-     "age_days": 83.7,
+     "age_days": 84.6,
      "completed_at": "2026-07-22T01:26:24Z",
      "conclusion": "success",
      "created_at": "2026-07-22T01:08:12Z",
@@ -1531,7 +1531,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-nhl-data/actions/runs/29882262560"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T06:51:02Z",
      "conclusion": "success",
      "created_at": "2026-10-12T06:50:52Z",
@@ -1543,16 +1543,16 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-nhl-data/actions/runs/38214561615"
     },
     "tests": {
-     "age_days": 0.4,
-     "completed_at": "2026-10-13T08:05:00Z",
+     "age_days": 0.3,
+     "completed_at": "2026-10-14T08:05:25Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T08:04:17Z",
+     "created_at": "2026-10-14T08:04:52Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38366785186,
+     "run_id": 38532619679,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/fastRhockey-nhl-data/actions/runs/38366785186"
+     "url": "https://github.com/sportsdataverse/fastRhockey-nhl-data/actions/runs/38532619679"
     }
    }
   },
@@ -1565,14 +1565,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.4,
-   "pushed_at": "2026-10-13T08:00:40Z",
+   "pushed_age_days": 0.3,
+   "pushed_at": "2026-10-14T08:00:53Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "Scrape NHL Player Bio": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T18:44:16Z",
      "conclusion": "success",
      "created_at": "2026-10-12T18:43:44Z",
@@ -1584,7 +1584,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-nhl-raw/actions/runs/38292869074"
     },
     "Scrape NHL Raw Data": {
-     "age_days": 87.0,
+     "age_days": 87.9,
      "completed_at": "2026-07-18T17:46:26Z",
      "conclusion": "success",
      "created_at": "2026-07-18T16:58:01Z",
@@ -1596,7 +1596,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-nhl-raw/actions/runs/29652993857"
     },
     "fastRhockey NHL Data trigger": {
-     "age_days": 83.7,
+     "age_days": 84.6,
      "completed_at": "2026-07-22T01:08:13Z",
      "conclusion": "success",
      "created_at": "2026-07-22T01:08:05Z",
@@ -1608,7 +1608,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-nhl-raw/actions/runs/29882257013"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T06:29:35Z",
      "conclusion": "success",
      "created_at": "2026-10-12T06:29:26Z",
@@ -1620,16 +1620,16 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-nhl-raw/actions/runs/38212763701"
     },
     "tests": {
-     "age_days": 0.4,
-     "completed_at": "2026-10-13T08:01:02Z",
+     "age_days": 0.3,
+     "completed_at": "2026-10-14T08:01:18Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T08:00:42Z",
+     "created_at": "2026-10-14T08:00:55Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38366381576,
+     "run_id": 38532163828,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/fastRhockey-nhl-raw/actions/runs/38366381576"
+     "url": "https://github.com/sportsdataverse/fastRhockey-nhl-raw/actions/runs/38532163828"
     }
    }
   },
@@ -1642,14 +1642,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:05Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "PWHL xG": {
-     "age_days": 5.1,
+     "age_days": 6.0,
      "completed_at": "2026-10-08T13:37:16Z",
      "conclusion": "success",
      "created_at": "2026-10-08T13:34:08Z",
@@ -1661,7 +1661,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-pwhl-data/actions/runs/37785363329"
     },
     "Update PWHL Data": {
-     "age_days": 87.2,
+     "age_days": 88.1,
      "completed_at": "2026-07-18T12:39:25Z",
      "conclusion": "success",
      "created_at": "2026-07-18T12:36:26Z",
@@ -1673,7 +1673,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-pwhl-data/actions/runs/29644634564"
     },
     "Update PWHL Data (Python)": {
-     "age_days": 5.2,
+     "age_days": 6.1,
      "completed_at": "2026-10-08T13:31:02Z",
      "conclusion": "success",
      "created_at": "2026-10-08T13:11:22Z",
@@ -1685,7 +1685,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-pwhl-data/actions/runs/37782401924"
     },
     "orphan-scripts": {
-     "age_days": 5.2,
+     "age_days": 6.1,
      "completed_at": "2026-10-08T12:57:38Z",
      "conclusion": "success",
      "created_at": "2026-10-08T12:57:29Z",
@@ -1697,7 +1697,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-pwhl-data/actions/runs/37780629632"
     },
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:25:14Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:08:07Z",
@@ -1719,14 +1719,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:06Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "Scrape PWHL Raw Data": {
-     "age_days": 135.3,
+     "age_days": 136.2,
      "completed_at": "2026-05-31T10:15:35Z",
      "conclusion": "success",
      "created_at": "2026-05-31T10:08:07Z",
@@ -1738,7 +1738,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-pwhl-raw/actions/runs/26709713864"
     },
     "fastRhockey PWHL Data trigger": {
-     "age_days": 87.2,
+     "age_days": 88.1,
      "completed_at": "2026-07-18T12:36:27Z",
      "conclusion": "success",
      "created_at": "2026-07-18T12:36:20Z",
@@ -1750,7 +1750,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-pwhl-raw/actions/runs/29644631688"
     },
     "orphan-scripts": {
-     "age_days": 5.2,
+     "age_days": 6.1,
      "completed_at": "2026-10-08T12:53:33Z",
      "conclusion": "success",
      "created_at": "2026-10-08T12:53:23Z",
@@ -1762,7 +1762,7 @@
      "url": "https://github.com/sportsdataverse/fastRhockey-pwhl-raw/actions/runs/37780126864"
     },
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:25:24Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:08:09Z",
@@ -1784,14 +1784,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:11:19Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "Build Presentation": {
-     "age_days": 373.6,
+     "age_days": 374.5,
      "completed_at": "2025-10-05T01:44:55Z",
      "conclusion": "success",
      "created_at": "2025-10-05T01:39:43Z",
@@ -1803,7 +1803,7 @@
      "url": "https://github.com/sportsdataverse/fsu-sac/actions/runs/18252204637"
     },
     "CodeQL": {
-     "age_days": 378.0,
+     "age_days": 378.9,
      "completed_at": "2025-09-30T17:38:26Z",
      "conclusion": "success",
      "created_at": "2025-09-30T17:36:38Z",
@@ -1825,14 +1825,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:11:14Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "Build Presentation": {
-     "age_days": 373.7,
+     "age_days": 374.6,
      "completed_at": "2025-10-05T01:00:23Z",
      "conclusion": "success",
      "created_at": "2025-10-05T00:56:34Z",
@@ -1844,7 +1844,7 @@
      "url": "https://github.com/sportsdataverse/fsu-sac-2025/actions/runs/18251761696"
     },
     "CodeQL": {
-     "age_days": 378.0,
+     "age_days": 378.9,
      "completed_at": "2025-09-30T17:39:50Z",
      "conclusion": "success",
      "created_at": "2025-09-30T17:37:54Z",
@@ -1866,7 +1866,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:21Z",
    "red_workflows": [],
    "releases": {},
@@ -1882,7 +1882,7 @@
    "open_issues": 2,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.6,
+   "pushed_age_days": 1.5,
    "pushed_at": "2026-10-13T01:38:35Z",
    "red_workflows": [
     "R-hub"
@@ -2038,7 +2038,7 @@
    },
    "stale_unassigned_issues": [
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 206,
      "title": "bug: kenpom functions still not working with 3.1.0 & httr fix",
      "url": "https://github.com/sportsdataverse/hoopR/issues/206"
@@ -2046,7 +2046,7 @@
    ],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 0.7,
+     "age_days": 1.6,
      "completed_at": "2026-10-13T01:40:54Z",
      "conclusion": "success",
      "created_at": "2026-10-13T01:11:53Z",
@@ -2058,7 +2058,7 @@
      "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38330972378"
     },
     "R-hub": {
-     "age_days": 126.4,
+     "age_days": 127.3,
      "completed_at": "2026-06-10T07:56:10Z",
      "conclusion": "cancelled",
      "created_at": "2026-06-09T07:53:21Z",
@@ -2070,19 +2070,19 @@
      "url": "https://github.com/sportsdataverse/hoopR/actions/runs/27192006294"
     },
     "api-sync": {
-     "age_days": 0.7,
-     "completed_at": "2026-10-13T01:12:06Z",
+     "age_days": 0.9,
+     "completed_at": "2026-10-13T17:56:54Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T01:11:53Z",
-     "event": "push",
+     "created_at": "2026-10-13T17:56:38Z",
+     "event": "schedule",
      "file": ".github/workflows/api-sync.yaml",
      "name": "api-sync",
-     "run_id": 38330972936,
+     "run_id": 38442734436,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38330972936"
+     "url": "https://github.com/sportsdataverse/hoopR/actions/runs/38442734436"
     },
     "pkgdown": {
-     "age_days": 0.7,
+     "age_days": 1.6,
      "completed_at": "2026-10-13T01:38:43Z",
      "conclusion": "success",
      "created_at": "2026-10-13T01:11:53Z",
@@ -2104,7 +2104,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.7,
+   "pushed_age_days": 1.6,
    "pushed_at": "2026-10-12T23:38:34Z",
    "red_workflows": [],
    "releases": {},
@@ -2123,7 +2123,7 @@
      "url": "https://github.com/sportsdataverse/hoopR-mbb-data/actions/workflows/mbb_models_cron.yml"
     },
     "Update MBB Data": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T23:39:33Z",
      "conclusion": "success",
      "created_at": "2026-10-12T22:36:27Z",
@@ -2135,7 +2135,7 @@
      "url": "https://github.com/sportsdataverse/hoopR-mbb-data/actions/runs/38317621832"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T08:05:42Z",
      "conclusion": "success",
      "created_at": "2026-10-12T08:05:13Z",
@@ -2147,7 +2147,7 @@
      "url": "https://github.com/sportsdataverse/hoopR-mbb-data/actions/runs/38221454757"
     },
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:17:59Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:07:26Z",
@@ -2169,14 +2169,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.8,
+   "pushed_age_days": 1.7,
    "pushed_at": "2026-10-12T22:35:21Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "hoopR MBB Data trigger": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T22:36:28Z",
      "conclusion": "success",
      "created_at": "2026-10-12T22:35:24Z",
@@ -2188,7 +2188,7 @@
      "url": "https://github.com/sportsdataverse/hoopR-mbb-raw/actions/runs/38317521940"
     },
     "orphan-scripts": {
-     "age_days": 13.3,
+     "age_days": 14.2,
      "completed_at": "2026-09-30T10:17:25Z",
      "conclusion": "success",
      "created_at": "2026-09-30T10:17:14Z",
@@ -2200,7 +2200,7 @@
      "url": "https://github.com/sportsdataverse/hoopR-mbb-raw/actions/runs/36701484207"
     },
     "tests": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T22:39:03Z",
      "conclusion": "success",
      "created_at": "2026-10-12T22:35:24Z",
@@ -2222,26 +2222,26 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.2,
-   "pushed_at": "2026-10-13T11:49:11Z",
+   "pushed_age_days": 0.1,
+   "pushed_at": "2026-10-14T11:50:08Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "Update NBA Data": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T11:49:26Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T11:30:32Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T11:16:50Z",
+     "created_at": "2026-10-14T11:16:49Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_nba.yml",
      "name": "Update NBA Data",
-     "run_id": 38389121181,
+     "run_id": 38555448690,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR-nba-data/actions/runs/38389121181"
+     "url": "https://github.com/sportsdataverse/hoopR-nba-data/actions/runs/38555448690"
     },
     "orphan-scripts": {
-     "age_days": 1.2,
+     "age_days": 2.1,
      "completed_at": "2026-10-12T12:15:56Z",
      "conclusion": "success",
      "created_at": "2026-10-12T11:29:41Z",
@@ -2253,7 +2253,7 @@
      "url": "https://github.com/sportsdataverse/hoopR-nba-data/actions/runs/38242995829"
     },
     "tests": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T19:33:02Z",
      "conclusion": "success",
      "created_at": "2026-10-12T19:32:37Z",
@@ -2275,7 +2275,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:11:23Z",
    "red_workflows": [],
    "releases": {},
@@ -2291,26 +2291,26 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.2,
-   "pushed_at": "2026-10-13T11:16:41Z",
+   "pushed_age_days": 0.1,
+   "pushed_at": "2026-10-14T11:16:40Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "hoopR NBA Data trigger": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T11:16:51Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T11:16:49Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T11:16:43Z",
+     "created_at": "2026-10-14T11:16:43Z",
      "event": "push",
      "file": ".github/workflows/hoopR_nba_data_trigger.yaml",
      "name": "hoopR NBA Data trigger",
-     "run_id": 38389108656,
+     "run_id": 38555437038,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR-nba-raw/actions/runs/38389108656"
+     "url": "https://github.com/sportsdataverse/hoopR-nba-raw/actions/runs/38555437038"
     },
     "orphan-scripts": {
-     "age_days": 1.6,
+     "age_days": 2.5,
      "completed_at": "2026-10-12T02:45:47Z",
      "conclusion": "success",
      "created_at": "2026-10-12T02:45:39Z",
@@ -2322,16 +2322,16 @@
      "url": "https://github.com/sportsdataverse/hoopR-nba-raw/actions/runs/38197052709"
     },
     "tests": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T11:17:33Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T11:17:30Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T11:16:43Z",
+     "created_at": "2026-10-14T11:16:43Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38389108649,
+     "run_id": 38555437011,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR-nba-raw/actions/runs/38389108649"
+     "url": "https://github.com/sportsdataverse/hoopR-nba-raw/actions/runs/38555437011"
     }
    }
   },
@@ -2344,13 +2344,13 @@
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.0,
+   "pushed_age_days": 1.9,
    "pushed_at": "2026-10-12T17:22:47Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 12,
      "title": "NBA model-publish: post-ship follow-ups (loader, league_id, droplet backfill)",
      "url": "https://github.com/sportsdataverse/hoopR-nba-stats-data/issues/12"
@@ -2358,7 +2358,7 @@
    ],
    "workflows": {
     "Annual NBA Draft Update": {
-     "age_days": 1.6,
+     "age_days": 2.5,
      "completed_at": "2026-10-12T03:05:50Z",
      "conclusion": "success",
      "created_at": "2026-10-12T03:04:02Z",
@@ -2382,7 +2382,7 @@
      "url": "https://github.com/sportsdataverse/hoopR-nba-stats-data/actions/workflows/nba_models.yml"
     },
     "Update NBA Stats Data": {
-     "age_days": 93.3,
+     "age_days": 94.2,
      "completed_at": "2026-07-12T09:02:58Z",
      "conclusion": "success",
      "created_at": "2026-07-12T08:56:20Z",
@@ -2394,7 +2394,7 @@
      "url": "https://github.com/sportsdataverse/hoopR-nba-stats-data/actions/runs/29186638375"
     },
     "orphan-scripts": {
-     "age_days": 1.0,
+     "age_days": 1.9,
      "completed_at": "2026-10-12T17:22:58Z",
      "conclusion": "success",
      "created_at": "2026-10-12T17:22:50Z",
@@ -2406,7 +2406,7 @@
      "url": "https://github.com/sportsdataverse/hoopR-nba-stats-data/actions/runs/38283813192"
     },
     "tests": {
-     "age_days": 1.0,
+     "age_days": 1.9,
      "completed_at": "2026-10-12T17:25:06Z",
      "conclusion": "success",
      "created_at": "2026-10-12T17:22:50Z",
@@ -2423,13 +2423,13 @@
    "default_branch": "main",
    "full_name": "sportsdataverse/hoopR-nba-stats-raw",
    "latest_release_tag": "nba-stats-raw-json",
-   "newest_asset_age_days": 2.0,
+   "newest_asset_age_days": 2.9,
    "newest_asset_at": "2026-10-11T15:55:22Z",
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.2,
-   "pushed_at": "2026-10-13T12:07:54Z",
+   "pushed_age_days": 0.1,
+   "pushed_at": "2026-10-14T12:07:44Z",
    "red_workflows": [],
    "releases": {
     "nba-stats-raw-json": {
@@ -2443,7 +2443,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "orphan-scripts": {
-     "age_days": 1.5,
+     "age_days": 2.4,
      "completed_at": "2026-10-12T06:03:13Z",
      "conclusion": "success",
      "created_at": "2026-10-12T06:03:04Z",
@@ -2455,16 +2455,16 @@
      "url": "https://github.com/sportsdataverse/hoopR-nba-stats-raw/actions/runs/38210677235"
     },
     "tests": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T12:08:40Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T12:08:21Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T12:07:57Z",
+     "created_at": "2026-10-14T12:07:46Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38395057595,
+     "run_id": 38561509197,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/hoopR-nba-stats-raw/actions/runs/38395057595"
+     "url": "https://github.com/sportsdataverse/hoopR-nba-stats-raw/actions/runs/38561509197"
     }
    }
   },
@@ -2477,7 +2477,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:11:48Z",
    "red_workflows": [],
    "releases": {},
@@ -2493,7 +2493,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:22Z",
    "red_workflows": [],
    "releases": {},
@@ -2509,7 +2509,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:07:30Z",
    "red_workflows": [],
    "releases": {},
@@ -2528,7 +2528,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-mbb-hoops-data/actions/workflows/ncaa_mbb_models.yml"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T07:21:23Z",
      "conclusion": "success",
      "created_at": "2026-10-12T07:21:15Z",
@@ -2540,7 +2540,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-mbb-hoops-data/actions/runs/38217262297"
     },
     "tests": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T07:21:40Z",
      "conclusion": "success",
      "created_at": "2026-10-12T07:21:15Z",
@@ -2562,14 +2562,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:07:19Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T08:16:56Z",
      "conclusion": "success",
      "created_at": "2026-10-12T08:15:35Z",
@@ -2581,7 +2581,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-mbb-hoops-raw/actions/runs/38222478354"
     },
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T09:27:56Z",
      "conclusion": "success",
      "created_at": "2026-10-12T09:25:11Z",
@@ -2603,14 +2603,14 @@
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T12:32:00Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "Update NCAA MFB Data": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:32:04Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:58:41Z",
@@ -2622,7 +2622,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-mfb-football-data/actions/runs/38239681498"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T07:21:29Z",
      "conclusion": "success",
      "created_at": "2026-10-12T07:21:19Z",
@@ -2634,7 +2634,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-mfb-football-data/actions/runs/38217267162"
     },
     "tests": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T07:21:44Z",
      "conclusion": "success",
      "created_at": "2026-10-12T07:21:19Z",
@@ -2656,7 +2656,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:07:06Z",
    "red_workflows": [
     "tests"
@@ -2665,7 +2665,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "ncaa-mfb-football-data trigger": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T10:58:42Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:07:08Z",
@@ -2677,7 +2677,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-mfb-football-raw/actions/runs/38234290050"
     },
     "orphan-scripts": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T09:15:31Z",
      "conclusion": "success",
      "created_at": "2026-10-12T09:15:20Z",
@@ -2689,7 +2689,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-mfb-football-raw/actions/runs/38228689926"
     },
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T10:57:09Z",
      "conclusion": "failure",
      "created_at": "2026-10-12T10:07:08Z",
@@ -2711,14 +2711,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:13Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "orphan-scripts": {
-     "age_days": 41.9,
+     "age_days": 42.8,
      "completed_at": "2026-09-01T19:07:13Z",
      "conclusion": "success",
      "created_at": "2026-09-01T19:07:05Z",
@@ -2730,7 +2730,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-softball-raw/actions/runs/33547621756"
     },
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:39:09Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:08:15Z",
@@ -2752,7 +2752,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:07:29Z",
    "red_workflows": [],
    "releases": {},
@@ -2771,7 +2771,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-wbb-hoops-data/actions/workflows/ncaa_wbb_models.yml"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T07:21:25Z",
      "conclusion": "success",
      "created_at": "2026-10-12T07:21:17Z",
@@ -2783,7 +2783,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-wbb-hoops-data/actions/runs/38217264766"
     },
     "tests": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T07:21:44Z",
      "conclusion": "success",
      "created_at": "2026-10-12T07:21:17Z",
@@ -2805,7 +2805,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:07:10Z",
    "red_workflows": [
     "orphan-scripts"
@@ -2814,7 +2814,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T08:16:45Z",
      "conclusion": "failure",
      "created_at": "2026-10-12T08:15:37Z",
@@ -2826,7 +2826,7 @@
      "url": "https://github.com/sportsdataverse/ncaa-wbb-hoops-raw/actions/runs/38222482361"
     },
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T09:28:30Z",
      "conclusion": "success",
      "created_at": "2026-10-12T09:25:13Z",
@@ -2848,13 +2848,13 @@
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.7,
+   "pushed_age_days": 1.6,
    "pushed_at": "2026-10-13T00:05:47Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [
     {
-     "idle_days": 40.4,
+     "idle_days": 41.3,
      "number": 34,
      "title": "nfl_model_pbp seasons 2000-2002 are published near-empty (median 2-3 plays/game)",
      "url": "https://github.com/sportsdataverse/nfl-data/issues/34"
@@ -2874,55 +2874,55 @@
      "url": "https://github.com/sportsdataverse/nfl-data/actions/workflows/nfl_model_pipeline.yml"
     },
     "NFL Ratings Weekly": {
-     "age_days": 6.9,
-     "completed_at": "2026-10-06T19:16:53Z",
+     "age_days": 0.8,
+     "completed_at": "2026-10-13T20:01:22Z",
      "conclusion": "success",
-     "created_at": "2026-10-06T19:15:48Z",
+     "created_at": "2026-10-13T20:00:14Z",
      "event": "schedule",
      "file": ".github/workflows/nfl_ratings_weekly.yml",
      "name": "NFL Ratings Weekly",
-     "run_id": 37517635573,
+     "run_id": 38459323883,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/37517635573"
+     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38459323883"
     },
     "NFL model_pbp build + publish": {
      "age_days": 0.6,
-     "completed_at": "2026-10-13T01:47:51Z",
+     "completed_at": "2026-10-13T23:35:50Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T01:44:16Z",
+     "created_at": "2026-10-13T23:32:31Z",
      "event": "schedule",
      "file": ".github/workflows/nfl_pbp_cron.yml",
      "name": "NFL model_pbp build + publish",
-     "run_id": 38333548804,
+     "run_id": 38484876413,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38333548804"
+     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38484876413"
     },
     "NFL rosters + players + player-stats + team-stats + QBR build + publish": {
      "age_days": 0.6,
-     "completed_at": "2026-10-13T02:09:58Z",
+     "completed_at": "2026-10-13T23:48:12Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T02:07:51Z",
+     "created_at": "2026-10-13T23:46:29Z",
      "event": "schedule",
      "file": ".github/workflows/nfl_rosters_players_cron.yml",
      "name": "NFL rosters + players + player-stats + team-stats + QBR build + publish",
-     "run_id": 38335415298,
+     "run_id": 38486261428,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38335415298"
+     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38486261428"
     },
     "espn_nfl processed-game datasets": {
      "age_days": 0.6,
-     "completed_at": "2026-10-13T01:57:10Z",
+     "completed_at": "2026-10-13T23:44:59Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T01:49:57Z",
+     "created_at": "2026-10-13T23:36:41Z",
      "event": "schedule",
      "file": ".github/workflows/espn_nfl_cron.yml",
      "name": "espn_nfl processed-game datasets",
-     "run_id": 38334000190,
+     "run_id": 38485291937,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38334000190"
+     "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38485291937"
     },
     "orphan-scripts": {
-     "age_days": 0.7,
+     "age_days": 1.6,
      "completed_at": "2026-10-13T00:05:58Z",
      "conclusion": "success",
      "created_at": "2026-10-13T00:05:50Z",
@@ -2934,7 +2934,7 @@
      "url": "https://github.com/sportsdataverse/nfl-data/actions/runs/38325534839"
     },
     "tests": {
-     "age_days": 0.7,
+     "age_days": 1.6,
      "completed_at": "2026-10-13T00:06:43Z",
      "conclusion": "success",
      "created_at": "2026-10-13T00:05:50Z",
@@ -2956,26 +2956,26 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.2,
-   "pushed_at": "2026-10-13T11:57:54Z",
+   "pushed_age_days": 0.1,
+   "pushed_at": "2026-10-14T11:52:55Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "Update NFL NGS Data": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T11:57:59Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T11:52:58Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T11:46:57Z",
+     "created_at": "2026-10-14T11:46:46Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_ngs.yml",
      "name": "Update NFL NGS Data",
-     "run_id": 38392596605,
+     "run_id": 38558979549,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-ngs-data/actions/runs/38392596605"
+     "url": "https://github.com/sportsdataverse/nfl-ngs-data/actions/runs/38558979549"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T07:07:03Z",
      "conclusion": "success",
      "created_at": "2026-10-12T07:06:53Z",
@@ -2987,7 +2987,7 @@
      "url": "https://github.com/sportsdataverse/nfl-ngs-data/actions/runs/38215966345"
     },
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:11:46Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:07:34Z",
@@ -3009,8 +3009,8 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.2,
-   "pushed_at": "2026-10-13T11:46:50Z",
+   "pushed_age_days": 0.1,
+   "pushed_at": "2026-10-14T11:46:36Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
@@ -3028,19 +3028,19 @@
      "url": "https://github.com/sportsdataverse/nfl-ngs-raw/actions/workflows/scrape_ngs_raw.yml"
     },
     "nfl-ngs-data trigger": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T11:46:58Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T11:46:46Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T11:46:52Z",
+     "created_at": "2026-10-14T11:46:38Z",
      "event": "push",
      "file": ".github/workflows/nfl_ngs_data_trigger.yml",
      "name": "nfl-ngs-data trigger",
-     "run_id": 38392586993,
+     "run_id": 38558963102,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-ngs-raw/actions/runs/38392586993"
+     "url": "https://github.com/sportsdataverse/nfl-ngs-raw/actions/runs/38558963102"
     },
     "orphan-scripts": {
-     "age_days": 13.3,
+     "age_days": 14.2,
      "completed_at": "2026-09-30T10:17:40Z",
      "conclusion": "success",
      "created_at": "2026-09-30T10:17:31Z",
@@ -3052,16 +3052,16 @@
      "url": "https://github.com/sportsdataverse/nfl-ngs-raw/actions/runs/36701512590"
     },
     "tests": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T11:47:15Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T11:47:08Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T11:46:52Z",
+     "created_at": "2026-10-14T11:46:38Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38392587116,
+     "run_id": 38558963106,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-ngs-raw/actions/runs/38392587116"
+     "url": "https://github.com/sportsdataverse/nfl-ngs-raw/actions/runs/38558963106"
     }
    }
   },
@@ -3074,8 +3074,8 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.9,
-   "pushed_at": "2026-10-12T20:28:44Z",
+   "pushed_age_days": 0.8,
+   "pushed_at": "2026-10-13T18:33:58Z",
    "red_workflows": [
     "tests"
    ],
@@ -3083,19 +3083,19 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "Scrape NFL Raw Data": {
-     "age_days": 0.9,
-     "completed_at": "2026-10-12T20:28:49Z",
+     "age_days": 0.8,
+     "completed_at": "2026-10-13T18:34:03Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T20:25:26Z",
+     "created_at": "2026-10-13T18:30:46Z",
      "event": "schedule",
      "file": ".github/workflows/scrape_nfl_raw.yml",
      "name": "Scrape NFL Raw Data",
-     "run_id": 38304118519,
+     "run_id": 38447345347,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/nfl-raw/actions/runs/38304118519"
+     "url": "https://github.com/sportsdataverse/nfl-raw/actions/runs/38447345347"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T08:29:16Z",
      "conclusion": "success",
      "created_at": "2026-10-12T08:29:06Z",
@@ -3107,7 +3107,7 @@
      "url": "https://github.com/sportsdataverse/nfl-raw/actions/runs/38223837744"
     },
     "tests": {
-     "age_days": 1.0,
+     "age_days": 1.9,
      "completed_at": "2026-10-12T17:57:33Z",
      "conclusion": "failure",
      "created_at": "2026-10-12T17:57:00Z",
@@ -3129,7 +3129,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:11:53Z",
    "red_workflows": [],
    "releases": {},
@@ -3145,7 +3145,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T12:02:48Z",
    "red_workflows": [],
    "releases": {
@@ -3174,7 +3174,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:04:00Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:04Z",
@@ -3186,7 +3186,7 @@
      "url": "https://github.com/sportsdataverse/oddsapiR/actions/runs/38234603630"
     },
     "R-hub": {
-     "age_days": 50.4,
+     "age_days": 51.3,
      "completed_at": "2026-08-24T08:44:20Z",
      "conclusion": "success",
      "created_at": "2026-08-24T08:13:03Z",
@@ -3198,7 +3198,7 @@
      "url": "https://github.com/sportsdataverse/oddsapiR/actions/runs/32705175437"
     },
     "pkgdown": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:02:53Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:04Z",
@@ -3220,7 +3220,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:11:27Z",
    "red_workflows": [],
    "releases": {},
@@ -3236,14 +3236,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T11:58:28Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:48:30Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:13Z",
@@ -3255,7 +3255,7 @@
      "url": "https://github.com/sportsdataverse/recruitR/actions/runs/38234620785"
     },
     "pkgdown": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:58:33Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:14Z",
@@ -3277,7 +3277,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T12:01:13Z",
    "red_workflows": [],
    "releases": {},
@@ -3293,7 +3293,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:11Z",
    "red_workflows": [],
    "releases": {},
@@ -3334,7 +3334,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.1,
+   "pushed_age_days": 2.0,
    "pushed_at": "2026-10-12T13:32:53Z",
    "red_workflows": [],
    "releases": {},
@@ -3350,7 +3350,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:10:59Z",
    "red_workflows": [],
    "releases": {},
@@ -3366,14 +3366,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T12:24:57Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.2,
+     "age_days": 2.1,
      "completed_at": "2026-10-12T12:35:09Z",
      "conclusion": "success",
      "created_at": "2026-10-12T11:57:22Z",
@@ -3385,7 +3385,7 @@
      "url": "https://github.com/sportsdataverse/sdvmodels/actions/runs/38245969786"
     },
     "R-hub": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T08:22:23Z",
      "conclusion": "success",
      "created_at": "2026-10-12T08:01:23Z",
@@ -3397,7 +3397,7 @@
      "url": "https://github.com/sportsdataverse/sdvmodels/actions/runs/38221076799"
     },
     "pkgdown": {
-     "age_days": 1.2,
+     "age_days": 2.1,
      "completed_at": "2026-10-12T12:25:01Z",
      "conclusion": "success",
      "created_at": "2026-10-12T11:57:22Z",
@@ -3419,10 +3419,30 @@
    "open_issues": 4,
    "open_prs": [
     {
-     "age_days": 0.8,
+     "age_days": 0.5,
+     "author": "dependabot[bot]",
+     "draft": false,
+     "idle_days": 0.5,
+     "number": 121,
+     "title": "build(deps): bump the python-deps group with 5 updates",
+     "updated_at": "2026-10-14T03:31:51Z",
+     "url": "https://github.com/sportsdataverse/sdvplot/pull/121"
+    },
+    {
+     "age_days": 0.5,
+     "author": "dependabot[bot]",
+     "draft": false,
+     "idle_days": 0.5,
+     "number": 120,
+     "title": "build(deps): bump the actions group with 2 updates",
+     "updated_at": "2026-10-14T03:24:36Z",
+     "url": "https://github.com/sportsdataverse/sdvplot/pull/120"
+    },
+    {
+     "age_days": 1.7,
      "author": "github-actions[bot]",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 119,
      "title": "docs(tutorials): weekly refresh of executed notebook pages and home figures",
      "updated_at": "2026-10-12T21:51:12Z",
@@ -3430,8 +3450,8 @@
     }
    ],
    "private": false,
-   "pushed_age_days": 0.8,
-   "pushed_at": "2026-10-12T21:51:01Z",
+   "pushed_age_days": 0.5,
+   "pushed_at": "2026-10-14T03:31:25Z",
    "red_workflows": [],
    "releases": {
     "v0.1.0": {
@@ -3444,19 +3464,19 @@
    },
    "stale_unassigned_issues": [
     {
-     "idle_days": 7.4,
+     "idle_days": 8.3,
      "number": 101,
      "title": "Soccer recipes: the shot filter drops penalties; note the StatsBomb own goal",
      "url": "https://github.com/sportsdataverse/sdvplot/issues/101"
     },
     {
-     "idle_days": 7.4,
+     "idle_days": 8.3,
      "number": 100,
      "title": "surface(): document the InputError for a team on a no-team surface; pitch_updates=None",
      "url": "https://github.com/sportsdataverse/sdvplot/issues/100"
     },
     {
-     "idle_days": 7.4,
+     "idle_days": 8.3,
      "number": 99,
      "title": "pitch_coords: non-vacuity guards in the R-oracle parity test",
      "url": "https://github.com/sportsdataverse/sdvplot/issues/99"
@@ -3464,7 +3484,7 @@
    ],
    "workflows": {
     "automation-example": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T21:51:06Z",
      "conclusion": "success",
      "created_at": "2026-10-12T21:50:03Z",
@@ -3488,7 +3508,7 @@
      "url": "https://github.com/sportsdataverse/sdvplot/actions/workflows/docs-build.yml"
     },
     "docs-deploy": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T19:40:34Z",
      "conclusion": "success",
      "created_at": "2026-10-12T19:39:36Z",
@@ -3500,7 +3520,7 @@
      "url": "https://github.com/sportsdataverse/sdvplot/actions/runs/38299103068"
     },
     "drift": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T19:40:24Z",
      "conclusion": "success",
      "created_at": "2026-10-12T19:39:36Z",
@@ -3512,7 +3532,7 @@
      "url": "https://github.com/sportsdataverse/sdvplot/actions/runs/38299103050"
     },
     "live-tests-cron": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T21:51:11Z",
      "conclusion": "success",
      "created_at": "2026-10-12T21:34:52Z",
@@ -3524,7 +3544,7 @@
      "url": "https://github.com/sportsdataverse/sdvplot/actions/runs/38311515637"
     },
     "quality": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T19:41:21Z",
      "conclusion": "success",
      "created_at": "2026-10-12T19:39:36Z",
@@ -3548,7 +3568,7 @@
      "url": "https://github.com/sportsdataverse/sdvplot/actions/workflows/release.yml"
     },
     "tests": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T19:45:32Z",
      "conclusion": "success",
      "created_at": "2026-10-12T19:39:36Z",
@@ -3570,7 +3590,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.9,
+   "pushed_age_days": 1.8,
    "pushed_at": "2026-10-12T19:39:40Z",
    "red_workflows": [],
    "releases": {
@@ -3599,7 +3619,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "ci": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T19:49:53Z",
      "conclusion": "success",
      "created_at": "2026-10-12T19:39:41Z",
@@ -3611,7 +3631,7 @@
      "url": "https://github.com/sportsdataverse/sdvplot-js/actions/runs/38299112513"
     },
     "release": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T19:40:28Z",
      "conclusion": "success",
      "created_at": "2026-10-12T19:39:41Z",
@@ -3628,12 +3648,12 @@
    "default_branch": "main",
    "full_name": "sportsdataverse/sdvplotR",
    "latest_release_tag": "sdvplotr_infrastructure",
-   "newest_asset_age_days": 6.0,
+   "newest_asset_age_days": 6.9,
    "newest_asset_at": "2026-10-07T17:26:41Z",
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.8,
+   "pushed_age_days": 1.7,
    "pushed_at": "2026-10-12T22:42:51Z",
    "red_workflows": [
     "automation-example",
@@ -3650,7 +3670,7 @@
    },
    "stale_unassigned_issues": [
     {
-     "idle_days": 7.4,
+     "idle_days": 8.3,
      "number": 70,
      "title": "Pin the sdvplot index the sysdata builder downloads; widen fold_accents()",
      "url": "https://github.com/sportsdataverse/sdvplotR/issues/70"
@@ -3658,7 +3678,7 @@
    ],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T22:16:31Z",
      "conclusion": "success",
      "created_at": "2026-10-12T22:09:42Z",
@@ -3670,7 +3690,7 @@
      "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38315027789"
     },
     "R-hub": {
-     "age_days": 1.1,
+     "age_days": 2.0,
      "completed_at": "2026-10-12T15:53:24Z",
      "conclusion": "failure",
      "created_at": "2026-10-12T15:11:02Z",
@@ -3682,7 +3702,7 @@
      "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38268355722"
     },
     "automation-example": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T21:51:26Z",
      "conclusion": "failure",
      "created_at": "2026-10-12T21:48:48Z",
@@ -3694,7 +3714,7 @@
      "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38312948847"
     },
     "pkgdown": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T22:42:57Z",
      "conclusion": "success",
      "created_at": "2026-10-12T22:09:42Z",
@@ -3706,7 +3726,7 @@
      "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38315027775"
     },
     "pr-commands": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T10:08:04Z",
      "conclusion": "skipped",
      "created_at": "2026-10-12T10:07:58Z",
@@ -3718,7 +3738,7 @@
      "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38234380331"
     },
     "test-coverage": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T22:14:20Z",
      "conclusion": "success",
      "created_at": "2026-10-12T22:09:42Z",
@@ -3730,7 +3750,7 @@
      "url": "https://github.com/sportsdataverse/sdvplotR/actions/runs/38315028036"
     },
     "update-headshot-map": {
-     "age_days": 6.0,
+     "age_days": 6.9,
      "completed_at": "2026-10-07T17:26:47Z",
      "conclusion": "success",
      "created_at": "2026-10-07T17:24:57Z",
@@ -3752,13 +3772,13 @@
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:09:53Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 1,
      "title": "some games showing up wrong in ncaa_scoreboard",
      "url": "https://github.com/sportsdataverse/softballR/issues/1"
@@ -3775,7 +3795,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:14Z",
    "red_workflows": [],
    "releases": {},
@@ -3828,14 +3848,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T11:46:14Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:06:57Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:09Z",
@@ -3847,7 +3867,7 @@
      "url": "https://github.com/sportsdataverse/sportsdataverse-R/actions/runs/38234611333"
     },
     "pkgdown": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:46:23Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:09Z",
@@ -3870,7 +3890,7 @@
    "open_prs": [],
    "private": false,
    "pushed_age_days": 0.1,
-   "pushed_at": "2026-10-13T14:58:39Z",
+   "pushed_at": "2026-10-14T12:51:12Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
@@ -3889,15 +3909,15 @@
     },
     "Update Statcast PBP": {
      "age_days": 0.1,
-     "completed_at": "2026-10-13T14:58:45Z",
+     "completed_at": "2026-10-14T12:51:16Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T14:48:32Z",
+     "created_at": "2026-10-14T12:39:36Z",
      "event": "schedule",
      "file": ".github/workflows/pybaseball-pbp.yml",
      "name": "Update Statcast PBP",
-     "run_id": 38416554005,
+     "run_id": 38565502107,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-baseball-data/actions/runs/38416554005"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-baseball-data/actions/runs/38565502107"
     }
    }
   },
@@ -3905,12 +3925,12 @@
    "default_branch": "main",
    "full_name": "sportsdataverse/sportsdataverse-data",
    "latest_release_tag": "wnba_stats_rolling_windows",
-   "newest_asset_age_days": 0.1,
-   "newest_asset_at": "2026-10-13T14:31:37Z",
-   "open_issues": 3,
+   "newest_asset_age_days": 0.0,
+   "newest_asset_at": "2026-10-14T14:31:30Z",
+   "open_issues": 4,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:07:29Z",
    "red_workflows": [],
    "releases": {
@@ -3918,14 +3938,14 @@
      "asset_bytes": 2024532,
      "assets": 34,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:23:25Z",
+     "newest_asset_at": "2026-10-14T10:34:24Z",
      "published_at": "2026-06-13T07:47:49Z"
     },
     "cfb_defense_vs_position": {
-     "asset_bytes": 3070433,
+     "asset_bytes": 3070469,
      "assets": 43,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T06:10:29Z",
+     "newest_asset_at": "2026-10-14T10:21:44Z",
      "published_at": "2026-10-04T18:27:31Z"
     },
     "cfb_fpi_weekly": {
@@ -3943,31 +3963,31 @@
      "published_at": "2026-09-27T03:30:22Z"
     },
     "cfb_league_averages": {
-     "asset_bytes": 3062180,
+     "asset_bytes": 3062342,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:08:54Z",
+     "newest_asset_at": "2026-10-14T10:19:57Z",
      "published_at": "2026-09-26T21:51:46Z"
     },
     "cfb_matchup_features": {
-     "asset_bytes": 21656142,
+     "asset_bytes": 21656189,
      "assets": 43,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:13:56Z",
+     "newest_asset_at": "2026-10-14T10:24:59Z",
      "published_at": "2026-09-15T15:52:09Z"
     },
     "cfb_matchup_line": {
-     "asset_bytes": 44779207,
+     "asset_bytes": 44779452,
      "assets": 40,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:21:42Z",
+     "newest_asset_at": "2026-10-14T10:32:42Z",
      "published_at": "2026-09-15T15:54:13Z"
     },
     "cfb_metric_curves": {
-     "asset_bytes": 20400893,
+     "asset_bytes": 20403276,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T12:49:52Z",
+     "newest_asset_at": "2026-10-14T10:10:04Z",
      "published_at": "2026-10-01T11:40:02Z"
     },
     "cfb_model_artifacts": {
@@ -3978,10 +3998,10 @@
      "published_at": "2026-08-27T04:32:30Z"
     },
     "cfb_paper_index_games": {
-     "asset_bytes": 10834353,
+     "asset_bytes": 10835576,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:59:26Z",
+     "newest_asset_at": "2026-10-14T10:10:20Z",
      "published_at": "2026-10-04T22:38:13Z"
     },
     "cfb_poll_analytics": {
@@ -3999,17 +4019,17 @@
      "published_at": "2026-10-01T13:36:04Z"
     },
     "cfb_ratings": {
-     "asset_bytes": 1233995,
+     "asset_bytes": 1233976,
      "assets": 74,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:35:45Z",
+     "newest_asset_at": "2026-10-13T19:47:08Z",
      "published_at": "2026-07-16T21:48:35Z"
     },
     "cfb_ratings_weekly": {
-     "asset_bytes": 14390189,
+     "asset_bytes": 14390145,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:09:28Z",
+     "newest_asset_at": "2026-10-14T10:20:44Z",
      "published_at": "2026-08-01T01:53:16Z"
     },
     "cfb_recruiting_proj": {
@@ -4027,24 +4047,24 @@
      "published_at": "2026-08-06T06:36:25Z"
     },
     "cfb_returning_production": {
-     "asset_bytes": 187153,
+     "asset_bytes": 187154,
      "assets": 25,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:22:14Z",
+     "newest_asset_at": "2026-10-14T10:33:14Z",
      "published_at": "2026-08-06T06:37:24Z"
     },
     "cfb_rolling_windows": {
-     "asset_bytes": 81583238,
+     "asset_bytes": 81612243,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T13:00:22Z",
+     "newest_asset_at": "2026-10-14T10:20:20Z",
      "published_at": "2026-09-27T01:23:49Z"
     },
     "cfb_schedules": {
-     "asset_bytes": 4601723,
+     "asset_bytes": 4601800,
      "assets": 80,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:05:54Z",
+     "newest_asset_at": "2026-10-14T10:16:10Z",
      "published_at": "2026-08-27T05:47:50Z"
     },
     "cfb_team_info": {
@@ -4055,10 +4075,10 @@
      "published_at": "2026-08-27T10:59:39Z"
     },
     "cfb_team_opponent_splits": {
-     "asset_bytes": 4450495,
+     "asset_bytes": 4451230,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:59:10Z",
+     "newest_asset_at": "2026-10-14T10:09:48Z",
      "published_at": "2026-09-30T01:45:15Z"
     },
     "cfb_team_portal": {
@@ -4069,17 +4089,17 @@
      "published_at": "2026-10-02T00:49:03Z"
     },
     "cfb_team_summaries_weekly": {
-     "asset_bytes": 451758457,
+     "asset_bytes": 451758476,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:10:15Z",
+     "newest_asset_at": "2026-10-14T10:21:30Z",
      "published_at": "2026-08-01T02:44:38Z"
     },
     "cfb_team_talent": {
-     "asset_bytes": 202481,
+     "asset_bytes": 202489,
      "assets": 24,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:21:56Z",
+     "newest_asset_at": "2026-10-14T10:32:57Z",
      "published_at": "2026-08-06T06:36:07Z"
     },
     "cfbfastR_cfb_pbp": {
@@ -4090,206 +4110,206 @@
      "published_at": "2025-08-24T11:19:48Z"
     },
     "espn_cfb_adv_defensive": {
-     "asset_bytes": 7063028,
+     "asset_bytes": 7063853,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:13:23Z",
+     "newest_asset_at": "2026-10-14T08:37:46Z",
      "published_at": "2026-06-04T02:21:14Z"
     },
     "espn_cfb_adv_defensive_players": {
-     "asset_bytes": 14836795,
+     "asset_bytes": 14839478,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:15:46Z",
+     "newest_asset_at": "2026-10-14T08:40:19Z",
      "published_at": "2026-06-24T17:07:24Z"
     },
     "espn_cfb_adv_drive_scripting": {
-     "asset_bytes": 16758547,
+     "asset_bytes": 16760455,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:41:03Z",
+     "newest_asset_at": "2026-10-14T09:04:07Z",
      "published_at": "2026-09-15T08:24:55Z"
     },
     "espn_cfb_adv_drives": {
-     "asset_bytes": 5095671,
+     "asset_bytes": 5096256,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:14:33Z",
+     "newest_asset_at": "2026-10-14T08:39:01Z",
      "published_at": "2026-06-04T02:21:17Z"
     },
     "espn_cfb_adv_passing": {
-     "asset_bytes": 26795191,
+     "asset_bytes": 26798738,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:11:35Z",
+     "newest_asset_at": "2026-10-14T08:35:46Z",
      "published_at": "2026-06-04T02:21:11Z"
     },
     "espn_cfb_adv_player_usage": {
-     "asset_bytes": 140767803,
+     "asset_bytes": 140785062,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:20:30Z",
+     "newest_asset_at": "2026-10-14T08:44:56Z",
      "published_at": "2026-09-15T08:22:57Z"
     },
     "espn_cfb_adv_position_group_tackles": {
-     "asset_bytes": 7044635,
+     "asset_bytes": 7046185,
      "assets": 43,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:32:39Z",
+     "newest_asset_at": "2026-10-14T08:56:25Z",
      "published_at": "2026-09-15T22:17:32Z"
     },
     "espn_cfb_adv_position_group_usage": {
-     "asset_bytes": 32516068,
+     "asset_bytes": 32522298,
      "assets": 43,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:24:43Z",
+     "newest_asset_at": "2026-10-14T08:48:52Z",
      "published_at": "2026-09-15T22:13:47Z"
     },
     "espn_cfb_adv_receiving": {
-     "asset_bytes": 44829419,
+     "asset_bytes": 44836364,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:12:48Z",
+     "newest_asset_at": "2026-10-14T08:37:07Z",
      "published_at": "2026-06-04T02:21:13Z"
     },
     "espn_cfb_adv_rushing": {
-     "asset_bytes": 27261370,
+     "asset_bytes": 27264210,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:12:12Z",
+     "newest_asset_at": "2026-10-14T08:36:25Z",
      "published_at": "2026-06-04T02:21:12Z"
     },
     "espn_cfb_adv_situational": {
-     "asset_bytes": 29277461,
+     "asset_bytes": 29280537,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:15:10Z",
+     "newest_asset_at": "2026-10-14T08:39:40Z",
      "published_at": "2026-06-04T02:21:53Z"
     },
     "espn_cfb_adv_specialists": {
-     "asset_bytes": 14126198,
+     "asset_bytes": 14128254,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:16:22Z",
+     "newest_asset_at": "2026-10-14T08:40:56Z",
      "published_at": "2026-06-24T17:07:55Z"
     },
     "espn_cfb_adv_st_blocks": {
-     "asset_bytes": 320809,
+     "asset_bytes": 320812,
      "assets": 61,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:34:13Z",
+     "newest_asset_at": "2026-10-14T09:45:21Z",
      "published_at": "2026-09-15T08:29:08Z"
     },
     "espn_cfb_adv_st_kickers": {
-     "asset_bytes": 13137296,
+     "asset_bytes": 13139292,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:22:19Z",
+     "newest_asset_at": "2026-10-14T09:32:37Z",
      "published_at": "2026-09-15T08:27:49Z"
     },
     "espn_cfb_adv_st_punters": {
-     "asset_bytes": 9025959,
+     "asset_bytes": 9026830,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:26:16Z",
+     "newest_asset_at": "2026-10-14T09:36:58Z",
      "published_at": "2026-09-15T08:28:15Z"
     },
     "espn_cfb_adv_st_returners": {
-     "asset_bytes": 12865609,
+     "asset_bytes": 12867333,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:30:15Z",
+     "newest_asset_at": "2026-10-14T09:41:09Z",
      "published_at": "2026-09-15T08:28:42Z"
     },
     "espn_cfb_adv_st_team": {
-     "asset_bytes": 12897274,
+     "asset_bytes": 12898893,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:38:13Z",
+     "newest_asset_at": "2026-10-14T09:49:28Z",
      "published_at": "2026-09-15T08:29:34Z"
     },
     "espn_cfb_adv_tackles": {
-     "asset_bytes": 42296966,
+     "asset_bytes": 42308429,
      "assets": 43,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:28:42Z",
+     "newest_asset_at": "2026-10-14T08:52:42Z",
      "published_at": "2026-09-15T08:23:42Z"
     },
     "espn_cfb_adv_team": {
-     "asset_bytes": 31839837,
+     "asset_bytes": 31843241,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:10:57Z",
+     "newest_asset_at": "2026-10-14T08:35:07Z",
      "published_at": "2026-06-04T02:21:09Z"
     },
     "espn_cfb_adv_team_gamelog": {
-     "asset_bytes": 35091635,
+     "asset_bytes": 35095464,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T12:49:28Z",
+     "newest_asset_at": "2026-10-14T10:09:35Z",
      "published_at": "2026-08-01T01:33:57Z"
     },
     "espn_cfb_adv_team_usage": {
-     "asset_bytes": 20232913,
+     "asset_bytes": 20235062,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T08:53:15Z",
+     "newest_asset_at": "2026-10-14T09:00:16Z",
      "published_at": "2026-09-15T08:24:29Z"
     },
     "espn_cfb_adv_turnover": {
-     "asset_bytes": 5531574,
+     "asset_bytes": 5532267,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:13:58Z",
+     "newest_asset_at": "2026-10-14T08:38:24Z",
      "published_at": "2026-06-04T02:21:15Z"
     },
     "espn_cfb_betting": {
-     "asset_bytes": 1303714,
+     "asset_bytes": 1303886,
      "assets": 95,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:08:17Z",
+     "newest_asset_at": "2026-10-14T08:32:29Z",
      "published_at": "2026-06-04T02:21:58Z"
     },
     "espn_cfb_coach_careers": {
-     "asset_bytes": 5934524,
+     "asset_bytes": 5934216,
      "assets": 7,
      "max_season": null,
-     "newest_asset_at": "2026-10-11T13:15:21Z",
+     "newest_asset_at": "2026-10-14T10:34:55Z",
      "published_at": "2026-09-15T08:53:37Z"
     },
     "espn_cfb_coach_tendencies": {
-     "asset_bytes": 37653550,
+     "asset_bytes": 37654405,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T12:58:26Z",
+     "newest_asset_at": "2026-10-14T10:18:09Z",
      "published_at": "2026-09-15T08:50:23Z"
     },
     "espn_cfb_drives": {
-     "asset_bytes": 97962913,
+     "asset_bytes": 97970633,
      "assets": 95,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:06:37Z",
+     "newest_asset_at": "2026-10-14T08:30:38Z",
      "published_at": "2026-06-04T02:21:56Z"
     },
     "espn_cfb_game_rosters": {
-     "asset_bytes": 3802591023,
+     "asset_bytes": 3803154176,
      "assets": 95,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:07:41Z",
+     "newest_asset_at": "2026-10-14T08:31:50Z",
      "published_at": "2026-06-04T02:21:57Z"
     },
     "espn_cfb_injuries": {
-     "asset_bytes": 12197,
+     "asset_bytes": 12184,
      "assets": 3,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:37:39Z",
+     "newest_asset_at": "2026-10-13T19:47:52Z",
      "published_at": "2026-06-04T02:22:01Z"
     },
     "espn_cfb_linescores": {
-     "asset_bytes": 4712392,
+     "asset_bytes": 4712814,
      "assets": 95,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:09:28Z",
+     "newest_asset_at": "2026-10-14T08:33:42Z",
      "published_at": "2026-06-04T02:21:59Z"
     },
     "espn_cfb_model_artifacts": {
@@ -4307,38 +4327,38 @@
      "published_at": "2026-06-17T12:20:13Z"
     },
     "espn_cfb_passing": {
-     "asset_bytes": 9839027,
+     "asset_bytes": 9840097,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:08:25Z",
+     "newest_asset_at": "2026-10-14T10:19:23Z",
      "published_at": "2026-06-13T16:19:46Z"
     },
     "espn_cfb_pbp": {
-     "asset_bytes": 13314085314,
+     "asset_bytes": 13315632466,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:03:32Z",
+     "newest_asset_at": "2026-10-14T08:27:33Z",
      "published_at": "2023-05-04T21:48:05Z"
     },
     "espn_cfb_percentiles": {
-     "asset_bytes": 1919157,
+     "asset_bytes": 1919052,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T12:59:14Z",
+     "newest_asset_at": "2026-10-14T10:18:59Z",
      "published_at": "2026-06-13T16:19:49Z"
     },
     "espn_cfb_play_participants": {
-     "asset_bytes": 590495522,
+     "asset_bytes": 590627040,
      "assets": 55,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:04:38Z",
+     "newest_asset_at": "2026-10-14T08:28:39Z",
      "published_at": "2026-06-04T02:21:54Z"
     },
     "espn_cfb_player_box": {
-     "asset_bytes": 141369784,
+     "asset_bytes": 141393602,
      "assets": 95,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:05:57Z",
+     "newest_asset_at": "2026-10-14T08:29:56Z",
      "published_at": "2026-06-04T02:21:08Z"
     },
     "espn_cfb_power_index": {
@@ -4349,59 +4369,59 @@
      "published_at": "2026-06-04T02:22:00Z"
     },
     "espn_cfb_qa": {
-     "asset_bytes": 6841466,
+     "asset_bytes": 6842415,
      "assets": 96,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:05:40Z",
+     "newest_asset_at": "2026-10-14T10:15:56Z",
      "published_at": "2026-09-19T07:30:01Z"
     },
     "espn_cfb_receiving": {
-     "asset_bytes": 24587320,
+     "asset_bytes": 24589430,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:08:45Z",
+     "newest_asset_at": "2026-10-14T10:19:46Z",
      "published_at": "2026-06-13T16:19:48Z"
     },
     "espn_cfb_rosters": {
-     "asset_bytes": 135777800,
+     "asset_bytes": 135777802,
      "assets": 76,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T12:58:58Z",
+     "newest_asset_at": "2026-10-14T10:18:42Z",
      "published_at": "2023-05-04T21:48:06Z"
     },
     "espn_cfb_rushing": {
-     "asset_bytes": 22163263,
+     "asset_bytes": 22155761,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:08:35Z",
+     "newest_asset_at": "2026-10-14T10:19:35Z",
      "published_at": "2026-06-13T16:19:47Z"
     },
     "espn_cfb_schedules": {
-     "asset_bytes": 4917120,
+     "asset_bytes": 4917652,
      "assets": 95,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:08:52Z",
+     "newest_asset_at": "2026-10-14T08:33:06Z",
      "published_at": "2023-05-04T21:47:58Z"
     },
     "espn_cfb_team_box": {
-     "asset_bytes": 7539024,
+     "asset_bytes": 7539730,
      "assets": 95,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T06:52:00Z",
+     "newest_asset_at": "2026-10-14T08:29:16Z",
      "published_at": "2026-06-04T02:21:07Z"
     },
     "espn_cfb_team_summaries": {
-     "asset_bytes": 44296746,
+     "asset_bytes": 44297042,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T10:08:15Z",
+     "newest_asset_at": "2026-10-14T10:19:12Z",
      "published_at": "2026-06-13T16:19:45Z"
     },
     "espn_cfb_team_tendencies": {
-     "asset_bytes": 53224688,
+     "asset_bytes": 53225556,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T12:57:25Z",
+     "newest_asset_at": "2026-10-14T10:17:11Z",
      "published_at": "2026-09-15T08:32:04Z"
     },
     "espn_cfb_teams": {
@@ -4412,80 +4432,80 @@
      "published_at": "2026-08-27T08:28:17Z"
     },
     "espn_cfb_usage_drive_scripting": {
-     "asset_bytes": 2888937,
+     "asset_bytes": 2889095,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T12:07:29Z",
+     "newest_asset_at": "2026-10-14T09:28:26Z",
      "published_at": "2026-09-15T08:27:22Z"
     },
     "espn_cfb_usage_players": {
-     "asset_bytes": 38344527,
+     "asset_bytes": 38346715,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:45:13Z",
+     "newest_asset_at": "2026-10-14T09:08:15Z",
      "published_at": "2026-09-15T08:25:23Z"
     },
     "espn_cfb_usage_position_group_tackles": {
-     "asset_bytes": 1851240,
+     "asset_bytes": 1851245,
      "assets": 43,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:57:57Z",
+     "newest_asset_at": "2026-10-14T09:19:48Z",
      "published_at": "2026-09-15T19:23:41Z"
     },
     "espn_cfb_usage_position_groups": {
-     "asset_bytes": 6498935,
+     "asset_bytes": 6499215,
      "assets": 43,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:49:26Z",
+     "newest_asset_at": "2026-10-14T09:12:06Z",
      "published_at": "2026-09-15T19:23:39Z"
     },
     "espn_cfb_usage_st_blocks": {
-     "asset_bytes": 278356,
+     "asset_bytes": 278358,
      "assets": 61,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:54:36Z",
+     "newest_asset_at": "2026-10-14T10:05:47Z",
      "published_at": "2026-09-15T08:31:22Z"
     },
     "espn_cfb_usage_st_kickers": {
-     "asset_bytes": 3894906,
+     "asset_bytes": 3895065,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:42:25Z",
+     "newest_asset_at": "2026-10-14T09:53:43Z",
      "published_at": "2026-09-15T08:30:01Z"
     },
     "espn_cfb_usage_st_punters": {
-     "asset_bytes": 2371439,
+     "asset_bytes": 2371431,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:46:24Z",
+     "newest_asset_at": "2026-10-14T09:57:48Z",
      "published_at": "2026-09-15T08:30:28Z"
     },
     "espn_cfb_usage_st_returners": {
-     "asset_bytes": 5120438,
+     "asset_bytes": 5120762,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:50:25Z",
+     "newest_asset_at": "2026-10-14T10:02:10Z",
      "published_at": "2026-09-15T08:30:56Z"
     },
     "espn_cfb_usage_st_team": {
-     "asset_bytes": 2717952,
+     "asset_bytes": 2718056,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:58:53Z",
+     "newest_asset_at": "2026-10-14T10:09:20Z",
      "published_at": "2026-09-15T08:31:49Z"
     },
     "espn_cfb_usage_tackles": {
-     "asset_bytes": 12970687,
+     "asset_bytes": 12971626,
      "assets": 43,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T11:53:41Z",
+     "newest_asset_at": "2026-10-14T09:15:57Z",
      "published_at": "2026-09-15T08:26:09Z"
     },
     "espn_cfb_usage_teams": {
-     "asset_bytes": 3666480,
+     "asset_bytes": 3666603,
      "assets": 73,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T09:14:56Z",
+     "newest_asset_at": "2026-10-14T09:24:01Z",
      "published_at": "2026-09-15T08:26:55Z"
     },
     "espn_mbb_injuries": {
@@ -4580,24 +4600,24 @@
      "published_at": "2026-05-30T14:51:29Z"
     },
     "espn_mlb_depthcharts": {
-     "asset_bytes": 175147,
+     "asset_bytes": 177225,
      "assets": 3,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:40:39Z",
+     "newest_asset_at": "2026-10-13T19:50:45Z",
      "published_at": "2026-09-08T03:01:43Z"
     },
     "espn_mlb_injuries": {
-     "asset_bytes": 221578,
+     "asset_bytes": 222442,
      "assets": 3,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:37:44Z",
+     "newest_asset_at": "2026-10-13T19:47:57Z",
      "published_at": "2026-09-08T03:01:40Z"
     },
     "espn_nba_depthcharts": {
-     "asset_bytes": 46658,
+     "asset_bytes": 47430,
      "assets": 3,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-12T21:40:44Z",
+     "newest_asset_at": "2026-10-13T19:50:51Z",
      "published_at": "2026-09-08T03:01:42Z"
     },
     "espn_nba_draft": {
@@ -4615,10 +4635,10 @@
      "published_at": "2026-05-30T11:29:52Z"
     },
     "espn_nba_injuries": {
-     "asset_bytes": 93339,
+     "asset_bytes": 97790,
      "assets": 3,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-12T21:37:50Z",
+     "newest_asset_at": "2026-10-13T19:48:02Z",
      "published_at": "2026-09-08T03:01:34Z"
     },
     "espn_nba_officials": {
@@ -4657,17 +4677,17 @@
      "published_at": "2026-05-30T12:18:36Z"
     },
     "espn_nba_rosters": {
-     "asset_bytes": 1137170,
+     "asset_bytes": 1135355,
      "assets": 14,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T11:32:33Z",
+     "newest_asset_at": "2026-10-14T11:30:09Z",
      "published_at": "2026-05-30T14:37:16Z"
     },
     "espn_nba_schedules": {
-     "asset_bytes": 166859982,
+     "asset_bytes": 166877535,
      "assets": 112,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-12T21:28:40Z",
+     "newest_asset_at": "2026-10-14T11:29:52Z",
      "published_at": "2023-03-29T22:29:11Z"
     },
     "espn_nba_shots": {
@@ -4699,311 +4719,311 @@
      "published_at": "2026-05-30T14:31:10Z"
     },
     "espn_nfl_adv_defensive": {
-     "asset_bytes": 604191,
+     "asset_bytes": 604198,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:25Z",
+     "newest_asset_at": "2026-10-13T23:42:40Z",
      "published_at": "2026-09-15T12:34:00Z"
     },
     "espn_nfl_adv_defensive_players": {
-     "asset_bytes": 674173,
+     "asset_bytes": 674253,
      "assets": 25,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:35Z",
+     "newest_asset_at": "2026-10-13T23:42:55Z",
      "published_at": "2026-09-15T12:34:09Z"
     },
     "espn_nfl_adv_drive_scripting": {
-     "asset_bytes": 1137160,
+     "asset_bytes": 1137235,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:57Z",
+     "newest_asset_at": "2026-10-13T23:43:28Z",
      "published_at": "2026-09-15T12:34:20Z"
     },
     "espn_nfl_adv_drives": {
-     "asset_bytes": 506262,
+     "asset_bytes": 506284,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:30Z",
+     "newest_asset_at": "2026-10-13T23:42:47Z",
      "published_at": "2026-09-15T12:34:04Z"
     },
     "espn_nfl_adv_passing": {
-     "asset_bytes": 1579320,
+     "asset_bytes": 1579510,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:18Z",
+     "newest_asset_at": "2026-10-13T23:42:30Z",
      "published_at": "2026-09-15T12:33:54Z"
     },
     "espn_nfl_adv_player_usage": {
-     "asset_bytes": 5447584,
+     "asset_bytes": 5448515,
      "assets": 25,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:45Z",
+     "newest_asset_at": "2026-10-13T23:43:10Z",
      "published_at": "2026-09-15T12:34:15Z"
     },
     "espn_nfl_adv_position_group_tackles": {
-     "asset_bytes": 498569,
+     "asset_bytes": 498698,
      "assets": 14,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:52Z",
+     "newest_asset_at": "2026-10-13T23:43:21Z",
      "published_at": "2026-09-15T13:08:56Z"
     },
     "espn_nfl_adv_position_group_usage": {
-     "asset_bytes": 1769202,
+     "asset_bytes": 1769674,
      "assets": 14,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:48Z",
+     "newest_asset_at": "2026-10-13T23:43:14Z",
      "published_at": "2026-09-15T13:08:52Z"
     },
     "espn_nfl_adv_receiving": {
-     "asset_bytes": 2892720,
+     "asset_bytes": 2893212,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:23Z",
+     "newest_asset_at": "2026-10-13T23:42:37Z",
      "published_at": "2026-09-15T12:33:58Z"
     },
     "espn_nfl_adv_rushing": {
-     "asset_bytes": 1440764,
+     "asset_bytes": 1440942,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:20Z",
+     "newest_asset_at": "2026-10-13T23:42:33Z",
      "published_at": "2026-09-15T12:33:56Z"
     },
     "espn_nfl_adv_situational": {
-     "asset_bytes": 3556302,
+     "asset_bytes": 3556616,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:33Z",
+     "newest_asset_at": "2026-10-13T23:42:51Z",
      "published_at": "2026-09-15T12:34:07Z"
     },
     "espn_nfl_adv_specialists": {
-     "asset_bytes": 586169,
+     "asset_bytes": 586238,
      "assets": 25,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:38Z",
+     "newest_asset_at": "2026-10-13T23:42:59Z",
      "published_at": "2026-09-15T12:34:11Z"
     },
     "espn_nfl_adv_st_blocks": {
      "asset_bytes": 104734,
      "assets": 21,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:08Z",
+     "newest_asset_at": "2026-10-13T23:43:42Z",
      "published_at": "2026-09-15T12:44:17Z"
     },
     "espn_nfl_adv_st_kickers": {
-     "asset_bytes": 836301,
+     "asset_bytes": 836408,
      "assets": 25,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:00Z",
+     "newest_asset_at": "2026-10-13T23:43:32Z",
      "published_at": "2026-09-15T12:34:22Z"
     },
     "espn_nfl_adv_st_punters": {
-     "asset_bytes": 612716,
+     "asset_bytes": 612747,
      "assets": 23,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:03Z",
+     "newest_asset_at": "2026-10-13T23:43:35Z",
      "published_at": "2026-09-15T12:34:24Z"
     },
     "espn_nfl_adv_st_returners": {
-     "asset_bytes": 713827,
+     "asset_bytes": 713871,
      "assets": 23,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:06Z",
+     "newest_asset_at": "2026-10-13T23:43:39Z",
      "published_at": "2026-09-15T12:34:26Z"
     },
     "espn_nfl_adv_st_team": {
-     "asset_bytes": 1174647,
+     "asset_bytes": 1174664,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:11Z",
+     "newest_asset_at": "2026-10-13T23:43:46Z",
      "published_at": "2026-09-15T12:34:28Z"
     },
     "espn_nfl_adv_tackles": {
-     "asset_bytes": 1727423,
+     "asset_bytes": 1727925,
      "assets": 14,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:50Z",
+     "newest_asset_at": "2026-10-13T23:43:17Z",
      "published_at": "2026-09-15T13:08:54Z"
     },
     "espn_nfl_adv_team": {
-     "asset_bytes": 4007705,
+     "asset_bytes": 4008009,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:15Z",
+     "newest_asset_at": "2026-10-13T23:42:26Z",
      "published_at": "2026-09-15T12:33:52Z"
     },
     "espn_nfl_adv_team_usage": {
-     "asset_bytes": 1785346,
+     "asset_bytes": 1785492,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:55Z",
+     "newest_asset_at": "2026-10-13T23:43:25Z",
      "published_at": "2026-09-15T12:34:18Z"
     },
     "espn_nfl_adv_turnover": {
      "asset_bytes": 530469,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:27Z",
+     "newest_asset_at": "2026-10-13T23:42:44Z",
      "published_at": "2026-09-15T12:34:02Z"
     },
     "espn_nfl_coach_careers": {
-     "asset_bytes": 296925,
+     "asset_bytes": 296912,
      "assets": 1,
      "max_season": null,
-     "newest_asset_at": "2026-10-13T01:56:54Z",
+     "newest_asset_at": "2026-10-13T23:44:43Z",
      "published_at": "2026-09-15T09:22:47Z"
     },
     "espn_nfl_coach_tendencies": {
-     "asset_bytes": 7726451,
+     "asset_bytes": 7726490,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:45Z",
+     "newest_asset_at": "2026-10-13T23:44:33Z",
      "published_at": "2026-09-15T08:58:00Z"
     },
     "espn_nfl_depthcharts": {
-     "asset_bytes": 176896,
+     "asset_bytes": 180366,
      "assets": 3,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:40:49Z",
+     "newest_asset_at": "2026-10-13T19:50:56Z",
      "published_at": "2026-09-08T03:01:41Z"
     },
     "espn_nfl_drives": {
-     "asset_bytes": 3200835,
+     "asset_bytes": 3201284,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:42Z",
+     "newest_asset_at": "2026-10-13T23:43:06Z",
      "published_at": "2026-09-15T12:34:13Z"
     },
     "espn_nfl_injuries": {
-     "asset_bytes": 1074470,
+     "asset_bytes": 1090872,
      "assets": 3,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:37:55Z",
+     "newest_asset_at": "2026-10-13T19:48:08Z",
      "published_at": "2026-09-08T03:01:33Z"
     },
     "espn_nfl_pbp": {
-     "asset_bytes": 401973020,
+     "asset_bytes": 402053268,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:04Z",
+     "newest_asset_at": "2026-10-13T23:42:10Z",
      "published_at": "2026-09-15T12:33:45Z"
     },
     "espn_nfl_play_participants": {
-     "asset_bytes": 14268262,
+     "asset_bytes": 14274140,
      "assets": 14,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:40Z",
+     "newest_asset_at": "2026-10-13T23:43:02Z",
      "published_at": "2026-09-15T13:08:47Z"
     },
     "espn_nfl_player_box": {
-     "asset_bytes": 5136838,
+     "asset_bytes": 5137500,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:13Z",
+     "newest_asset_at": "2026-10-13T23:42:22Z",
      "published_at": "2026-09-15T12:33:50Z"
     },
     "espn_nfl_qa": {
-     "asset_bytes": 405739,
+     "asset_bytes": 401664,
      "assets": 51,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:07Z",
+     "newest_asset_at": "2026-10-13T23:42:15Z",
      "published_at": "2026-09-19T07:03:40Z"
     },
     "espn_nfl_team_box": {
-     "asset_bytes": 771446,
+     "asset_bytes": 771468,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:55:10Z",
+     "newest_asset_at": "2026-10-13T23:42:19Z",
      "published_at": "2026-09-15T12:33:48Z"
     },
     "espn_nfl_team_tendencies": {
-     "asset_bytes": 7582117,
+     "asset_bytes": 7582156,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:43Z",
+     "newest_asset_at": "2026-10-13T23:44:29Z",
      "published_at": "2026-09-15T08:57:57Z"
     },
     "espn_nfl_usage_drive_scripting": {
-     "asset_bytes": 291142,
+     "asset_bytes": 291107,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:27Z",
+     "newest_asset_at": "2026-10-13T23:44:07Z",
      "published_at": "2026-09-15T12:34:34Z"
     },
     "espn_nfl_usage_players": {
-     "asset_bytes": 1823037,
+     "asset_bytes": 1823034,
      "assets": 25,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:14Z",
+     "newest_asset_at": "2026-10-13T23:43:50Z",
      "published_at": "2026-09-15T12:34:30Z"
     },
     "espn_nfl_usage_position_group_tackles": {
-     "asset_bytes": 130953,
+     "asset_bytes": 130940,
      "assets": 14,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:22Z",
+     "newest_asset_at": "2026-10-13T23:44:00Z",
      "published_at": "2026-09-15T13:09:11Z"
     },
     "espn_nfl_usage_position_groups": {
-     "asset_bytes": 461203,
+     "asset_bytes": 461177,
      "assets": 14,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:16Z",
+     "newest_asset_at": "2026-10-13T23:43:53Z",
      "published_at": "2026-09-15T13:09:07Z"
     },
     "espn_nfl_usage_st_blocks": {
      "asset_bytes": 78367,
      "assets": 21,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:38Z",
+     "newest_asset_at": "2026-10-13T23:44:21Z",
      "published_at": "2026-09-15T12:44:24Z"
     },
     "espn_nfl_usage_st_kickers": {
-     "asset_bytes": 427218,
+     "asset_bytes": 427240,
      "assets": 25,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:30Z",
+     "newest_asset_at": "2026-10-13T23:44:11Z",
      "published_at": "2026-09-15T12:34:36Z"
     },
     "espn_nfl_usage_st_punters": {
-     "asset_bytes": 279680,
+     "asset_bytes": 279697,
      "assets": 23,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:32Z",
+     "newest_asset_at": "2026-10-13T23:44:14Z",
      "published_at": "2026-09-15T12:34:39Z"
     },
     "espn_nfl_usage_st_returners": {
-     "asset_bytes": 328863,
+     "asset_bytes": 328831,
      "assets": 23,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:35Z",
+     "newest_asset_at": "2026-10-13T23:44:18Z",
      "published_at": "2026-09-15T12:34:41Z"
     },
     "espn_nfl_usage_st_team": {
-     "asset_bytes": 492774,
+     "asset_bytes": 492752,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:40Z",
+     "newest_asset_at": "2026-10-13T23:44:25Z",
      "published_at": "2026-09-15T12:34:43Z"
     },
     "espn_nfl_usage_tackles": {
-     "asset_bytes": 725547,
+     "asset_bytes": 725642,
      "assets": 14,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:19Z",
+     "newest_asset_at": "2026-10-13T23:43:56Z",
      "published_at": "2026-09-15T13:09:09Z"
     },
     "espn_nfl_usage_teams": {
-     "asset_bytes": 581357,
+     "asset_bytes": 581360,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:24Z",
+     "newest_asset_at": "2026-10-13T23:44:04Z",
      "published_at": "2026-09-15T12:34:32Z"
     },
     "espn_nhl_injuries": {
-     "asset_bytes": 105291,
+     "asset_bytes": 108066,
      "assets": 4,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-12T21:38:00Z",
+     "newest_asset_at": "2026-10-13T19:48:13Z",
      "published_at": "2026-09-08T03:01:39Z"
     },
     "espn_wbb_injuries": {
@@ -5028,10 +5048,10 @@
      "published_at": "2026-05-11T23:02:07Z"
     },
     "espn_wnba_injuries": {
-     "asset_bytes": 48521,
+     "asset_bytes": 48539,
      "assets": 3,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:38:05Z",
+     "newest_asset_at": "2026-10-13T19:48:18Z",
      "published_at": "2026-09-08T03:01:35Z"
     },
     "espn_wnba_officials": {
@@ -5077,10 +5097,10 @@
      "published_at": "2026-05-11T23:02:02Z"
     },
     "espn_wnba_schedules": {
-     "asset_bytes": 25578432,
-     "assets": 85,
+     "asset_bytes": 27435557,
+     "assets": 94,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-11T10:40:33Z",
+     "newest_asset_at": "2026-10-14T10:38:49Z",
      "published_at": "2023-03-30T03:58:38Z"
     },
     "espn_wnba_shots": {
@@ -5161,10 +5181,10 @@
      "published_at": "2026-05-11T23:03:49Z"
     },
     "espn_womens_college_basketball_schedules": {
-     "asset_bytes": 432954068,
+     "asset_bytes": 437211694,
      "assets": 88,
      "max_season": 2027,
-     "newest_asset_at": "2026-09-09T05:43:56Z",
+     "newest_asset_at": "2026-10-13T23:48:01Z",
      "published_at": "2023-03-30T03:58:33Z"
     },
     "espn_womens_college_basketball_shots": {
@@ -5175,10 +5195,10 @@
      "published_at": "2026-05-11T23:03:52Z"
     },
     "espn_womens_college_basketball_standings": {
-     "asset_bytes": 146422575,
+     "asset_bytes": 146406975,
      "assets": 68,
      "max_season": 2026,
-     "newest_asset_at": "2026-09-09T04:42:56Z",
+     "newest_asset_at": "2026-10-13T23:48:22Z",
      "published_at": "2026-05-11T23:03:51Z"
     },
     "espn_womens_college_basketball_team_boxscores": {
@@ -5224,17 +5244,17 @@
      "published_at": "2026-07-17T03:34:43Z"
     },
     "mlb_fielding_models": {
-     "asset_bytes": 2129968,
+     "asset_bytes": 2129844,
      "assets": 80,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:14:43Z",
+     "newest_asset_at": "2026-10-13T19:05:53Z",
      "published_at": "2026-07-17T12:34:42Z"
     },
     "mlb_game_state": {
-     "asset_bytes": 91012528,
+     "asset_bytes": 91012583,
      "assets": 116,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T20:15:28Z",
+     "newest_asset_at": "2026-10-13T18:10:45Z",
      "published_at": "2026-07-17T12:05:04Z"
     },
     "mlb_groups": {
@@ -5245,10 +5265,10 @@
      "published_at": "2026-09-27T03:30:57Z"
     },
     "mlb_hitting_models": {
-     "asset_bytes": 6244815,
+     "asset_bytes": 6244969,
      "assets": 110,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:14:12Z",
+     "newest_asset_at": "2026-10-13T19:05:15Z",
      "published_at": "2026-07-17T12:34:27Z"
     },
     "mlb_parks": {
@@ -5259,45 +5279,45 @@
      "published_at": "2026-09-27T19:55:54Z"
     },
     "mlb_pbp": {
-     "asset_bytes": 493799422,
+     "asset_bytes": 493805623,
      "assets": 121,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T12:33:10Z",
+     "newest_asset_at": "2026-10-14T12:33:01Z",
      "published_at": "2026-09-10T01:38:09Z"
     },
     "mlb_pitches": {
-     "asset_bytes": 1514653776,
+     "asset_bytes": 1514684896,
      "assets": 121,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T12:34:28Z",
+     "newest_asset_at": "2026-10-14T12:34:17Z",
      "published_at": "2026-09-10T01:38:31Z"
     },
     "mlb_pitching_models": {
-     "asset_bytes": 7536155,
+     "asset_bytes": 7536385,
      "assets": 113,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T21:15:13Z",
+     "newest_asset_at": "2026-10-13T19:06:28Z",
      "published_at": "2026-07-17T12:34:52Z"
     },
     "mlb_runners": {
-     "asset_bytes": 158261005,
+     "asset_bytes": 158262582,
      "assets": 121,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T12:34:52Z",
+     "newest_asset_at": "2026-10-14T12:34:40Z",
      "published_at": "2026-09-10T01:39:42Z"
     },
     "mlb_schedules": {
-     "asset_bytes": 4295486,
+     "asset_bytes": 4295493,
      "assets": 121,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T12:35:05Z",
+     "newest_asset_at": "2026-10-14T12:34:54Z",
      "published_at": "2026-10-11T16:54:15Z"
     },
     "mlb_statcast": {
-     "asset_bytes": 3664044669,
+     "asset_bytes": 3664165020,
      "assets": 40,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T12:39:39Z",
+     "newest_asset_at": "2026-10-14T12:39:32Z",
      "published_at": "2026-10-11T17:14:12Z"
     },
     "nba_crosswalk": {
@@ -5847,10 +5867,10 @@
      "published_at": "2026-06-23T01:40:59Z"
     },
     "nfl_defense_vs_position": {
-     "asset_bytes": 485030,
+     "asset_bytes": 485040,
      "assets": 32,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:47:45Z",
+     "newest_asset_at": "2026-10-13T23:35:42Z",
      "published_at": "2026-10-04T19:31:04Z"
     },
     "nfl_espn_qbr": {
@@ -5868,17 +5888,17 @@
      "published_at": "2026-09-27T03:31:47Z"
     },
     "nfl_league_averages": {
-     "asset_bytes": 328660,
+     "asset_bytes": 328686,
      "assets": 30,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:47:19Z",
+     "newest_asset_at": "2026-10-13T23:35:19Z",
      "published_at": "2026-09-27T01:22:49Z"
     },
     "nfl_metric_curves": {
-     "asset_bytes": 949157,
+     "asset_bytes": 949263,
      "assets": 32,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:47:35Z",
+     "newest_asset_at": "2026-10-13T23:35:33Z",
      "published_at": "2026-10-01T12:04:49Z"
     },
     "nfl_model_artifacts": {
@@ -5889,10 +5909,10 @@
      "published_at": "2026-06-17T17:17:06Z"
     },
     "nfl_model_pbp": {
-     "asset_bytes": 289070205,
+     "asset_bytes": 289115969,
      "assets": 32,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:46:41Z",
+     "newest_asset_at": "2026-10-13T23:34:40Z",
      "published_at": "2026-06-18T12:01:42Z"
     },
     "nfl_ngs_gamecenter_leaders": {
@@ -5959,31 +5979,31 @@
      "published_at": "2026-09-14T21:08:08Z"
     },
     "nfl_ngs_leaders": {
-     "asset_bytes": 26811683,
+     "asset_bytes": 26811686,
      "assets": 27,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T11:49:11Z",
+     "newest_asset_at": "2026-10-14T11:48:24Z",
      "published_at": "2026-09-10T03:20:40Z"
     },
     "nfl_ngs_passing": {
-     "asset_bytes": 5136427,
+     "asset_bytes": 5134509,
      "assets": 27,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T11:47:54Z",
+     "newest_asset_at": "2026-10-14T11:47:29Z",
      "published_at": "2026-09-10T03:20:07Z"
     },
     "nfl_ngs_receiving": {
-     "asset_bytes": 9051313,
+     "asset_bytes": 9046208,
      "assets": 27,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T11:48:27Z",
+     "newest_asset_at": "2026-10-14T11:47:57Z",
      "published_at": "2026-09-10T03:20:24Z"
     },
     "nfl_ngs_rushing": {
-     "asset_bytes": 3595694,
+     "asset_bytes": 3590119,
      "assets": 27,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T11:48:11Z",
+     "newest_asset_at": "2026-10-14T11:47:43Z",
      "published_at": "2026-09-10T03:20:16Z"
     },
     "nfl_ngs_schedules": {
@@ -6008,38 +6028,38 @@
      "published_at": "2026-09-10T03:17:08Z"
     },
     "nfl_paper_index_games": {
-     "asset_bytes": 725407,
+     "asset_bytes": 725508,
      "assets": 29,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:57:02Z",
+     "newest_asset_at": "2026-10-13T23:44:53Z",
      "published_at": "2026-10-06T23:43:48Z"
     },
     "nfl_passing": {
-     "asset_bytes": 1778522,
+     "asset_bytes": 1778564,
      "assets": 30,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:46:55Z",
+     "newest_asset_at": "2026-10-13T23:34:54Z",
      "published_at": "2026-09-10T01:32:45Z"
     },
     "nfl_percentiles": {
-     "asset_bytes": 731893,
+     "asset_bytes": 732165,
      "assets": 30,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:47:09Z",
+     "newest_asset_at": "2026-10-13T23:35:09Z",
      "published_at": "2026-09-10T01:32:54Z"
     },
     "nfl_player_percentiles": {
-     "asset_bytes": 986685,
+     "asset_bytes": 986727,
      "assets": 30,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:47:14Z",
+     "newest_asset_at": "2026-10-13T23:35:14Z",
      "published_at": "2026-09-21T15:44:45Z"
     },
     "nfl_player_stats": {
-     "asset_bytes": 5098561,
+     "asset_bytes": 5099305,
      "assets": 5,
      "max_season": null,
-     "newest_asset_at": "2026-10-13T02:09:19Z",
+     "newest_asset_at": "2026-10-13T23:47:44Z",
      "published_at": "2026-06-22T21:29:21Z"
     },
     "nfl_players": {
@@ -6050,80 +6070,80 @@
      "published_at": "2026-06-18T17:17:28Z"
     },
     "nfl_ratings_weekly": {
-     "asset_bytes": 839646,
+     "asset_bytes": 841099,
      "assets": 32,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-06T19:16:47Z",
+     "newest_asset_at": "2026-10-13T20:01:15Z",
      "published_at": "2026-08-07T03:30:26Z"
     },
     "nfl_receiving": {
-     "asset_bytes": 2592408,
+     "asset_bytes": 2590034,
      "assets": 30,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:47:05Z",
+     "newest_asset_at": "2026-10-13T23:35:04Z",
      "published_at": "2026-09-10T01:32:51Z"
     },
     "nfl_rolling_windows": {
-     "asset_bytes": 2285144,
+     "asset_bytes": 2285209,
      "assets": 26,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:56:48Z",
+     "newest_asset_at": "2026-10-13T23:44:36Z",
      "published_at": "2026-09-27T02:30:13Z"
     },
     "nfl_rosters": {
-     "asset_bytes": 5614186,
+     "asset_bytes": 5614192,
      "assets": 29,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T02:08:46Z",
+     "newest_asset_at": "2026-10-13T23:47:20Z",
      "published_at": "2026-06-18T17:07:57Z"
     },
     "nfl_rushing": {
-     "asset_bytes": 1929307,
+     "asset_bytes": 1929293,
      "assets": 30,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:47:00Z",
+     "newest_asset_at": "2026-10-13T23:34:59Z",
      "published_at": "2026-09-10T01:32:48Z"
     },
     "nfl_team_opponent_splits": {
-     "asset_bytes": 447379,
+     "asset_bytes": 447457,
      "assets": 30,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:47:24Z",
+     "newest_asset_at": "2026-10-13T23:35:23Z",
      "published_at": "2026-09-30T01:39:23Z"
     },
     "nfl_team_stats": {
-     "asset_bytes": 1063833,
+     "asset_bytes": 1063966,
      "assets": 5,
      "max_season": null,
-     "newest_asset_at": "2026-10-13T02:09:52Z",
+     "newest_asset_at": "2026-10-13T23:48:07Z",
      "published_at": "2026-06-22T22:34:34Z"
     },
     "nfl_team_summaries": {
-     "asset_bytes": 11916804,
+     "asset_bytes": 11916600,
      "assets": 30,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T01:46:50Z",
+     "newest_asset_at": "2026-10-13T23:34:49Z",
      "published_at": "2026-09-10T01:32:41Z"
     },
     "nhl_game_info": {
-     "asset_bytes": 1889407,
+     "asset_bytes": 1890719,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:02:15Z",
+     "newest_asset_at": "2026-10-14T08:02:34Z",
      "published_at": "2026-05-23T10:36:13Z"
     },
     "nhl_game_rosters": {
-     "asset_bytes": 84753303,
+     "asset_bytes": 84816230,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:02:24Z",
+     "newest_asset_at": "2026-10-14T08:02:45Z",
      "published_at": "2026-05-23T10:36:13Z"
     },
     "nhl_goalie_boxscores": {
-     "asset_bytes": 12722896,
+     "asset_bytes": 12732302,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:01:56Z",
+     "newest_asset_at": "2026-10-14T08:02:15Z",
      "published_at": "2026-05-23T10:36:12Z"
     },
     "nhl_groups": {
@@ -6134,45 +6154,45 @@
      "published_at": "2026-09-27T03:31:58Z"
     },
     "nhl_linescore": {
-     "asset_bytes": 1391177,
+     "asset_bytes": 1392135,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:03:11Z",
+     "newest_asset_at": "2026-10-14T08:03:34Z",
      "published_at": "2026-05-23T10:36:17Z"
     },
     "nhl_officials": {
-     "asset_bytes": 5207293,
+     "asset_bytes": 5211131,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:03:30Z",
+     "newest_asset_at": "2026-10-14T08:03:54Z",
      "published_at": "2026-04-09T02:53:08Z"
     },
     "nhl_pbp_full": {
-     "asset_bytes": 9471113084,
+     "asset_bytes": 9478870561,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:01:35Z",
+     "newest_asset_at": "2026-10-14T08:01:55Z",
      "published_at": "2026-04-07T13:36:02Z"
     },
     "nhl_pbp_lite": {
-     "asset_bytes": 8610223810,
+     "asset_bytes": 8613513974,
      "assets": 109,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:03:50Z",
+     "newest_asset_at": "2026-10-14T08:04:24Z",
      "published_at": "2026-04-07T13:36:01Z"
     },
     "nhl_penalties": {
-     "asset_bytes": 26724866,
+     "asset_bytes": 26748463,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:02:52Z",
+     "newest_asset_at": "2026-10-14T08:03:15Z",
      "published_at": "2026-05-23T10:36:15Z"
     },
     "nhl_player_boxscores": {
-     "asset_bytes": 98877402,
+     "asset_bytes": 98964975,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:03:59Z",
+     "newest_asset_at": "2026-10-14T08:04:34Z",
      "published_at": "2026-04-07T13:36:00Z"
     },
     "nhl_rosters": {
@@ -6183,66 +6203,66 @@
      "published_at": "2026-04-07T13:49:15Z"
     },
     "nhl_schedules": {
-     "asset_bytes": 23216026,
+     "asset_bytes": 23217616,
      "assets": 64,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:04:09Z",
+     "newest_asset_at": "2026-10-14T08:04:43Z",
      "published_at": "2026-04-07T13:35:58Z"
     },
     "nhl_scoring": {
-     "asset_bytes": 91419303,
+     "asset_bytes": 91536971,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:02:44Z",
+     "newest_asset_at": "2026-10-14T08:03:05Z",
      "published_at": "2026-05-23T10:36:15Z"
     },
     "nhl_scratches": {
-     "asset_bytes": 6507958,
+     "asset_bytes": 6511745,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:03:02Z",
+     "newest_asset_at": "2026-10-14T08:03:25Z",
      "published_at": "2026-05-23T10:36:16Z"
     },
     "nhl_shifts": {
-     "asset_bytes": 1888046420,
+     "asset_bytes": 1889539138,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:02:34Z",
+     "newest_asset_at": "2026-10-14T08:02:55Z",
      "published_at": "2026-05-23T10:36:14Z"
     },
     "nhl_shootout": {
-     "asset_bytes": 3036443,
+     "asset_bytes": 3040588,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-12T06:48:51Z",
+     "newest_asset_at": "2026-10-14T08:04:13Z",
      "published_at": "2026-04-09T02:53:20Z"
     },
     "nhl_shots_by_period": {
-     "asset_bytes": 3792407,
+     "asset_bytes": 3795005,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:03:39Z",
+     "newest_asset_at": "2026-10-14T08:04:03Z",
      "published_at": "2026-04-09T02:53:14Z"
     },
     "nhl_skater_boxscores": {
-     "asset_bytes": 94225916,
+     "asset_bytes": 94295243,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:01:46Z",
+     "newest_asset_at": "2026-10-14T08:02:05Z",
      "published_at": "2026-05-23T10:36:11Z"
     },
     "nhl_team_boxscores": {
-     "asset_bytes": 4537878,
+     "asset_bytes": 4542060,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:02:06Z",
+     "newest_asset_at": "2026-10-14T08:02:25Z",
      "published_at": "2026-04-07T13:35:59Z"
     },
     "nhl_three_stars": {
-     "asset_bytes": 12001351,
+     "asset_bytes": 12012023,
      "assets": 58,
      "max_season": 2027,
-     "newest_asset_at": "2026-10-13T08:03:21Z",
+     "newest_asset_at": "2026-10-14T08:03:44Z",
      "published_at": "2026-05-23T10:36:17Z"
     },
     "nhl_xg_models": {
@@ -6400,10 +6420,10 @@
      "published_at": "2026-07-17T04:16:56Z"
     },
     "wbb_crosswalk": {
-     "asset_bytes": 14985685,
-     "assets": 103,
+     "asset_bytes": 15165302,
+     "assets": 109,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-12T06:14:59Z",
+     "newest_asset_at": "2026-10-13T23:50:59Z",
      "published_at": "2026-06-13T04:47:34Z"
     },
     "wbb_groups": {
@@ -6442,10 +6462,10 @@
      "published_at": "2026-09-27T04:40:10Z"
     },
     "wnba_player_impact": {
-     "asset_bytes": 5400504,
+     "asset_bytes": 5400545,
      "assets": 96,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T14:31:37Z",
+     "newest_asset_at": "2026-10-14T14:31:30Z",
      "published_at": "2026-07-28T23:54:48Z"
     },
     "wnba_stats_coaches": {
@@ -6463,10 +6483,10 @@
      "published_at": "2026-05-11T23:02:16Z"
     },
     "wnba_stats_game_lineups": {
-     "asset_bytes": 15441013,
+     "asset_bytes": 15441012,
      "assets": 91,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T14:01:23Z",
+     "newest_asset_at": "2026-10-14T14:01:21Z",
      "published_at": "2026-08-12T05:31:53Z"
     },
     "wnba_stats_game_rosters": {
@@ -6477,10 +6497,10 @@
      "published_at": "2026-05-11T23:02:18Z"
     },
     "wnba_stats_leaguedash": {
-     "asset_bytes": 276711218,
+     "asset_bytes": 276711163,
      "assets": 771,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T14:04:01Z",
+     "newest_asset_at": "2026-10-14T14:03:50Z",
      "published_at": "2026-07-12T05:18:35Z"
     },
     "wnba_stats_lineups": {
@@ -6505,10 +6525,10 @@
      "published_at": "2026-05-11T23:02:19Z"
     },
     "wnba_stats_pbp": {
-     "asset_bytes": 214532595,
+     "asset_bytes": 214532594,
      "assets": 99,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T14:01:19Z",
+     "newest_asset_at": "2026-10-14T14:01:18Z",
      "published_at": "2023-04-03T10:28:27Z"
     },
     "wnba_stats_player_boxscores": {
@@ -6526,17 +6546,17 @@
      "published_at": "2026-05-12T05:30:43Z"
     },
     "wnba_stats_player_season_stats": {
-     "asset_bytes": 2245403,
+     "asset_bytes": 2245518,
      "assets": 8,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T13:13:16Z",
+     "newest_asset_at": "2026-10-14T13:15:01Z",
      "published_at": "2026-05-11T23:02:12Z"
     },
     "wnba_stats_possessions": {
-     "asset_bytes": 47665330,
+     "asset_bytes": 47665332,
      "assets": 91,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T14:01:21Z",
+     "newest_asset_at": "2026-10-14T14:01:20Z",
      "published_at": "2026-08-12T05:31:52Z"
     },
     "wnba_stats_rolling_windows": {
@@ -6554,10 +6574,10 @@
      "published_at": "2026-05-11T23:02:11Z"
     },
     "wnba_stats_schedules": {
-     "asset_bytes": 1799760,
+     "asset_bytes": 1799763,
      "assets": 105,
      "max_season": 2026,
-     "newest_asset_at": "2026-10-13T14:01:17Z",
+     "newest_asset_at": "2026-10-14T14:01:15Z",
      "published_at": "2023-04-03T10:28:20Z"
     },
     "wnba_stats_shots": {
@@ -6591,7 +6611,7 @@
    },
    "stale_unassigned_issues": [
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 4,
      "title": "espn_womens_college_basketball_schedules is missing some games",
      "url": "https://github.com/sportsdataverse/sportsdataverse-data/issues/4"
@@ -6599,16 +6619,16 @@
    ],
    "workflows": {
     "Check CRAN status": {
-     "age_days": 0.8,
-     "completed_at": "2026-10-12T22:51:27Z",
+     "age_days": 0.7,
+     "completed_at": "2026-10-13T21:13:00Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T22:48:48Z",
+     "created_at": "2026-10-13T21:05:27Z",
      "event": "schedule",
      "file": ".github/workflows/cran-checks.yaml",
      "name": "Check CRAN status",
-     "run_id": 38318771361,
+     "run_id": 38467936974,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-data/actions/runs/38318771361"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-data/actions/runs/38467936974"
     }
    }
   },
@@ -6621,7 +6641,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:23Z",
    "red_workflows": [],
    "releases": {},
@@ -6637,10 +6657,10 @@
    "open_issues": 1,
    "open_prs": [
     {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "author": "github-actions[bot]",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 125,
      "title": "chore(vendor): sync sdv-py codegen YAML to 79dd939371",
      "updated_at": "2026-10-12T22:03:24Z",
@@ -6648,7 +6668,7 @@
     }
    ],
    "private": false,
-   "pushed_age_days": 0.8,
+   "pushed_age_days": 1.7,
    "pushed_at": "2026-10-12T22:00:43Z",
    "red_workflows": [
     "Live smoke"
@@ -6672,7 +6692,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "CI": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:07:01Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:09:05Z",
@@ -6684,7 +6704,7 @@
      "url": "https://github.com/sportsdataverse/sportsdataverse-js/actions/runs/38234500134"
     },
     "Live smoke": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T19:11:10Z",
      "conclusion": "failure",
      "created_at": "2026-10-12T19:07:20Z",
@@ -6696,7 +6716,7 @@
      "url": "https://github.com/sportsdataverse/sportsdataverse-js/actions/runs/38295521880"
     },
     "Node.js Package": {
-     "age_days": 4.7,
+     "age_days": 5.5,
      "completed_at": "2026-10-09T01:29:45Z",
      "conclusion": "success",
      "created_at": "2026-10-09T01:25:22Z",
@@ -6708,7 +6728,7 @@
      "url": "https://github.com/sportsdataverse/sportsdataverse-js/actions/runs/37869692730"
     },
     "Vendor sync (sdv-py)": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T22:00:56Z",
      "conclusion": "success",
      "created_at": "2026-10-12T21:56:23Z",
@@ -6725,125 +6745,125 @@
    "default_branch": "main",
    "full_name": "sportsdataverse/sportsdataverse-py",
    "latest_release_tag": "docs-index",
-   "newest_asset_age_days": 0.6,
-   "newest_asset_at": "2026-10-13T03:35:04Z",
+   "newest_asset_age_days": 0.8,
+   "newest_asset_at": "2026-10-13T20:21:22Z",
    "open_issues": 8,
    "open_prs": [
     {
-     "age_days": 0.4,
+     "age_days": 1.2,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.4,
+     "idle_days": 1.2,
      "number": 858,
      "title": "fix(codegen): parser override before the view; typed wrapper returns; one _query_params (3.9 PR 1)",
      "updated_at": "2026-10-13T08:39:04Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/858"
     },
     {
-     "age_days": 0.4,
+     "age_days": 1.3,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.4,
+     "idle_days": 1.3,
      "number": 857,
      "title": "fix(nhl): ESPN clocks are elapsed, not remaining (2.15)",
      "updated_at": "2026-10-13T08:28:39Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/857"
     },
     {
-     "age_days": 0.4,
+     "age_days": 1.3,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.4,
+     "idle_days": 1.3,
      "number": 856,
      "title": "fix(nfl): order pre-2014 plays by clock before the next-play end state",
      "updated_at": "2026-10-13T07:36:55Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/856"
     },
     {
-     "age_days": 0.4,
+     "age_days": 1.3,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.3,
+     "idle_days": 1.2,
      "number": 855,
      "title": "fix(espn): schedule family returns a schema'd empty frame, guards each event, NFL ranks null, Canceled masked",
      "updated_at": "2026-10-13T08:52:55Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/855"
     },
     {
-     "age_days": 0.4,
+     "age_days": 1.3,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.4,
+     "idle_days": 1.3,
      "number": 854,
      "title": "fix(cfb): read the rush yardage text forms that left yds_rushed null",
      "updated_at": "2026-10-13T08:26:18Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/854"
     },
     {
-     "age_days": 0.4,
+     "age_days": 1.3,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.4,
+     "idle_days": 1.3,
      "number": 853,
      "title": "fix(ncaa): one owner for the WBB period model; page-format guards; integer contest ids",
      "updated_at": "2026-10-13T06:45:34Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/853"
     },
     {
-     "age_days": 0.6,
+     "age_days": 1.5,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.6,
+     "idle_days": 1.5,
      "number": 848,
      "title": "feat(basketball): WNBA / MBB / WBB game pages in nba_game_page; wnba_stats floors at 1997, player crosswalks at 2002",
      "updated_at": "2026-10-13T01:40:50Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/848"
     },
     {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "author": "github-actions[bot]",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 839,
      "title": "docs(tutorials): weekly refresh of executed notebook pages",
      "updated_at": "2026-10-12T22:17:39Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/839"
     },
     {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.8,
+     "idle_days": 1.7,
      "number": 836,
      "title": "feat(football): average drive-start EP in the advanced box's drives rows",
      "updated_at": "2026-10-12T21:00:04Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/836"
     },
     {
-     "age_days": 1.1,
+     "age_days": 2.0,
      "author": "saiemgilani",
      "draft": false,
-     "idle_days": 0.7,
+     "idle_days": 1.6,
      "number": 830,
      "title": "fix(basketball): rebuild the running score from scoring plays when it reproduces the official final",
      "updated_at": "2026-10-13T01:21:55Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/830"
     },
     {
-     "age_days": 2.3,
+     "age_days": 3.2,
      "author": "saiemgilani",
      "draft": true,
-     "idle_days": 1.1,
+     "idle_days": 2.0,
      "number": 759,
      "title": "sdv-py quality program: test-harness",
      "updated_at": "2026-10-12T14:02:48Z",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/pull/759"
     },
     {
-     "age_days": 2.4,
+     "age_days": 3.3,
      "author": "saiemgilani",
      "draft": true,
-     "idle_days": 1.6,
+     "idle_days": 2.5,
      "number": 750,
      "title": "sdv-py quality program: program-setup",
      "updated_at": "2026-10-12T02:01:16Z",
@@ -6851,9 +6871,10 @@
     }
    ],
    "private": false,
-   "pushed_age_days": 0.0,
-   "pushed_at": "2026-10-13T17:01:57Z",
+   "pushed_age_days": 0.8,
+   "pushed_at": "2026-10-13T20:18:53Z",
    "red_workflows": [
+    "docs-deploy",
     "live-tests-cron",
     "tests"
    ],
@@ -6929,10 +6950,10 @@
      "published_at": "2023-09-03T17:20:59Z"
     },
     "docs-index": {
-     "asset_bytes": 15368236,
+     "asset_bytes": 17169784,
      "assets": 2,
      "max_season": null,
-     "newest_asset_at": "2026-10-13T03:35:04Z",
+     "newest_asset_at": "2026-10-13T20:21:22Z",
      "published_at": "2026-10-06T04:33:42Z"
     },
     "v0.0.59": {
@@ -7085,31 +7106,31 @@
    },
    "stale_unassigned_issues": [
     {
-     "idle_days": 13.2,
+     "idle_days": 14.1,
      "number": 633,
      "title": "CFB WP overtime follow-ups: second team level in OT over-rated, forced two-point periods, OT bound at the grid edge",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/issues/633"
     },
     {
-     "idle_days": 13.4,
+     "idle_days": 14.3,
      "number": 623,
      "title": "fix(cfb): box score splits a passer spelled two ways into two rows, each with its own xQBR",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/issues/623"
     },
     {
-     "idle_days": 26.5,
+     "idle_days": 27.4,
      "number": 505,
      "title": "cfb_pbp: derive an overtime-period index so multi-OT games numbered period 5 keep one timeout per OT",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/issues/505"
     },
     {
-     "idle_days": 36.5,
+     "idle_days": 37.4,
      "number": 457,
      "title": "cfb_model_artifacts: two_pt_model never splits on `era` (other claims in the original report retracted)",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/issues/457"
     },
     {
-     "idle_days": 39.9,
+     "idle_days": 40.8,
      "number": 444,
      "title": "nhl_xg: published boosters over-predict 25-30% for seasons through 2023-24",
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/issues/444"
@@ -7117,64 +7138,64 @@
    ],
    "workflows": {
     "codegen": {
-     "age_days": 0.6,
-     "completed_at": "2026-10-13T03:45:33Z",
+     "age_days": 0.8,
+     "completed_at": "2026-10-13T20:26:39Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T03:33:19Z",
+     "created_at": "2026-10-13T20:18:57Z",
      "event": "push",
      "file": ".github/workflows/codegen.yml",
      "name": "codegen",
-     "run_id": 38342261654,
+     "run_id": 38461836109,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38342261654"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38461836109"
     },
     "conda-build": {
      "age_days": 0.8,
-     "completed_at": "2026-10-12T20:49:54Z",
+     "completed_at": "2026-10-13T20:30:13Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T20:44:09Z",
+     "created_at": "2026-10-13T20:18:57Z",
      "event": "push",
      "file": ".github/workflows/conda-build.yml",
      "name": "conda-build",
-     "run_id": 38306131743,
+     "run_id": 38461835596,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38306131743"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38461835596"
     },
     "dispatch Game on Paper deploy (package pushes to main)": {
-     "age_days": 0.6,
-     "completed_at": "2026-10-13T03:33:27Z",
+     "age_days": 0.8,
+     "completed_at": "2026-10-13T20:19:02Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T03:33:19Z",
+     "created_at": "2026-10-13T20:18:57Z",
      "event": "push",
      "file": ".github/workflows/deploy-gop.yml",
      "name": "dispatch Game on Paper deploy (package pushes to main)",
-     "run_id": 38342261620,
+     "run_id": 38461835568,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38342261620"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38461835568"
     },
     "docs-deploy": {
-     "age_days": 0.6,
-     "completed_at": "2026-10-13T03:49:03Z",
-     "conclusion": "success",
-     "created_at": "2026-10-13T03:33:19Z",
+     "age_days": 0.8,
+     "completed_at": "2026-10-13T20:20:04Z",
+     "conclusion": "failure",
+     "created_at": "2026-10-13T20:18:57Z",
      "event": "push",
      "file": ".github/workflows/docs-deploy.yml",
      "name": "docs-deploy",
-     "run_id": 38342261629,
+     "run_id": 38461835624,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38342261629"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38461835624"
     },
     "docs-index": {
-     "age_days": 0.6,
-     "completed_at": "2026-10-13T03:35:07Z",
+     "age_days": 0.8,
+     "completed_at": "2026-10-13T20:21:24Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T03:33:19Z",
+     "created_at": "2026-10-13T20:18:57Z",
      "event": "push",
      "file": ".github/workflows/docs-index.yml",
      "name": "docs-index",
-     "run_id": 38342261660,
+     "run_id": 38461835612,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38342261660"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38461835612"
     },
     "great-docs": {
      "age_days": null,
@@ -7189,7 +7210,7 @@
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/workflows/great-docs.yml"
     },
     "live-tests-cron": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T22:17:33Z",
      "conclusion": "failure",
      "created_at": "2026-10-12T21:29:31Z",
@@ -7201,7 +7222,7 @@
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38310951741"
     },
     "publish": {
-     "age_days": 136.1,
+     "age_days": 137.0,
      "completed_at": "2026-05-30T13:45:36Z",
      "conclusion": "success",
      "created_at": "2026-05-30T13:45:15Z",
@@ -7213,31 +7234,31 @@
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/26685374369"
     },
     "quality": {
-     "age_days": 0.6,
-     "completed_at": "2026-10-13T03:34:21Z",
+     "age_days": 0.8,
+     "completed_at": "2026-10-13T20:20:12Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T03:33:19Z",
+     "created_at": "2026-10-13T20:18:57Z",
      "event": "push",
      "file": ".github/workflows/quality.yml",
      "name": "quality",
-     "run_id": 38342261610,
+     "run_id": 38461835617,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38342261610"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38461835617"
     },
     "tests": {
-     "age_days": 0.6,
-     "completed_at": "2026-10-13T04:41:04Z",
+     "age_days": 0.8,
+     "completed_at": "2026-10-13T21:44:59Z",
      "conclusion": "failure",
-     "created_at": "2026-10-13T03:33:19Z",
+     "created_at": "2026-10-13T20:18:57Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38342261691,
+     "run_id": 38461835582,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38342261691"
+     "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38461835582"
     },
     "theme-drift": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T21:27:27Z",
      "conclusion": "success",
      "created_at": "2026-10-12T21:27:19Z",
@@ -7249,7 +7270,7 @@
      "url": "https://github.com/sportsdataverse/sportsdataverse-py/actions/runs/38310730419"
     },
     "validation-cron": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T21:03:28Z",
      "conclusion": "success",
      "created_at": "2026-10-12T21:02:35Z",
@@ -7271,7 +7292,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:10:31Z",
    "red_workflows": [],
    "releases": {},
@@ -7287,7 +7308,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.0,
+   "pushed_age_days": 1.9,
    "pushed_at": "2026-10-12T16:14:19Z",
    "red_workflows": [
     "Update data"
@@ -7296,7 +7317,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "Copilot setup steps": {
-     "age_days": 28.4,
+     "age_days": 29.3,
      "completed_at": "2026-09-15T07:47:19Z",
      "conclusion": "success",
      "created_at": "2026-09-15T07:46:34Z",
@@ -7308,7 +7329,7 @@
      "url": "https://github.com/sportsdataverse/sportsdataverse-web/actions/runs/34943431767"
     },
     "Update data": {
-     "age_days": 47.1,
+     "age_days": 48.0,
      "completed_at": "2026-08-27T14:51:37Z",
      "conclusion": "failure",
      "created_at": "2026-08-27T14:50:55Z",
@@ -7354,7 +7375,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:10:49Z",
    "red_workflows": [],
    "releases": {},
@@ -7365,15 +7386,15 @@
    "default_branch": "main",
    "full_name": "sportsdataverse/sportyR",
    "latest_release_tag": "v2.1.0",
-   "newest_asset_age_days": 1442.9,
+   "newest_asset_age_days": 1443.8,
    "newest_asset_at": "2022-10-31T19:19:21Z",
    "open_issues": 6,
    "open_prs": [
     {
-     "age_days": 506.5,
+     "age_days": 507.4,
      "author": "AimanFariz",
      "draft": false,
-     "idle_days": 27.8,
+     "idle_days": 28.7,
      "number": 42,
      "title": "first push - bwf specification for badminton court",
      "updated_at": "2026-09-15T22:17:03Z",
@@ -7381,7 +7402,7 @@
     }
    ],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T12:05:15Z",
    "red_workflows": [
     "R-CMD-check"
@@ -7446,37 +7467,37 @@
    },
    "stale_unassigned_issues": [
     {
-     "idle_days": 443.5,
+     "idle_days": 444.4,
      "number": 41,
      "title": "Adding Badminton Court",
      "url": "https://github.com/sportsdataverse/sportyR/issues/41"
     },
     {
-     "idle_days": 634.8,
+     "idle_days": 635.7,
      "number": 39,
      "title": "Adding Ultimate Frisbee Fields",
      "url": "https://github.com/sportsdataverse/sportyR/issues/39"
     },
     {
-     "idle_days": 717.9,
+     "idle_days": 718.8,
      "number": 37,
      "title": "Change in function use",
      "url": "https://github.com/sportsdataverse/sportyR/issues/37"
     },
     {
-     "idle_days": 1087.5,
+     "idle_days": 1088.4,
      "number": 30,
      "title": "Rugby field request",
      "url": "https://github.com/sportsdataverse/sportyR/issues/30"
     },
     {
-     "idle_days": 1515.9,
+     "idle_days": 1516.8,
      "number": 11,
      "title": "Add swimming pool to package",
      "url": "https://github.com/sportsdataverse/sportyR/issues/11"
     },
     {
-     "idle_days": 1565.8,
+     "idle_days": 1566.7,
      "number": 6,
      "title": "geom_baseball doesn't connect well with other data sets",
      "url": "https://github.com/sportsdataverse/sportyR/issues/6"
@@ -7484,7 +7505,7 @@
    ],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:09:16Z",
      "conclusion": "cancelled",
      "created_at": "2026-10-12T10:10:37Z",
@@ -7496,7 +7517,7 @@
      "url": "https://github.com/sportsdataverse/sportyR/actions/runs/38234662854"
     },
     "lint": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:00:21Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:37Z",
@@ -7508,7 +7529,7 @@
      "url": "https://github.com/sportsdataverse/sportyR/actions/runs/38234662825"
     },
     "pkgdown": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:05:18Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:37Z",
@@ -7520,7 +7541,7 @@
      "url": "https://github.com/sportsdataverse/sportyR/actions/runs/38234662851"
     },
     "test-coverage": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T12:09:07Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:37Z",
@@ -7537,15 +7558,15 @@
    "default_branch": "main",
    "full_name": "sportsdataverse/sportypy",
    "latest_release_tag": "v1.0.0",
-   "newest_asset_age_days": 1490.9,
+   "newest_asset_age_days": 1491.8,
    "newest_asset_at": "2022-09-13T20:19:13Z",
    "open_issues": 1,
    "open_prs": [
     {
-     "age_days": 30.1,
+     "age_days": 31.0,
      "author": "bensynapse",
      "draft": false,
-     "idle_days": 8.3,
+     "idle_days": 9.2,
      "number": 13,
      "title": "Fix boundary filtering for constrained statistical plots",
      "updated_at": "2026-10-05T10:34:31Z",
@@ -7553,7 +7574,7 @@
     }
    ],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:10:40Z",
    "red_workflows": [],
    "releases": {
@@ -7567,7 +7588,7 @@
    },
    "stale_unassigned_issues": [
     {
-     "idle_days": 30.1,
+     "idle_days": 31.0,
      "number": 12,
      "title": "bug: off-court points affect constrained hexbin color scales",
      "url": "https://github.com/sportsdataverse/sportypy/issues/12"
@@ -7587,7 +7608,7 @@
      "url": "https://github.com/sportsdataverse/sportypy/actions/workflows/upload-to-pypi.yml"
     },
     "package-coverage": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:57:11Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:41Z",
@@ -7609,7 +7630,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 159.0,
+   "pushed_age_days": 159.9,
    "pushed_at": "2026-05-07T18:05:50Z",
    "red_workflows": [],
    "releases": {},
@@ -7625,14 +7646,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.2,
+   "pushed_age_days": 2.1,
    "pushed_at": "2026-10-12T11:55:46Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:48:55Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:18Z",
@@ -7644,7 +7665,7 @@
      "url": "https://github.com/sportsdataverse/usfootballR/actions/runs/38234630211"
     },
     "pkgdown": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:55:50Z",
      "conclusion": "success",
      "created_at": "2026-10-12T10:10:22Z",
@@ -7666,7 +7687,7 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
+   "pushed_age_days": 2.2,
    "pushed_at": "2026-10-12T10:08:27Z",
    "red_workflows": [],
    "releases": {},
@@ -7682,7 +7703,7 @@
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.6,
+   "pushed_age_days": 1.5,
    "pushed_at": "2026-10-13T01:36:14Z",
    "red_workflows": [],
    "releases": {
@@ -7753,7 +7774,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "R-CMD-check": {
-     "age_days": 0.7,
+     "age_days": 1.6,
      "completed_at": "2026-10-13T01:34:20Z",
      "conclusion": "success",
      "created_at": "2026-10-13T01:11:57Z",
@@ -7765,7 +7786,7 @@
      "url": "https://github.com/sportsdataverse/wehoop/actions/runs/38330977545"
     },
     "R-hub": {
-     "age_days": 160.6,
+     "age_days": 161.5,
      "completed_at": "2026-05-06T02:19:40Z",
      "conclusion": "success",
      "created_at": "2026-05-06T02:14:28Z",
@@ -7777,7 +7798,7 @@
      "url": "https://github.com/sportsdataverse/wehoop/actions/runs/25412850366"
     },
     "pkgdown": {
-     "age_days": 0.7,
+     "age_days": 1.6,
      "completed_at": "2026-10-13T01:36:18Z",
      "conclusion": "success",
      "created_at": "2026-10-13T01:11:57Z",
@@ -7799,15 +7820,15 @@
    "open_issues": 1,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
-   "pushed_at": "2026-10-12T10:07:42Z",
+   "pushed_age_days": 0.6,
+   "pushed_at": "2026-10-13T23:51:33Z",
    "red_workflows": [
     "tests"
    ],
    "releases": {},
    "stale_unassigned_issues": [
     {
-     "idle_days": 24.6,
+     "idle_days": 25.5,
      "number": 37,
      "title": "espn_womens_college_basketball_pbp: seasons 2004-2021 published without win-probability columns",
      "url": "https://github.com/sportsdataverse/wehoop-wbb-data/issues/37"
@@ -7815,16 +7836,16 @@
    ],
    "workflows": {
     "Update WBB Data": {
-     "age_days": 34.5,
-     "completed_at": "2026-09-09T05:45:53Z",
+     "age_days": 0.6,
+     "completed_at": "2026-10-13T23:51:43Z",
      "conclusion": "success",
-     "created_at": "2026-09-09T05:21:38Z",
+     "created_at": "2026-10-13T23:01:36Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_wbb.yml",
      "name": "Update WBB Data",
-     "run_id": 34314558299,
+     "run_id": 38481636501,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/34314558299"
+     "url": "https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/38481636501"
     },
     "WBB Model Datasets": {
      "age_days": null,
@@ -7839,7 +7860,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wbb-data/actions/workflows/wbb_models_cron.yml"
     },
     "Weekly R/Python Output Parity": {
-     "age_days": 0.8,
+     "age_days": 1.7,
      "completed_at": "2026-10-12T21:29:54Z",
      "conclusion": "success",
      "created_at": "2026-10-12T20:57:10Z",
@@ -7851,7 +7872,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/38307524518"
     },
     "Weekly WBB Rosters Refresh": {
-     "age_days": 2.2,
+     "age_days": 3.1,
      "completed_at": "2026-10-11T12:22:50Z",
      "conclusion": "success",
      "created_at": "2026-10-11T11:51:55Z",
@@ -7863,7 +7884,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/38137120333"
     },
     "orphan-scripts": {
-     "age_days": 1.8,
+     "age_days": 2.7,
      "completed_at": "2026-10-11T21:04:44Z",
      "conclusion": "success",
      "created_at": "2026-10-11T21:04:35Z",
@@ -7875,7 +7896,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wbb-data/actions/runs/38174850743"
     },
     "tests": {
-     "age_days": 1.3,
+     "age_days": 2.2,
      "completed_at": "2026-10-12T11:36:18Z",
      "conclusion": "failure",
      "created_at": "2026-10-12T10:07:44Z",
@@ -7897,8 +7918,8 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 1.3,
-   "pushed_at": "2026-10-12T10:07:40Z",
+   "pushed_age_days": 0.6,
+   "pushed_at": "2026-10-13T23:01:27Z",
    "red_workflows": [
     "Daily WBB Raw Scrape"
    ],
@@ -7906,7 +7927,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "Daily WBB Raw Scrape": {
-     "age_days": 158.9,
+     "age_days": 159.8,
      "completed_at": "2026-05-07T21:46:08Z",
      "conclusion": "failure",
      "created_at": "2026-05-07T20:09:52Z",
@@ -7918,7 +7939,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wbb-raw/actions/runs/25519402950"
     },
     "orphan-scripts": {
-     "age_days": 1.6,
+     "age_days": 2.5,
      "completed_at": "2026-10-12T02:45:57Z",
      "conclusion": "success",
      "created_at": "2026-10-12T02:45:45Z",
@@ -7930,28 +7951,28 @@
      "url": "https://github.com/sportsdataverse/wehoop-wbb-raw/actions/runs/38197059791"
     },
     "tests": {
-     "age_days": 1.3,
-     "completed_at": "2026-10-12T11:20:40Z",
+     "age_days": 0.6,
+     "completed_at": "2026-10-13T23:02:21Z",
      "conclusion": "success",
-     "created_at": "2026-10-12T10:07:43Z",
+     "created_at": "2026-10-13T23:01:30Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38234351926,
+     "run_id": 38481625036,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wbb-raw/actions/runs/38234351926"
+     "url": "https://github.com/sportsdataverse/wehoop-wbb-raw/actions/runs/38481625036"
     },
     "wehoop WBB Data trigger": {
-     "age_days": 34.5,
-     "completed_at": "2026-09-09T05:21:38Z",
+     "age_days": 0.6,
+     "completed_at": "2026-10-13T23:01:37Z",
      "conclusion": "success",
-     "created_at": "2026-09-09T05:21:31Z",
+     "created_at": "2026-10-13T23:01:30Z",
      "event": "push",
      "file": ".github/workflows/wehoop_wbb_data_trigger.yaml",
      "name": "wehoop WBB Data trigger",
-     "run_id": 34314550077,
+     "run_id": 38481625068,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wbb-raw/actions/runs/34314550077"
+     "url": "https://github.com/sportsdataverse/wehoop-wbb-raw/actions/runs/38481625068"
     }
    }
   },
@@ -7964,19 +7985,25 @@
    "open_issues": 3,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.1,
-   "pushed_at": "2026-10-13T15:15:47Z",
+   "pushed_age_days": 0.2,
+   "pushed_at": "2026-10-14T10:39:57Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [
     {
-     "idle_days": 24.7,
+     "idle_days": 7.7,
+     "number": 29,
+     "title": "player_season_stats appears to hold career totals, not season totals, for most veteran players",
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-data/issues/29"
+    },
+    {
+     "idle_days": 25.6,
      "number": 28,
      "title": "Guard the daily publish with a row-count floor per dataset (from #9)",
      "url": "https://github.com/sportsdataverse/wehoop-wnba-data/issues/28"
     },
     {
-     "idle_days": 24.7,
+     "idle_days": 25.6,
      "number": 1,
      "title": "Incorrect play-by-play data for Game Id 220623012 (6/23/2002, Houston Comets at Portland Fire). Root cause: ESPN data is incorrect.",
      "url": "https://github.com/sportsdataverse/wehoop-wnba-data/issues/1"
@@ -7984,7 +8011,7 @@
    ],
    "workflows": {
     "Annual WNBA Draft": {
-     "age_days": 136.4,
+     "age_days": 137.3,
      "completed_at": "2026-05-30T07:04:11Z",
      "conclusion": "success",
      "created_at": "2026-05-30T06:58:15Z",
@@ -7996,19 +8023,19 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-data/actions/runs/26677470722"
     },
     "Update WNBA Data": {
-     "age_days": 0.3,
-     "completed_at": "2026-10-13T10:39:31Z",
+     "age_days": 0.2,
+     "completed_at": "2026-10-14T10:40:03Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T10:33:41Z",
+     "created_at": "2026-10-14T10:33:43Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_wnba.yml",
      "name": "Update WNBA Data",
-     "run_id": 38384199583,
+     "run_id": 38550431922,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wnba-data/actions/runs/38384199583"
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-data/actions/runs/38550431922"
     },
     "Weekly R/Python Output Parity": {
-     "age_days": 0.9,
+     "age_days": 1.8,
      "completed_at": "2026-10-12T18:20:31Z",
      "conclusion": "success",
      "created_at": "2026-10-12T18:16:43Z",
@@ -8020,7 +8047,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-data/actions/runs/38289824539"
     },
     "Weekly WNBA Rosters Refresh": {
-     "age_days": 2.2,
+     "age_days": 3.1,
      "completed_at": "2026-10-11T12:09:54Z",
      "conclusion": "success",
      "created_at": "2026-10-11T12:06:21Z",
@@ -8032,7 +8059,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-data/actions/runs/38138011928"
     },
     "orphan-scripts": {
-     "age_days": 1.4,
+     "age_days": 2.3,
      "completed_at": "2026-10-12T07:54:53Z",
      "conclusion": "success",
      "created_at": "2026-10-12T07:54:46Z",
@@ -8044,7 +8071,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-data/actions/runs/38220416384"
     },
     "tests": {
-     "age_days": 0.1,
+     "age_days": 1.0,
      "completed_at": "2026-10-13T15:16:20Z",
      "conclusion": "success",
      "created_at": "2026-10-13T15:15:49Z",
@@ -8066,14 +8093,14 @@
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.3,
-   "pushed_at": "2026-10-13T10:33:30Z",
+   "pushed_age_days": 0.2,
+   "pushed_at": "2026-10-14T10:33:35Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [],
    "workflows": {
     "Daily WNBA Raw Scrape": {
-     "age_days": 31.3,
+     "age_days": 32.1,
      "completed_at": "2026-09-12T11:03:45Z",
      "conclusion": "success",
      "created_at": "2026-09-12T11:02:46Z",
@@ -8085,7 +8112,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-raw/actions/runs/34690011338"
     },
     "orphan-scripts": {
-     "age_days": 1.6,
+     "age_days": 2.5,
      "completed_at": "2026-10-12T02:45:51Z",
      "conclusion": "success",
      "created_at": "2026-10-12T02:45:41Z",
@@ -8097,31 +8124,31 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-raw/actions/runs/38197055103"
     },
     "tests": {
-     "age_days": 0.3,
-     "completed_at": "2026-10-13T10:34:19Z",
+     "age_days": 0.2,
+     "completed_at": "2026-10-14T10:34:20Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T10:33:34Z",
+     "created_at": "2026-10-14T10:33:37Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38384186267,
+     "run_id": 38550420609,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wnba-raw/actions/runs/38384186267"
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-raw/actions/runs/38550420609"
     },
     "wehoop WNBA Data trigger": {
-     "age_days": 0.3,
-     "completed_at": "2026-10-13T10:33:42Z",
+     "age_days": 0.2,
+     "completed_at": "2026-10-14T10:33:44Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T10:33:34Z",
+     "created_at": "2026-10-14T10:33:37Z",
      "event": "push",
      "file": ".github/workflows/wehoop_wnba_data_trigger.yml",
      "name": "wehoop WNBA Data trigger",
-     "run_id": 38384186218,
+     "run_id": 38550420537,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wnba-raw/actions/runs/38384186218"
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-raw/actions/runs/38550420537"
     },
     "wehoop WNBA Draft trigger": {
-     "age_days": 154.7,
+     "age_days": 155.6,
      "completed_at": "2026-05-11T23:22:26Z",
      "conclusion": "success",
      "created_at": "2026-05-11T23:22:20Z",
@@ -8143,13 +8170,13 @@
    "open_issues": 2,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.1,
-   "pushed_at": "2026-10-13T14:31:39Z",
+   "pushed_age_days": 0.0,
+   "pushed_at": "2026-10-14T14:31:32Z",
    "red_workflows": [],
    "releases": {},
    "stale_unassigned_issues": [
     {
-     "idle_days": 9.1,
+     "idle_days": 10.0,
      "number": 24,
      "title": "droplet cron failing: nightly-season-refresh",
      "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/issues/24"
@@ -8157,7 +8184,7 @@
    ],
    "workflows": {
     "Annual WNBA Draft Update": {
-     "age_days": 136.0,
+     "age_days": 136.9,
      "completed_at": "2026-05-30T18:09:46Z",
      "conclusion": "success",
      "created_at": "2026-05-30T18:07:19Z",
@@ -8169,16 +8196,16 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/runs/26691134715"
     },
     "Update WNBA Stats Data": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T13:13:35Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T13:15:28Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T13:09:36Z",
+     "created_at": "2026-10-14T13:08:36Z",
      "event": "repository_dispatch",
      "file": ".github/workflows/daily_wnba_stats.yml",
      "name": "Update WNBA Stats Data",
-     "run_id": 38402745975,
+     "run_id": 38569347009,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/runs/38402745975"
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/runs/38569347009"
     },
     "WNBA Model Datasets": {
      "age_days": null,
@@ -8193,7 +8220,7 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/workflows/wnba_models.yml"
     },
     "orphan-scripts": {
-     "age_days": 1.0,
+     "age_days": 1.9,
      "completed_at": "2026-10-12T17:04:03Z",
      "conclusion": "success",
      "created_at": "2026-10-12T17:03:52Z",
@@ -8205,16 +8232,16 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/runs/38281717858"
     },
     "tests": {
-     "age_days": 0.1,
-     "completed_at": "2026-10-13T14:32:19Z",
+     "age_days": 0.0,
+     "completed_at": "2026-10-14T14:32:08Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T14:31:42Z",
+     "created_at": "2026-10-14T14:31:35Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38414126110,
+     "run_id": 38581293623,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/runs/38414126110"
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-data/actions/runs/38581293623"
     }
    }
   },
@@ -8222,13 +8249,13 @@
    "default_branch": "main",
    "full_name": "sportsdataverse/wehoop-wnba-stats-raw",
    "latest_release_tag": "wnba-stats-raw-json",
-   "newest_asset_age_days": 75.8,
+   "newest_asset_age_days": 76.7,
    "newest_asset_at": "2026-07-29T21:35:54Z",
    "open_issues": 0,
    "open_prs": [],
    "private": false,
-   "pushed_age_days": 0.2,
-   "pushed_at": "2026-10-13T13:09:23Z",
+   "pushed_age_days": 0.1,
+   "pushed_at": "2026-10-14T13:08:27Z",
    "red_workflows": [],
    "releases": {
     "wnba-stats-raw-json": {
@@ -8242,7 +8269,7 @@
    "stale_unassigned_issues": [],
    "workflows": {
     "orphan-scripts": {
-     "age_days": 9.2,
+     "age_days": 10.1,
      "completed_at": "2026-10-04T13:23:38Z",
      "conclusion": "success",
      "created_at": "2026-10-04T13:23:29Z",
@@ -8254,28 +8281,28 @@
      "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-raw/actions/runs/37205450603"
     },
     "tests": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T13:09:53Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T13:08:55Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T13:09:25Z",
+     "created_at": "2026-10-14T13:08:29Z",
      "event": "push",
      "file": ".github/workflows/tests.yml",
      "name": "tests",
-     "run_id": 38402723901,
+     "run_id": 38569332377,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-raw/actions/runs/38402723901"
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-raw/actions/runs/38569332377"
     },
     "wehoop WNBA Stats Data trigger": {
-     "age_days": 0.2,
-     "completed_at": "2026-10-13T13:09:33Z",
+     "age_days": 0.1,
+     "completed_at": "2026-10-14T13:08:35Z",
      "conclusion": "success",
-     "created_at": "2026-10-13T13:09:24Z",
+     "created_at": "2026-10-14T13:08:28Z",
      "event": "push",
      "file": ".github/workflows/wehoop_wnba_stats_data_trigger.yml",
      "name": "wehoop WNBA Stats Data trigger",
-     "run_id": 38402721350,
+     "run_id": 38569330402,
      "state": "active",
-     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-raw/actions/runs/38402721350"
+     "url": "https://github.com/sportsdataverse/wehoop-wnba-stats-raw/actions/runs/38569330402"
     }
    }
   }
@@ -8283,9 +8310,9 @@
  "stale_days": 7,
  "totals": {
   "carried_forward": 0,
-  "open_prs": 29,
-  "red_workflows": 19,
+  "open_prs": 31,
+  "red_workflows": 20,
   "repos": 80,
-  "stale_unassigned_issues": 41
+  "stale_unassigned_issues": 42
  }
 }
