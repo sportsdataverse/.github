@@ -41,7 +41,7 @@ jobs:
           git init -q out
           git -C out remote add origin "https://github.com/${REPO}.git"
           rc=0
-          git -C out ls-remote --exit-code --heads origin star-history > /dev/null || rc=$?
+          git -C out ls-remote --exit-code origin refs/heads/star-history > /dev/null || rc=$?
           if [ "$rc" = 0 ]; then
             git -C out fetch -q --depth 1 origin star-history
             git -C out checkout -q FETCH_HEAD
@@ -91,7 +91,7 @@ jobs:
           git config http.https://github.com/.extraheader \
             "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
           rc=0
-          git ls-remote --exit-code --heads origin star-history > /dev/null || rc=$?
+          git ls-remote --exit-code origin refs/heads/star-history > /dev/null || rc=$?
           if [ "$rc" = 0 ]; then
             git fetch -q --depth 1 origin star-history
             git checkout -q -b star-history FETCH_HEAD
