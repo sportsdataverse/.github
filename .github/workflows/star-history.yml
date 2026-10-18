@@ -31,17 +31,15 @@ jobs:
       cancel-in-progress: false
     steps:
       # Start from the published chart so the action's .star-history.sig change
-      # detection works and unchanged runs publish nothing.
+      # detection works and unchanged runs publish nothing. Anonymous (the libraries
+      # are public), so no git credential is on disk while the renderer runs.
       - name: Check out the star-history branch
         env:
-          GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         run: |
           git init -q out
           cd out
           git remote add origin "https://github.com/${REPO}.git"
-          git config http.https://github.com/.extraheader \
-            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
           rc=0
           git ls-remote --exit-code origin refs/heads/star-history > /dev/null || rc=$?
           if [ "$rc" = 0 ]; then
@@ -64,7 +62,11 @@ jobs:
       - name: Push chart
         if: steps.chart.outputs.changed == 'true'
         working-directory: out
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          git config http.https://github.com/.extraheader \
+            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
