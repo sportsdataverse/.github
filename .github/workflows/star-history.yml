@@ -1,0 +1,74 @@
+name: Star history
+
+# Reusable workflow: renders the calling repo's star history chart and pushes it
+# to that repo's orphan `star-history` branch. READMEs embed the files from
+# raw.githubusercontent.com, so this never commits to a (protected) main, never
+# fights a README.Rmd re-knit, and the absolute URLs render on CRAN, PyPI and npm.
+#
+# Why self-rendered: since 2026-06-30 GitHub limits the stargazers API to a
+# repo's own admins/collaborators, which blanked hosted star-history embeds. The
+# repo's own GITHUB_TOKEN still qualifies, but only with `contents: write`: a
+# read-only token gets HTTP 403 (verified on sportsdataverse/wehoop). So the
+# renderer must hold a write token; its code is pinned instead: the action by
+# commit SHA, and its dependencies by the action's lockfile (`npm ci`).
+#
+# Caller (.github/workflows/star-history.yml in each library):
+#   on: { schedule: [{cron: '17 6 * * *'}], watch: {types: [started]}, workflow_dispatch: }
+#   permissions: { contents: write }
+#   jobs: { star-history: { uses: sportsdataverse/.github/.github/workflows/star-history.yml@main } }
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: star-history-publish-${{ github.repository }}
+      cancel-in-progress: false
+    steps:
+      # Start from the published chart so the action's .star-history.sig change
+      # detection works and unchanged runs publish nothing. Anonymous (the libraries
+      # are public), so no git credential is on disk while the renderer runs.
+      - name: Check out the star-history branch
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          git init -q out
+          cd out
+          git remote add origin "https://github.com/${REPO}.git"
+          rc=0
+          git ls-remote --exit-code origin refs/heads/star-history > /dev/null || rc=$?
+          if [ "$rc" = 0 ]; then
+            git fetch -q --depth 1 origin star-history
+            git checkout -q -b star-history FETCH_HEAD
+          elif [ "$rc" = 2 ]; then
+            git checkout -q --orphan star-history  # first run
+          else
+            exit "$rc"  # a failed lookup must not start a second, unrelated history
+          fi
+
+      - name: Render chart
+        id: chart
+        uses: keeptinkering/star-history-action@12543ab7352b91fb7c5eb0c4fbb39772baa0c168 # v1.0.6
+        with:
+          output-dir: out
+          update-readme: 'false'
+          commit: 'false'
+
+      - name: Push chart
+        if: steps.chart.outputs.changed == 'true'
+        working-directory: out
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config http.https://github.com/.extraheader \
+            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -q -m 'chore: update star history [skip ci]'
+          git push -q origin HEAD:star-history
