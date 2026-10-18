@@ -9,6 +9,9 @@ name: Star history
 # repo's own admins/collaborators, which blanked hosted star-history embeds. The
 # repo's own GITHUB_TOKEN still qualifies.
 #
+# The third-party renderer (and the npm packages it installs) runs in a job with
+# a read-only token; only the publish job, which runs first-party code, can write.
+#
 # Caller (.github/workflows/star-history.yml in each library):
 #   on: { schedule: [{cron: '17 6 * * *'}], watch: {types: [started]}, workflow_dispatch: }
 #   permissions: { contents: write }
@@ -18,26 +21,32 @@ on:
   workflow_call:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   render:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.chart.outputs.changed }}
     steps:
-      # Start from the existing branch so the action's .star-history.sig change
-      # detection works and unchanged runs push nothing.
-      - name: Check out the star-history branch
+      # Start from the published chart so the action's .star-history.sig change
+      # detection works and unchanged runs publish nothing. Anonymous fetch: the
+      # libraries are public, and no credential lands where the renderer can read it.
+      - name: Fetch the published chart
         env:
-          GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         run: |
           git init -q out
-          cd out
-          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
-          if git fetch -q --depth 1 origin star-history; then
-            git checkout -q -b star-history FETCH_HEAD
-          else
-            git checkout -q --orphan star-history
+          git -C out remote add origin "https://github.com/${REPO}.git"
+          rc=0
+          git -C out ls-remote --exit-code --heads origin star-history > /dev/null || rc=$?
+          if [ "$rc" = 0 ]; then
+            git -C out fetch -q --depth 1 origin star-history
+            git -C out checkout -q FETCH_HEAD
+          elif [ "$rc" != 2 ]; then
+            exit "$rc"  # 2 = branch absent (first run); anything else is a real failure
           fi
 
       - name: Render chart
@@ -48,12 +57,65 @@ jobs:
           update-readme: 'false'
           commit: 'false'
 
-      - name: Push chart
+      - name: Upload chart
         if: steps.chart.outputs.changed == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: star-history
+          path: |
+            out/*.svg
+            out/*.png
+            out/.star-history.sig
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: render
+    if: needs.render.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: star-history-publish-${{ github.repository }}
+      cancel-in-progress: false
+    steps:
+      - name: Check out the star-history branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          git init -q out
+          cd out
+          git remote add origin "https://github.com/${REPO}.git"
+          git config http.https://github.com/.extraheader \
+            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          rc=0
+          git ls-remote --exit-code --heads origin star-history > /dev/null || rc=$?
+          if [ "$rc" = 0 ]; then
+            git fetch -q --depth 1 origin star-history
+            git checkout -q -b star-history FETCH_HEAD
+          elif [ "$rc" = 2 ]; then
+            git checkout -q --orphan star-history
+          else
+            exit "$rc"
+          fi
+
+      - name: Download chart
+        uses: actions/download-artifact@v8
+        with:
+          name: star-history
+          path: out
+
+      - name: Push chart
         working-directory: out
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
+          if git diff --cached --quiet; then
+            echo 'Chart already published.'
+            exit 0
+          fi
           git commit -q -m 'chore: update star history [skip ci]'
           git push -q origin HEAD:star-history
