@@ -53,7 +53,7 @@ npm install @sportsdataverse/sdvplot @sportsdataverse/sporty @sportsdataverse/sd
 
 ## R Packages
 
-<p align="center"><a href='https://r.sportsdataverse.org/'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-hex-wall.png' width='560' alt='The SportsDataverse R package hex wall'/></a></p>
+<p align="center"><a href='https://r.sportsdataverse.org/'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-hex-wall.png' width='560' alt='The SportsDataverse package hex wall'/></a></p>
 
 | Package | Covers | Version | Downloads | Cheat sheet |
 | --- | --- | --- | --- | --- |
@@ -85,6 +85,7 @@ All of them install from [sportsdataverse.r-universe.dev](https://sportsdatavers
 ## Python Packages <a href="https://pypi.org/user/saiemgilani/" alt="Saiem's Python Packages" target="_blank"> <img src="https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/python-original.svg" alt="python" width="40" height="40"/> </a>
 
 <a href='https://pypi.org/project/sportsdataverse/'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-py-logo.png' width="18%" min-width="100px" alt="sportsdataverse-py logo"/></a>
+<a href='https://sdvplot.sportsdataverse.org/'><img src='https://raw.githubusercontent.com/sportsdataverse/sdvplot/main/docs/static/img/sdvplot-logo.png' width="18%" min-width="100px" alt="sdvplot hex logo"/></a>
 
 | Package | Covers | Version | Downloads |
 | --- | --- | --- | --- |
@@ -99,6 +100,7 @@ All of them install from [sportsdataverse.r-universe.dev](https://sportsdatavers
 ## <a href="https://nodejs.org" target="_blank">Node.js modules</a>
 
 <a href='https://www.npmjs.com/package/sportsdataverse'><img src='https://raw.githubusercontent.com/sportsdataverse/.github/main/profile/sdv-js.png' width="18%" min-width="100px" alt="sportsdataverse-js logo"/></a>
+<a href='https://plot.sportsdataverse.org/'><img src='https://raw.githubusercontent.com/sportsdataverse/sdvplot-js/main/docs/static/img/sdvplot-js-logo.png' width="18%" min-width="100px" alt="sdvplot-js hex logo"/></a>
 
 [![npm](https://img.shields.io/npm/v/sportsdataverse?style=for-the-badge)](https://js.sportsdataverse.org/)  [![npm](https://img.shields.io/npm/dm/sportsdataverse?style=for-the-badge)](https://www.npmjs.com/package/sportsdataverse)
 
@@ -134,7 +136,7 @@ rather than *stale*; red means its update pipeline failed.
 
 ## Built on the SportsDataverse
 
-- [**Game on Paper**](https://gameonpaper.com/cfb "Game on Paper: live analytics for the modern age"): live college
+- [**Game on Paper**](https://gameonpaper.com/ "Game on Paper: live analytics for the modern age"): live college
   football analytics on the same expected-points and win-probability models the packages ship.
 - [**sdv-toolkit**](https://github.com/sportsdataverse/.github/tree/main/sdv-toolkit): a [Claude Code](https://claude.com/claude-code)
   plugin with skills, agents, hooks and an MCP server encoding the SDV engineering conventions (codegen-safe edit guards,
