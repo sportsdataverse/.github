@@ -1,6 +1,6 @@
 ---
 name: sdv-repo-audit
-description: Use to audit a whole SportsDataverse repo's documentation, currency and public polish at one commit, read-only — after a big merge or layout move, before a release, or when asked "is the README/CONTRIBUTING/CHANGELOG still true", "are we behind on the release or deps", "what does the site look like to a stranger", "docs audit", "polish pass", "currency check". Detects the archetype (sdv-py, Python package, R package, -raw/-data producer, web), runs five lenses in parallel through the sdv-repo-auditor agent — contributor docs and templates checked claim-by-claim against the code, companion-package integration (sdvplot/sportypy, cfbplotR/nflplotR/sportyR), front-page coverage against the registries, currency (release vs PyPI/CRAN/npm vs tags vs GitHub Releases, outdated deps, OSV advisories in the lock, docs/MCP index freshness, CI and crons on main), and public polish ranked by visibility (live pages, leaked internal content, metadata/SEO, root clutter, README header, repo description/topics) — and synthesizes a verdict table plus cleanup in PR-sized batches. Never edits; each fix batch is tier 1, confirmed separately. Not for reviewing one PR (sdv-review-pr), the issue queue (sdv-triage), or dataset propagation (sdv-dataset-lifecycle).
+description: Use to audit a whole SportsDataverse repo's documentation, currency and public polish at one commit, read-only — after a big merge or layout move, before a release, or when asked "is the README/CONTRIBUTING/CHANGELOG still true", "are we behind on the release or deps", "what does the site look like to a stranger", "docs audit", "polish pass", "currency check". Works on R, Python and JS/TS libraries, DB/API services and web apps: detects the archetype (sdv-py, python-package, r-package, -raw/-data producer, js-package, web-app, db-service; mixed repos get a primary plus secondaries, and every matching reference loads), runs five lenses in parallel through the sdv-repo-auditor agent — contributor docs and templates checked claim-by-claim against the code, companion-package integration (sdvplot/sportypy, cfbplotR/nflplotR/sportyR), front-page coverage against the registries, currency (release vs PyPI/CRAN/npm vs tags vs GitHub Releases, outdated deps, OSV advisories in the lock, docs/MCP index freshness, CI and crons on main), and public polish ranked by visibility (live pages, leaked internal content, metadata/SEO, root clutter, README header, repo description/topics) — and synthesizes a verdict table plus cleanup in PR-sized batches. Never edits; each fix batch is tier 1, confirmed separately. Not for reviewing one PR (sdv-review-pr), the issue queue (sdv-triage), or dataset propagation (sdv-dataset-lifecycle).
 ---
 
 # sdv-repo-audit — is everything this repo says about itself still true?
@@ -47,17 +47,29 @@ mid-audit becomes a finding. After a batch is confirmed, it lands through `/sdv-
 python <this-skill-dir>/scripts/audit_probes.py archetype <repo>
 ```
 
-| Archetype | Detected by | Reference |
-|---|---|---|
-| `sdv-py` | `tools/codegen/generate.py` | `references/python-package.md` (+ its sdv-py rows) |
-| `python-package` | `pyproject.toml`, none of the above | `references/python-package.md` |
-| `r-package` | `DESCRIPTION` + `R/` | `references/r-package.md` |
-| `producer` | repo name ends `-raw` / `-data` | `references/producer.md` |
-| `web` | `package.json` (sportsdataverse-js, game-on-paper-app, sportsdataverse-web, docs sites) | `references/web.md` |
-| `other` | none (toolkit, papers) | the closer of `web.md` / `python-package.md`; say which |
+It prints a **primary** archetype, any **secondary** ones, the evidence for each, and
+the reference files to load. Rows are in precedence order: the first that matches is
+primary; every other match is a secondary.
+
+| # | Archetype | Detected by | Example | Reference |
+|---|---|---|---|---|
+| 1 | `sdv-py` | `tools/codegen/generate.py` (implies `python-package`) | sportsdataverse-py | `python-package.md` (+ its sdv-py rows) |
+| 2 | `producer` | repo name ends `-raw` / `-data` | cfbfastR-cfb-data | `producer.md` |
+| 3 | `r-package` | `DESCRIPTION` + `R/` | hoopR | `r-package.md` |
+| 4 | `js-package` | published `package.json` (not `private`, with `main`/`module`/`exports`/`types`/`bin`), or npm/pnpm workspace members that are; TypeScript included | sportsdataverse-js, sdvplot-js | `js-package.md` |
+| 5 | `web-app` | framework dependency or config (`next`, `astro`, `@docusaurus/core`, `@sveltejs/kit`, `remix`, `nuxt`, a vite app with `index.html`) at the root — or one level down when the root has **no** manifest | blazing-the-nets, game-on-paper-app (`astro/`) | `web-app.md` |
+| 6 | `db-service` | migrations (`alembic/`, `migrations/`, `*.sql`) or systemd units, plus an API server dependency (FastAPI, Express), a Dockerfile/compose file, a catalog, or more such files; outranks `python-package` | sdv-db | `db-service.md` |
+| 7 | `python-package` | `pyproject.toml` / `setup.py` | sdvplot | `python-package.md` |
+| 8 | `web-app` (secondary) | a framework site one level down in a repo that has a root manifest: a docs site | sdv-py `docs/`, sdvplot `docs/` | `web-app.md` |
+| 9 | `other` | none (papers, the toolkit itself) | | the closest reference; say which |
+
+**Mixed repos load every reference the probe lists** (sdv-py: `python-package.md` +
+`web-app.md`; cfbfastR-cfb-data: `producer.md` + `r-package.md` + `python-package.md`;
+game-on-paper-app: `web-app.md` + `db-service.md`). Each auditor runs its lens section from
+every listed file and labels a finding with the archetype whose checklist produced it.
 
 These rules are the probe's own (the SessionStart router's archetypes differ: it splits
-`raw`/`data` and has no `web`). A repo instruction file (`CLAUDE.md`,
+`raw`/`data` and knows no `js-package`, `web-app` or `db-service`). A repo instruction file (`CLAUDE.md`,
 `AGENTS.md`, `CONTRIBUTING.md`) that contradicts a reference wins for that repo; record
 the conflict.
 
@@ -91,25 +103,27 @@ Run these once, in the audit worktree, before dispatching; write each to
 `<report-dir>/probes/<name>.md` and hand the paths to the auditors. Probe hits are
 **leads**: each becomes a finding only after a human-readable check of the line.
 
-Substitute before running: pick **one** registry flag for `release` and **one** lockfile
-for `osv` (the alternatives are listed in the comments), and drop the `fragments` line in
-repos without `changelog.d/`. A probe that exits 2 (a missing path, a lockfile with 0
-packages) is a probe failure to fix, never an empty result.
+Substitute before running: pick **one** registry flag per `release` run and run `osv`
+once per lockfile the repo has (the alternatives are listed in the comments). A mixed repo
+runs `release` once per published artifact (an R package and its PyPI twin are two runs).
+A probe that exits 2 (a missing path, a lockfile with 0 packages, an unsupported lockfile)
+is a probe failure to fix, never an empty result.
 
 ```sh
 P=<this-skill-dir>/scripts/audit_probes.py; O="<report-dir>/probes"   # W and SHA from Phase 1
 mkdir -p "$O"
-python "$P" release   "$W" --pypi <dist>            > "$O/release.md"   # or: --cran <pkg> / --npm <pkg>
-python "$P" fragments "$W"                          > "$O/fragments.md" # options: --dir changelog.d --max-lines 3
+python "$P" archetype "$W"                          > "$O/archetype.md"
+python "$P" release   "$W" --pypi <dist>            > "$O/release.md"   # or: --cran <pkg> / --runiverse <owner> / --npm <pkg> / --workspaces
+python "$P" fragments "$W"                          > "$O/fragments.md" # changelog.d/, .changeset/, NEWS.md; option: --dir <dir>
 python "$P" leaks     --root "$W"                   > "$O/leaks.md"     # option: --private <extra names>
 python "$P" counts    --root "$W"                   > "$O/counts.md"
-python "$P" osv       "$W/uv.lock"                  > "$O/osv.md"       # or: "$W/renv.lock" / "$W/package-lock.json"
+python "$P" osv       "$W/uv.lock"                  > "$O/osv.md"       # or: renv.lock / package-lock.json / pnpm-lock.yaml / yarn.lock / poetry.lock / requirements.txt
 ```
 
 | Probe | Checks | Known blind spots |
 |---|---|---|
-| `release` | local version vs registry vs tags (by name, not "newest": sdv-py carries old-line `0.36.0`/`0.37.0` tags) vs GitHub `Latest`; newest CHANGELOG/NEWS heading vs registry; commits since the registry's tag; fragment counts by group | conda-forge, docs version dropdowns, pins in downstream repos |
-| `fragments` | `<slug>.<group>.md` names, final newline, one PR number per bullet, ≤ N lines, internal ids (`B-M31`, `R828-4`, `Task 3.1`, `phase 5`) | whether the **Area:** lead and wording match the house contract |
+| `release` | local version vs PyPI / CRAN / r-universe / npm vs tags (by name, not "newest": sdv-py carries old-line `0.36.0`/`0.37.0` tags) vs GitHub `Latest`; `--workspaces`: every published member vs npm vs its `@scope/pkg@x.y.z` tag; newest CHANGELOG/NEWS heading vs registry; commits since the registry's tag; "not compared" for every source it could not check | conda-forge, docs version dropdowns, pins in downstream repos |
+| `fragments` | every system present: `changelog.d/` (names, final newline, one PR number per bullet, ≤ N lines), `.changeset/*.md` (valid bump per package, non-empty summary), NEWS.md's top section (bullets without a PR/issue ref counted); internal ids (`B-M31`, `R828-4`, `Task 3.1`, `Phase 5`) in all three; "no fragment system" when there is none | whether the **Area:** lead and wording match the house contract |
 | `leaks` | tracked public files only: local/server paths, non-placeholder IPs, internal ids, agent notes (`ponytail:`, `.superpowers/`), `dev/*.md` citations, private repo names (`sdv-internal-refs`, `ClaudeCowork`, …) | rendered pages built from docstrings (grep the built site or the docstrings too); images; deliberate provenance registers |
 | `counts` | every "N <noun>" claim in hand-written docs, grouped by noun | context: "128 wrappers" (one stem) and "4,566 wrappers" (all ESPN) can both be right — measure each |
 | `osv` | every locked package against OSV, with severity | whether the package reaches runtime (`uv tree --frozen --invert --package <pkg>`; extras/dev only is lower) |
@@ -122,9 +136,9 @@ prompt carries exactly:
 
 ```
 lens: <contributor-docs | companions | coverage | currency | polish>
-archetype: <archetype>
+archetype: <primary> (+ secondary: <secondary, ...>)
 repo: <owner/name>   audit tree: <W>   sha: <short sha>   date: <YYYY-MM-DD>
-reference: <this-skill-dir>/references/<file>.md   (run only the section for your lens)
+references: <this-skill-dir>/references/<file>.md, ...   (every file the archetype probe listed; run only your lens's section in each)
 files: <the explicit file list for this lens, from the reference's "Files" line, resolved against W>
 probes: <O>/<the probe outputs this lens uses>
 output: <report-dir>/<NN>-<lens>.md
@@ -134,7 +148,7 @@ questions: <the user's questions this lens answers, verbatim>
 | NN | Lens | Answers |
 |---|---|---|
 | 01 | `contributor-docs` | Is every concrete claim in CHANGELOG/fragments, CONTRIBUTING, README, CLAUDE.md/AGENTS.md, copilot-instructions and the issue/PR templates true at this SHA? |
-| 02 | `companions` | Do the plotting/surface companions install, integrate, appear in notebooks/vignettes, and link both ways? |
+| 02 | `companions` | Do the companions install, integrate, appear in notebooks/vignettes/examples, and link both ways? (plotting/surface packages for libraries; producers and consumers for producers, services and web apps) |
 | 03 | `coverage` | Do the front pages (home, intro, README, nav) cover what the registries say exists, with consistent names and live links? |
 | 04 | `currency` | Release state, outdated deps, lock advisories, docs/MCP/search index freshness, CI and crons on main |
 | 05 | `polish` | What a stranger sees first, ranked by visibility: live pages, leaks, metadata/SEO, root clutter, README header, repo description/topics |

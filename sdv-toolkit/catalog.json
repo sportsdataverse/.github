@@ -537,7 +537,7 @@
     {
       "name": "sdv-repo-audit",
       "kind": "skill",
-      "purpose": "Read-only whole-repo audit at one commit: five parallel lenses (contributor docs vs code, companion integration, front-page coverage vs registries, release/deps/OSV/CI currency, public polish), mechanical probes, a verdict table and cleanup in PR-sized batches; every fix batch needs confirmation.",
+      "purpose": "Read-only whole-repo audit at one commit, for R, Python and JS/TS libraries, producers, DB/API services and web apps (mixed repos load every matching checklist): five parallel lenses (contributor docs vs code, companions, front-page coverage vs registries, release/deps/OSV/CI currency, public polish), mechanical probes, a verdict table and cleanup in PR-sized batches; every fix batch needs confirmation.",
       "archetypes": [
         "all"
       ],
@@ -561,7 +561,7 @@
     {
       "name": "sdv-repo-auditor",
       "kind": "agent",
-      "purpose": "Run one repo-audit lens (contributor-docs | companions | coverage | currency | polish) at a pinned commit, read-only, and write its ranked, evidence-backed report.",
+      "purpose": "Run one repo-audit lens (contributor-docs | companions | coverage | currency | polish) for one archetype or a mixed set (sdv-py, producer, r-package, js-package, web-app, db-service, python-package) at a pinned commit, read-only, and write its ranked, evidence-backed report.",
       "archetypes": [
         "all"
       ],
@@ -571,6 +571,16 @@
         "coverage",
         "currency",
         "polish"
+      ],
+      "archetypes_audited": [
+        "sdv-py",
+        "producer",
+        "r-package",
+        "js-package",
+        "web-app",
+        "db-service",
+        "python-package",
+        "other"
       ]
     }
   ]

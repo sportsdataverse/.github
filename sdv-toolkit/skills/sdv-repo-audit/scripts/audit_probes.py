@@ -5,12 +5,15 @@ Each subcommand prints markdown (or JSON with --json) and exits 0 when the probe
 ran, 2 on a usage or I/O error. A finding is never an error exit: the auditor
 decides what a probe hit means.
 
-    python audit_probes.py archetype [REPO]
-    python audit_probes.py release   [REPO] [--repo owner/name] [--pypi NAME] [--cran NAME] [--npm NAME]
+    python audit_probes.py archetype [REPO]          primary + secondary archetypes, with evidence
+    python audit_probes.py release   [REPO] [--repo owner/name]
+                                     (--pypi NAME | --cran NAME | --npm NAME | --runiverse OWNER | --workspaces)
     python audit_probes.py fragments [REPO] [--dir changelog.d] [--max-lines 3] [--groups a,b,...]
+                                     changelog.d/, .changeset/ and NEWS.md; "no fragment system" when none
     python audit_probes.py leaks     [PATH ...] [--root REPO] [--private NAME ...]
     python audit_probes.py counts    [PATH ...] [--root REPO]
-    python audit_probes.py osv       LOCKFILE
+    python audit_probes.py osv       LOCKFILE        uv.lock, poetry.lock, renv.lock, package-lock.json,
+                                                     yarn.lock (v1/berry), pnpm-lock.yaml, requirements*.txt
 
 Network (release, osv) is read-only GETs/POSTs to public registries plus
 `git ls-remote` and `gh api` GETs; an unreachable source is reported as
@@ -160,32 +163,178 @@ def _rel(fp, root):
 # --------------------------------------------------------------------------- archetype
 
 
-def detect_archetype(repo: pathlib.Path, remote: str = "") -> str:
-    """sdv-py | python-package | r-package | producer | web | other, from files on disk and the remote name."""
-    repo = pathlib.Path(repo).resolve()  # Path(".").name is ""
-    name = remote.rstrip("/").rsplit("/", 1)[-1]
-    name = name[:-4] if name.endswith(".git") else name
-    if (repo / "tools" / "codegen" / "generate.py").exists():
-        return "sdv-py"
-    if name.endswith("-raw") or name.endswith("-data") or repo.name.endswith(("-raw", "-data")):
-        return "producer"
-    if (repo / "DESCRIPTION").exists() and (repo / "R").is_dir():
-        return "r-package"
-    if (repo / "package.json").exists():
-        return "web"
-    if (repo / "pyproject.toml").exists():
-        return "python-package"
-    return "other"
-
-
+ARCHETYPES = (
+    "sdv-py", "producer", "r-package", "js-package", "web-app", "db-service", "python-package", "other",
+)  # fmt: skip
 REFERENCE_FOR = {
     "sdv-py": "python-package.md",
     "python-package": "python-package.md",
     "r-package": "r-package.md",
     "producer": "producer.md",
-    "web": "web.md",
-    "other": "web.md (JS) or python-package.md (Python): pick the closer one and say so",
+    "js-package": "js-package.md",
+    "web-app": "web-app.md",
+    "db-service": "db-service.md",
+    "other": "the closest reference file: pick one and say so",
 }
+WEB_DEPS = {
+    "next",
+    "astro",
+    "@docusaurus/core",
+    "@sveltejs/kit",
+    "@remix-run/react",
+    "@remix-run/node",
+    "nuxt",
+    "gatsby",
+}
+WEB_CONFIG_RE = re.compile(r"^(?:next|astro|docusaurus|remix|nuxt|gatsby)\.config\.[cm]?[jt]s$")
+API_DEPS_RE = re.compile(r"(?i)[\"'\s,\[](fastapi|flask|uvicorn|starlette|express|fastify|hono|koa)\b")
+COMPOSE_RE = re.compile(r"^(?:docker-)?compose(?:\.[\w-]+)?\.ya?ml$")
+
+
+def repo_files(repo, max_depth=4):
+    """Posix paths of the repo's files: git-tracked when it is a checkout, else a bounded walk."""
+    tracked = tracked_files(repo)
+    if tracked is not None:
+        return sorted(tracked)
+    out = []
+    for dirpath, dirnames, filenames in os.walk(repo):
+        rel = pathlib.Path(dirpath).relative_to(repo)
+        depth = len(rel.parts)
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS] if depth < max_depth else []
+        out += [(rel / f).as_posix() for f in filenames]
+    return sorted(out)
+
+
+def _json(path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def _published(pkg):
+    """A package.json that npm would publish as a library: not private, with an entry point."""
+    return (
+        bool(pkg) and not pkg.get("private") and any(pkg.get(k) for k in ("main", "module", "exports", "types", "bin"))
+    )
+
+
+def workspace_members(repo):
+    """[(dir, package.json dict)] for npm/yarn `workspaces` or pnpm-workspace.yaml `packages:` globs."""
+    root = _json(repo / "package.json") or {}
+    pats = root.get("workspaces") or []
+    if isinstance(pats, dict):  # yarn: {"packages": [...]}
+        pats = pats.get("packages") or []
+    pw = repo / "pnpm-workspace.yaml"
+    if pw.exists():
+        pats = list(pats) + re.findall(r"(?m)^\s*-\s*['\"]?([^'\"\s#]+)", pw.read_text(encoding="utf-8"))
+    members = []
+    for pat in pats:
+        if pat.startswith("!"):
+            continue
+        for d in sorted(repo.glob(pat)):
+            pkg = _json(d / "package.json")
+            if pkg is not None:
+                members.append((d, pkg))
+    return members
+
+
+def _web_dir(repo, rel_dir, names):
+    """Does this directory hold a web-app framework (a config file, or a framework dependency)?"""
+    d = repo / rel_dir
+    if any(WEB_CONFIG_RE.match(n) for n in names):
+        return True
+    pkg = _json(d / "package.json") if "package.json" in names else None
+    if not pkg:
+        return False
+    deps = set(pkg.get("dependencies") or {}) | set(pkg.get("devDependencies") or {})
+    if deps & WEB_DEPS:
+        return True
+    if "svelte.config.js" in names and "@sveltejs/kit" in deps:
+        return True
+    return "vite" in deps and "index.html" in names and not _published(pkg)  # a vite APP, not a vite-built library
+
+
+def probe_archetype(repo, remote=""):
+    """Primary archetype by precedence, plus secondaries for mixed repos, with the evidence for each.
+
+    Precedence: sdv-py > producer > r-package > js-package > web-app (at the root, or in a subdir when
+    the root has no manifest) > db-service > python-package > web-app (a docs site in a subdir) > other.
+    """
+    repo = pathlib.Path(repo).resolve()  # Path(".").name is ""
+    name = remote.rstrip("/").rsplit("/", 1)[-1]
+    name = name[:-4] if name.endswith(".git") else name
+    files = repo_files(repo)
+    by_dir = collections.defaultdict(set)
+    for f in files:
+        parent, _, base = f.rpartition("/")
+        by_dir[parent].add(base)
+    root = by_dir.get("", set())
+    sig = collections.defaultdict(list)
+
+    if "tools/codegen/generate.py" in files:
+        sig["sdv-py"].append("tools/codegen/generate.py")
+    if name.endswith(("-raw", "-data")) or repo.name.endswith(("-raw", "-data")):
+        sig["producer"].append("repo name %s" % (name or repo.name))
+    if "DESCRIPTION" in root and any(f.startswith("R/") for f in files):
+        sig["r-package"].append("DESCRIPTION + R/")
+    if "pyproject.toml" in root or "setup.py" in root:
+        sig["python-package"].append("pyproject.toml" if "pyproject.toml" in root else "setup.py")
+    if _published(_json(repo / "package.json")):
+        sig["js-package"].append("package.json (published entry point)")
+    pub = [pkg.get("name", str(d)) for d, pkg in workspace_members(repo) if _published(pkg)]
+    if pub:
+        sig["js-package"].append("workspace members: " + ", ".join(pub))
+    for d in sorted(by_dir):
+        if d.count("/") < 1 and _web_dir(repo, d, by_dir[d]):  # the root and one level down
+            sig["web-root" if d == "" else "web-sub"].append(d or ".")
+    for f in files:
+        parts = f.split("/")
+        base = parts[-1]
+        if {"alembic", "migrations"} & set(parts[:-1]) or base.endswith(".sql"):
+            sig["db-strong"].append(f)
+        elif base.endswith((".service", ".timer")):
+            sig["db-strong"].append(f)
+        elif base == "Dockerfile" or COMPOSE_RE.match(base) or base.startswith("catalog") and len(parts) <= 2:
+            sig["db-weak"].append(f)
+        elif base in ("pyproject.toml", "package.json") and len(parts) <= 2:
+            txt = read_text(repo / f) or ""
+            if API_DEPS_RE.search(" " + txt):
+                sig["db-weak"].append("%s (API server dependency)" % f)
+    strong = sig.get("db-strong", [])
+    if strong and (sig.get("db-weak") or len(strong) >= 2):
+        sig["db-service"] = strong[:5] + sig.get("db-weak", [])[:5]
+    no_root_manifest = not root & {"pyproject.toml", "setup.py", "package.json", "DESCRIPTION"}
+
+    ranked = []
+    for arch in ("sdv-py", "producer", "r-package", "js-package"):
+        if sig.get(arch):
+            ranked.append(arch)
+    if sig.get("web-root") or (sig.get("web-sub") and no_root_manifest):
+        ranked.append("web-app")
+    for arch in ("db-service", "python-package"):
+        if sig.get(arch):
+            ranked.append(arch)
+    if sig.get("web-sub") and "web-app" not in ranked:
+        ranked.append("web-app")
+    if ranked and ranked[0] == "sdv-py" and "python-package" in ranked:
+        ranked.remove("python-package")  # sdv-py already is one
+    primary = ranked[0] if ranked else "other"
+    secondary = ranked[1:]
+    refs = []
+    for arch in [primary] + secondary:
+        ref = REFERENCE_FOR[arch]
+        if arch != "other" and ref not in refs:
+            refs.append(ref)
+    shown = {k: v for k, v in sig.items() if k not in ("web-root", "web-sub")}
+    if sig.get("web-root") or sig.get("web-sub"):
+        shown["web-app"] = sig.get("web-root", []) + sig.get("web-sub", [])
+    return {"primary": primary, "secondary": secondary, "references": refs, "signals": dict(shown)}
+
+
+def detect_archetype(repo, remote=""):
+    """The primary archetype only; see probe_archetype for the secondaries and the evidence."""
+    return probe_archetype(repo, remote)["primary"]
 
 
 # --------------------------------------------------------------------------- release
@@ -288,10 +437,43 @@ def compare_release(local, registry, tags, latest_release, changelog_head):
     return out
 
 
-def probe_release(repo, owner_repo, pypi, cran, npm):
+def _npm_latest(name):
+    j = _get_json("https://registry.npmjs.org/%s/latest" % name.replace("/", "%2F"))
+    return (j or {}).get("version") if j and "__status__" not in j else None
+
+
+def compare_workspaces(members, registry, tags):
+    """Per published workspace member: its version vs npm vs its tags. Pure: unit-tested.
+
+    Monorepo tags name the package (`@scope/pkg@0.1.0`, the changesets form); a member with
+    none of those falls back to plain `v0.1.0` tags.
+    """
+    rows = []
+    for _, pkg in members:
+        if not _published(pkg):
+            continue
+        name, local = pkg.get("name"), pkg.get("version")
+        scoped = [t[len(name) + 1 :] for t in tags if t.startswith(name + "@")]
+        mine = scoped or [t for t in tags if re.match(r"v?\d", t)]
+        reg = registry.get(name)
+        mism = compare_release(local, reg, mine, None, None)
+        if reg is None:
+            mism.append("npm version unavailable (not published, or the registry was unreachable)")
+        if local is None:
+            mism.append("no version in package.json")
+        rows.append({"name": name, "local": local, "registry": reg, "tags": mine[-3:], "mismatches": mism})
+    return rows
+
+
+def probe_release(repo, owner_repo, pypi, cran, npm, runiverse=None, workspaces=False):
     local, src = local_version(repo)
     reg_name, registry = None, None
-    if pypi:
+    if runiverse:
+        desc = repo / "DESCRIPTION"
+        m = re.search(r"(?m)^Package:\s*(\S+)", desc.read_text(encoding="utf-8")) if desc.exists() else None
+        j = _get_json("https://%s.r-universe.dev/api/packages/%s" % (runiverse, m.group(1))) if m else None
+        reg_name, registry = "r-universe", (j or {}).get("Version") if j and "__status__" not in j else None
+    elif pypi:
         j = _get_json("https://pypi.org/pypi/%s/json" % pypi)
         reg_name, registry = "PyPI", (j or {}).get("info", {}).get("version") if j and "__status__" not in j else None
     elif cran:
@@ -302,14 +484,10 @@ def probe_release(repo, owner_repo, pypi, cran, npm):
         j = _get_json("https://registry.npmjs.org/%s/latest" % npm)
         reg_name, registry = "npm", (j or {}).get("version") if j and "__status__" not in j else None
     ls = _run(["git", "-C", str(repo), "ls-remote", "--tags", "origin"])
-    tags = sorted(
-        {
-            ln.split("refs/tags/")[1].replace("^{}", "")
-            for ln in (ls or "").splitlines()
-            if "refs/tags/" in ln and re.search(r"refs/tags/v?\d", ln)
-        },
-        key=vkey,
+    all_tags = sorted(
+        {ln.split("refs/tags/")[1].replace("^{}", "") for ln in (ls or "").splitlines() if "refs/tags/" in ln}
     )
+    tags = sorted((t for t in all_tags if re.match(r"v?\d", t)), key=vkey)
     if not owner_repo:
         m = re.search(
             r"github\.com[:/]([^/]+/[^/]+?)(?:\.git)?/?$",
@@ -344,10 +522,25 @@ def probe_release(repo, owner_repo, pypi, cran, npm):
         ),
         "unreleased_fragments": count_fragments(repo),
     }
+    if workspaces:  # a monorepo: each published member is its own release line
+        rows = compare_workspaces(
+            workspace_members(repo),
+            {p.get("name"): _npm_latest(p["name"]) for _, p in workspace_members(repo) if _published(p)},
+            all_tags,
+        )
+        result["workspaces"] = rows
+        mism = ["%s: %s" % (r["name"], m) for r in rows for m in r["mismatches"]]
+        if not rows:
+            mism.append("no published workspace members found (workspaces / pnpm-workspace.yaml)")
+        if ls is None:
+            mism.append("git ls-remote failed: tags not compared")
+        result["mismatches"] = mism
+        result["compared"] = bool(rows) and ls is not None and all(r["registry"] for r in rows)
+        return result
     mism = compare_release(local, registry, tags if ls is not None else None, latest, None if head_dev else head)
     # every source that was NOT compared is a finding of its own, so "none" can only mean "all compared, all agree"
     if not reg_name:
-        mism.append("no registry compared: pass --pypi, --cran or --npm")
+        mism.append("no registry compared: pass --pypi, --cran, --npm, --runiverse or --workspaces")
     elif registry is None:
         mism.append("%s version unavailable (not published, or the registry was unreachable)" % reg_name)
     if local is None:
@@ -390,10 +583,95 @@ def lint_fragment_text(text, max_lines=3):
     return probs
 
 
-def probe_fragments(repo, d, max_lines, groups):
+BUMPS = ("patch", "minor", "major")
+REF_RE = re.compile(r"#\d+|/pull/\d+|/issues/\d+")
+
+
+def lint_changeset(text):
+    """Problems in one .changeset/*.md: frontmatter of `"pkg": bump` lines, then a summary."""
+    probs = []
+    m = re.match(r"(?s)^---\r?\n(.*?)\r?\n?---\r?\n?(.*)$", text)
+    if not m:
+        probs.append((1, 'no frontmatter (--- "pkg": bump ---)'))
+        body = text
+    else:
+        for i, ln in enumerate(m.group(1).splitlines(), 2):
+            kv = re.match(r"^\s*(.+?)\s*:\s*(\S+)\s*$", ln)
+            if kv and kv.group(2) not in BUMPS:
+                probs.append((i, "bump %r for %s is not patch/minor/major" % (kv.group(2), kv.group(1))))
+        body = m.group(2)
+        if not body.strip():
+            probs.append((1, "empty summary"))
+    for hit in INTERNAL_ID_RE.finditer(body):
+        probs.append((1, "internal id %r" % hit.group(0)))
+    return probs
+
+
+def news_top_section(text):
+    """(heading, first_line_no, lines) of NEWS.md's first `# ` section (the doctoc TOC above it is skipped)."""
+    lines = text.splitlines()
+    starts = [i for i, ln in enumerate(lines) if re.match(r"^# ", ln)]
+    if not starts:
+        return None, 0, []
+    end = starts[1] if len(starts) > 1 else len(lines)
+    return lines[starts[0]], starts[0] + 1, lines[starts[0] + 1 : end]
+
+
+def lint_news(text):
+    """(summary, findings) for the top NEWS.md section: R NEWS bullets rarely carry PR refs, so missing refs
+    are counted, not listed; internal ids are findings."""
+    heading, start, body = news_top_section(text)
+    bullets, cur = [], None
+    for i, ln in enumerate(body, start + 1):
+        if re.match(r"^[-*] ", ln):
+            cur = [i, [ln]]
+            bullets.append(cur)
+        elif not ln.strip() or ln.startswith("#"):
+            cur = None
+        elif cur:
+            cur[1].append(ln)
+    findings = [(i, "internal id %r" % h.group(0)) for i, b in bullets for h in INTERNAL_ID_RE.finditer(" ".join(b))]
+    without = sum(1 for _, b in bullets if not REF_RE.search(" ".join(b)))
+    return {"section": heading, "bullets": len(bullets), "without_ref": without}, findings
+
+
+def probe_fragments(repo, d=None, max_lines=3, groups=()):
+    """Lint every fragment system present: `changelog.d/` (or --dir), `.changeset/`, and NEWS.md's top section.
+
+    With no system present the result says so (`systems: []`): never "0 problems".
+    """
+    systems, findings, res = [], [], {}
+    if d or (repo / "changelog.d").is_dir():
+        d = d or "changelog.d"
+        if (repo / d).is_dir():
+            systems.append(d)
+            res["fragments"], dir_findings = _lint_fragment_dir(repo, d, max_lines, groups)
+            findings += dir_findings
+        else:
+            res["missing_dir"] = d
+        explicit = True
+    else:
+        explicit = False
+    if not explicit or d == "changelog.d":
+        cs = repo / ".changeset"
+        if cs.is_dir():
+            systems.append("changesets")
+            files = [f for f in sorted(cs.glob("*.md")) if f.name.lower() != "readme.md"]
+            res["changesets"] = len(files)
+            for f in files:
+                for line, prob in lint_changeset(read_text(f) or ""):
+                    findings.append({"file": ".changeset/%s" % f.name, "line": line, "problem": prob})
+        news = repo / "NEWS.md"
+        if news.exists():
+            systems.append("NEWS.md")
+            res["news"], news_findings = lint_news(read_text(news) or "")
+            findings += [{"file": "NEWS.md", "line": i, "problem": p} for i, p in news_findings]
+    res.update(systems=systems, findings=findings)
+    return res
+
+
+def _lint_fragment_dir(repo, d, max_lines, groups):
     fdir = repo / d
-    if not fdir.is_dir():
-        return {"dir": d, "present": False, "findings": []}
     findings = []
     for f in sorted(fdir.glob("*")):
         if f.is_dir() or f.name.lower() == "readme.md":
@@ -412,12 +690,7 @@ def probe_fragments(repo, d, max_lines, groups):
             findings.append({"file": "%s/%s" % (d, f.name), "line": 1, "problem": "no final newline"})
         for line, prob in lint_fragment_text(txt, max_lines):
             findings.append({"file": "%s/%s" % (d, f.name), "line": line, "problem": prob})
-    return {
-        "dir": d,
-        "present": True,
-        "fragments": len([f for f in fdir.glob("*.md") if f.name.lower() != "readme.md"]),
-        "findings": findings,
-    }
+    return len([f for f in fdir.glob("*.md") if f.name.lower() != "readme.md"]), findings
 
 
 # --------------------------------------------------------------------------- leaks
@@ -595,12 +868,71 @@ def probe_counts(root, paths, exclude=()):
 # --------------------------------------------------------------------------- osv
 
 
+LOCKFILES = ("uv.lock", "poetry.lock", "renv.lock", "package-lock.json", "yarn.lock", "pnpm-lock.yaml")
+_YARN_SKIP = ("@workspace:", "@patch:", "@link:", "@portal:", "@file:", "@exec:")
+_PNPM_KEY = re.compile(r"^  (?! )['\"]?/?((?:@[^/@\s'\"]+/)?[^@\s'\"(/]+)@([^(:'\"\s]+)")
+_REQ_PIN = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?\s*==\s*([^\s;#,]+)")
+
+
+def _spec_name(spec):
+    """'@babel/core@^7.0.0' -> '@babel/core'; '@s/x@npm:^1' -> '@s/x'."""
+    spec = spec.strip().strip("\"'")
+    i = spec.rfind("@", 1)
+    return spec[:i] if i > 0 else spec
+
+
+def _parse_yarn(txt):
+    out = set()
+    for block in re.split(r"\n\s*\n", txt):
+        lines = [ln for ln in block.splitlines() if ln.strip() and not ln.startswith("#")]
+        if not lines or lines[0].startswith(" ") or not lines[0].rstrip().endswith(":"):
+            continue
+        header = lines[0].rstrip()[:-1]
+        if header == "__metadata" or any(s in header for s in _YARN_SKIP):
+            continue
+        ver = next((m.group(1) for ln in lines[1:] for m in [re.match(r'^  version:?\s+"?([^"\s]+)"?', ln)] if m), None)
+        if ver and "use.local" not in ver:
+            for spec in header.split(","):
+                out.add(("npm", _spec_name(spec), ver))
+    return sorted(out)
+
+
+def _parse_pnpm(txt):
+    out, section = set(), None
+    for ln in txt.splitlines():
+        if ln and not ln.startswith(" "):
+            section = ln.rstrip(":").strip()
+            continue
+        if section in ("packages", "snapshots"):
+            m = _PNPM_KEY.match(ln)
+            if m:
+                out.add(("npm", m.group(1), m.group(2)))
+    return sorted(out)
+
+
+def _parse_requirements(txt):
+    """Exact `==` pins only; ranges and `-r`/`-e` lines cannot be checked against one version."""
+    out = set()
+    for ln in txt.splitlines():
+        m = _REQ_PIN.match(ln.split("#", 1)[0].strip())
+        if m:
+            out.add(("PyPI", m.group(1).lower(), m.group(2)))
+    return sorted(out)
+
+
 def parse_lock(path: pathlib.Path):
-    """[(ecosystem, name, version)] from uv.lock, poetry.lock, renv.lock, or package-lock.json. Pure-ish: unit-tested."""
+    """[(ecosystem, name, version)] from any LOCKFILES name or requirements*.txt. Pure-ish: unit-tested."""
     name = path.name
-    if name not in ("uv.lock", "poetry.lock", "renv.lock", "package-lock.json"):
-        raise ValueError("unsupported lockfile: %s (uv.lock, poetry.lock, renv.lock, package-lock.json)" % name)
+    is_req = fnmatch.fnmatch(name, "requirements*.txt")
+    if name not in LOCKFILES and not is_req:
+        raise ValueError("unsupported lockfile: %s (%s, requirements*.txt)" % (name, ", ".join(LOCKFILES)))
     txt = path.read_text(encoding="utf-8")
+    if is_req:
+        return _parse_requirements(txt)
+    if name == "yarn.lock":
+        return _parse_yarn(txt)
+    if name == "pnpm-lock.yaml":
+        return _parse_pnpm(txt)
     if name in ("uv.lock", "poetry.lock"):
         out = []
         for block in re.split(r"(?m)^\[\[package\]\]\s*$", txt)[1:]:
@@ -667,8 +999,14 @@ def _md(cmd, res):
     lines = ["## probe: %s" % cmd, ""]
     if cmd == "release":
         for k, v in res.items():
-            if k not in ("mismatches", "compared"):
+            if k not in ("mismatches", "compared", "workspaces"):
                 lines.append("- **%s**: `%s`" % (k, v))
+        if res.get("workspaces"):
+            lines += ["", "| member | local | npm | tags | mismatches |", "|---|---|---|---|---|"]
+            for r in res["workspaces"]:
+                lines.append("| `%s` | %s | %s | %s | %s |" % (
+                    r["name"], r["local"], r["registry"] or "unavailable", ", ".join(r["tags"]) or "none",
+                    "; ".join(r["mismatches"]) or "none"))  # fmt: skip
         verdict = "" if res["mismatches"] and res["compared"] else ("none" if res["compared"] else "not compared")
         lines += ["", "**Mismatches:** " + verdict]
         lines += ["- " + m for m in res["mismatches"]]
@@ -677,10 +1015,22 @@ def _md(cmd, res):
             lines.append(
                 "Scanned: %s. Hits by kind: %s" % (", ".join(res["scanned"]) or "(none)", res["by_kind"] or "none")
             )
-        elif not res["present"]:
-            lines.append("No `%s/` directory." % res["dir"])
+        elif not res["systems"]:
+            lines.append(
+                "**no fragment system** (no changelog.d/, .changeset/ or NEWS.md%s): nothing was linted."
+                % ("; --dir %s/ does not exist" % res["missing_dir"] if res.get("missing_dir") else "")
+            )
         else:
-            lines.append("%d fragments, %d findings." % (res["fragments"], len(res["findings"])))
+            counts = [
+                "%s: %d files" % (k, res[k]) for k in ("fragments", "changesets") if k in res
+            ] + (
+                ["NEWS.md top section %r: %d bullets, %d without a PR/issue ref"
+                 % (res["news"]["section"], res["news"]["bullets"], res["news"]["without_ref"])]
+                if "news" in res else []
+            )  # fmt: skip
+            lines.append(
+                "Systems: %s. %s. %d findings." % (", ".join(res["systems"]), "; ".join(counts), len(res["findings"]))
+            )
         if res["findings"]:
             lines += [
                 "",
@@ -743,9 +1093,11 @@ def main(argv=None):
     g.add_argument("--pypi")
     g.add_argument("--cran")
     g.add_argument("--npm")
+    g.add_argument("--runiverse", metavar="OWNER", help="r-universe owner; the package name comes from DESCRIPTION")
+    g.add_argument("--workspaces", action="store_true", help="npm/pnpm monorepo: compare every published member")
     f = sub.add_parser("fragments")
     f.add_argument("repo", nargs="?", default=".")
-    f.add_argument("--dir", default="changelog.d")
+    f.add_argument("--dir", default=None, help="fragment dir (default: changelog.d/ when present)")
     f.add_argument("--max-lines", type=int, default=3)
     f.add_argument("--groups", default="breaking,added,changed,deprecated,removed,fixed,security,data")
     lk = sub.add_parser("leaks")
@@ -772,10 +1124,17 @@ def main(argv=None):
         if args.cmd == "archetype":
             repo = pathlib.Path(args.repo)
             remote = (_run(["git", "-C", str(repo), "remote", "get-url", "origin"]) or "").strip()
-            arch = detect_archetype(repo, remote)
-            res = {"archetype": arch, "remote": remote, "reference": REFERENCE_FOR[arch]}
+            res = dict(probe_archetype(repo, remote), remote=remote)
         elif args.cmd == "release":
-            res = probe_release(pathlib.Path(args.repo), args.owner_repo, args.pypi, args.cran, args.npm)
+            res = probe_release(
+                pathlib.Path(args.repo),
+                args.owner_repo,
+                args.pypi,
+                args.cran,
+                args.npm,
+                args.runiverse,
+                args.workspaces,
+            )
         elif args.cmd == "fragments":
             res = probe_fragments(
                 pathlib.Path(args.repo), args.dir, args.max_lines, [x for x in args.groups.split(",") if x]

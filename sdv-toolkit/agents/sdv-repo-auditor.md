@@ -1,6 +1,6 @@
 ---
 name: sdv-repo-auditor
-description: Use to run ONE lens of a whole-repo docs, currency and polish audit on a SportsDataverse repo at a pinned commit, dispatched by sdv-repo-audit with a lens and an archetype (sdv-py, python-package, r-package, producer, web). Lenses — contributor-docs (every concrete claim in CHANGELOG and changelog.d fragments, CONTRIBUTING, README, CLAUDE.md/AGENTS.md, copilot-instructions and the issue/PR templates checked against the code: counts, module paths, commands, env vars, version and extras pins, links, template dropdowns, contradictions between files, internal jargon), companions (plotting/surface companion integration — sdvplot and sportypy for sdv-py, cfbplotR/nflplotR/sportyR/sdvplotR for R: extras and pins, what an extra actually installs, code integration, a notebook/vignette coverage matrix, links both directions), coverage (home page, intro, README and nav against the registries — leagues.json/sources.yaml, the _pkgdown.yml reference index, release tags: missing or extra entries, hard-coded counts, naming, dead links, old paths), currency (version vs PyPI/CRAN/npm vs tags vs GitHub Releases, unreleased fragments, outdated deps, lock advisories via OSV, docs/MCP index and site-search freshness, CI and crons on main), polish (what a stranger sees, ranked by visibility: live pages, leaked internal content such as private repo names, local paths and task/rule ids, metadata/SEO, root clutter, README header, repo description/topics). Read-only on the audited repo; the only file it writes is its own report. Every finding is verified with file:line, evidence and a fix.
+description: Use to run ONE lens of a whole-repo docs, currency and polish audit on a SportsDataverse repo at a pinned commit, dispatched by sdv-repo-audit with a lens and an archetype — a primary plus any secondaries for a mixed repo (sdv-py, producer, r-package, js-package, web-app, db-service, python-package, other) — and runs that lens's checklist from every matching reference file. Lenses — contributor-docs (every concrete claim in CHANGELOG and changelog.d fragments, CONTRIBUTING, README, CLAUDE.md/AGENTS.md, copilot-instructions and the issue/PR templates checked against the code: counts, module paths, commands, env vars, version and extras pins, links, template dropdowns, contradictions between files, internal jargon), companions (plotting/surface companion integration — sdvplot and sportypy for sdv-py, cfbplotR/nflplotR/sportyR/sdvplotR for R: extras and pins, what an extra actually installs, code integration, a notebook/vignette coverage matrix, links both directions), coverage (home page, intro, README and nav against the registries — leagues.json/sources.yaml, the _pkgdown.yml reference index, release tags: missing or extra entries, hard-coded counts, naming, dead links, old paths), currency (version vs PyPI/CRAN/npm vs tags vs GitHub Releases, unreleased fragments, outdated deps, lock advisories via OSV, docs/MCP index and site-search freshness, CI and crons on main), polish (what a stranger sees, ranked by visibility: live pages, leaked internal content such as private repo names, local paths and task/rule ids, metadata/SEO, root clutter, README header, repo description/topics). Read-only on the audited repo; the only file it writes is its own report. Every finding is verified with file:line, evidence and a fix.
 tools: Read, Grep, Glob, Bash, WebFetch
 ---
 
@@ -12,14 +12,26 @@ at the `output:` path you were given.
 ## Inputs (from the dispatch prompt)
 
 `lens`, `archetype`, `repo`, `audit tree` (a detached worktree, call it `W`), `sha`,
-`date`, `reference` (a file under `skills/sdv-repo-audit/references/`), `files`, `probes`,
+`date`, `references` (files under `skills/sdv-repo-audit/references/`), `files`, `probes`,
 `output`, and the user's `questions`. If any is missing, infer it from `W` and say so
 in the report header; if `lens` is missing, stop and ask — do not run all five.
 
+| `archetype` value | Reference file |
+|---|---|
+| `sdv-py`, `python-package` | `python-package.md` |
+| `r-package` | `r-package.md` |
+| `producer` | `producer.md` |
+| `js-package` | `js-package.md` |
+| `web-app` | `web-app.md` |
+| `db-service` | `db-service.md` (the strictest safety rules: never a database connection, never a migration) |
+| `other` | the closest one; say which |
+
 ## Method
 
-1. **Read your section only.** Open `reference` and run the section whose heading
-   matches your lens (`## 01 contributor-docs` … `## 05 polish`). Read the repo's own
+1. **Read your section only, in every listed reference.** For a mixed repo (`primary +
+   secondary`) run your lens's section (`## 01 contributor-docs` … `## 05 polish`) from
+   each reference, and tag each finding with the archetype whose checklist produced it.
+   When two references give different safety rules, the stricter one holds. Read the repo's own
    `CLAUDE.md` / `AGENTS.md` first: a repo rule that contradicts the reference wins for
    that repo; note the conflict.
 2. **Ground truth before claims.** Measure the facts the docs talk about (counts,

@@ -52,7 +52,7 @@ class Archetype(unittest.TestCase):
         self.assertEqual(ap.detect_archetype(tree({"tools/codegen/generate.py": ""})), "sdv-py")
         self.assertEqual(ap.detect_archetype(tree({"README.md": ""}), "git@github.com:o/nfl-data.git"), "producer")
         self.assertEqual(ap.detect_archetype(tree({"DESCRIPTION": "Package: x", "R/x.R": ""})), "r-package")
-        self.assertEqual(ap.detect_archetype(tree({"package.json": "{}"})), "web")
+        self.assertEqual(ap.detect_archetype(tree({"package.json": "{}"})), "other")  # neither published nor an app
         self.assertEqual(ap.detect_archetype(tree({"pyproject.toml": ""})), "python-package")
         self.assertEqual(ap.detect_archetype(tree({"README.md": ""})), "other")
 
@@ -68,9 +68,140 @@ class Archetype(unittest.TestCase):
     def test_no_router_mirror_claim(self):
         self.assertNotIn("sdv_router", ap.detect_archetype.__doc__)
 
-    def test_every_archetype_has_a_reference(self):
-        for arch in ("sdv-py", "python-package", "r-package", "producer", "web", "other"):
+    def test_every_archetype_has_a_reference_file(self):
+        for arch in ap.ARCHETYPES:
             self.assertIn(arch, ap.REFERENCE_FOR)
+            if arch != "other":
+                self.assertTrue((SKILL / "references" / ap.REFERENCE_FOR[arch]).is_file(), arch)
+        self.assertFalse((SKILL / "references" / "web.md").exists())  # split into js-package + web-app
+
+
+def pj(**kw):
+    return json.dumps(kw)
+
+
+class ArchetypeMatrix(unittest.TestCase):
+    """probe_archetype: primary by precedence, secondaries for mixed repos, on temp-dir fixtures."""
+
+    def probe(self, files, remote=""):
+        return ap.probe_archetype(tree(files), remote)
+
+    def check(self, files, primary, secondary=(), remote=""):
+        res = self.probe(files, remote)
+        self.assertEqual((res["primary"], sorted(res["secondary"])), (primary, sorted(secondary)), res["signals"])
+        return res
+
+    def test_js_package_published(self):
+        self.check(
+            {"package.json": pj(name="x", exports={".": "./dist/index.js"}, types="./dist/index.d.ts")}, "js-package"
+        )
+        self.check({"package.json": pj(name="x", main="index.js")}, "js-package")
+
+    def test_private_with_main_is_not_published(self):
+        self.check({"package.json": pj(name="x", private=True, main="index.js")}, "other")
+
+    def test_js_workspace_npm_and_pnpm(self):
+        member = pj(name="@s/a", version="0.1.0", exports="./dist/index.js")
+        self.check(
+            {
+                "package.json": pj(name="root", private=True, workspaces=["packages/*"]),
+                "packages/a/package.json": member,
+            },
+            "js-package",
+        )
+        self.check(
+            {
+                "package.json": pj(name="root", private=True),
+                "pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
+                "packages/a/package.json": member,
+            },
+            "js-package",
+        )
+
+    def test_web_app_by_dependency_and_by_config(self):
+        self.check({"package.json": pj(name="app", private=True, dependencies={"next": "16"})}, "web-app")
+        self.check({"package.json": pj(name="app", private=True), "astro.config.mjs": ""}, "web-app")
+        self.check({"package.json": pj(name="kit", private=True, devDependencies={"@sveltejs/kit": "2"})}, "web-app")
+
+    def test_published_library_with_vite_is_not_an_app(self):
+        self.check({"package.json": pj(name="lib", main="dist/i.js", devDependencies={"vite": "6"})}, "js-package")
+
+    def test_db_service_outranks_python_package(self):
+        self.check(
+            {
+                "pyproject.toml": '[project]\nname = "svc"\ndependencies = ["fastapi"]\n',
+                "systemd/svc-api.service": "",
+                "systemd/svc-ingest.timer": "",
+            },
+            "db-service",
+            ["python-package"],
+        )
+        self.check({"pyproject.toml": "", "alembic/env.py": "", "Dockerfile": ""}, "db-service", ["python-package"])
+
+    def test_one_sql_file_alone_is_not_a_service(self):
+        self.check({"pyproject.toml": "", "tests/fixtures/x.sql": ""}, "python-package")
+
+    def test_compose_means_a_compose_file_not_a_word(self):
+        res = self.probe({"pyproject.toml": "", "tools/compose_counting.yaml": "", "x.sql": ""})
+        self.assertNotIn("compose", " ".join(res["signals"].get("db-weak", [])))
+
+    def test_web_app_in_a_subdir_without_a_root_manifest(self):
+        # game-on-paper-app: astro/ + python/sql + docker-compose, nothing at the root
+        self.check(
+            {
+                "astro/package.json": pj(name="gop", private=True, dependencies={"astro": "5"}),
+                "astro/astro.config.mjs": "",
+                "python/sql/2026_x.sql": "",
+                "python/pyproject.toml": "fastapi",
+                "docker-compose.yml": "",
+                "scripts/gop-capture.service": "",
+            },
+            "web-app",
+            ["db-service"],
+        )
+
+    def test_python_package_with_a_docs_site(self):
+        self.check(
+            {
+                "pyproject.toml": "",
+                "docs/package.json": pj(name="d", private=True, dependencies={"@docusaurus/core": "3"}),
+                "docs/docusaurus.config.ts": "",
+            },
+            "python-package",
+            ["web-app"],
+        )
+
+    def test_sdv_py_with_docs_site(self):
+        self.check(
+            {
+                "tools/codegen/generate.py": "",
+                "pyproject.toml": "",
+                "docs/package.json": pj(name="d", private=True, dependencies={"@docusaurus/core": "3"}),
+            },
+            "sdv-py",
+            ["web-app"],  # sdv-py already implies python-package
+        )
+
+    def test_producer_mixed_with_r_and_python(self):
+        self.check(
+            {"DESCRIPTION": "Package: x", "R/x.R": "", "pyproject.toml": ""},
+            "producer",
+            ["r-package", "python-package"],
+            remote="https://github.com/o/cfbfastR-cfb-data.git",
+        )
+
+    def test_r_package_with_pkgdown_is_just_r(self):
+        self.check({"DESCRIPTION": "Package: x", "R/x.R": "", "_pkgdown.yml": "", "pkgdown/extra.css": ""}, "r-package")
+
+    def test_references_cover_primary_and_secondary(self):
+        res = self.probe(
+            {
+                "pyproject.toml": "",
+                "docs/docusaurus.config.ts": "",
+                "docs/package.json": pj(name="d", private=True, dependencies={"@docusaurus/core": "3"}),
+            }
+        )
+        self.assertEqual(res["references"], ["python-package.md", "web-app.md"])
 
 
 class Release(unittest.TestCase):
@@ -377,8 +508,8 @@ class Osv(unittest.TestCase):
         self.assertEqual(ap.parse_lock(d / "package-lock.json"), [("npm", "@s/b", "2.0.0")])
 
     def test_unsupported_lockfile_is_named_before_parsing(self):
-        d = tree({"Cargo.lock": "[[package]]\nname = 'x'\n", "yarn.lock": "x@1:\n  version 1\n"})
-        for name in ("Cargo.lock", "yarn.lock"):
+        d = tree({"Cargo.lock": "[[package]]\nname = 'x'\n", "Gemfile.lock": "GEM\n  specs:\n"})
+        for name in ("Cargo.lock", "Gemfile.lock"):
             with self.assertRaisesRegex(ValueError, "unsupported lockfile"):
                 ap.parse_lock(d / name)
 
@@ -424,6 +555,142 @@ class Osv(unittest.TestCase):
         self.assertEqual(res["error"], "OSV unreachable")
 
 
+class MoreLocks(unittest.TestCase):
+    def test_yarn_v1(self):
+        txt = (
+            "# yarn lockfile v1\n\n"
+            '"@babel/core@^7.0.0", "@babel/core@^7.1.0":\n  version "7.24.0"\n  resolved "x"\n\n'
+            'lodash@^4.17.0:\n  version "4.17.21"\n'
+        )
+        d = tree({"yarn.lock": txt})
+        self.assertEqual(
+            ap.parse_lock(d / "yarn.lock"), [("npm", "@babel/core", "7.24.0"), ("npm", "lodash", "4.17.21")]
+        )
+
+    def test_yarn_berry(self):
+        txt = (
+            "__metadata:\n  version: 8\n\n"
+            '"@s/x@npm:^1.0.0, @s/x@npm:^1.2.0":\n  version: 1.2.3\n  resolution: "@s/x@npm:1.2.3"\n\n'
+            '"app@workspace:.":\n  version: 0.0.0-use.local\n\n'
+            '"left-pad@npm:1.3.0":\n  version: 1.3.0\n'
+        )
+        d = tree({"yarn.lock": txt})
+        self.assertEqual(ap.parse_lock(d / "yarn.lock"), [("npm", "@s/x", "1.2.3"), ("npm", "left-pad", "1.3.0")])
+
+    def test_pnpm_v6_and_v9(self):
+        v6 = "lockfileVersion: '6.0'\n\npackages:\n\n  /lodash@4.17.21:\n    resolution: {x}\n  /@s/x@1.2.3(react@18.0.0):\n    dev: true\n"
+        v9 = "lockfileVersion: '9.0'\n\npackages:\n\n  lodash@4.17.21:\n    resolution: {x}\n\n  '@s/x@1.2.3':\n    resolution: {y}\n\nsnapshots:\n\n  lodash@4.17.21: {}\n"
+        d = tree({"a/pnpm-lock.yaml": v6, "b/pnpm-lock.yaml": v9})
+        for sub in ("a", "b"):
+            self.assertEqual(
+                ap.parse_lock(d / sub / "pnpm-lock.yaml"), [("npm", "@s/x", "1.2.3"), ("npm", "lodash", "4.17.21")], sub
+            )
+
+    def test_requirements_pins_only(self):
+        txt = "# c\nrequests==2.32.3\nnumpy>=1.26\npolars == 1.0.0 ; python_version >= '3.10'\n-r base.txt\n-e .\n"
+        d = tree({"requirements-dev.txt": txt})
+        self.assertEqual(
+            ap.parse_lock(d / "requirements-dev.txt"), [("PyPI", "polars", "1.0.0"), ("PyPI", "requests", "2.32.3")]
+        )
+
+    def test_poetry_lock(self):
+        d = tree({"poetry.lock": '[[package]]\nname = "idna"\nversion = "3.7"\n'})
+        self.assertEqual(ap.parse_lock(d / "poetry.lock"), [("PyPI", "idna", "3.7")])
+
+
+class WorkspaceRelease(unittest.TestCase):
+    def test_members_compared_one_by_one(self):
+        d = tree(
+            {
+                "package.json": pj(name="root", private=True),
+                "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+                "packages/a/package.json": pj(name="@s/a", version="0.2.0", exports="./i.js"),
+                "packages/b/package.json": pj(name="@s/b", version="0.1.0", exports="./i.js"),
+                "packages/c/package.json": pj(name="@s/c", version="0.1.0", private=True),
+            }
+        )
+        tags = ["@s/a@0.1.0", "@s/b@0.1.0"]
+        registry = {"@s/a": "0.1.0", "@s/b": "0.1.0"}
+        rows = ap.compare_workspaces(ap.workspace_members(d), registry, tags)
+        by = {r["name"]: r for r in rows}
+        self.assertEqual(sorted(by), ["@s/a", "@s/b"])  # the private member is not published
+        self.assertTrue(any("unreleased work" in m for m in by["@s/a"]["mismatches"]))
+        self.assertEqual(by["@s/b"]["mismatches"], [])  # tag @s/b@0.1.0 matches by name
+
+    def test_unpublished_member_is_reported(self):
+        d = tree(
+            {
+                "package.json": pj(name="r", private=True, workspaces=["pkgs/*"]),
+                "pkgs/x/package.json": pj(name="x", version="1.0.0", main="i.js"),
+            }
+        )
+        rows = ap.compare_workspaces(ap.workspace_members(d), {"x": None}, [])
+        self.assertTrue(any("npm version unavailable" in m for m in rows[0]["mismatches"]))
+
+
+class RUniverse(unittest.TestCase):
+    def test_r_universe_version(self):
+        d = tree({"DESCRIPTION": "Package: hoopR\nVersion: 3.2.0.9000\n"})
+        urls = []
+
+        def fake_json(url, data=None, timeout=30):
+            urls.append(url)
+            return {"Package": "hoopR", "Version": "3.2.0.9000"}
+
+        saved = ap._run, ap._get_json
+        ap._run, ap._get_json = (lambda *a, **k: None), fake_json
+        try:
+            res = ap.probe_release(d, None, None, None, None, runiverse="sportsdataverse")
+        finally:
+            ap._run, ap._get_json = saved
+        self.assertEqual(urls[0], "https://sportsdataverse.r-universe.dev/api/packages/hoopR")
+        self.assertEqual((res["registry"], res["registry_version"]), ("r-universe", "3.2.0.9000"))
+
+
+class FragmentSystems(unittest.TestCase):
+    def test_no_fragment_system_is_said_not_zero_problems(self):
+        res = ap.probe_fragments(tree({"README.md": ""}), None, 3, [])
+        self.assertEqual(res["systems"], [])
+        self.assertIn("no fragment system", ap._md("fragments", res))
+        self.assertNotIn("0 findings", ap._md("fragments", res))
+
+    def test_changesets(self):
+        d = tree(
+            {
+                ".changeset/config.json": "{}",
+                ".changeset/README.md": "x",
+                ".changeset/good-fox.md": '---\n"@s/a": minor\n---\n\nAdd the thing.\n',
+                ".changeset/bad-cat.md": '---\n"@s/a": huge\n---\n\n',
+                ".changeset/no-front.md": "Fix (B-M31)\n",
+            }
+        )
+        res = ap.probe_fragments(d, None, 3, [])
+        self.assertEqual(res["systems"], ["changesets"])
+        probs = {(f["file"], f["problem"]) for f in res["findings"]}
+        self.assertFalse(any(f.endswith("good-fox.md") for f, _ in probs), probs)
+        self.assertIn((".changeset/bad-cat.md", "bump 'huge' for \"@s/a\" is not patch/minor/major"), probs)
+        self.assertIn((".changeset/bad-cat.md", "empty summary"), probs)
+        self.assertIn((".changeset/no-front.md", 'no frontmatter (--- "pkg": bump ---)'), probs)
+        self.assertIn((".changeset/no-front.md", "internal id 'B-M31'"), probs)
+
+    def test_news_md_top_section(self):
+        news = (
+            "<!-- toc -->\n- [**x 1.1.0**](#x)\n\n# **x (development version)**\n\n### **Fixes**\n\n"
+            "* Fixed the loader (#12).\n* Fixed the other thing, see Task 3.1.\n\n# **x 1.0.0**\n\n* old, no ref\n"
+        )
+        res = ap.probe_fragments(tree({"NEWS.md": news}), None, 3, [])
+        self.assertEqual(res["systems"], ["NEWS.md"])
+        self.assertEqual(res["news"]["section"], "# **x (development version)**")
+        self.assertEqual((res["news"]["bullets"], res["news"]["without_ref"]), (2, 1))
+        self.assertEqual([f["problem"] for f in res["findings"]], ["internal id 'Task 3.1'"])
+
+    def test_changelog_d_still_works_and_dir_override(self):
+        d = tree({"changes/x.fixed.md": "- y\n"})
+        res = ap.probe_fragments(d, "changes", 3, ["fixed"])
+        self.assertEqual(res["systems"], ["changes"])
+        self.assertEqual([f["problem"] for f in res["findings"]], ["no PR number"])
+
+
 class DocsSafety(unittest.TestCase):
     """The audit's read-only and hostile-host rules must be stated wherever an auditor reads."""
 
@@ -451,6 +718,29 @@ class DocsSafety(unittest.TestCase):
                 self.assertIn("--frozen", m.group(0), "%s: %s" % (p.name, m.group(0)))
                 if "--invert" in m.group(0):
                     self.assertIn("--package", m.group(0), "%s: %s" % (p.name, m.group(0)))
+
+    def test_every_archetype_documented_in_skill_and_agent(self):
+        for p in (SKILL / "SKILL.md", AGENT):
+            t = self.text(p)
+            for arch in ap.ARCHETYPES:
+                self.assertIn("`%s`" % arch, t, "%s lacks archetype %s" % (p.name, arch))
+
+    def test_db_service_never_touches_production(self):
+        t = self.text(SKILL / "references" / "db-service.md")
+        for needle in ("never connect to a production database", "never run migrations", "names only"):
+            self.assertIn(needle, t.lower() if needle.islower() else t)
+
+    def test_new_references_carry_five_lenses(self):
+        for name in ("js-package.md", "web-app.md", "db-service.md"):
+            t = self.text(SKILL / "references" / name)
+            for lens in (
+                "## 01 contributor-docs",
+                "## 02 companions",
+                "## 03 coverage",
+                "## 04 currency",
+                "## 05 polish",
+            ):
+                self.assertIn(lens, t, "%s lacks %s" % (name, lens))
 
     def test_no_run_every_command(self):
         self.assertNotIn("Run every command", self.text(SKILL / "SKILL.md"))
