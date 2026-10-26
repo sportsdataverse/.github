@@ -187,8 +187,38 @@ WEB_DEPS = {
     "gatsby",
 }
 WEB_CONFIG_RE = re.compile(r"^(?:next|astro|docusaurus|remix|nuxt|gatsby)\.config\.[cm]?[jt]s$")
-API_DEPS_RE = re.compile(r"(?i)[\"'\s,\[](fastapi|flask|uvicorn|starlette|express|fastify|hono|koa)\b")
+API_SERVERS = {"fastapi", "flask", "uvicorn", "starlette", "express", "fastify", "hono", "koa"}
 COMPOSE_RE = re.compile(r"^(?:docker-)?compose(?:\.[\w-]+)?\.ya?ml$")
+CATALOG_RE = re.compile(r"^catalog\.(?:json|ya?ml|toml)$")
+NOT_SERVICE_DIRS = {"tests", "test", "fixtures", "testdata", "inst"}  # SQL here is test data or package data
+
+
+def _py_dependencies(txt):
+    """Distribution names from pyproject `dependencies = [...]`, the optional-dependencies arrays and
+    `[tool.poetry.dependencies]` keys -- never keywords, classifiers or prose."""
+    names = []
+    m = re.search(r"(?ms)^dependencies\s*=\s*\[(.*?)\]", txt)
+    arrays = [m.group(1)] if m else []
+    for sec in re.finditer(r"(?ms)^\[project\.optional-dependencies\]\s*$(.*?)(?=^\[|\Z)", txt):
+        arrays += re.findall(r"(?s)=\s*\[(.*?)\]", sec.group(1))
+    for arr in arrays:
+        names += [re.match(r"[A-Za-z0-9._-]+", s).group(0) for s in re.findall(r"[\"']([A-Za-z0-9][^\"']*)[\"']", arr)]
+    for sec in re.finditer(r"(?ms)^\[tool\.poetry\.dependencies\]\s*$(.*?)(?=^\[|\Z)", txt):
+        names += re.findall(r"(?m)^([A-Za-z0-9._-]+)\s*=", sec.group(1))
+    return {n.lower() for n in names}
+
+
+def _api_server_deps(repo, rel):
+    """API-server packages among a manifest's runtime dependencies."""
+    txt = read_text(repo / rel) or ""
+    if rel.endswith("package.json"):
+        try:
+            deps = set((json.loads(txt).get("dependencies") or {}))
+        except ValueError:
+            deps = set()
+    else:
+        deps = _py_dependencies(txt)
+    return sorted(deps & API_SERVERS)
 
 
 def repo_files(repo, max_depth=4):
@@ -219,23 +249,66 @@ def _published(pkg):
     )
 
 
+def _glob_re(pat):
+    """A workspace glob as a regex on a posix dir path: `*` is one segment, `**` any depth."""
+    pat = pat.strip().strip("'\"").rstrip("/")
+    pat = pat[2:] if pat.startswith("./") else pat
+    out, i = "", 0
+    while i < len(pat):
+        if pat.startswith("**/", i):
+            out, i = out + "(?:.*/)?", i + 3
+        elif pat.startswith("/**", i) and i + 3 == len(pat):
+            out, i = out + "(?:/.*)?", i + 3
+        elif pat.startswith("**", i):
+            out, i = out + ".*", i + 2
+        elif pat[i] == "*":
+            out, i = out + "[^/]*", i + 1
+        elif pat[i] == "?":
+            out, i = out + "[^/]", i + 1
+        else:
+            out, i = out + re.escape(pat[i]), i + 1
+    return re.compile(out + r"\Z")
+
+
+def _pnpm_packages_block(txt):
+    """List items of the top-level `packages:` key only (not onlyBuiltDependencies or catalogs)."""
+    items, inside = [], False
+    for ln in txt.splitlines():
+        if re.match(r"^\S", ln):
+            inside = bool(re.match(r"^packages\s*:", ln))
+            continue
+        m = re.match(r"^\s+-\s*['\"]?([^'\"\s#]+)", ln) if inside else None
+        if m:
+            items.append(m.group(1))
+    return items
+
+
 def workspace_members(repo):
-    """[(dir, package.json dict)] for npm/yarn `workspaces` or pnpm-workspace.yaml `packages:` globs."""
+    """[(dir, package.json dict)] for npm/yarn `workspaces` or pnpm-workspace.yaml `packages:` globs.
+
+    Members are git-tracked `<glob>/package.json` files (a bounded walk outside a checkout), never
+    anything under node_modules, minus `!` exclusions.
+    """
     root = _json(repo / "package.json") or {}
     pats = root.get("workspaces") or []
     if isinstance(pats, dict):  # yarn: {"packages": [...]}
         pats = pats.get("packages") or []
     pw = repo / "pnpm-workspace.yaml"
     if pw.exists():
-        pats = list(pats) + re.findall(r"(?m)^\s*-\s*['\"]?([^'\"\s#]+)", pw.read_text(encoding="utf-8"))
+        pats = list(pats) + _pnpm_packages_block(pw.read_text(encoding="utf-8"))
+    include = [_glob_re(p) for p in pats if not p.startswith("!")]
+    exclude = [_glob_re(p[1:]) for p in pats if p.startswith("!")]
+    if not include:
+        return []
     members = []
-    for pat in pats:
-        if pat.startswith("!"):
+    for f in repo_files(repo, max_depth=8):
+        if not f.endswith("/package.json") or "node_modules" in f.split("/"):
             continue
-        for d in sorted(repo.glob(pat)):
-            pkg = _json(d / "package.json")
+        d = f[: -len("/package.json")]
+        if any(rx.match(d) for rx in include) and not any(rx.match(d) for rx in exclude):
+            pkg = _json(repo / f)
             if pkg is not None:
-                members.append((d, pkg))
+                members.append((repo / d, pkg))
     return members
 
 
@@ -248,9 +321,7 @@ def _web_dir(repo, rel_dir, names):
     if not pkg:
         return False
     deps = set(pkg.get("dependencies") or {}) | set(pkg.get("devDependencies") or {})
-    if deps & WEB_DEPS:
-        return True
-    if "svelte.config.js" in names and "@sveltejs/kit" in deps:
+    if deps & WEB_DEPS:  # WEB_DEPS covers SvelteKit apps too
         return True
     return "vite" in deps and "index.html" in names and not _published(pkg)  # a vite APP, not a vite-built library
 
@@ -291,19 +362,21 @@ def probe_archetype(repo, remote=""):
     for f in files:
         parts = f.split("/")
         base = parts[-1]
+        if NOT_SERVICE_DIRS & set(parts[:-1]) or "node_modules" in parts:
+            continue
         if {"alembic", "migrations"} & set(parts[:-1]) or base.endswith(".sql"):
             sig["db-strong"].append(f)
         elif base.endswith((".service", ".timer")):
             sig["db-strong"].append(f)
-        elif base == "Dockerfile" or COMPOSE_RE.match(base) or base.startswith("catalog") and len(parts) <= 2:
+        elif base == "Dockerfile" or COMPOSE_RE.match(base) or (CATALOG_RE.match(base) and len(parts) <= 2):
             sig["db-weak"].append(f)
         elif base in ("pyproject.toml", "package.json") and len(parts) <= 2:
-            txt = read_text(repo / f) or ""
-            if API_DEPS_RE.search(" " + txt):
-                sig["db-weak"].append("%s (API server dependency)" % f)
-    strong = sig.get("db-strong", [])
-    if strong and (sig.get("db-weak") or len(strong) >= 2):
-        sig["db-service"] = strong[:5] + sig.get("db-weak", [])[:5]
+            servers = _api_server_deps(repo, f)
+            if servers:
+                sig["db-weak"].append("%s (API server dependency: %s)" % (f, ", ".join(servers)))
+    # a service needs both halves: state (migrations, SQL, units) AND a way to serve or run it
+    if sig.get("db-strong") and sig.get("db-weak"):
+        sig["db-service"] = sig["db-strong"][:5] + sig["db-weak"][:5]
     no_root_manifest = not root & {"pyproject.toml", "setup.py", "package.json", "DESCRIPTION"}
 
     ranked = []
@@ -445,18 +518,23 @@ def _npm_latest(name):
 def compare_workspaces(members, registry, tags):
     """Per published workspace member: its version vs npm vs its tags. Pure: unit-tested.
 
-    Monorepo tags name the package (`@scope/pkg@0.1.0`, the changesets form); a member with
-    none of those falls back to plain `v0.1.0` tags.
+    Monorepo tags name the package (`@scope/pkg@0.1.0`, the changesets form). Repo-wide `v0.1.0`
+    tags are never borrowed: in a monorepo they belong to no single member.
     """
     rows = []
-    for _, pkg in members:
+    for d, pkg in members:
         if not _published(pkg):
             continue
         name, local = pkg.get("name"), pkg.get("version")
-        scoped = [t[len(name) + 1 :] for t in tags if t.startswith(name + "@")]
-        mine = scoped or [t for t in tags if re.match(r"v?\d", t)]
+        if not name:
+            rows.append({"name": "(unnamed: %s)" % d, "local": local, "registry": None, "tags": [],
+                         "mismatches": ["package.json has no name: skipped"]})  # fmt: skip
+            continue
+        mine = sorted((t[len(name) + 1 :] for t in tags if t.startswith(name + "@")), key=vkey)
         reg = registry.get(name)
-        mism = compare_release(local, reg, mine, None, None)
+        mism = compare_release(local, reg, mine if mine else None, None, None)
+        if not mine:
+            mism.append("no per-package tags (%s@x.y.z): tags not compared" % name)
         if reg is None:
             mism.append("npm version unavailable (not published, or the registry was unreachable)")
         if local is None:
@@ -548,7 +626,9 @@ def probe_release(repo, owner_repo, pypi, cran, npm, runiverse=None, workspaces=
     if ls is None:
         mism.append("git ls-remote failed: tags not compared")
     result["mismatches"] = mism
-    result["compared"] = bool(reg_name and registry and local and ls is not None)
+    if latest is None:
+        mism.append("GitHub Latest release not compared (gh and the GitHub API both failed, or no GitHub remote)")
+    result["compared"] = bool(reg_name and registry and local and ls is not None and latest is not None)
     return result
 
 
@@ -597,8 +677,9 @@ def lint_changeset(text):
     else:
         for i, ln in enumerate(m.group(1).splitlines(), 2):
             kv = re.match(r"^\s*(.+?)\s*:\s*(\S+)\s*$", ln)
-            if kv and kv.group(2) not in BUMPS:
-                probs.append((i, "bump %r for %s is not patch/minor/major" % (kv.group(2), kv.group(1))))
+            bump = kv.group(2).strip("\"'") if kv else None  # `"@s/a": "minor"` is valid YAML too
+            if kv and bump not in BUMPS:
+                probs.append((i, "bump %r for %s is not patch/minor/major" % (bump, kv.group(1))))
         body = m.group(2)
         if not body.strip():
             probs.append((1, "empty summary"))
@@ -607,14 +688,25 @@ def lint_changeset(text):
     return probs
 
 
+def _is_version_heading(line):
+    return bool(_HEAD_RE.match(line) or re.match(r"^#{1,3}\s.*(?i:development version|unreleased)", line))
+
+
 def news_top_section(text):
-    """(heading, first_line_no, lines) of NEWS.md's first `# ` section (the doctoc TOC above it is skipped)."""
+    """(heading, first_line_no, lines) of NEWS.md's first VERSION section, at whatever heading level
+    (`# pkg 1.0`, `## v1.0` under a `# Changelog` title, `## pkg (development version)`); it ends at the
+    next heading of the same or a higher level. (None, 0, []) when no heading names a version."""
     lines = text.splitlines()
-    starts = [i for i, ln in enumerate(lines) if re.match(r"^# ", ln)]
-    if not starts:
-        return None, 0, []
-    end = starts[1] if len(starts) > 1 else len(lines)
-    return lines[starts[0]], starts[0] + 1, lines[starts[0] + 1 : end]
+    for i, ln in enumerate(lines):
+        if ln.startswith("#") and _is_version_heading(ln):
+            level = len(ln) - len(ln.lstrip("#"))
+            end = next(
+                (j for j in range(i + 1, len(lines))
+                 if re.match(r"^#{1,%d}\s" % level, lines[j])),
+                len(lines),
+            )  # fmt: skip
+            return ln, i + 1, lines[i + 1 : end]
+    return None, 0, []
 
 
 def lint_news(text):
@@ -663,9 +755,13 @@ def probe_fragments(repo, d=None, max_lines=3, groups=()):
                     findings.append({"file": ".changeset/%s" % f.name, "line": line, "problem": prob})
         news = repo / "NEWS.md"
         if news.exists():
-            systems.append("NEWS.md")
-            res["news"], news_findings = lint_news(read_text(news) or "")
-            findings += [{"file": "NEWS.md", "line": i, "problem": p} for i, p in news_findings]
+            summary, news_findings = lint_news(read_text(news) or "")
+            if summary["section"] is None:
+                res["news_unlinted"] = True  # a NEWS.md with no version heading: say so, never "0 bullets"
+            else:
+                systems.append("NEWS.md")
+                res["news"] = summary
+                findings += [{"file": "NEWS.md", "line": i, "problem": p} for i, p in news_findings]
     res.update(systems=systems, findings=findings)
     return res
 
@@ -869,101 +965,158 @@ def probe_counts(root, paths, exclude=()):
 
 
 LOCKFILES = ("uv.lock", "poetry.lock", "renv.lock", "package-lock.json", "yarn.lock", "pnpm-lock.yaml")
-_YARN_SKIP = ("@workspace:", "@patch:", "@link:", "@portal:", "@file:", "@exec:")
-_PNPM_KEY = re.compile(r"^  (?! )['\"]?/?((?:@[^/@\s'\"]+/)?[^@\s'\"(/]+)@([^(:'\"\s]+)")
-_REQ_PIN = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?\s*==\s*([^\s;#,]+)")
+_YARN_WORKSPACE = ("@workspace:", "@patch:", "@portal:", "@link:")  # the repo's own packages: not dependencies
+_NON_REGISTRY = re.compile(r"(?i)^(?:git[+:]|github:|gitlab:|bitbucket:|file:|https?:|link:|portal:|exec:)|#")
+_PNPM_KEY = re.compile(r"^  (?! )['\"]?/?((?:@[^/@\s'\"]+/)?[^@\s'\"(/]+)@([^(\s'\"]+?)(?:\(.*)?['\"]?:\s*(?:\{.*)?$")
+_REQ_PIN = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?\s*={2,3}\s*([^\s;#,]+)")
 
 
-def _spec_name(spec):
-    """'@babel/core@^7.0.0' -> '@babel/core'; '@s/x@npm:^1' -> '@s/x'."""
+def _split_spec(spec):
+    """'@babel/core@^7.0.0' -> ('@babel/core', '^7.0.0'); the range keeps any 'npm:' protocol."""
     spec = spec.strip().strip("\"'")
-    i = spec.rfind("@", 1)
-    return spec[:i] if i > 0 else spec
+    i = spec.find("@", 1)
+    return (spec[:i], spec[i + 1 :]) if i > 0 else (spec, "")
+
+
+def _yarn_target(spec):
+    """(registry name, unchecked?) for one header spec: an `x@npm:real@^1` alias resolves to `real`;
+    git, file, URL and other non-registry ranges cannot be checked against OSV."""
+    name, rng = _split_spec(spec)
+    if rng.startswith("npm:"):
+        rng = rng[4:]
+        if "@" in rng.lstrip("@"):  # alias: npm:<real-name>@<range>
+            name, rng = _split_spec(rng)
+    return name, bool(_NON_REGISTRY.search(rng))
 
 
 def _parse_yarn(txt):
-    out = set()
+    out, unchecked = set(), 0
+    berry = "__metadata:" in txt
     for block in re.split(r"\n\s*\n", txt):
         lines = [ln for ln in block.splitlines() if ln.strip() and not ln.startswith("#")]
         if not lines or lines[0].startswith(" ") or not lines[0].rstrip().endswith(":"):
             continue
         header = lines[0].rstrip()[:-1]
-        if header == "__metadata" or any(s in header for s in _YARN_SKIP):
+        if header == "__metadata" or any(s in header for s in _YARN_WORKSPACE):
             continue
-        ver = next((m.group(1) for ln in lines[1:] for m in [re.match(r'^  version:?\s+"?([^"\s]+)"?', ln)] if m), None)
-        if ver and "use.local" not in ver:
-            for spec in header.split(","):
-                out.add(("npm", _spec_name(spec), ver))
-    return sorted(out)
+        field = {}
+        for ln in lines[1:]:
+            m = re.match(r'^  (version|resolution):?\s+"?([^"]+?)"?\s*$', ln)
+            if m:
+                field[m.group(1)] = m.group(2)
+        ver = field.get("version")
+        if not ver or "use.local" in ver:
+            continue
+        if berry and "resolution" in field:  # resolution names the package actually installed: "string-width@npm:4.2.3"
+            res = field.get("resolution", "")
+            name, rng = _split_spec(res)
+            if rng.startswith("npm:"):
+                out.add(("npm", name, rng[4:] or ver))
+            else:
+                unchecked += 1
+            continue
+        targets = {_yarn_target(s) for s in header.split(",")}
+        if any(bad for _, bad in targets):
+            unchecked += 1
+        for name, bad in targets:
+            if not bad:
+                out.add(("npm", name, ver))
+    return sorted(out), unchecked
 
 
 def _parse_pnpm(txt):
-    out, section = set(), None
+    out, unchecked, section = set(), 0, None
     for ln in txt.splitlines():
         if ln and not ln.startswith(" "):
             section = ln.rstrip(":").strip()
             continue
         if section in ("packages", "snapshots"):
             m = _PNPM_KEY.match(ln)
-            if m:
+            if not m:
+                continue
+            if re.match(r"\d", m.group(2)):
                 out.add(("npm", m.group(1), m.group(2)))
-    return sorted(out)
+            else:  # tarball / git keys: `foo@https://codeload...`
+                unchecked += 1
+    return sorted(out), unchecked
 
 
 def _parse_requirements(txt):
-    """Exact `==` pins only; ranges and `-r`/`-e` lines cannot be checked against one version."""
-    out = set()
+    """Exact `==`/`===` pins only; ranges and `-r`/`-e` lines cannot be checked against one version."""
+    out, unchecked = set(), 0
     for ln in txt.splitlines():
-        m = _REQ_PIN.match(ln.split("#", 1)[0].strip())
+        ln = ln.split("#", 1)[0].strip()
+        if not ln or ln.startswith("-"):
+            continue
+        m = _REQ_PIN.match(ln)
         if m:
             out.add(("PyPI", m.group(1).lower(), m.group(2)))
-    return sorted(out)
+        else:
+            unchecked += 1
+    return sorted(out), unchecked
 
 
-def parse_lock(path: pathlib.Path):
-    """[(ecosystem, name, version)] from any LOCKFILES name or requirements*.txt. Pure-ish: unit-tested."""
+def parse_lock_full(path: pathlib.Path):
+    """([(ecosystem, name, version)], unchecked) from any LOCKFILES name or requirements*.txt.
+
+    `unchecked` counts entries that cannot be looked up by name and version (git, file, URL and tarball
+    specs, unpinned requirements), so a clean OSV result never hides them. Pure-ish: unit-tested.
+    """
     name = path.name
-    is_req = fnmatch.fnmatch(name, "requirements*.txt")
-    if name not in LOCKFILES and not is_req:
+    low = name.lower()  # fnmatchcase on the lowered name: the same answer on Windows and Linux
+    is_req = fnmatch.fnmatchcase(low, "requirements*.txt")
+    if low not in LOCKFILES and not is_req:
         raise ValueError("unsupported lockfile: %s (%s, requirements*.txt)" % (name, ", ".join(LOCKFILES)))
     txt = path.read_text(encoding="utf-8")
     if is_req:
         return _parse_requirements(txt)
-    if name == "yarn.lock":
+    if low == "yarn.lock":
         return _parse_yarn(txt)
-    if name == "pnpm-lock.yaml":
+    if low == "pnpm-lock.yaml":
         return _parse_pnpm(txt)
-    if name in ("uv.lock", "poetry.lock"):
+    if low in ("uv.lock", "poetry.lock"):
         out = []
         for block in re.split(r"(?m)^\[\[package\]\]\s*$", txt)[1:]:
             n = re.search(r'(?m)^name\s*=\s*"([^"]+)"', block)
             v = re.search(r'(?m)^version\s*=\s*"([^"]+)"', block)
             if n and v and "source = { editable" not in block and "source = { virtual" not in block:
                 out.append(("PyPI", n.group(1), v.group(1)))
-        return out
+        return out, 0
     data = json.loads(txt)
-    if name == "renv.lock":
-        return [
+    if low == "renv.lock":
+        pkgs = data.get("Packages", {})
+        out = [
             ("CRAN", k, p.get("Version"))
-            for k, p in data.get("Packages", {}).items()
+            for k, p in pkgs.items()
             if p.get("Version") and p.get("Source", "Repository") in ("Repository", "CRAN")
         ]
-    out = set()  # package-lock.json: v2/v3 "packages" map, v1 nested "dependencies" tree
+        return out, len(pkgs) - len(out)
+    out, unchecked = set(), 0  # package-lock.json: v2/v3 "packages" map, v1 nested "dependencies" tree
     for key, p in (data.get("packages") or {}).items():
         if key and p.get("version") and "node_modules/" in key:
-            out.add(("npm", key.rsplit("node_modules/", 1)[1], p["version"]))
+            if _NON_REGISTRY.search(str(p.get("resolved", ""))) and "registry" not in str(p.get("resolved", "")):
+                unchecked += 1
+            else:
+                out.add(("npm", key.rsplit("node_modules/", 1)[1], p["version"]))
     stack = [data.get("dependencies") or {}]
     while stack:
         for dep, p in stack.pop().items():
             if isinstance(p, dict):
-                if p.get("version") and not str(p["version"]).startswith(("file:", "link:", "git")):
+                if p.get("version") and not _NON_REGISTRY.search(str(p["version"])):
                     out.add(("npm", dep, p["version"]))
+                elif p.get("version"):
+                    unchecked += 1
                 stack.append(p.get("dependencies") or {})
-    return sorted(out)
+    return sorted(out), unchecked
+
+
+def parse_lock(path: pathlib.Path):
+    """[(ecosystem, name, version)]: parse_lock_full without the unchecked count."""
+    return parse_lock_full(path)[0]
 
 
 def probe_osv(lock: pathlib.Path, post=_get_json):
-    pkgs = parse_lock(lock)
+    pkgs, unchecked = parse_lock_full(lock)
     if not pkgs:  # "0 advisories" for a lock nothing was read from is a false all-clear
         raise ValueError("parsed 0 packages from %s: unsupported lock layout or empty lock" % lock)
     vulns = []
@@ -972,7 +1125,7 @@ def probe_osv(lock: pathlib.Path, post=_get_json):
         body = {"queries": [{"package": {"ecosystem": e, "name": n}, "version": v} for e, n, v in chunk]}
         res = post("https://api.osv.dev/v1/querybatch", body)
         if not res or "results" not in res:
-            return {"lockfile": lock.name, "packages": len(pkgs), "error": "OSV unreachable", "vulnerable": []}
+            return {"lockfile": lock.name, "packages": len(pkgs), "unchecked": unchecked, "error": "OSV unreachable", "vulnerable": []}
         for (e, n, v), r in zip(chunk, res["results"]):
             ids = [x["id"] for x in r.get("vulns", [])]
             if ids:
@@ -989,7 +1142,7 @@ def probe_osv(lock: pathlib.Path, post=_get_json):
     for v in vulns:
         v["advisories"] = [dict(id=i, **detail.get(i, {})) for i in v["ids"]]
         del v["ids"]
-    return {"lockfile": lock.name, "packages": len(pkgs), "vulnerable": vulns}
+    return {"lockfile": lock.name, "packages": len(pkgs), "unchecked": unchecked, "vulnerable": vulns}
 
 
 # --------------------------------------------------------------------------- output
@@ -1031,6 +1184,8 @@ def _md(cmd, res):
             lines.append(
                 "Systems: %s. %s. %d findings." % (", ".join(res["systems"]), "; ".join(counts), len(res["findings"]))
             )
+        if cmd == "fragments" and res.get("news_unlinted"):
+            lines.append("NEWS.md: no version section found, not linted.")
         if res["findings"]:
             lines += [
                 "",
@@ -1059,7 +1214,8 @@ def _md(cmd, res):
             lines.append("**%s** (%d packages parsed)" % (res["error"], res["packages"]))
         else:
             lines.append(
-                "%d packages in %s, %d with advisories." % (res["packages"], res["lockfile"], len(res["vulnerable"]))
+                "%d packages in %s, %d with advisories; %d unchecked (git, file, URL or tarball specs, unpinned lines)."
+                % (res["packages"], res["lockfile"], len(res["vulnerable"]), res.get("unchecked", 0))
             )
             lines += ["", "| package | version | advisory | severity | summary |", "|---|---|---|---|---|"]
             for v in res["vulnerable"]:

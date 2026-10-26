@@ -9,6 +9,9 @@ carries it as a secondary.
 - **Never connect to a production database** — not with `psql`, not through the service's
   own CLI, not "read-only". **Never run migrations**, `alembic upgrade`, seed scripts,
   ingest/ETL entry points, or `systemctl` on any host. **Only read from the repo.**
+- **Never `ssh`** to a service host (the droplet included), and never read `/mnt`, `/etc`,
+  `/root` or any other path outside the audited checkout — a runbook's `/mnt/sdv_repos/...` or
+  `/etc/<svc>/<svc>.env` is checked as text in the repo, never opened on a machine.
 - Live checks are limited to public HTTP health or status endpoints **the repo itself
   documents** (`GET /health`, `/status`, a public status page). No authenticated endpoint,
   no write method, no endpoint found by guessing.
@@ -74,6 +77,6 @@ Rank: GitHub landing → the public API docs page → a public status page → r
 |---|---|
 | README header | what the service is, who consumes it, how to run it locally against a local database |
 | Public API docs | the docs page loads, its examples match the routes, no internal hostnames |
-| Leaked internals | `leaks` probe over README, docs, `infra/`, units: droplet IPs, `/root` and `/mnt` paths in public docs, private repo names, credentials in examples |
+| Leaked internals | `leaks README.md docs infra systemd --root "$W" --exclude '*versioned_docs/*' '*.env' '*.pem' '*key*'` (the probe prints each match, so secret-bearing files are never scanned — the same names-only rule as the Safety block): droplet IPs, `/root` and `/mnt` paths in public docs, private repo names, credentials in examples |
 | Repo About box | description, topics; a private service repo says so |
 | Root clutter | tracked `.env`, dumps, logs, `.idea/`, scratch SQL outside the migrations |

@@ -691,6 +691,201 @@ class FragmentSystems(unittest.TestCase):
         self.assertEqual([f["problem"] for f in res["findings"]], ["no PR number"])
 
 
+class ReviewRound3(unittest.TestCase):
+    """The reproduced cases from the aae603e review (scratchpad rv/t.py), one test each."""
+
+    def test_yarn_v1_alias_uses_the_real_name(self):
+        d = tree({"yarn.lock": '"string-width-cjs@npm:string-width@^4.2.0":\n  version "4.2.3"\n\n'})
+        self.assertEqual(ap.parse_lock(d / "yarn.lock"), [("npm", "string-width", "4.2.3")])
+
+    def test_yarn_berry_alias_uses_resolution(self):
+        txt = (
+            "__metadata:\n  version: 6\n\n"
+            '"string-width-cjs@npm:string-width@^4.2.0":\n  version: 4.2.3\n  resolution: "string-width@npm:4.2.3"\n\n'
+        )
+        d = tree({"yarn.lock": txt})
+        self.assertEqual(ap.parse_lock(d / "yarn.lock"), [("npm", "string-width", "4.2.3")])
+
+    def test_yarn_git_and_file_specs_are_unchecked(self):
+        v1 = (
+            'lodash@^4.17.0:\n  version "4.17.21"\n\n'
+            '"mylib@git+https://github.com/o/r.git#abc":\n  version "1.0.0"\n\n'
+            '"local@file:../local":\n  version "0.0.1"\n'
+        )
+        berry = (
+            "__metadata:\n  version: 8\n\n"
+            '"x@github:o/x#abc":\n  version: 1.0.0\n  resolution: "x@https://github.com/o/x.git#commit=abc"\n'
+        )
+        d = tree({"a/yarn.lock": v1, "b/yarn.lock": berry})
+        pkgs, unchecked = ap.parse_lock_full(d / "a" / "yarn.lock")
+        self.assertEqual((pkgs, unchecked), ([("npm", "lodash", "4.17.21")], 2))
+        self.assertEqual(ap.parse_lock_full(d / "b" / "yarn.lock"), ([], 1))
+
+    def test_pnpm_tarball_keys_are_unchecked(self):
+        txt = (
+            "lockfileVersion: '9.0'\npackages:\n  foo@https://codeload.github.com/a/b/tar.gz/abc:\n"
+            "    resolution: {}\n  '@a/b@1.0.0':\n    resolution: {}\n"
+        )
+        d = tree({"pnpm-lock.yaml": txt})
+        self.assertEqual(ap.parse_lock_full(d / "pnpm-lock.yaml"), ([("npm", "@a/b", "1.0.0")], 1))
+
+    def test_requirements_triple_equals(self):
+        d = tree({"requirements.txt": "a===1.0\nB_c==2.0\n"})
+        self.assertEqual(ap.parse_lock(d / "requirements.txt"), [("PyPI", "a", "1.0"), ("PyPI", "b_c", "2.0")])
+
+    def test_requirements_name_is_case_insensitive_everywhere(self):
+        d = tree({"Requirements-Dev.txt": "x==1.0\n"})
+        self.assertEqual(ap.parse_lock(d / "Requirements-Dev.txt"), [("PyPI", "x", "1.0")])
+
+    def test_osv_reports_unchecked(self):
+        d = tree({"pnpm-lock.yaml": "packages:\n  foo@https://x/y.tgz:\n    resolution: {}\n  bar@1.0.0:\n    r: {}\n"})
+        res = ap.probe_osv(d / "pnpm-lock.yaml", post=lambda u, b: {"results": [{} for _ in b["queries"]]})
+        self.assertEqual((res["packages"], res["unchecked"]), (1, 1))
+        self.assertIn("1 unchecked", ap._md("osv", res))
+
+    def _ws_tree(self):
+        return tree(
+            {
+                "package.json": pj(name="r", private=True),
+                "pnpm-workspace.yaml": "packages:\n  - 'packages/**'\n  - '!**/test/**'\nonlyBuiltDependencies:\n  - esbuild\n",
+                "packages/a/package.json": pj(name="@s/a", version="1.0.0", main="i.js"),
+                "packages/a/node_modules/lodash/package.json": pj(name="lodash", version="4.17.21", main="lodash.js"),
+                "packages/a/test/fixture/package.json": pj(name="fixture", version="0.0.1", main="x.js"),
+                "esbuild/package.json": pj(name="not-a-member", version="1.0.0", main="x.js"),
+            }
+        )
+
+    def test_workspace_globs_skip_node_modules_exclusions_and_other_keys(self):
+        d = self._ws_tree()
+        self.assertEqual([p.get("name") for _, p in ap.workspace_members(d)], ["@s/a"])
+        self.assertEqual(ap.probe_archetype(d)["signals"]["js-package"], ["workspace members: @s/a"])
+
+    def test_workspace_star_is_one_level_and_dot_prefix_works(self):
+        d = tree(
+            {
+                "package.json": pj(name="r", private=True, workspaces=["./packages/*"]),
+                "packages/a/package.json": pj(name="a", version="1.0.0", main="i.js"),
+                "packages/a/deep/package.json": pj(name="deep", version="1.0.0", main="i.js"),
+            }
+        )
+        self.assertEqual([p.get("name") for _, p in ap.workspace_members(d)], ["a"])
+
+    def test_workspace_members_are_tracked_files_only(self):
+        d = self._ws_tree()
+        (d / "packages" / "b").mkdir()
+        (d / "packages" / "b" / "package.json").write_text(pj(name="@s/untracked", main="i.js"), encoding="utf-8")
+        for cmd in (
+            ["git", "init", "-q"],
+            ["git", "add", "package.json", "pnpm-workspace.yaml", "packages/a/package.json"],
+        ):
+            subprocess.run(cmd, cwd=d, check=True, capture_output=True)
+        self.assertEqual([p.get("name") for _, p in ap.workspace_members(d)], ["@s/a"])
+
+    def test_sql_fixtures_do_not_make_a_service(self):
+        for files in (
+            {"pyproject.toml": "[project]\nname='x'\n", "tests/fixtures/a.sql": "", "tests/fixtures/b.sql": ""},
+            {"DESCRIPTION": "Package: x\n", "R/a.R": "", "inst/sql/a.sql": "", "inst/sql/b.sql": ""},
+            {"pyproject.toml": "[project]\nname='x'\n", "migrations/001.sql": "", "migrations/002.sql": ""},  # no weak
+        ):
+            res = ap.probe_archetype(tree(files))
+            self.assertNotIn("db-service", [res["primary"]] + res["secondary"], files)
+
+    def test_catalog_and_api_signals_are_strict(self):
+        res = ap.probe_archetype(
+            tree(
+                {
+                    "pyproject.toml": "[project]\nname='x'\nkeywords=['flask']\n",
+                    "docs/catalog.md": "",
+                    "scripts/x.sql": "",
+                }
+            )
+        )
+        self.assertEqual((res["primary"], res["secondary"]), ("python-package", []))
+        self.assertNotIn("db-weak", res["signals"])
+        res = ap.probe_archetype(
+            tree(
+                {
+                    "pyproject.toml": "[project]\nname='x'\ndependencies = [\n  \"fastapi>=0.110\",\n]\n",
+                    "x.sql": "",
+                    "catalog.yaml": "",
+                }
+            )
+        )
+        self.assertEqual(res["primary"], "db-service")
+        self.assertEqual(len(res["signals"]["db-weak"]), 2)
+
+    def test_workspace_tags_are_per_package(self):
+        members = [
+            (None, {"name": "@s/a", "version": "0.2.0", "main": "i"}),
+            (None, {"name": "@s/b", "version": "0.2.0", "main": "i"}),
+        ]
+        rows = ap.compare_workspaces(members, {"@s/a": "0.2.0", "@s/b": "0.1.0"}, ["@s/a@0.2.0", "v0.1.0"])
+        by = {r["name"]: r for r in rows}
+        self.assertEqual(by["@s/a"]["mismatches"], [])
+        self.assertTrue(any("no per-package tags" in m for m in by["@s/b"]["mismatches"]), by["@s/b"])
+        self.assertEqual(by["@s/b"]["tags"], [])
+
+    def test_workspace_member_without_name(self):
+        rows = ap.compare_workspaces([(pathlib.Path("pkgs/x"), {"version": "1.0.0", "main": "i"})], {}, ["v1"])
+        self.assertTrue(any("no name" in m for m in rows[0]["mismatches"]))
+
+    def test_workspace_tags_sorted_by_version(self):
+        members = [(None, {"name": "a", "version": "0.10.0", "main": "i"})]
+        tags = ["a@0.10.0", "a@0.9.0", "a@0.2.0", "a@0.1.0"]
+        self.assertEqual(ap.compare_workspaces(members, {"a": "0.10.0"}, tags)[0]["tags"], ["0.2.0", "0.9.0", "0.10.0"])
+
+    def test_news_with_only_level_two_headings(self):
+        res = ap.probe_fragments(tree({"NEWS.md": "## pkg 1.0.0\n\n* a (#1)\n* b see Task 3.1\n"}), None, 3, [])
+        self.assertEqual((res["news"]["section"], res["news"]["bullets"]), ("## pkg 1.0.0", 2))
+        self.assertEqual([f["problem"] for f in res["findings"]], ["internal id 'Task 3.1'"])
+
+    def test_news_title_then_versions_lints_top_version_only(self):
+        res = ap.probe_fragments(
+            tree({"NEWS.md": "# Changelog\n\n## v2.0.0\n* new\n\n## v1.0.0\n* old\n* older\n"}), None, 3, []
+        )
+        self.assertEqual((res["news"]["section"], res["news"]["bullets"]), ("## v2.0.0", 1))
+
+    def test_news_without_a_version_section_is_not_linted(self):
+        res = ap.probe_fragments(tree({"NEWS.md": "Just prose, no headings.\n"}), None, 3, [])
+        self.assertEqual(res["systems"], [])
+        md = ap._md("fragments", res)
+        self.assertIn("NEWS.md: no version section found, not linted", md)
+        self.assertNotIn("None", md)
+
+    def test_missing_explicit_dir_says_so(self):
+        res = ap.probe_fragments(tree({"README.md": ""}), "changelog.d", 3, [])
+        self.assertIn("--dir changelog.d/ does not exist", ap._md("fragments", res))
+
+    def test_changeset_quoted_bump(self):
+        self.assertEqual(ap.lint_changeset('---\n"@s/a": "minor"\n---\n\nX\n'), [])
+        self.assertEqual(ap.lint_changeset("---\n'@s/a': 'huge'\n---\n\nX\n")[0][1][:10], "bump 'huge")
+
+    def test_latest_release_not_compared(self):
+        def fake_run(cmd, cwd=None, timeout=60):
+            if "ls-remote" in cmd:
+                return "abc\trefs/tags/v1.0.0\n"
+            if "get-url" in cmd:
+                return "https://github.com/o/r.git\n"
+            if "rev-list" in cmd:
+                return "1\n"
+            return None  # gh fails
+
+        saved = ap._run, ap._get_json
+        ap._run = fake_run
+        ap._get_json = lambda url, data=None, timeout=30: {"info": {"version": "1.0.0"}} if "pypi" in url else None
+        try:
+            res = ap.probe_release(tree({"pyproject.toml": '[project]\nversion = "1.0.0"\n'}), None, "x", None, None)
+        finally:
+            ap._run, ap._get_json = saved
+        self.assertTrue(any("GitHub Latest release not compared" in m for m in res["mismatches"]), res["mismatches"])
+        self.assertIn("**Mismatches:** not compared", ap._md("release", res))
+
+    def test_no_dead_svelte_branch(self):
+        import inspect
+
+        self.assertNotIn("svelte.config", inspect.getsource(ap._web_dir))
+
+
 class DocsSafety(unittest.TestCase):
     """The audit's read-only and hostile-host rules must be stated wherever an auditor reads."""
 
@@ -726,9 +921,19 @@ class DocsSafety(unittest.TestCase):
                 self.assertIn("`%s`" % arch, t, "%s lacks archetype %s" % (p.name, arch))
 
     def test_db_service_never_touches_production(self):
-        t = self.text(SKILL / "references" / "db-service.md")
-        for needle in ("never connect to a production database", "never run migrations", "names only"):
-            self.assertIn(needle, t.lower() if needle.islower() else t)
+        t = self.text(SKILL / "references" / "db-service.md").lower()
+        for needle in (
+            "never connect to a production database",
+            "never run migrations",
+            "names only",
+            "never `ssh`",
+            "`/mnt`",
+            "`/etc`",
+        ):
+            self.assertIn(needle, t)
+        leak_line = next(ln for ln in t.splitlines() if "leaks" in ln and "infra" in ln)
+        for ex in ("*.env", "*.pem", "*key*"):
+            self.assertIn(ex, leak_line)
 
     def test_new_references_carry_five_lenses(self):
         for name in ("js-package.md", "web-app.md", "db-service.md"):
