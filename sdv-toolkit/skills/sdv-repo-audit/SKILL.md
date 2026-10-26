@@ -28,6 +28,19 @@ The audit never edits the repo it audits — not a typo, not a dead link. A fix 
 mid-audit becomes a finding. After a batch is confirmed, it lands through `/sdv-ship`
 (branch + PR, codegen regen first in sdv-py).
 
+## Safety — every phase, every auditor
+
+- **Never call stats.nba.com, stats.wnba.com, stats.ncaa.org or Sports Reference** from
+  the audit, directly or through the package (their wrappers, live tests, notebooks). They
+  block datacenter IPs and hang; a claim about them is verified statically.
+- Keep `SDV_PY_LIVE_TESTS` and `SDV_PY_NBA_STATS_LIVE` (and every other live-test toggle)
+  **unset**.
+- Repo code runs only inside `sdv-review-pr`'s `scripts/sandbox.sh` (no network, no
+  secrets), or not at all. Outside it, verify a command statically or with a read-only
+  `--help` / `--check`.
+- `--frozen` on every uv command (`uv run --frozen --no-sync`, `uv tree --frozen`): any uv
+  command without it can re-lock `uv.lock`.
+
 ## Phase 0 — Scope and archetype
 
 ```sh
@@ -43,7 +56,8 @@ python <this-skill-dir>/scripts/audit_probes.py archetype <repo>
 | `web` | `package.json` (sportsdataverse-js, game-on-paper-app, sportsdataverse-web, docs sites) | `references/web.md` |
 | `other` | none (toolkit, papers) | the closer of `web.md` / `python-package.md`; say which |
 
-The rules mirror `hooks/sdv_router.py` `detect()`. A repo instruction file (`CLAUDE.md`,
+These rules are the probe's own (the SessionStart router's archetypes differ: it splits
+`raw`/`data` and has no `web`). A repo instruction file (`CLAUDE.md`,
 `AGENTS.md`, `CONTRIBUTING.md`) that contradicts a reference wins for that repo; record
 the conflict.
 
@@ -55,8 +69,9 @@ Audit one SHA, never a moving checkout:
 
 ```sh
 git -C <repo> fetch origin main
-git -C <repo> worktree add --detach .worktrees/audit-main origin/main   # read-only by convention
-git -C <repo>/.worktrees/audit-main rev-parse --short HEAD               # goes in every report header
+SHA=$(git -C <repo> rev-parse --short origin/main)                      # goes in every report header
+W=<repo>/.worktrees/audit-$(date +%Y%m%d)-$SHA                           # unique per audit: no collision with another session's
+git -C <repo> worktree add --detach "$W" "$SHA"                          # read-only by convention
 ```
 
 Without a local checkout, export with `git archive` or audit over `gh api` (slower; say
@@ -76,13 +91,19 @@ Run these once, in the audit worktree, before dispatching; write each to
 `<report-dir>/probes/<name>.md` and hand the paths to the auditors. Probe hits are
 **leads**: each becomes a finding only after a human-readable check of the line.
 
+Substitute before running: pick **one** registry flag for `release` and **one** lockfile
+for `osv` (the alternatives are listed in the comments), and drop the `fragments` line in
+repos without `changelog.d/`. A probe that exits 2 (a missing path, a lockfile with 0
+packages) is a probe failure to fix, never an empty result.
+
 ```sh
-P=<this-skill-dir>/scripts/audit_probes.py; W=<repo>/.worktrees/audit-main; O=<report-dir>/probes
-python $P release   $W --pypi <dist> | --cran <pkg> | --npm <pkg>   > $O/release.md
-python $P fragments $W [--dir changelog.d --max-lines 3]            > $O/fragments.md   # repos with fragments
-python $P leaks     --root $W [--private <extra names>]             > $O/leaks.md
-python $P counts    --root $W                                       > $O/counts.md
-python $P osv       $W/uv.lock | renv.lock | package-lock.json      > $O/osv.md
+P=<this-skill-dir>/scripts/audit_probes.py; O="<report-dir>/probes"   # W and SHA from Phase 1
+mkdir -p "$O"
+python "$P" release   "$W" --pypi <dist>            > "$O/release.md"   # or: --cran <pkg> / --npm <pkg>
+python "$P" fragments "$W"                          > "$O/fragments.md" # options: --dir changelog.d --max-lines 3
+python "$P" leaks     --root "$W"                   > "$O/leaks.md"     # option: --private <extra names>
+python "$P" counts    --root "$W"                   > "$O/counts.md"
+python "$P" osv       "$W/uv.lock"                  > "$O/osv.md"       # or: "$W/renv.lock" / "$W/package-lock.json"
 ```
 
 | Probe | Checks | Known blind spots |
@@ -91,7 +112,7 @@ python $P osv       $W/uv.lock | renv.lock | package-lock.json      > $O/osv.md
 | `fragments` | `<slug>.<group>.md` names, final newline, one PR number per bullet, ≤ N lines, internal ids (`B-M31`, `R828-4`, `Task 3.1`, `phase 5`) | whether the **Area:** lead and wording match the house contract |
 | `leaks` | tracked public files only: local/server paths, non-placeholder IPs, internal ids, agent notes (`ponytail:`, `.superpowers/`), `dev/*.md` citations, private repo names (`sdv-internal-refs`, `ClaudeCowork`, …) | rendered pages built from docstrings (grep the built site or the docstrings too); images; deliberate provenance registers |
 | `counts` | every "N <noun>" claim in hand-written docs, grouped by noun | context: "128 wrappers" (one stem) and "4,566 wrappers" (all ESPN) can both be right — measure each |
-| `osv` | every locked package against OSV, with severity | whether the package reaches runtime (`uv tree --invert <pkg>`; extras/dev only is lower) |
+| `osv` | every locked package against OSV, with severity | whether the package reaches runtime (`uv tree --frozen --invert --package <pkg>`; extras/dev only is lower) |
 
 ## Phase 3 — Dispatch the five lenses
 
@@ -121,8 +142,12 @@ questions: <the user's questions this lens answers, verbatim>
 When subagents are unavailable, read `<this-skill-dir>/../../agents/sdv-repo-auditor.md`
 and run each lens inline, one after another, writing the same files.
 
-Wait for every auditor to **report** before touching the audit worktree. Then remove it:
-`git -C <repo> worktree remove .worktrees/audit-main`.
+The five lenses are the whole agent budget: no lens starts a sixth agent. A producer's
+per-tag surface check applies `sdv-dataset-coverage-auditor`'s definition **inline**
+inside lens 02 (`references/producer.md`). Run that agent separately only after the
+five lenses have reported.
+
+Keep `W` until Phase 5 is done: verification reruns commands against it.
 
 ## Phase 4 — Verify the reports
 
@@ -171,13 +196,17 @@ Rules for the table and the batches:
 In the terminal: the Answers table, the batch list, and the report path. Ask which
 batch to start; each one is a separate tier-1 confirmation.
 
+Only now, with every auditor reported and the synthesis written, remove the audit
+worktree: `git -C <repo> worktree remove "$W"`. Then compare the main checkout's
+`git status --short` and lock hash with the Phase 1 notes.
+
 ## Red flags — what the audit exists to catch
 
 | Thought | Reality |
 |---|---|
 | "The CHANGELOG has a 0.1.5 section, so 0.1.5 shipped" | sdv-py's did not: no tag, no GitHub Release, PyPI at 0.1.4, 789 commits behind. Check the registry. |
 | "The README is hand-written, so someone keeps it current" | It covered 50 of 105 leagues. Compare against the registry, not against memory. |
-| "The template field must work, people fill it in" | The bug template asked for `sportsdataverse.__version__`, which does not exist. Run every command a template or doc asks for. |
+| "The template field must work, people fill it in" | The bug template asked for `sportsdataverse.__version__`, which does not exist. Verify each command a template or doc asks for statically (the symbol, flag or file exists at the SHA) or with a read-only `--help` / `--check`. |
 | "The extra is called `[sdvplot]`, so it installs plotting" | It installed no matplotlib or sportypy; every plotting notebook's first import failed. Read what each extra resolves to. |
 | "Counts in docs are roughly right" | Three files quoted three package sizes. Measure by importing the package from the audit tree (assert `__file__`). |
 | "Docstrings are code, not public content" | They render: `ponytail:` notes, `sdv-internal-refs` paths and `Task 3.1` ids reached the live reference pages. |

@@ -5,11 +5,24 @@ counts by importing the package **from the audit tree**, never the editable inst
 the main checkout:
 
 ```sh
-cd <W> && PYTHONPATH=<W> uv run --frozen --no-sync python -c "import sportsdataverse as s, pathlib; assert pathlib.Path(s.__file__).resolve().is_relative_to(pathlib.Path('<W>').resolve()); ..."
+cd <W> && PYTHONPATH=<W> uv run --frozen --no-sync python -c "import <import_name> as s, pathlib; assert pathlib.Path(s.__file__).resolve().is_relative_to(pathlib.Path('<W>').resolve()); ..."
 ```
 
-`uv run` without `--no-sync` can re-lock or strip extras; check `git status` in the main
-checkout afterwards.
+- `<import_name>` is the audited package's import name (`sportsdataverse` for sdv-py),
+  not its distribution name.
+- `--no-sync` installs nothing: the environment must already hold the package's
+  dependencies. Use an existing venv built from the same lock (sdv-py's `.venv`), never one
+  where the main checkout is installed editable — the assert catches that case. Without a
+  suitable venv, measure statically (parse `__all__`, the registries) and say so.
+- In a `src/` layout put `<W>/src` on `PYTHONPATH`, not `<W>`.
+- `uv run` without `--frozen --no-sync` can re-lock or strip extras; check `git status`
+  in the main checkout afterwards.
+
+**Safety:** never call stats.nba.com, stats.wnba.com, stats.ncaa.org or Sports Reference
+(no `nba_stats_*` / `ncaa_*` wrapper calls, live tests or notebooks); keep
+`SDV_PY_LIVE_TESTS` and `SDV_PY_NBA_STATS_LIVE` unset; run repo code only inside
+`sdv-review-pr`'s `scripts/sandbox.sh` or not at all (an import with no network side
+effects is the one exception above); `--frozen` on every uv command.
 
 ## 01 contributor-docs
 
@@ -24,7 +37,7 @@ Check every concrete claim; list the ones that held under "Verified accurate".
 |---|---|
 | Counts (wrappers, loaders, families, parsers, leagues) | import + `len(__all__)` / `dir()` / registry parse; quote the command |
 | Module paths, scripts, workflows, test files, private helpers named in prose | `test -e` / `git ls-files` at the SHA; grep the symbol |
-| Commands (`uv run …`, `python tools/…`, `--check`) | run them read-only (`--help`, `--check`, dry-run) in the audit tree |
+| Commands (`uv run …`, `python tools/…`, `--check`) | verify statically (the script, flag or target exists at the SHA) or with a read-only `--help` / `--check`; anything else only inside `sandbox.sh` |
 | Env vars | grep the code for the exact name (`SDV_PY_*`); a documented var nothing reads is wrong |
 | Version, `requires-python`, classifiers, extras, dependency floors | `pyproject.toml`; extras vs the docs' extras list; `[all]` composition |
 | "Newest release", "since X", "removed in X" | against the `release` probe; deprecation windows against the stated policy (sdv-py: two minors) and `removed_in=` in code |
@@ -92,8 +105,8 @@ latest release (sdvplot's `sportsdataverse.euroleague` against a `>=0.1.4` pin).
 |---|---|
 | Release | `release` probe (`--pypi <dist>`); `gh api repos/o/r/releases?per_page=10`; publish workflow trigger (`python-publish.yml` on `release: published`) and its last run |
 | Unreleased | fragment counts by group (breaking count → migration notes needed); commits since the registry tag |
-| Outdated deps | `uv tree --outdated --depth 1` (in the audit tree, `--frozen`); direct deps only unless a transitive one has an advisory |
-| Advisories | `osv` probe on `uv.lock`; for each hit `uv tree --invert --package <pkg>` → runtime, extra, or dev; Dependabot alerts on? (`gh api repos/o/r/vulnerability-alerts -i` → 204 on, 404 off) |
+| Outdated deps | `uv tree --frozen --outdated --depth 1` (in the audit tree); direct deps only unless a transitive one has an advisory |
+| Advisories | `osv` probe on `uv.lock`; for each hit `uv tree --frozen --invert --package <pkg>` → runtime, extra, or dev; Dependabot alerts on? (`gh api repos/o/r/vulnerability-alerts -i` → 204 on, 404 off) |
 | Docs MCP index **[sdv-py]** | `gh release view docs-index --json assets` asset `updatedAt` vs the merge time; download `manifest_v1.json`, compare `sdv_py_commit` to the SHA; `SCHEMA_VERSION` vs the hard-coded names in `docs-index.yml` |
 | Site search / llms.txt | search plugin version vs npm latest; built at deploy? gh-pages head commit vs the SHA; live `Last-Modified`; `llms.txt` contains a recently added module |
 | CI on main | `gh run list --branch main --limit 30 --json name,conclusion,headSha,event`; anything not success at the SHA |

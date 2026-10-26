@@ -5,6 +5,12 @@ seasons and schedules, and "currency" means the published assets. Producers comm
 straight to `main`; fixes still go through a confirmed batch. Never run a stage, a
 scrape, or a publish entry point to measure something: read the assets instead.
 
+**Safety:** never call stats.nba.com, stats.wnba.com, stats.ncaa.org or Sports Reference
+(the stats-raw and ncaa producers scrape them; read their committed JSON and release
+assets instead); keep `SDV_PY_LIVE_TESTS` and `SDV_PY_NBA_STATS_LIVE` unset; run repo
+code only inside `sdv-review-pr`'s `scripts/sandbox.sh` (no network, no secrets) or not
+at all; `--frozen` on every uv command (`uv tree --frozen`, `uv run --frozen --no-sync`).
+
 ## 01 contributor-docs
 
 **Files:** `README.md`, `CLAUDE.md`, `AGENTS.md`, runbook docs (`docs/`, `RUNBOOK.md`),
@@ -24,9 +30,10 @@ scrape, or a publish entry point to measure something: read the assets instead.
 ## 02 companions
 
 The consumers of this producer's tags: sdv-py `load_*` loaders, the R package's `load_*`,
-sdv-db catalog rows, GOP pages. **Dispatch `sdv-dataset-coverage-auditor` for the
-per-tag surface check instead of re-deriving it**; this lens only records its verdict
-per tag and checks:
+sdv-db catalog rows, GOP pages. For the per-tag surface check, **read
+`agents/sdv-dataset-coverage-auditor.md` and apply its surface list inline** instead of
+re-deriving it — do not start it as a sixth agent; the five lenses already fill the
+budget, and the auditor has no agent tool. Record its verdict per tag, then check:
 
 | Check | How |
 |---|---|
@@ -49,7 +56,7 @@ per tag and checks:
 
 | Area | Commands |
 |---|---|
-| Last publish per tag | `gh release view <tag> --json assets --jq '[.assets[].updatedAt]|max'` vs the stated schedule; in-season staleness beyond one cycle is a finding |
+| Last publish per tag | `gh release view <tag> --json assets --jq '[.assets[].updatedAt]\|max'` vs the stated schedule; in-season staleness beyond one cycle is a finding |
 | Scheduled runs | `gh run list --workflow <wf>.yml --limit 10` for each scheduled workflow; green-but-empty runs (success with no asset change) are the classic producer defect |
 | Droplet jobs | runbook-stated timers vs what the last asset timestamps imply (read-only; no ssh writes) |
 | Lock | `osv` probe on `uv.lock`; sdv-py rev age (`git -C <sdv-py> log -1 --format=%ci <rev>`) |
@@ -62,4 +69,4 @@ per tag and checks:
 | README header | one line on what is published, where, how often; badges resolve |
 | Repo About box | description and topics (`gh repo view o/r --json description,repositoryTopics`) |
 | Leaked internals | `leaks` probe on README/docs only. `/mnt/sdv_repos` and droplet paths are legitimate in a runbook marked maintainers-only; flag them in the README, and flag droplet IPs anywhere |
-| Root clutter | committed large files (`git ls-files -z | xargs -0 du -k | sort -n | tail`), stray logs, notebooks with outputs, tracked files under ignored dirs (`git ls-files -ci --exclude-standard`) |
+| Root clutter | committed large files (`git ls-files -z \| xargs -0 du -k \| sort -n \| tail`), stray logs, notebooks with outputs, tracked files under ignored dirs (`git ls-files -ci --exclude-standard`) |

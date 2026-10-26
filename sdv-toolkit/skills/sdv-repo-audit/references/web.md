@@ -3,6 +3,13 @@
 Read-only: no `npm install` in the main checkout (it rewrites the lock); if a build or
 script must run, install in a throwaway copy with `npm ci`. Never trigger a deploy.
 
+**Safety:** never call stats.nba.com, stats.wnba.com, stats.ncaa.org or Sports Reference
+(GOP and sdv-js pages that proxy them are checked from their code and the deployed
+static output, not by hitting the source); keep `SDV_PY_LIVE_TESTS` and
+`SDV_PY_NBA_STATS_LIVE` unset; run repo code (builds, tests, scripts) only inside
+`sdv-review-pr`'s `scripts/sandbox.sh` (no network, no secrets) or not at all;
+`--frozen` on any uv command a Python helper needs.
+
 ## 01 contributor-docs
 
 **Files:** `README.md` (root and per-package in a monorepo), `CONTRIBUTING.md`, `CLAUDE.md`,

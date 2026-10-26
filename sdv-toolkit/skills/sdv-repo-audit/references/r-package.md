@@ -1,9 +1,17 @@
 # R package lenses (cfbfastR, hoopR, wehoop, baseballr, fastRhockey, oddsapiR, cfbplotR, sdvplotR, …)
 
-Run R read-only in the audit tree: `Rscript -e 'pkgload::load_all("<W>", quiet = TRUE); …'`.
+Make a throwaway copy first and run every R call against it, never against `<W>` or the
+main checkout: `git -C <W> archive HEAD | tar -x -C <copy>`. `pkgload::load_all()`
+compiles `src/` (C, C++, Fortran) into the tree it loads, and `devtools::document()` /
+`pkgdown::build_site()` write, so `Rscript -e 'pkgload::load_all("<copy>", quiet = TRUE); …'`.
 Several R installs exist; pick the version the repo's CI uses (`Rscript --version`).
-Anything that writes (`devtools::document()`, `pkgdown::build_site()`) runs only in a
-throwaway copy (`git -C <W> archive HEAD | tar -x -C <tmp>`), never in the main checkout.
+
+**Safety:** never call stats.nba.com, stats.wnba.com, stats.ncaa.org or Sports Reference
+(no live loaders, examples or vignettes that fetch them; `\donttest{}` examples stay
+unrun); keep `SDV_PY_LIVE_TESTS`, `SDV_PY_NBA_STATS_LIVE` and the package's own live-test
+toggles unset (`NOT_CRAN` unset too, so `skip_on_cran()` tests skip); run tests or
+examples only inside `sdv-review-pr`'s `scripts/sandbox.sh` (no network, no secrets) or
+not at all; `--frozen` on any uv command a Python helper needs.
 General R concerns route to `sdv-r-reviewer`'s upstream skills; this audit owns the
 claims, coverage and currency.
 
@@ -64,7 +72,7 @@ companions: the matching `*-data` release repos and `sportsdataverse-py` for par
 |---|---|
 | Release | `release` probe (`--cran <pkg>`); dev version `x.y.z.9000` between releases is normal, so weigh commits since the tag |
 | CRAN health | WebFetch `https://cran.r-project.org/web/checks/check_results_<pkg>.html`: any ERROR/WARN flavor, a deadline notice |
-| Outdated deps | `Rscript -e 'remotes::package_deps("<W>")'`; floors in `DESCRIPTION` far below what CI installs mean the floor is untested |
+| Outdated deps | `Rscript -e 'remotes::dev_package_deps("<copy>")'` (takes a source directory; `package_deps()` takes package names); floors in `DESCRIPTION` far below what CI installs mean the floor is untested |
 | Advisories | `osv` probe on `renv.lock` when one exists; otherwise say "no lock, n/a" |
 | CI on main | R-CMD-check, test-coverage, pkgdown workflows at the SHA; pkgdown deploys only on push to main, so check its last run and the gh-pages head |
 | Crons | every `schedule:` workflow's last 5 runs |

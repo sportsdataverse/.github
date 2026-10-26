@@ -13,8 +13,10 @@ decides what a probe hit means.
     python audit_probes.py osv       LOCKFILE
 
 Network (release, osv) is read-only GETs/POSTs to public registries plus
-`git ls-remote` and `gh release list`; an unreachable source is reported as
-`unavailable`, never guessed.
+`git ls-remote` and `gh api` GETs; an unreachable source is reported as
+`unavailable`, never guessed, and a source never compared is reported as
+`not compared`, never `none`. Explicit PATHs resolve against --root; a missing
+path, or a lockfile with 0 packages, is an error (exit 2).
 """
 
 import argparse
@@ -72,7 +74,15 @@ BINARY_EXT = {
 def _run(cmd, cwd=None, timeout=60):
     try:
         out = subprocess.run(
-            cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout, encoding="utf-8", errors="replace"
+            cmd,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,  # never wait on a credential or pager prompt
+            env=dict(os.environ, GIT_TERMINAL_PROMPT="0"),
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
@@ -105,9 +115,12 @@ def _get_text(url, timeout=30):
 
 
 def vkey(v):
-    """Sortable key for a version string: '0.1.10' > '0.1.9'; non-numeric parts sort low."""
+    """Sortable key for a version string: '0.1.10' > '0.1.9', '1.0' == '1.0.0'; non-numeric parts sort low."""
     parts = re.split(r"[.\-+]", (v or "").lstrip("vV"))
-    return tuple((int(p), "") if p.isdigit() else (-1, p) for p in parts)
+    key = [(int(p), "") if p.isdigit() else (-1, p) for p in parts]
+    while len(key) > 1 and key[-1] == (0, ""):
+        key.pop()
+    return tuple(key)
 
 
 def iter_text_files(paths):
@@ -148,7 +161,8 @@ def _rel(fp, root):
 
 
 def detect_archetype(repo: pathlib.Path, remote: str = "") -> str:
-    """sdv-py | r-package | producer | web | other. Mirrors hooks/sdv_router.py detect()."""
+    """sdv-py | python-package | r-package | producer | web | other, from files on disk and the remote name."""
+    repo = pathlib.Path(repo).resolve()  # Path(".").name is ""
     name = remote.rstrip("/").rsplit("/", 1)[-1]
     name = name[:-4] if name.endswith(".git") else name
     if (repo / "tools" / "codegen" / "generate.py").exists():
@@ -323,22 +337,31 @@ def probe_release(repo, owner_repo, pypi, cran, npm):
         "github_latest_release": latest if latest is not None else "unavailable",
         "changelog_newest_heading": "development version" if head_dev else head,
         "changelog_file": head_file,
-        "commits_since_registry_tag": ("%s: %s" % (base_tag, since.strip())) if since else None,
+        "commits_since_registry_tag": (
+            "%s: %s" % (base_tag, since.strip() if since and since.strip().isdigit() else "unavailable")
+            if base_tag
+            else None
+        ),
         "unreleased_fragments": count_fragments(repo),
     }
-    result["mismatches"] = compare_release(
-        local, registry, tags if ls is not None else None, latest, None if head_dev else head
-    )
-    if reg_name and registry is None:
-        result["mismatches"].append(
-            "%s version unavailable (not published, or the registry was unreachable)" % reg_name
-        )
+    mism = compare_release(local, registry, tags if ls is not None else None, latest, None if head_dev else head)
+    # every source that was NOT compared is a finding of its own, so "none" can only mean "all compared, all agree"
+    if not reg_name:
+        mism.append("no registry compared: pass --pypi, --cran or --npm")
+    elif registry is None:
+        mism.append("%s version unavailable (not published, or the registry was unreachable)" % reg_name)
+    if local is None:
+        mism.append("local version unreadable (no [project] version, DESCRIPTION Version or package.json version)")
+    if ls is None:
+        mism.append("git ls-remote failed: tags not compared")
+    result["mismatches"] = mism
+    result["compared"] = bool(reg_name and registry and local and ls is not None)
     return result
 
 
 # --------------------------------------------------------------------------- fragments
 
-INTERNAL_ID_RE = re.compile(r"\b[A-Z]{1,2}-[LM]\d+\b|\bR\d{3,}-\d+\b|\b[Tt]ask \d+(?:\.\d+)*\b|\bphase ?\d+[a-z]?\b")
+INTERNAL_ID_RE = re.compile(r"\b[A-Z]{1,2}-[LM]\d+\b|\bR\d{3,}-\d+\b|\b[Tt]ask \d+(?:\.\d+)*\b|\b[Pp]hase ?\d+[a-z]?\b")
 PR_RE = re.compile(r"#\d+|/pull/\d+")
 
 
@@ -415,6 +438,8 @@ _IP_OK = re.compile(
     r"|172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+|192\.0\.2\.\d+|198\.51\.100\.\d+|203\.0\.113\.\d+"
     r"|1\.2\.3\.4|1\.1\.1\.1|8\.8\.8\.8|8\.8\.4\.4)$"
 )
+# a four-part version, not an address: only when a version marker sits IMMEDIATELY before the token
+_VERSION_MARKER = re.compile(r"(?i)(?:\bv|==|>=|<=|~=|\bversion\s)\s*$")
 
 
 def scan_leaks(text, private):
@@ -427,9 +452,7 @@ def scan_leaks(text, private):
         for kind, rx in pats:
             for m in rx.finditer(line):
                 tok = m.group(0)
-                if kind == "ip-address" and (
-                    _IP_OK.match(tok) or re.search(r"\d+\.\d+\.\d+\.\d+\s*[-<>=]|version|v\d", line, re.I)
-                ):
+                if kind == "ip-address" and (_IP_OK.match(tok) or _VERSION_MARKER.search(line[: m.start()])):
                     continue
                 hits.append((i, kind, tok))
     return hits
@@ -474,8 +497,19 @@ def _skip(fp, root, exclude, tracked):
     return excluded(fp, root, exclude) or (tracked is not None and _rel(fp, root) not in tracked)
 
 
+def resolve_paths(root, paths, defaults):
+    """Explicit paths resolve against root (not cwd) and must exist; no paths -> the defaults present."""
+    if not paths:
+        return [root / p for p in defaults if (root / p).exists()]
+    out = [pathlib.Path(p) if pathlib.Path(p).is_absolute() else root / p for p in paths]
+    missing = [str(p) for p in out if not p.exists()]
+    if missing:
+        raise ValueError("path not found under --root %s: %s" % (root, ", ".join(missing)))
+    return out
+
+
 def probe_leaks(root, paths, private, exclude=()):
-    paths = paths or [root / p for p in DEFAULT_PUBLIC if (root / p).exists()]
+    paths = resolve_paths(root, paths, DEFAULT_PUBLIC)
     tracked = tracked_files(root)
     by_kind = collections.Counter()
     findings = []
@@ -515,17 +549,16 @@ def find_counts(text):
         if in_fence:
             continue
         for m in COUNT_RE.finditer(line):
-            n = int(m.group(2).replace(",", ""))
-            if n < 2 or 1900 <= n <= 2100:
+            raw = m.group(2)
+            n = int(raw.replace(",", ""))
+            if n < 2 or ("," not in raw and len(raw) == 4 and 1900 <= n <= 2100):  # bare years only
                 continue
             out.append((i, n, m.group(4).lower(), line.strip()[:160]))
     return out
 
 
 def probe_counts(root, paths, exclude=()):
-    paths = paths or [root / p for p in DEFAULT_PUBLIC if (root / p).exists()] + [
-        root / p for p in ("CLAUDE.md", "AGENTS.md") if (root / p).exists()
-    ]
+    paths = resolve_paths(root, paths, DEFAULT_PUBLIC + ["CLAUDE.md", "AGENTS.md"])
     tracked = tracked_files(root)
     by_noun = collections.defaultdict(list)
     for fp in iter_text_files(paths):
@@ -564,8 +597,10 @@ def probe_counts(root, paths, exclude=()):
 
 def parse_lock(path: pathlib.Path):
     """[(ecosystem, name, version)] from uv.lock, poetry.lock, renv.lock, or package-lock.json. Pure-ish: unit-tested."""
-    txt = path.read_text(encoding="utf-8")
     name = path.name
+    if name not in ("uv.lock", "poetry.lock", "renv.lock", "package-lock.json"):
+        raise ValueError("unsupported lockfile: %s (uv.lock, poetry.lock, renv.lock, package-lock.json)" % name)
+    txt = path.read_text(encoding="utf-8")
     if name in ("uv.lock", "poetry.lock"):
         out = []
         for block in re.split(r"(?m)^\[\[package\]\]\s*$", txt)[1:]:
@@ -581,17 +616,24 @@ def parse_lock(path: pathlib.Path):
             for k, p in data.get("Packages", {}).items()
             if p.get("Version") and p.get("Source", "Repository") in ("Repository", "CRAN")
         ]
-    if name == "package-lock.json":
-        out = set()
-        for key, p in (data.get("packages") or {}).items():
-            if key and p.get("version") and "node_modules/" in key:
-                out.add(("npm", key.rsplit("node_modules/", 1)[1], p["version"]))
-        return sorted(out)
-    raise ValueError("unsupported lockfile: %s" % name)
+    out = set()  # package-lock.json: v2/v3 "packages" map, v1 nested "dependencies" tree
+    for key, p in (data.get("packages") or {}).items():
+        if key and p.get("version") and "node_modules/" in key:
+            out.add(("npm", key.rsplit("node_modules/", 1)[1], p["version"]))
+    stack = [data.get("dependencies") or {}]
+    while stack:
+        for dep, p in stack.pop().items():
+            if isinstance(p, dict):
+                if p.get("version") and not str(p["version"]).startswith(("file:", "link:", "git")):
+                    out.add(("npm", dep, p["version"]))
+                stack.append(p.get("dependencies") or {})
+    return sorted(out)
 
 
 def probe_osv(lock: pathlib.Path, post=_get_json):
     pkgs = parse_lock(lock)
+    if not pkgs:  # "0 advisories" for a lock nothing was read from is a false all-clear
+        raise ValueError("parsed 0 packages from %s: unsupported lock layout or empty lock" % lock)
     vulns = []
     for i in range(0, len(pkgs), 500):
         chunk = pkgs[i : i + 500]
@@ -625,9 +667,10 @@ def _md(cmd, res):
     lines = ["## probe: %s" % cmd, ""]
     if cmd == "release":
         for k, v in res.items():
-            if k != "mismatches":
+            if k not in ("mismatches", "compared"):
                 lines.append("- **%s**: `%s`" % (k, v))
-        lines += ["", "**Mismatches:** " + ("none" if not res["mismatches"] else "")]
+        verdict = "" if res["mismatches"] and res["compared"] else ("none" if res["compared"] else "not compared")
+        lines += ["", "**Mismatches:** " + verdict]
         lines += ["- " + m for m in res["mismatches"]]
     elif cmd in ("fragments", "leaks"):
         if cmd == "leaks":

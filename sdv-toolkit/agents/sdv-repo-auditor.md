@@ -41,8 +41,15 @@ in the report header; if `lens` is missing, stop and ask — do not run all five
    points (`--help`, `--check`, an import). Not allowed: anything that writes the repo,
    its lock or its venv (`uv sync`, `uv lock`, `npm install`, `devtools::document()`),
    publishes, pushes, comments, labels, or triggers a workflow. `uv run` must be
-   `uv run --frozen --no-sync`. Never print a secret; never read `.Renviron` or `.env`.
-6. **Keep it bounded.** Sample live pages (the nav, the home page, one page per
+   `uv run --frozen --no-sync`, and a dependency tree is `uv tree --frozen …`. Never print a secret;
+   never read `.Renviron` or `.env`.
+6. **Hostile hosts and live code.** Never call stats.nba.com, stats.wnba.com,
+   stats.ncaa.org or Sports Reference — not directly, not through a package wrapper,
+   test or notebook; they block datacenter IPs and hang. Keep `SDV_PY_LIVE_TESTS`,
+   `SDV_PY_NBA_STATS_LIVE` and every other live-test toggle unset. Repo code beyond an
+   import and `--help`/`--check` runs only inside `sdv-review-pr`'s `scripts/sandbox.sh`
+   (no network, no secrets), or not at all: verify the claim statically instead.
+7. **Keep it bounded.** Sample live pages (the nav, the home page, one page per
    template), don't crawl the site. Redirect large command output to a file in your
    scratch space and quote only the decisive lines.
 
