@@ -533,6 +533,45 @@
         "venue",
         "all"
       ]
+    },
+    {
+      "name": "sdv-repo-audit",
+      "kind": "skill",
+      "purpose": "Read-only whole-repo audit at one commit: five parallel lenses (contributor docs vs code, companion integration, front-page coverage vs registries, release/deps/OSV/CI currency, public polish), mechanical probes, a verdict table and cleanup in PR-sized batches; every fix batch needs confirmation.",
+      "archetypes": [
+        "all"
+      ],
+      "phases": [
+        "scope-archetype",
+        "pin-commit",
+        "probes",
+        "dispatch-lenses",
+        "verify",
+        "synthesize"
+      ],
+      "dispatches": [
+        "sdv-repo-auditor",
+        "sdv-dataset-coverage-auditor"
+      ],
+      "hands_off_to": [
+        "sdv-ship",
+        "sdv-learn"
+      ]
+    },
+    {
+      "name": "sdv-repo-auditor",
+      "kind": "agent",
+      "purpose": "Run one repo-audit lens (contributor-docs | companions | coverage | currency | polish) at a pinned commit, read-only, and write its ranked, evidence-backed report.",
+      "archetypes": [
+        "all"
+      ],
+      "lenses": [
+        "contributor-docs",
+        "companions",
+        "coverage",
+        "currency",
+        "polish"
+      ]
     }
   ]
 }
