@@ -10,6 +10,8 @@ This repository also serves as the **SportsDataverse Claude Code plugin marketpl
 
 ### Install
 
+The `sdv-docs` MCP server runs through `uvx`, so install [uv](https://docs.astral.sh/uv/getting-started/installation/) first and make sure `uvx` is on your `PATH`. The other MCP server, `context7`, is remote and needs nothing local.
+
 ```sh
 claude plugin marketplace add sportsdataverse/sportsdataverse
 claude plugin install sdv-toolkit@sportsdataverse
