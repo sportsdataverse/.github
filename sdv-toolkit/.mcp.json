@@ -3,6 +3,11 @@
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp"
+    },
+    "sdv-docs": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--from", "sportsdataverse[mcp]>=0.2.0b1", "sdv-docs"]
     }
   }
 }

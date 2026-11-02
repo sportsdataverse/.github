@@ -38,7 +38,9 @@ get identical automation everywhere.
 - **Agents** — `returns-table-auditor`, `docstring-auditor`, `provider-shape-mapper`,
   `polars-1x-reviewer`, `espn-parser-contract-reviewer`, `http-layer-reviewer`,
   `roxygen-doc-reviewer`.
-- **MCP** — `context7` (live library docs for polars / pandas / Jinja2 / Docusaurus).
+- **MCP** — `context7` (live library docs for polars / pandas / Jinja2 / Docusaurus) and
+  `sdv-docs` (exact sdv-py / R-package functions, Returns-table columns, provider endpoints
+  and released datasets, served by `uvx` from `sportsdataverse[mcp]>=0.2.0b1`).
 
 See [`sdv-toolkit/README.md`](sdv-toolkit/README.md) for the full inventory and the
 conventions it encodes.
