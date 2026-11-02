@@ -26,7 +26,7 @@ publishes the marketplace and the bundled `sdv-toolkit` plugin.
     archetype router (`hooks/test_sdv_router.py`).
   - `tools/` — `check_catalog.py`, `render.py`, the README renderers, and their
     `test_*.py` (including `test_pr_context.py` for `skills/sdv-review-pr/scripts/`).
-  - `.mcp.json` — MCP servers (`context7`, HTTP).
+  - `.mcp.json` — MCP servers (`context7`, HTTP; `sdv-docs`, stdio via `uvx`).
 
 ## CI
 
@@ -74,5 +74,6 @@ Run the same three catalog commands locally before pushing a toolkit change, plu
 ## Reference
 
 - Org: <https://github.com/sportsdataverse> · Site: <https://sportsdataverse.org>
+- Prerequisite: `uv` installed with `uvx` on `PATH`; the `sdv-docs` MCP server is launched by `uvx`.
 - Install: `claude plugin marketplace add sportsdataverse/.github` then
   `claude plugin install sdv-toolkit@sportsdataverse`.
