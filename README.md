@@ -28,24 +28,32 @@ claude plugin update sdv-toolkit@sportsdataverse
 Engineering tooling shared across the SportsDataverse Python + R repos — install once,
 get identical automation everywhere.
 
+- **Router** — a `SessionStart` hook detects the repo archetype (sdv-py, `-raw` / `-data`
+  producer, R package, …) and loads that archetype's conventions on arrival.
 - **Hooks** — block edits to codegen-generated (`# GENERATED`) files; block AI
   co-author/attribution trailers on commits; warn on unbounded capture/crawl loops;
   remind to regenerate after codegen-source edits, add a `returns_schema`, or
-  `devtools::document()` after R edits; block mutating `git stash` in a repo with more
-  than one worktree (the stash stack is shared, so parallel sessions pop each other's work).
-- **Skills** (`/sdv-toolkit:<name>`) — `add-provider-source`, `add-espn-league`,
-  `add-sport-parser`, `add-fox-league`, `add-cbs-league`, `add-yahoo-source`,
-  `gen-returns-schema`, `capture-endpoint`, `regen-docs`, `new-example-notebook`,
-  `sdv-r-returns-table`, `sdv-pkgdown-personalize`.
-- **Agents** — `returns-table-auditor`, `docstring-auditor`, `provider-shape-mapper`,
-  `polars-1x-reviewer`, `espn-parser-contract-reviewer`, `http-layer-reviewer`,
-  `roxygen-doc-reviewer`.
+  `devtools::document()` after R edits; note a `tryCatch(warning = )` added to an R
+  package (it unwinds and silently empties results); block mutating `git stash` in a
+  repo with more than one worktree (the stash stack is shared, so parallel sessions pop
+  each other's work).
+- **Skills** (`/sdv-<name>`) — sources and endpoints (`/sdv-add-source`,
+  `/sdv-api-sync`), producers and datasets (`/sdv-data-pipeline`,
+  `/sdv-dataset-lifecycle`), docs (`/sdv-document`, `/sdv-regen-docs`), repo health
+  (`/sdv-repo-audit`, `/sdv-review-pr`, `/sdv-triage`, `/sdv-ship`), R test coverage
+  (`/sdv-r-coverage`), modeling and research (`/sdv-modeling`, `/sdv-model-build`,
+  `/sdv-research-paper`), and the conventions packs (`/sdv-conventions`, including the
+  README standard). `/sdv-guide` is the full index.
+- **Agents** — lens-dispatched reviewers (`sdv-python-reviewer`, `sdv-r-reviewer`,
+  `sdv-parity-reviewer`, `sdv-docs-reviewer`, `sdv-model-reviewer`,
+  `sdv-paper-reviewer`) and auditors (`sdv-repo-auditor`, `sdv-dataset-coverage-auditor`,
+  `sdv-harness-triage`, `sdv-issue-triage`).
 - **MCP** — `context7` (live library docs for polars / pandas / Jinja2 / Docusaurus) and
   `sdv-docs` (exact sdv-py / R-package functions, Returns-table columns, provider endpoints
   and released datasets, served by `uvx` from `sportsdataverse[mcp]>=0.2.0b1`).
 
-See [`sdv-toolkit/README.md`](sdv-toolkit/README.md) for the full inventory and the
-conventions it encodes.
+See [`sdv-toolkit/README.md`](sdv-toolkit/README.md) (rendered from `catalog.json`) for
+the full, current inventory; this page names families, not counts, so it doesn't drift.
 
 ## Links
 
