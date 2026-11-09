@@ -1,0 +1,83 @@
+# Coverage with covr, following r-lib/actions' test-coverage example
+# (SportsDataverse house version; from cfbfastR).
+#
+# TEMPLATE: copy the test env vars from THIS repo's R-CMD-check.yaml into `env:`
+# below (API keys as secrets, *_TESTS flags as literals) and keep NOT_CRAN=true:
+# tests guard live calls with skip_on_cran(), so without it the number would only
+# cover the offline fixture tests. Delete the job-level `if:` when env uses no
+# secrets -- it exists because GitHub withholds secrets from fork pull requests.
+#
+# The Codecov upload is non-fatal (continue-on-error on the step): it depends on
+# the CODECOV_TOKEN secret (org-level for sportsdataverse) and on codecov.io being
+# up, neither of which says anything about the package. fail_ci_if_error stays
+# true so the action stops rather than running a CLI that failed its signature
+# check. The coverage summary is always printed by the "Test coverage" step.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+name: test-coverage
+
+permissions:
+  contents: read
+
+jobs:
+  test-coverage:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      # <copy from R-CMD-check.yaml>, e.g. CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+      NOT_CRAN: true
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          extra-packages: any::covr, any::xml2
+          needs: coverage
+
+      - name: Test coverage
+        run: |
+          cov <- covr::package_coverage(
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+          )
+          print(cov)
+          covr::to_cobertura(cov)
+        shell: Rscript {0}
+
+      - uses: codecov/codecov-action@v7
+        continue-on-error: true
+        with:
+          fail_ci_if_error: true
+          files: ./cobertura.xml
+          plugins: noop
+          disable_search: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Show testthat output
+        if: always()
+        run: |
+          find '${{ runner.temp }}/package' -name 'testthat.Rout*' -exec cat '{}' \; || true
+        shell: bash
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-test-failures
+          path: ${{ runner.temp }}/package
