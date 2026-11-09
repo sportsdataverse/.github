@@ -84,6 +84,11 @@ Recording surfaces wrappers that return 0 rows even with good ids. Run
   body while the core-API route still served it; and a harmless `data.frame()` warning
   swallowed by `tryCatch(warning = )` (step 5). Fix it and add the call to `calls.txt`.
 
+Before converting any `tryCatch(warning = )`, dispatch `sdv-r-reviewer` with
+`lens: conditions`: it lists every such call with R's parser and separates the ones
+that use the warning as a deliberate fallback (leave those) from the ones that only
+report it (convert those).
+
 ## 5. Failure modes and the assertion that catches each
 
 | Failure mode | Assertion |

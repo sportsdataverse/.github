@@ -87,13 +87,26 @@ for (i in seq_along(calls)) {
   message(sprintf("[%d/%d] %s %s", i, length(calls), if (ok[[i]]) "ok  " else "FAIL", calls[[i]]))
 }
 
-# Keep only the fixtures the successful calls need: replay them and drop the rest.
+# Replay every successful call against the final fixtures -- a "# keep" refetch may
+# have replaced a trimmed response an earlier call was recorded on -- and keep only
+# the calls that still return data, and only the fixtures those calls read.
 used <- character()
-for (call in calls[ok]) {
-  httr2::with_mocked_responses(function(req) {
-    used <<- union(used, req$url)
+for (i in which(ok)) {
+  seen <- character()
+  out <- httr2::with_mocked_responses(function(req) {
+    seen <<- union(seen, req$url)
+    if (is.null(index[[req$url]])) return(httr2::response(status_code = 404L, url = req$url))
     saved_response(req$url)
-  }, suppressMessages(suppressWarnings(eval(parse(text = call)))))
+  }, tryCatch(suppressMessages(suppressWarnings(eval(parse(text = calls[[i]])))),
+              error = function(e) e))
+  still <- !inherits(out, "error") && !is.null(out) &&
+    ((is.data.frame(out) && nrow(out) > 0) || (!is.data.frame(out) && length(out) > 0))
+  if (still) {
+    used <- union(used, seen)
+  } else {
+    ok[[i]] <- FALSE
+    message("dropped on replay (fixtures changed under it): ", calls[[i]])
+  }
 }
 drop <- setdiff(names(index), used)
 unlink(file.path(fix_dir, vapply(index[drop], `[[`, "", "file")))
