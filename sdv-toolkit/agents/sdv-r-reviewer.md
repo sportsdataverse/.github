@@ -1,6 +1,6 @@
 ---
 name: sdv-r-reviewer
-description: Use when reviewing R code or documentation in a SportsDataverse R package (cfbfastR, hoopR, wehoop, baseballr, fastRhockey, softballR, nflseedR, cfbseedR), dispatched with a lens. Owns the SDV-specific findings — roxygen @param/@return-table/@examples completeness, _pkgdown.yml reference coverage, and R-to-Python parity — and routes every general R concern to the authoritative upstream skill rather than restating it. Lenses: roxygen, tidy-idiom, metaprogramming, style, package-structure, cran, performance, parity. Read-only; reports findings with file:line and names the upstream skill for the lens it fired on.
+description: Use when reviewing R code or documentation in a SportsDataverse R package (cfbfastR, hoopR, wehoop, baseballr, fastRhockey, softballR, nflseedR, cfbseedR), dispatched with a lens. Owns the SDV-specific findings — roxygen @param/@return-table/@examples completeness, _pkgdown.yml reference coverage, and R-to-Python parity — and routes every general R concern to the authoritative upstream skill rather than restating it. Lenses: roxygen, tidy-idiom, metaprogramming, style, package-structure, cran, performance, parity, conditions (tryCatch(warning =) that silently empties results). Read-only; reports findings with file:line and names the upstream skill for the lens it fired on.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -24,6 +24,7 @@ this file — it will drift.
 | `cran` | — | `r-lib:cran-extrachecks` |
 | `performance` | — | `r-skills:r-performance` |
 | `parity` | R↔Python numeric/ID fidelity | hand off to `sdv-parity-reviewer` |
+| `conditions` | `tryCatch(warning = )` that silently empties results; empty-payload branches | owned below |
 
 **Duplicate-skill-name resolution.** Two different marketplaces ship a skill
 named `r-package-development`, and both have been invoked in this ecosystem's
@@ -43,10 +44,10 @@ history:
   from the `style` lens). Not routed from this agent — nothing here is its
   unique concern.
 
-For every lens except `roxygen`, do not attempt the check yourself — read the
-named upstream skill(s), apply their rules to the target package, and report
-findings in this agent's report format. `roxygen` is the one lens with
-SDV-specific logic; run it directly per the section below.
+For every lens except `roxygen` and `conditions`, do not attempt the check
+yourself — read the named upstream skill(s), apply their rules to the target
+package, and report findings in this agent's report format. `roxygen` and
+`conditions` carry SDV-specific logic; run them directly per the sections below.
 
 ## `roxygen` lens
 
@@ -111,6 +112,41 @@ comm -23 /tmp/exported_fns.txt /tmp/pkgdown_fns.txt
 ```
 
 Any function in the left column only is an **orphan export** — exported but not listed in `_pkgdown.yml`. Any function in the right column only is a **phantom reference** — listed in `_pkgdown.yml` but not exported (usually a rename/removal mismatch).
+
+## `conditions` lens
+
+The failure this lens exists for: a `warning =` handler given to `tryCatch()`
+**unwinds the call**, so any harmless warning raised while parsing (e.g.
+`data.frame()`'s "row names were found from a short variable and have been
+discarded") makes the wrapper return its empty default — no error, often no
+message. baseballr had 126 of these; `espn_mlb_team_current_roster()` returned 0
+rows for every team until they were converted (2026-11-09).
+
+1. List them with R's parser, not grep (nested calls and strings defeat grep):
+   ```r
+   for (f in list.files("R", "\\.R$", full.names = TRUE)) {
+     pd <- getParseData(parse(f, keep.source = TRUE))
+     for (id in pd$id[pd$token == "SYMBOL_FUNCTION_CALL" & pd$text == "tryCatch"]) {
+       call <- pd$parent[pd$id == pd$parent[pd$id == id]]
+       if (any(pd$token == "SYMBOL_SUB" & pd$text == "warning" & pd$parent == call))
+         cat(f, pd$line1[pd$id == id], "\n")
+     }
+   }
+   ```
+2. For each hit, decide: is the warning a **fallback signal on purpose** (the
+   handler substitutes a value, e.g. "cwevent not installed", "not a date, using
+   today")? Then it stays. Otherwise it is a MUST-FIX: the handler only reports or
+   is empty, so the unwind is a bug. Fix: a calling handler that muffles —
+   `withCallingHandlers(tryCatch(expr, error = ...), warning = function(w) {
+   report(w); invokeRestart("muffleWarning") })` — or the package's `.try_catch()`
+   (`sdv-r-coverage/templates/utils_try_catch.R`).
+3. The test that proves it: a mocked response that triggers the warning still
+   yields rows (`httr2::local_mocked_responses()`), and a `.try_catch()` unit test
+   that a warning mid-`expr` returns `expr`'s value, `error` still catches, and
+   `return()` inside `expr` still exits the caller.
+4. Empty-payload branches: when the source can send `[]` (`{"conferences": []}`),
+   the parser must return the documented empty frame, not error in `select()`.
+   Ask for the mocked-empty test.
 
 ## `parity` lens
 

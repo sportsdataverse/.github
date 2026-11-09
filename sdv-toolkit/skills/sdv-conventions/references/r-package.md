@@ -41,5 +41,19 @@
   the bespoke fonts/glow. Light theme stays untouched; fix dark mode only.
   Hardcoded near-black text (`#0f0f0f` etc.) → `var(--bs-body-color)`.
   Dead BS4 `.navbar-dark` selectors → `[data-bs-theme="dark"] .navbar`.
-- Install packages with `remotes::install_github()`, not `devtools::`.
+- Install packages with `pak::pak()` or `remotes::install_github()`, not `devtools::`.
+  A README `remotes::` fallback installs `remotes` first.
+- README: follow `readme.md` (bold headings, every badge whose backing exists, hand-written
+  authors, full footer); check it with `sdv-repo-audit/scripts/check_r_readme.py`.
+- **Never give `tryCatch()` a `warning =` handler around a parse.** The handler unwinds,
+  so any harmless warning returns the empty default with no error
+  (`espn_mlb_team_current_roster()` returned 0 rows for every team). Report warnings with a
+  calling handler: `withCallingHandlers(..., warning = function(w) { report(w);
+  invokeRestart("muffleWarning") })`, or baseballr's `.try_catch()` (same signature as
+  `tryCatch`). Exception: code that uses the warning as a fallback signal on purpose.
+- Coverage: house `test-coverage.yaml` (covr, `NOT_CRAN=true`, the same test env vars as
+  `R-CMD-check.yaml`, non-fatal Codecov upload with the org `CODECOV_TOKEN`, fork-PR guard
+  when secrets are used); outside the org without a token, the self-hosted shields-endpoint
+  badge. Wrapper tests replay recorded httr2 responses so they run on CI — see
+  `/sdv-r-coverage` for both.
 - Conventional Commits, no AI co-author trailer.
