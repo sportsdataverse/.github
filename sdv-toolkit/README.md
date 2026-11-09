@@ -27,6 +27,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-polars` | High-performance polars DataFrame patterns for ETL and analytics -- lazy queries, streaming, and Arrow interop; code runs on polars 1.x and 2.x. |
 | `/sdv-port` | Port logic between R, Python, and pandas/polars (1.x and 2.x), parity-test-first against real fixtures. |
 | `/sdv-python-performance-optimization` | Profile and optimize Python code with cProfile and memory profilers to find and fix performance bottlenecks. |
+| `/sdv-r-coverage` | Raise an SDV R package's test coverage: rank zero-coverage families from the CI log, record httr2 responses once and replay them offline, triage empty wrappers into upstream-empty / dead route / parser bug, and set up the Codecov or self-hosted coverage badge. |
 | `/sdv-regen-docs` | Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release. |
 | `/sdv-repo-audit` | Read-only whole-repo audit at one commit, for R, Python and JS/TS libraries, producers, DB/API services and web apps (mixed repos load every matching checklist): five parallel lenses (contributor docs vs code, companions, front-page coverage vs registries, release/deps/OSV/CI currency, public polish), mechanical probes, a verdict table and cleanup in PR-sized batches; every fix batch needs confirmation. |
 | `/sdv-reprocess` | Rebuild a -raw corpus after an sdv-py change: gather the PRs, lock + SCHEMA_REV bump, clear the runway, launch the reprocess chain, recover, close out. |
@@ -48,5 +49,5 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `sdv-paper-reviewer` | Hostile-referee review of a paper or abstract against its own code, numbers and history: holdout prior access, claim-to-evidence, cluster-consistent inference, benchmark integrity, reproducibility from a clean clone, figures, citations verified against sources, venue rules. |
 | `sdv-parity-reviewer` | Audit a cross-language port for ID-dtype, regex, indexing, null-semantics, and numeric-fidelity bug classes. |
 | `sdv-python-reviewer` | Python review by lens: polars (1.x + 2.x hazards) \| http \| parser-contract \| docstring. |
-| `sdv-r-reviewer` | R review by lens; owns roxygen/pkgdown/parity, routes general R concerns upstream. |
+| `sdv-r-reviewer` | R review by lens; owns roxygen/pkgdown/parity and the conditions lens (tryCatch(warning =) that silently empties results), routes general R concerns upstream. |
 | `sdv-repo-auditor` | Run one repo-audit lens (contributor-docs \| companions \| coverage \| currency \| polish) for one archetype or a mixed set (sdv-py, producer, r-package, js-package, web-app, db-service, python-package) at a pinned commit, read-only, and write its ranked, evidence-backed report. |
