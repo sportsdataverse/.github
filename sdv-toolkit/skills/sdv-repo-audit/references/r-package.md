@@ -86,6 +86,7 @@ articles → news → 404.
 | Check | How |
 |---|---|
 | README header | hex logo, CRAN/lifecycle/R-CMD-check badges resolve and agree; no dev-only install as the first line when it is on CRAN |
+| README standard | `python <skill-dir>/scripts/check_r_readme.py --repo-dir "$W" --slug o/r` — sections/order, bold headings, the full badge set with each badge's backing (CRAN, R-universe, workflows), install lines, authors vs DESCRIPTION, `twitter.com`, `/stargazers`, logo alt, Rmd/md parity (`sdv-conventions/references/readme.md`) |
 | `DESCRIPTION` Title/Description | title case, no "R package for", the description reads as a sentence; this is the CRAN page |
 | Repo About box | `gh repo view o/r --json description,repositoryTopics,homepageUrl` (homepage = pkgdown URL) |
 | pkgdown theme | SDV dark on-brand theme, shared CSS, favicon set (`pkgdown/favicon/`), no Bootstrap 5 regressions |

@@ -15,6 +15,7 @@ full style guide.
 | `-raw` producer (scrape → commit JSON) | `references/raw.md` |
 | `-data` producer (build → publish parquet) | `references/data.md` |
 | R package (cfbfastR, hoopR, wehoop, …) | `references/r-package.md` |
+| README of any archetype (sections, badges, footer) | `references/readme.md` |
 
 ## Universal — validate the instrument, not just the result
 
