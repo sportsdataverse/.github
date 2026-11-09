@@ -1,18 +1,17 @@
-# Coverage with covr, following r-lib/actions' test-coverage example.
+# Coverage with covr, following r-lib/actions' test-coverage example
+# (SportsDataverse house version; from cfbfastR).
 #
-# NOT_CRAN=true and CFBD_API_KEY match R-CMD-check: nearly every test file
-# guards its live calls with skip_on_cran(), so without NOT_CRAN the number
-# would only cover the offline fixture tests.
+# TEMPLATE: copy the test env vars from THIS repo's R-CMD-check.yaml into `env:`
+# below (API keys as secrets, *_TESTS flags as literals) and keep NOT_CRAN=true:
+# tests guard live calls with skip_on_cran(), so without it the number would only
+# cover the offline fixture tests. Delete the job-level `if:` when env uses no
+# secrets -- it exists because GitHub withholds secrets from fork pull requests.
 #
-# The live tests need CFBD_API_KEY, which GitHub withholds from fork pull
-# requests, so the job runs only on this repository's own branches.
-#
-# The Codecov upload is non-fatal (continue-on-error on the step): it depends
-# on the CODECOV_TOKEN secret and on codecov.io being up, neither of which says
-# anything about the package. fail_ci_if_error stays true so the action stops
-# rather than running a CLI that failed its signature check. A failed upload
-# shows in the step log; the coverage summary is always printed by the
-# "Test coverage" step.
+# The Codecov upload is non-fatal (continue-on-error on the step): it depends on
+# the CODECOV_TOKEN secret (org-level for sportsdataverse) and on codecov.io being
+# up, neither of which says anything about the package. fail_ci_if_error stays
+# true so the action stops rather than running a CLI that failed its signature
+# check. The coverage summary is always printed by the "Test coverage" step.
 on:
   push:
     branches: [main, master]
@@ -31,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+      # <copy from R-CMD-check.yaml>, e.g. CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
       NOT_CRAN: true
 
     steps:

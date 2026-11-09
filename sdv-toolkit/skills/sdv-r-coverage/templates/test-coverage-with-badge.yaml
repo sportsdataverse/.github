@@ -1,13 +1,13 @@
-# Coverage with covr, following r-lib/actions' test-coverage example and the
-# sportsdataverse house version (cfbfastR, hoopR, wehoop).
+# Coverage with covr plus a SELF-HOSTED coverage badge, for a repo Codecov can't
+# reach (outside the sportsdataverse org, no repo CODECOV_TOKEN -- Codecov answers
+# "Repository not found"). From BillPetti/baseballr.
 #
-# NOT_CRAN=true so tests guarded by skip_on_cran() run, as they do locally.
-# The *_TESTS flags match R-CMD-check.yaml.
-#
-# The Codecov upload is non-fatal (continue-on-error on the step): it depends
-# on the CODECOV_TOKEN secret and on codecov.io being up, neither of which says
-# anything about the package. The coverage summary is always printed by the
-# "Test coverage" step.
+# TEMPLATE: copy the test env vars from THIS repo's R-CMD-check.yaml into `env:`
+# and keep NOT_CRAN=true. The badge job (default branch only, never PRs) writes a shields.io
+# endpoint JSON to coverage.json on a `badges` branch, creating it on first run and
+# skipping the commit when the number is unchanged. README badge:
+#   https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2F<owner>%2F<repo>%2Fbadges%2Fcoverage.json
+# The non-fatal Codecov step can stay: if a token appears later, swap the badge.
 on:
   push:
     branches: [main, master]
@@ -27,14 +27,7 @@ jobs:
     outputs:
       pct: ${{ steps.cov.outputs.pct }}
     env:
-      FANGRAPHS_TESTS: "1"
-      MLB_STATS_TESTS: "1"
-      BREF_TESTS: "0"
-      STATCAST_TESTS: "1"
-      NCAA_BASEBALL_TESTS: "0"
-      SPOTRAC_TESTS: "1"
-      CHADWICK_TESTS: "1"
-      BASEBALLR_LOAD_TESTS: "1"
+      # <copy from R-CMD-check.yaml>, e.g. MLB_STATS_TESTS: "1"
       NOT_CRAN: true
 
     steps:
@@ -90,10 +83,10 @@ jobs:
 
   # Self-hosted coverage badge: Codecov can't be set up for this repo, so the total is
   # written as a shields.io endpoint JSON to the `badges` branch and the README badge
-  # reads it from raw.githubusercontent.com. Runs only for master, never for PRs.
+  # reads it from raw.githubusercontent.com. Runs only on the default branch, never for PRs.
   badge:
     needs: test-coverage
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master' && needs.test-coverage.outputs.pct != ''
+    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.test-coverage.outputs.pct != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write

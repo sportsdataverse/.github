@@ -102,7 +102,7 @@ Recording surfaces wrappers that return 0 rows even with good ids. Run
   `CODECOV_TOKEN`. A workflow that only uploads an artifact leaves the Codecov badge at
   "unknown" — check for a `codecov/codecov-action` step, not just the file name.
 - **Repos outside the org** whose owner can't add a Codecov token (Codecov answers
-  `"Repository not found"`): `templates/test-coverage-with-badge.yaml` adds a master-only
+  `"Repository not found"`): `templates/test-coverage-with-badge.yaml` adds a default-branch-only
   `badge` job (`contents: write`) that writes a shields endpoint JSON to `coverage.json` on
   a `badges` branch, and the README uses
   `https://img.shields.io/endpoint?url=<raw badges/coverage.json>`. The README checker
