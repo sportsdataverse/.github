@@ -76,6 +76,28 @@ both bin on predicted-*probability*, not on time/clock-bucket, so treat
 them as calibration-slope instances, not as evidence the per-time-bucket
 rule is already satisfied.
 
+#### Score one perspective per game, then split by side
+
+A team-game panel holds each game twice, as `(p, y)` for home and `(1 − p, 1 − y)`
+for away. Scoring both rows looks harmless, because Brier and log loss come out
+identical. It still does two kinds of damage:
+
+- **The calibration table turns symmetric, and a home bias cancels out.** In
+  20,000 simulated games, a model that overrates home teams by 5 points showed
+  0.650 predicted vs 0.608 actual in the 0.6 bin on home rows. Pooled with the
+  away rows, the same bin read 0.650 vs 0.654, and the mean residual went from
+  −0.051 to 0.000.
+- **n doubles, so every row-based SE or interval is √2 too narrow.**
+
+Gate on one row per game (home, or a fixed side for neutral sites). Then report
+the mean residual `mean(y − p)` by side.
+
+```python
+def assert_one_row_per_game(ev: pl.DataFrame) -> None:
+    dup = ev.group_by("game_id").len().filter(pl.col("len") > 1)
+    assert dup.height == 0, f"{dup.height} games scored from both sides"
+```
+
 
 #### Brier alone hides which half is broken
 
