@@ -138,6 +138,12 @@ to surface prior threshold values for comparison against the current one.
   `j = df.join(df.select("game_id", pl.col("team_id").alias("opp_id"), pl.col(x).alias("own")), on=["game_id", "opp_id"])`,
   then `assert j.height == df.height and (j[f"opp_{x}"] == j["own"]).all()`.
   The height check catches a fan-out or a dropped game.
+- **The four frame assertions** (`sdv-modeling/references/feature-construction.md`
+  §8b) are each a finding when absent from a backtest's build:
+  - `assert_targets_final`: no postponed, cancelled or in-progress game used as an outcome;
+  - `assert_as_of`: every timestamped input published by the decision time and not stale;
+  - `assert_join_m1`: no fan-out;
+  - `assert_time_ordered`: a sorted frame with no tied timestamps before `shift`/rolling.
 
 ---
 

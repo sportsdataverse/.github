@@ -629,6 +629,70 @@ defaulted at prediction time.
 
 ---
 
+## 8b. Four frame assertions — targets, publication time, joins, order
+
+Each check below catches a bug that a match-rate floor and a passing gate both
+let through:
+
+- **A target that isn't a finished game.** A postponed, cancelled, suspended or
+  in-progress game carries a placeholder score, or none.
+- **An input published after the decision.** An injury list, a poll, a ranking
+  or a rating snapshot can be stamped later than the decision time. An input
+  can also be stale, describing a different state. This generalises
+  `assert_prices_as_of` (`betting-markets.md` §3) to every timestamped source.
+- **A join that multiplies rows.** A duplicate key on the right side fans the
+  join out, and the match rate still reads 100%.
+- **A `shift` or rolling window on an unsorted frame, or on tied timestamps.**
+  `shift` reads neighbours by position: a doubleheader, or a same-day college
+  game, makes "previous" arbitrary.
+
+```python
+import polars as pl
+
+
+def assert_targets_final(games: pl.DataFrame, status_col="status_final", score_cols=("home_score", "away_score")) -> None:
+    """Only finished games are outcomes: postponed, cancelled, suspended or in-progress rows never train or score."""
+    bad = games.filter((pl.col(status_col) != True) | pl.any_horizontal(pl.col(c).is_null() for c in score_cols))  # noqa: E712
+    assert bad.height == 0, f"{bad.height} target rows are not final games (status or score missing)"
+
+
+def assert_as_of(features: pl.DataFrame, src: pl.DataFrame, key, src_ts: str, decision_ts: str, max_stale) -> None:
+    """Every timestamped input (injury list, poll, rating snapshot, price) was published by the decision time,
+    and not so long before it that it describes a different state. A null stamp fails: it cannot be verified."""
+    j = features.join(src, on=key, how="inner")
+    unstamped = j.filter(pl.col(src_ts).is_null() | pl.col(decision_ts).is_null())
+    assert unstamped.height == 0, f"{unstamped.height} joined rows have no {src_ts} or {decision_ts}"
+    late = j.filter(pl.col(src_ts) > pl.col(decision_ts))
+    assert late.height == 0, f"{late.height} rows use {src_ts} after the decision time"
+    stale = j.filter(pl.col(decision_ts) - pl.col(src_ts) > max_stale)
+    assert stale.height == 0, f"{stale.height} rows use an input older than {max_stale} at decision time"
+
+
+def assert_join_m1(left: pl.DataFrame, right: pl.DataFrame, on, joined: pl.DataFrame) -> None:
+    """A match-rate floor passes when rows multiply. Assert the right side is unique on the key and the row count held."""
+    on = [on] if isinstance(on, str) else list(on)
+    dup = right.select(on).is_duplicated().sum()
+    assert dup == 0, f"right side has {dup} rows with a duplicated {on}: the join fans out"
+    assert joined.height == left.height, f"join changed the row count: {left.height} -> {joined.height}"
+
+
+def assert_time_ordered(df: pl.DataFrame, entity, ts: str) -> None:
+    """shift/rolling read neighbours by position. Assert ascending time within each entity and one row per (entity, ts)."""
+    entity = [entity] if isinstance(entity, str) else list(entity)
+    back = df.filter(pl.col(ts) < pl.col(ts).shift(1).over(entity))
+    assert back.height == 0, f"{back.height} rows go backwards in {ts} within {entity}: sort before shifting"
+    dup = df.select(*entity, ts).is_duplicated().sum()
+    assert dup == 0, f"{dup} rows share an ({', '.join(entity)}, {ts}): add a tie-break (game_id) before shifting"
+```
+
+Each was run against a passing frame and a failing one: a postponed and an
+in-progress game; a late, an unstamped and a stale input; a duplicated right key;
+a reversed frame and a same-date tie. The source is a triage of
+WalrusQuant/sports-analytic-skills (MIT, `feature-rules`, `eda-sports`,
+`nflreadpy`).
+
+---
+
 ## 9. Checklist
 
 1. **Learner first** (§0). Trees: skip transforms, expect little from generated
@@ -646,6 +710,9 @@ defaulted at prediction time.
    for linear models, hunt sentinels (§7).
 8. **Smoke-test prediction on a slice with no history** before trusting a
    pipeline (§8).
+9. **Run the four frame assertions** (§8b): final-game targets, inputs
+   published before the decision and not stale, many-to-one joins, and time
+   order with no ties before any shift.
 
 ---
 

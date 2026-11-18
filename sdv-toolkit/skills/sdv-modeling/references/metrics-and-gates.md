@@ -92,6 +92,15 @@ identical. It still does two kinds of damage:
 Gate on one row per game (home, or a fixed side for neutral sites). Then report
 the mean residual `mean(y − p)` by side.
 
+The same rule holds outside calibration:
+- **Home advantage** fitted on both rows estimates a symmetric coefficient from
+  doubled data.
+- **A standard error** on the doubled panel is too small.
+- **A season simulator** fed both rows plays each game twice.
+
+So run `assert_one_row_per_game` before any of them, not only before the
+calibration table.
+
 ```python
 def assert_one_row_per_game(ev: pl.DataFrame) -> None:
     dup = ev.group_by("game_id").len().filter(pl.col("len") > 1)
