@@ -138,6 +138,42 @@ review the rest.
 - **GOP-FB-4** `[minor]` Official-scoring conventions differ by league (NFL sacks are
   neither rush nor pass attempts; CFB sacks are rushes); DQ/box code takes `league`.
 
+## Producer read (the site never computes a stat)
+
+The site reads producer columns as published (sdv-py, the `-data` tables, the Data API),
+**including `_rank`, `_pct` and `_n`**. It never aggregates or converts a stat. When the
+number a feature needs is not published, the fix is a producer column, not site math.
+
+- **GOP-READ-1** `[major]` Every stat the site shows is a producer column read as
+  published. Flag, in `astro/src/**` and `python/**`:
+  - a sum over games, plays or stints, or a per-game × games total;
+  - a remainder (a total minus its parts);
+  - a rank counted from a sort, a schedule or a standings tally;
+  - a percentile inverted or re-scaled into "rank N of M";
+  - a composite score (game score, a rating) built from box columns.
+
+  Raise each one as an owner question with the producer read as option A, and name the
+  table and column it reads or needs ("needs a new producer column:
+  `player_box.game_score`"). A feature waiting on a new column stays behind its flag
+  until the column lands. The owner may keep the site math. When he does, record his
+  answer in the PR thread and do not raise it again. — (#441 inverted a percentile
+  into "rank 94 of 582": he asked for a producer cohort column. #449 took FT points as
+  box points minus zone makes: he chose to read the season FTM. #461 tallied the record
+  and rank from the schedule: he chose to read `season_standings`. #460 ranked
+  standouts by a game score the site computed: he kept it.)
+- **GOP-READ-2** `[major]` `_n` is the player's (or team's) own sample, never the size
+  of the cohort a `_rank` is out of. No basketball table ships that cohort. "of N" needs
+  a producer cohort column, never `count(rows)` on the page and never an inverted `_pct`.
+  — (#441)
+- **GOP-READ-3** `[minor]` Presentation is not conversion. Scaling a fraction ×100,
+  rounding, choosing which side to draw, and setting two producer rows **side by side**
+  (a player's row beside his team's) are fine. Blending rows is not: a traded player's
+  per-team rows stay separate, since a summed row has a frequency but no honest
+  percentile. — (#433, #452)
+
+A number that must also match another layer (the sdv-py box, a ladder, sdv-db) goes to
+`/sdv-metric-parity`. GOP-READ asks only whether the site computed the number.
+
 ## Python processor
 
 - **GOP-PY-1** `[blocker]` A new runtime import in `python/app.py` is importable in the
@@ -217,6 +253,7 @@ for f in $(gh pr diff <N> -R saiemgilani/game-on-paper-app --name-only | grep '^
   git -C /mnt/sdv_repos/game-on-paper-app show <base-sha>:"$f" > "<tree>/$f" 2>/dev/null || rm -f "<tree>/$f"; done
 python3 -c "import ast; ast.parse(open('python/app.py').read())"          # GOP-PY-2
 ls astro/src/components/game/classic/                                     # GOP-TWIN-1
+git -C <tree> diff origin/main...HEAD -- astro/src python | grep -nE '^\+.*(\.reduce\(|_(pct|rank|n)\b\s*[-+*/]|[-+*/]\s*\(?[\w.]*_(pct|rank|n)\b)'   # GOP-READ-1 leads
 gh pr view <N> -R saiemgilani/game-on-paper-app --comments | grep -A40 'pr-evidence'   # GOP-PERF-2
 curl -sI https://gameonpaper.com/game/<id> | grep -iE 'HTTP/|cf-cache-status|cache-control'   # post-merge public (classic) smoke
 ```

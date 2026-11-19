@@ -332,6 +332,19 @@ LINE_SIGNALS = [
         "invalid on Cloudflare adapter v14 / workerd",
     ),
     (
+        "GOP-READ-1",
+        # Arithmetic (incl. `+=`) on a producer `_pct`/`_rank`/`_n` column. Only display
+        # scaling is exempt: `col * 100`, `col / 100`, `100 * col` (100 or 100.0, the whole
+        # literal); `col + 100`, `100 - col`, `col * 100.5` are leads.
+        re.compile(
+            r"\b\w+_(?:pct|rank|n)\b\s*(?:[-+]=?|[*/]=?(?!\s*100(?:\.0+)?(?![\w.])))\s*[\w(.]"
+            r"|(?<![\w.])(?:(?!100(?:\.0+)?(?![\w.]))[\w.)]+\s*[-+*/]|100(?:\.0+)?\s*[-+/])"
+            r"=?\s*\(?\s*[\w.]*_(?:pct|rank|n)\b"
+        ),
+        re.compile(r"(^|/)astro/src/"),
+        "site math on a producer rank/percentile/sample -- read the column",
+    ),
+    (
         "GOP-ROUTE-5",
         re.compile(r"<script[^>]*\bis:inline"),
         re.compile(r"\.astro$"),
