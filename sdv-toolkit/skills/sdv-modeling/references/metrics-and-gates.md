@@ -76,21 +76,31 @@ both bin on predicted-*probability*, not on time/clock-bucket, so treat
 them as calibration-slope instances, not as evidence the per-time-bucket
 rule is already satisfied.
 
-#### Score one perspective per game, then split by side
+#### Score one perspective per game, and report that side's residual
 
 A team-game panel holds each game twice, as `(p, y)` for home and `(1 − p, 1 − y)`
 for away. Scoring both rows looks harmless, because Brier and log loss come out
 identical. It still does two kinds of damage:
 
-- **The calibration table turns symmetric, and a home bias cancels out.** In
-  20,000 simulated games, a model that overrates home teams by 5 points showed
-  0.650 predicted vs 0.608 actual in the 0.6 bin on home rows. Pooled with the
-  away rows, the same bin read 0.650 vs 0.654, and the mean residual went from
-  −0.051 to 0.000.
-- **n doubles, so every row-based SE or interval is √2 too narrow.**
+- **The calibration table turns symmetric, and can hide a home bias.** Bin b of
+  the pooled table mirrors bin 1 − b, and the pooled mean residual is exactly 0
+  for any model, so neither can show a side bias. Inside a bin, the away rows
+  that land there can offset the home rows. In 20,000 simulated games, a model
+  that overrates home teams by 5 points showed 0.650 predicted vs 0.608 actual
+  in the 0.6 bin on home rows; pooled with the away rows, the same bin read
+  0.650 vs 0.654. How much cancels depends on how the bias spreads across bins.
+- **n doubles without new information.** A row-based SE on a statistic both
+  rows feed (Brier, log loss, a mean residual) treats 2n mirrored rows as
+  independent, roughly √2 too narrow. The factor is not universal (a mirror row
+  can land in another calibration bin), so take intervals from a game-clustered
+  resample rather than rescaling.
 
-Gate on one row per game (home, or a fixed side for neutral sites). Then report
-the mean residual `mean(y − p)` by side.
+Gate on one perspective per game: home, or a fixed side for neutral sites; for
+in-game WP, one per game and time point, so the per-time-bucket table survives.
+Then report the mean residual `mean(y − p)` on that scored side, split home-site
+from neutral-site games when both occur. A value away from 0 is the bias the
+pooled table hid; the away residual on the same games is its negative, so it
+needs no rows of its own.
 
 The same rule holds outside calibration:
 - **Home advantage** fitted on both rows estimates a symmetric coefficient from
@@ -102,10 +112,14 @@ So run `assert_one_row_per_game` before any of them, not only before the
 calibration table.
 
 ```python
-def assert_one_row_per_game(ev: pl.DataFrame) -> None:
-    dup = ev.group_by("game_id").len().filter(pl.col("len") > 1)
-    assert dup.height == 0, f"{dup.height} games scored from both sides"
+def assert_one_row_per_game(ev: pl.DataFrame, key=("game_id",)) -> None:
+    """key=("game_id", "play_id") for in-game WP: one perspective per game and time point."""
+    dup = ev.group_by(*key).len().filter(pl.col("len") > 1)
+    assert dup.height == 0, f"{dup.height} {key} groups scored from both sides"
 ```
+
+It checks duplicates only. That the evaluation frame still holds every game is
+the match-rate floor's job (`assert_join_m1` and the oracle-join checks).
 
 
 #### Brier alone hides which half is broken

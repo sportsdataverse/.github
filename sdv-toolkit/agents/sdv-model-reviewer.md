@@ -106,38 +106,57 @@ to surface prior threshold values for comparison against the current one.
 - **Reading the code is not the evidence; an as-of rebuild test is.** The
   bullets above are found by tracing code, and a trace misses the leak hidden
   in a helper, a join or a cached table. The runnable proof is a perturbation
-  test. Scramble every outcome dated on or after D, rebuild the feature frame,
+  test. Move every outcome dated on or after D, rebuild the feature frame,
   and assert that no feature for a game on or before D changed: a game on D may
   read only what happened before D. A rolling mean without its
-  `shift(1)`, a season-final value on a week-2 row, and an opponent column joined
-  from the wrong game each fail it:
+  `shift(1)`, a season-final value on a week-2 row, a game's own result, and an
+  opponent column joined from the wrong game each fail it:
   ```python
-  def assert_features_as_of(build, raw, d, out_cols, key=("game_id", "team_id")):
-      base = build(raw)
-      late = pl.col("game_date") >= d
-      scrambled = raw.with_columns(
-          pl.when(late).then(pl.col(c).shuffle(seed=0)).otherwise(pl.col(c)).alias(c)
-          for c in out_cols)                       # outcome columns: score, margin, win
-      rebuilt = build(scrambled)
-      cols = [c for c in base.columns if c not in key and c not in out_cols]
-      early = lambda f: f.filter(pl.col("game_date") <= d).sort(key).select(*key, *cols)
-      assert early(base).equals(early(rebuilt)), "a feature on or before D reads an outcome from D on"
+  def assert_features_as_of(build, raw, d, out_cols, feature_cols, key=("game_id", "team_id")):
+      assert not set(feature_cols) & set(out_cols), "an outcome column is itself a model feature"
+      assert raw.filter(pl.col("game_date") == d).height, "D must be a game date"
+      late, row = pl.col("game_date") >= d, pl.int_range(pl.len()) + 1
+      moved = raw.with_columns(  # outcome columns: score, margin, win
+          pl.when(late).then(pl.col(c).cast(pl.Float64) + 1000.0 * (i + 1) * row)
+          .otherwise(pl.col(c)).alias(c)
+          for i, c in enumerate(out_cols))
+      early = lambda f: f.filter(pl.col("game_date") <= d).sort(key).select(*key, *feature_cols)
+      assert early(build(raw)).equals(early(build(moved))), "a feature on or before D reads an outcome from D on"
   ```
-  A test that never scrambles a row the feature could have read is vacuous:
-  assert that `scrambled` differs from `raw` on the late rows. A feature read from
-  a table **replaced nightly** (season-to-date ratings, standings, a rated prior
-  served by the Data API) escapes the rebuild, because the table isn't rebuilt
-  from `raw`. If a backtest reads such a table for historical games without an
-  `as_of` / snapshot-date filter, that is a finding: every row carries
-  end-of-window values. Grep the backtest's reads for the table name, and check
-  each one has a date predicate `<= G − 1 day` or a per-date snapshot key.
+  Every late outcome moves by a nonzero amount that differs by row and column,
+  so no value stays put and no late sum, mean or difference is preserved (a
+  `shuffle` can leave a value in place and keeps every pooled total). At one D
+  only the games dated D are tested against their own outcome, so run it at
+  every game date, or a sample of them
+  (`for d in raw["game_date"].unique().sort()`). A feature read from a table
+  **replaced nightly** (season-to-date ratings, standings, a rated prior served
+  by the Data API) escapes the rebuild, because the table isn't rebuilt from
+  `raw`, and a date filter cannot rescue it: once overwritten the old value is
+  gone, so filtering on the game's date still returns today's. A backtest that
+  reads such a table for historical games is a finding unless it reads a
+  retained point-in-time snapshot, taking the latest one taken strictly before
+  G's decision time (a snapshot dated G may already hold G's result), or
+  rebuilds the value from raw inputs. Grep the backtest's reads for the table
+  name and check each one.
 - **An opponent column must equal the opponent's own pre-game row.** On a
   team-game panel, `opp_<x>` for team A in game G must equal `<x>` on team B's
   row for game G. A join on team and season (instead of game), on the wrong
-  week, or on a display name breaks it silently. Assert:
-  `j = df.join(df.select("game_id", pl.col("team_id").alias("opp_id"), pl.col(x).alias("own")), on=["game_id", "opp_id"])`,
-  then `assert j.height == df.height and (j[f"opp_{x}"] == j["own"]).all()`.
-  The height check catches a fan-out or a dropped game.
+  week, or on a display name breaks it silently. Take the opponent from the
+  game's other row, not from the panel's `opp_id`, which the same bad join may
+  have written:
+  ```python
+  def assert_opp_is_opponent_row(df, x, key=("game_id", "team_id")):
+      assert not df.select(*key).is_duplicated().any(), "panel is not unique on (game_id, team_id)"
+      other = df.select("game_id", pl.col("team_id").alias("true_opp"), pl.col(x).alias("own"))
+      j = df.join(other, on="game_id").filter(pl.col("team_id") != pl.col("true_opp"))
+      assert j.height == df.height and not j.select(*key).is_duplicated().any(), "a game lacks exactly one opponent row"
+      ok = pl.col(f"opp_{x}").eq_missing(pl.col("own"))
+      if "opp_id" in df.columns:
+          ok = ok & pl.col("opp_id").eq_missing(pl.col("true_opp"))
+      assert j.select(ok.all()).item(), f"opp_{x} is not the opponent's own {x}"
+  ```
+  The per-key duplicate check catches a fan-out that a dropped game would hide
+  in the height, and `eq_missing` stops a null from passing (`.all()` skips nulls).
 - **The four frame assertions** (`sdv-modeling/references/feature-construction.md`
   §8b) are each a finding when absent from a backtest's build:
   - `assert_targets_final`: no postponed, cancelled or in-progress game used as an outcome;
@@ -152,10 +171,12 @@ to surface prior threshold values for comparison against the current one.
 - Probabilities → Brier and/or log-loss PLUS a calibration table (a good Brier
   can hide miscalibration); in-game WP → per-time-bucket calibration.
 - A calibration table or interval built on BOTH rows of each team-game is a
-  finding. The table is forced symmetric, which cancels a home bias, and n is
-  double-counted. Require one row per game (`assert_one_row_per_game`) plus the
-  mean residual by side (`sdv-modeling/references/metrics-and-gates.md`, "Score
-  one perspective per game").
+  finding. The pooled table is symmetric by construction and can hide a home
+  bias, and n is double-counted. Require one perspective per game (per game and
+  time point for in-game WP; `assert_one_row_per_game`), the mean residual on
+  that scored side, and intervals from a game-clustered resample
+  (`sdv-modeling/references/metrics-and-gates.md`, "Score one perspective per
+  game").
 - Point predictions (spread/total) → MAE vs the closing market line, with the
   sign convention of the quoted line handled explicitly (home spread negative
   = favored; flag unexplained negations).
