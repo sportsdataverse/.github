@@ -304,6 +304,9 @@ class LineSignals(unittest.TestCase):
         self.assertTrue(read1("const top = 100 - row.ts_pct;"))
         self.assertTrue(read1("const k = 100 / row.ts_pct;"))
         self.assertTrue(read1("total += row.games_n;"))
+        self.assertTrue(read1("const top = 100.0 - row.ts_pct;"))
+        self.assertTrue(read1("const g = row.games_n * 100.5;"))
+        self.assertFalse(read1("const shown = row.fg3_pct * 100.0;"))
         # Display scaling, a plain read, and a column-name suffix are not leads.
         self.assertFalse(read1("const shown = row.fg3_pct * 100;"))
         self.assertFalse(read1("const shown = 100 * row.fg3_pct;"))
