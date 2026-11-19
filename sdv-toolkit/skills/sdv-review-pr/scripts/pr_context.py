@@ -333,10 +333,11 @@ LINE_SIGNALS = [
     ),
     (
         "GOP-READ-1",
-        # Arithmetic on a producer `_pct`/`_rank`/`_n` column; `* 100` / `/ 100` display scaling is not a lead.
+        # Arithmetic (incl. `+=`) on a producer `_pct`/`_rank`/`_n` column. Only display
+        # scaling is exempt: `col * 100`, `col / 100`, `100 * col`; `col + 100`, `100 - col` are leads.
         re.compile(
-            r"\b\w+_(?:pct|rank|n)\b\s*[-+*/]\s*(?!100\b)[\w(.]"
-            r"|(?<![\w.])(?!100\b)[\w.)]+\s*[-+*/]\s*\(?\s*[\w.]*_(?:pct|rank|n)\b"
+            r"\b\w+_(?:pct|rank|n)\b\s*(?:[-+]=?|[*/]=?(?!\s*100\b))\s*[\w(.]"
+            r"|(?<![\w.])(?:(?!100\b)[\w.)]+\s*[-+*/]|100\s*[-+/])=?\s*\(?\s*[\w.]*_(?:pct|rank|n)\b"
         ),
         re.compile(r"(^|/)astro/src/"),
         "site math on a producer rank/percentile/sample -- read the column",

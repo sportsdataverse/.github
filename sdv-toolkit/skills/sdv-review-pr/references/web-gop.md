@@ -253,7 +253,7 @@ for f in $(gh pr diff <N> -R saiemgilani/game-on-paper-app --name-only | grep '^
   git -C /mnt/sdv_repos/game-on-paper-app show <base-sha>:"$f" > "<tree>/$f" 2>/dev/null || rm -f "<tree>/$f"; done
 python3 -c "import ast; ast.parse(open('python/app.py').read())"          # GOP-PY-2
 ls astro/src/components/game/classic/                                     # GOP-TWIN-1
-git diff origin/main...HEAD -- astro/src python | grep -nE '^\+.*(\.reduce\(|_(pct|rank|n)\b\s*[-+*/]|[-+*/]\s*\(?[\w.]*_(pct|rank|n)\b)'   # GOP-READ-1 leads
+git -C <tree> diff origin/main...HEAD -- astro/src python | grep -nE '^\+.*(\.reduce\(|_(pct|rank|n)\b\s*[-+*/]|[-+*/]\s*\(?[\w.]*_(pct|rank|n)\b)'   # GOP-READ-1 leads
 gh pr view <N> -R saiemgilani/game-on-paper-app --comments | grep -A40 'pr-evidence'   # GOP-PERF-2
 curl -sI https://gameonpaper.com/game/<id> | grep -iE 'HTTP/|cf-cache-status|cache-control'   # post-merge public (classic) smoke
 ```

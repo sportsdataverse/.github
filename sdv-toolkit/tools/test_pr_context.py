@@ -299,8 +299,15 @@ class LineSignals(unittest.TestCase):
         )
         self.assertTrue(read1("const n = row.poss_n + other.poss_n;"))
         self.assertTrue(read1("rank = (1 - pctile) * row.games_n;"))
+        # 100 is exempt only as display scaling (* or /), and `+=` accumulates a sample.
+        self.assertTrue(read1("const g = row.games_n + 100;"))
+        self.assertTrue(read1("const top = 100 - row.ts_pct;"))
+        self.assertTrue(read1("const k = 100 / row.ts_pct;"))
+        self.assertTrue(read1("total += row.games_n;"))
         # Display scaling, a plain read, and a column-name suffix are not leads.
         self.assertFalse(read1("const shown = row.fg3_pct * 100;"))
+        self.assertFalse(read1("const shown = 100 * row.fg3_pct;"))
+        self.assertFalse(read1("const frac = row.fg3_pct / 100;"))
         self.assertFalse(read1("<td>{row.ts_pct_rank}</td>"))
         self.assertFalse(read1("cols.map((c) => c + '_rank')"))
         self.assertFalse(read1("const r = 1 - row.ts_pct;", path="python/app.py"))
