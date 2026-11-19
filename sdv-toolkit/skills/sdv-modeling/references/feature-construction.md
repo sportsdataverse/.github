@@ -652,16 +652,16 @@ import polars as pl
 
 def assert_targets_final(games: pl.DataFrame, status_col="status_final", score_cols=("home_score", "away_score")) -> None:
     """Only finished games are outcomes: postponed, cancelled, suspended or in-progress rows never train or score."""
-    bad = games.filter((pl.col(status_col) != True) | pl.any_horizontal(pl.col(c).is_null() for c in score_cols))  # noqa: E712
+    bad = games.filter((pl.col(status_col).fill_null(False) != True) | pl.any_horizontal(pl.col(c).is_null() for c in score_cols))  # noqa: E712
     assert bad.height == 0, f"{bad.height} target rows are not final games (status or score missing)"
 
 
 def assert_as_of(features: pl.DataFrame, src: pl.DataFrame, key, src_ts: str, decision_ts: str, max_stale) -> None:
     """Every timestamped input (injury list, poll, rating snapshot, price) was published by the decision time,
-    and not so long before it that it describes a different state. A null stamp fails: it cannot be verified."""
-    j = features.join(src, on=key, how="inner")
+    and not so long before it that it describes a different state. A null stamp or a missing input fails: it cannot be verified."""
+    j = features.join(src, on=key, how="left")  # left, so a feature row with no input row surfaces as a null stamp
     unstamped = j.filter(pl.col(src_ts).is_null() | pl.col(decision_ts).is_null())
-    assert unstamped.height == 0, f"{unstamped.height} joined rows have no {src_ts} or {decision_ts}"
+    assert unstamped.height == 0, f"{unstamped.height} feature rows have no matching input, or no {src_ts} / {decision_ts}"
     late = j.filter(pl.col(src_ts) > pl.col(decision_ts))
     assert late.height == 0, f"{late.height} rows use {src_ts} after the decision time"
     stale = j.filter(pl.col(decision_ts) - pl.col(src_ts) > max_stale)
@@ -679,6 +679,8 @@ def assert_join_m1(left: pl.DataFrame, right: pl.DataFrame, on, joined: pl.DataF
 def assert_time_ordered(df: pl.DataFrame, entity, ts: str) -> None:
     """shift/rolling read neighbours by position. Assert ascending time within each entity and one row per (entity, ts)."""
     entity = [entity] if isinstance(entity, str) else list(entity)
+    nulls = df.filter(pl.col(ts).is_null()).height
+    assert nulls == 0, f"{nulls} rows have no {ts}: their order is undefined"
     back = df.filter(pl.col(ts) < pl.col(ts).shift(1).over(entity))
     assert back.height == 0, f"{back.height} rows go backwards in {ts} within {entity}: sort before shifting"
     dup = df.select(*entity, ts).is_duplicated().sum()
