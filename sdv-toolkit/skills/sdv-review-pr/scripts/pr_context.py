@@ -332,6 +332,16 @@ LINE_SIGNALS = [
         "invalid on Cloudflare adapter v14 / workerd",
     ),
     (
+        "GOP-READ-1",
+        # Arithmetic on a producer `_pct`/`_rank`/`_n` column; `* 100` / `/ 100` display scaling is not a lead.
+        re.compile(
+            r"\b\w+_(?:pct|rank|n)\b\s*[-+*/]\s*(?!100\b)[\w(.]"
+            r"|(?<![\w.])(?!100\b)[\w.)]+\s*[-+*/]\s*\(?\s*[\w.]*_(?:pct|rank|n)\b"
+        ),
+        re.compile(r"(^|/)astro/src/"),
+        "site math on a producer rank/percentile/sample -- read the column",
+    ),
+    (
         "GOP-ROUTE-5",
         re.compile(r"<script[^>]*\bis:inline"),
         re.compile(r"\.astro$"),

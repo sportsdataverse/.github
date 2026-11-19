@@ -289,6 +289,22 @@ class LineSignals(unittest.TestCase):
             ),
         )
 
+    def test_gop_site_math_on_producer_columns(self):
+        def read1(text, path="astro/src/components/player/CareerTable.astro"):
+            return "GOP-READ-1" in rules(diff_for(path, text))
+
+        # #441's inverted percentile, a summed sample, and a rank scaled off a `_n`.
+        self.assertTrue(
+            read1("const ofN = Math.round(row.pts_rank / (1 - row.pts_pct));")
+        )
+        self.assertTrue(read1("const n = row.poss_n + other.poss_n;"))
+        self.assertTrue(read1("rank = (1 - pctile) * row.games_n;"))
+        # Display scaling, a plain read, and a column-name suffix are not leads.
+        self.assertFalse(read1("const shown = row.fg3_pct * 100;"))
+        self.assertFalse(read1("<td>{row.ts_pct_rank}</td>"))
+        self.assertFalse(read1("cols.map((c) => c + '_rank')"))
+        self.assertFalse(read1("const r = 1 - row.ts_pct;", path="python/app.py"))
+
     def test_vignette_self_install_only_for_the_package_itself(self):
         def r3(text, path="vignettes/a.Rmd", repo="cfbfastR"):
             return [s.rule for s in pc.scan_diff(diff_for(path, text), repo)]
@@ -612,23 +628,33 @@ class Sandbox(unittest.TestCase):
 
     SCRIPT = (
         pathlib.Path(__file__).resolve().parent.parent
-        / "skills" / "sdv-review-pr" / "scripts" / "sandbox.sh"
+        / "skills"
+        / "sdv-review-pr"
+        / "scripts"
+        / "sandbox.sh"
     )
 
     def test_shell_syntax(self):
         import subprocess
 
-        r = subprocess.run(["bash", "-n", str(self.SCRIPT)], capture_output=True, text=True)
+        r = subprocess.run(
+            ["bash", "-n", str(self.SCRIPT)], capture_output=True, text=True
+        )
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_refuses_without_bwrap_instead_of_running_unsandboxed(self):
         import subprocess, tempfile
 
-        with tempfile.TemporaryDirectory() as empty_bin, tempfile.TemporaryDirectory() as tree:
+        with (
+            tempfile.TemporaryDirectory() as empty_bin,
+            tempfile.TemporaryDirectory() as tree,
+        ):
             # PATH with bash's own dir only via absolute bash; no bwrap reachable.
             r = subprocess.run(
                 ["/bin/bash", str(self.SCRIPT), tree, "--", "/bin/echo", "RAN"],
-                capture_output=True, text=True, env={"PATH": empty_bin},
+                capture_output=True,
+                text=True,
+                env={"PATH": empty_bin},
             )
         self.assertNotEqual(r.returncode, 0)
         self.assertNotIn("RAN", r.stdout)
@@ -640,7 +666,12 @@ class Sandbox(unittest.TestCase):
     def test_self_test_passes(self):
         import subprocess
 
-        r = subprocess.run(["bash", str(self.SCRIPT), "--self-test"], capture_output=True, text=True, timeout=120)
+        r = subprocess.run(
+            ["bash", str(self.SCRIPT), "--self-test"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("self-test PASSED", r.stdout)
 
