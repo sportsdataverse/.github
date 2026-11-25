@@ -76,7 +76,7 @@ addendum), rather than papering over it as equally solid.
 | 18 | a cross-run leak kept on purpose to match a broken oracle | `start_event_type` for a game's first possession is identical whether that game is parsed alone or inside a multi-game frame |
 | 19 | a denominator that counted ROWS, not events (MLB `pa`/`ab` = raw pitch rows) | `pa == count(events is not null)`, never `pl.len()`; and the published rate's league mean on the qualified population sits inside a known-level band (xwOBA `[.26, .38]`) — a rank gate alone stayed green through a 2x scale error |
 | 20 | a render-time "holdout" evaluated on a corpus that grew after the fit | the evaluation partition is read from the persisted train-time game-id file; otherwise the number is labelled *near-holdout* and the frozen train-time metric is quoted beside it |
-| 21 | a sibling-league shim priced with the parent league's fitted constants (WNBA props on NBA spread) | each league's constants row equals a refit on that league's own committed fixture, and every re-exported `league_id` helper in the shim is bound to the shim's league |
+| 21 | a sibling-league shim priced with the parent league's fitted constants (WNBA props on NBA spread) | each league's constants row with a committed fixture equals a refit on that fixture (a league with none carries a commented, test-pinned seed), and every re-exported `league_id` helper in the shim is bound to the shim's league |
 
 ---
 
@@ -801,8 +801,9 @@ labelled seeds.
 
 **Assertions.**
 
-- Each league's constants row equals a refit on that league's committed
-  fixture; the parent's refit reproduces its old values exactly.
+- Each league with a committed fixture has a constants row equal to a refit
+  on that fixture, and the parent's refit reproduces its old values exactly.
+  A league with no fixture is covered by the seed bullet below instead.
 - Every shim function that takes `league_id` is a partial bound to the
   shim's league (`func.keywords["league_id"] == "10"`).
 - A row that reuses another league's values says so in a comment naming the
