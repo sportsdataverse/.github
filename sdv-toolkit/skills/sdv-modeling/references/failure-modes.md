@@ -47,8 +47,9 @@ Every row in `reviewer.md` §4's shipped table (rows 1–7) appears below with a
 compatible assertion, plus seven more confirmed in the wider corpus (rows
 8–14) and four bonus instances (rows 15–18) found while grounding the
 required fourteen. "Confirmed" means a real commit or repo artifact grounds
-it; all 20 rows below have one (rows 19–20 were added 2026-09-01 and are
-written up in §21–22 so the earlier section numbers stay stable). §20 names
+it; all 21 rows below have one (rows 19–20 were added 2026-09-01 and row 21
+on 2026-11-25; they are written up in §21–23 so the earlier section numbers
+stay stable). §20 names
 the one place where the evidence
 is a documented hazard rather than a confirmed incident (§14's PWHL/NHL
 addendum), rather than papering over it as equally solid.
@@ -75,6 +76,7 @@ addendum), rather than papering over it as equally solid.
 | 18 | a cross-run leak kept on purpose to match a broken oracle | `start_event_type` for a game's first possession is identical whether that game is parsed alone or inside a multi-game frame |
 | 19 | a denominator that counted ROWS, not events (MLB `pa`/`ab` = raw pitch rows) | `pa == count(events is not null)`, never `pl.len()`; and the published rate's league mean on the qualified population sits inside a known-level band (xwOBA `[.26, .38]`) — a rank gate alone stayed green through a 2x scale error |
 | 20 | a render-time "holdout" evaluated on a corpus that grew after the fit | the evaluation partition is read from the persisted train-time game-id file; otherwise the number is labelled *near-holdout* and the frozen train-time metric is quoted beside it |
+| 21 | a sibling-league shim priced with the parent league's fitted constants (WNBA props on NBA spread) | each league's constants row equals a refit on that league's own committed fixture, and every re-exported `league_id` helper in the shim is bound to the shim's league |
 
 ---
 
@@ -779,4 +781,32 @@ The same shape appears wherever a committed artifact meets a growing corpus.
 - Absent those, the section title says *near-holdout* and the frozen train-time
   metric from the meta sidecar is quoted in the same table — an unlabelled
   "holdout" is the finding (`metrics-and-gates.md` §6b).
+
+## 23. A sibling-league shim priced with the parent league's constants (#21)
+
+**What shipped.** `sdv-py`'s player-prop distribution read a points SD law
+(`sd = a + b*sqrt(mu)`) and a count dispersion fitted on NBA 2024 box logs
+only, held as module constants. `prop_distribution` / `prob_over` accepted
+`league_id` and ignored it, and the WNBA shim re-exported them unbound, so
+they defaulted to the NBA id. WNBA props were priced with NBA spread, and
+WNBA pace projections used the NBA possession constants. Every test passed:
+nothing asserted that a WNBA call read a WNBA number.
+
+**The fix** (`sdv-py#1264`, 2026-11-25): the constants moved into the
+per-league constants table and are read through `get_constants(league_id)`.
+WNBA was refit on its own 2024 logs with the same method (points SD at 15
+points 6.46 vs NBA 6.81), and the shim binds `league_id="10"` on every
+league-aware helper. G-League has no fixture, so it keeps the NBA values as
+labelled seeds.
+
+**Assertions.**
+
+- Each league's constants row equals a refit on that league's committed
+  fixture; the parent's refit reproduces its old values exactly.
+- Every shim function that takes `league_id` is a partial bound to the
+  shim's league (`func.keywords["league_id"] == "10"`).
+- A row that reuses another league's values says so in a comment naming the
+  missing fixture, and a test pins that it is a seed.
+- Mutation: read the parent's row for every league, and unbind one helper.
+  Both must go red (the PR recorded 2/2 killed).
 

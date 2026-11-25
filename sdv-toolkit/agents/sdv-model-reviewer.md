@@ -1,6 +1,6 @@
 ---
 name: sdv-model-reviewer
-description: Use before merging new model or validation code — a model-spine phase, a ratings engine, a backtest, a simulator — to audit its correctness contract. Lenses — gate-integrity (gates derived from observed values, never lowered, train/holdout seasons disjoint), leakage-boundary (the as-of-date split actually enforced and proven by an as-of rebuild test, through_week treated as EXCLUSIVE, cumulative ops reset per group, opponent columns equal to the opponent's own pre-game row), metric-fit (Brier and calibration for probabilities, MAE-vs-market for spreads, Spearman for ratings, calibration slope for simulators), silent-no-op (every fitted component provably applied — assert the OUTPUT changed, not that the code ran; and ask whether the guarding test could fail at all, since a fixture holding only the rows the function reads, a dead branch with no per-branch count asserted, a `raising=False` monkeypatch, a re-implemented rather than imported gate, and a coincidentally-passing placeholder each shipped green over a live defect — the standard is the fix mutated out and the test seen to go red, and this read-only reviewer reports the absence of that evidence rather than running the mutation itself), sklearn-contract (the splitter matches the panel structure with GroupKFold or TimeSeriesSplit and never a bare KFold, preprocessing lives inside the Pipeline, ConvergenceWarning is not swallowed), lineage (train-gate-publish wired, retrain scheduled, fitted constants cite their fitting script), oracle-join (dtype agreement asserted, match-rate floor enforced, fixture provenance README present), uncertainty-reported (a published decision surface ships an interval, and that interval comes from a cluster-respecting resample rather than a row-level bootstrap that is 8.8x too narrow), explainability-present (a shipped boosted model has a committed importance artifact; TreeSHAP needs no extra dependency; multiclass pred_contribs is 3-D), tracking-lineage (a feature-set definition exists per promoted model, its ordered columns are gated against the training code, stages carry fingerprints, and in_published_data is closed; the fit's train/test partition + meta sidecar are committed so the exact holdout is reproducible — a render-time re-split of a grown corpus must be labelled near-holdout — and every model-card number is computed by a committed qmd, never hand-typed). Read-only; reports findings with file:line.
+description: Use before merging new model or validation code — a model-spine phase, a ratings engine, a backtest, a simulator — to audit its correctness contract. Lenses — gate-integrity (gates derived from observed values, never lowered, train/holdout seasons disjoint, asserted only against an oracle whose publish time is verifiable), leakage-boundary (the as-of-date split actually enforced and proven by an as-of rebuild test, through_week treated as EXCLUSIVE, cumulative ops reset per group, opponent columns equal to the opponent's own pre-game row, pregame weather read from the forecast issued before prediction time and never the observed weather, rest features that do not count the off-season or an All-Star/international break as rest), metric-fit (Brier and calibration for probabilities, MAE-vs-market for spreads, Spearman for ratings, calibration slope for simulators), silent-no-op (every fitted component provably applied — assert the OUTPUT changed, not that the code ran; and ask whether the guarding test could fail at all, since a fixture holding only the rows the function reads, a dead branch with no per-branch count asserted, a `raising=False` monkeypatch, a re-implemented rather than imported gate, and a coincidentally-passing placeholder each shipped green over a live defect — the standard is the fix mutated out and the test seen to go red, and this read-only reviewer reports the absence of that evidence rather than running the mutation itself), sklearn-contract (the splitter matches the panel structure with GroupKFold or TimeSeriesSplit and never a bare KFold, preprocessing lives inside the Pipeline, ConvergenceWarning is not swallowed), lineage (train-gate-publish wired, retrain scheduled, fitted constants cite their fitting script, and a constant shared with a sibling league is refit per league or carries a seed justification and a test), oracle-join (dtype agreement asserted, match-rate floor enforced, fixture provenance README present, an external number is called an oracle or benchmark only when its publish time is verifiable and is otherwise a comparison that cannot gate), uncertainty-reported (a published decision surface ships an interval, and that interval comes from a cluster-respecting resample rather than a row-level bootstrap that is 8.8x too narrow, and it widens when a material input such as the starter or the lineup changes or is unconfirmed), explainability-present (a shipped boosted model has a committed importance artifact; TreeSHAP needs no extra dependency; multiclass pred_contribs is 3-D), tracking-lineage (a feature-set definition exists per promoted model, its ordered columns are gated against the training code, stages carry fingerprints, and in_published_data is closed; the fit's train/test partition + meta sidecar are committed so the exact holdout is reproducible — a render-time re-split of a grown corpus must be labelled near-holdout — and every model-card number is computed by a committed qmd, never hand-typed). Read-only; reports findings with file:line.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -63,6 +63,9 @@ harness WARN finding (as opposed to design-time review of new code) →
 - Trained artifacts: the training season(s) and the gate/backtest season(s)
   must not overlap (e.g. train in-game WP on 2023, gate on 2024). Check the
   trainer script and the gate test agree.
+- **A gate may only assert against a verified oracle.** An external number
+  whose publish time cannot be verified is a *comparison*, and a gate against
+  it is MUST-FIX. The test for "verified" is §7's first bullet.
 
 Grep: `git log -p --follow -- <gate_test_file> | grep -nE "^-.*assert|^-.*(>=|<=|>|<)\s*[0-9.]+"`
 to surface prior threshold values for comparison against the current one.
@@ -100,6 +103,37 @@ to surface prior threshold values for comparison against the current one.
 - Cumulative ops must reset per group (season, game) unless the column is
   documented as an intentional whole-vector running total — a non-reset that
   isn't documented is a finding, not a style nit.
+- **A pregame model reads the weather FORECAST available at prediction time,
+  never the observed game-time weather.** Observed temperature, wind and
+  precipitation are recorded at or after kickoff, so a backtest that uses them
+  credits the model with information no pregame user had. Grep:
+  `grep -niE "weather|\btemp|wind|precip|humid" <feature_file>`, then trace each
+  hit to its source. The source must carry a forecast issue time, and that time
+  must pass `assert_as_of` (`sdv-modeling/references/feature-construction.md`
+  §8b) with `src_ts` = the issue time and `decision_ts` = the prediction time.
+  A box score, a game-summary field, or a source with no issue time is
+  observed weather: MUST-FIX on a pregame model. An in-game model may use
+  observed conditions up to the current game state.
+- **Rest and days-off features must not count a season break as rest.** A
+  `game_date.diff()` over `team_id` alone gives a team's opener the whole
+  off-season (months) as "rest". A diff inside one season also counts the
+  All-Star break or an international or Olympic break as ordinary rest. (A
+  team's own bye is real rest and is not a finding.)
+  Grep: `grep -nE "\brest|days_off|days_since|\.diff\(" <feature_file>` and read
+  the grouping and the cap. Each of these is a finding:
+  - the diff is not grouped by season (`.over(["team_id", "season"])`), so the
+    first game of a season reads the previous season;
+  - the season's first game gets a number instead of null or a flag;
+  - a gap that spans a known break gets no break flag and no cap, so it
+    looks like ordinary rest.
+  Assertions to require:
+  ```python
+  opener = pl.col("game_date") == pl.col("game_date").min().over(["team_id", "season"])
+  assert df.filter(opener)["rest_days"].is_null().all(), "a season opener carries off-season rest"
+  assert df.filter(~opener & ~pl.col("break_flag").fill_null(False))["rest_days"].max() <= cap, "a break is counted as rest"
+  ```
+  `cap` is a stated number with its source (the longest gap in the league's
+  schedule outside its listed breaks), not a value tuned until the test passes.
 - Trained artifacts: the training season(s) and the gate/backtest season(s)
   must not overlap (e.g. train in-game WP on 2023, gate on 2024). Check the
   trainer script and the gate test agree.
@@ -345,6 +379,25 @@ Procedure:
   task that overwrites them. Unexplained numeric literals inside algorithm
   functions are findings (league-specific numbers belong in the constants
   table).
+- **A constant shared across sibling leagues is fitted per league, or
+  justified and tested.** A WNBA, G-League or women's-college shim that
+  re-uses the parent league's code also re-uses its fitted numbers unless
+  something stops it. In `sdv-py#1264`, WNBA props were priced with NBA-fitted
+  spread constants: the helpers accepted `league_id` and ignored it, and the
+  shim re-exported them unbound (`failure-modes.md` §23). Check three things:
+  - every function that takes `league_id`/`league` reads it. Grep
+    `grep -nE "def \w+\(.*league" <module>` and confirm each body uses the
+    argument. A docstring saying it is "accepted for parity" is the finding;
+  - every re-export in the sibling shim binds the shim's league
+    (`functools.partial(f, league_id="10")` or the R equivalent). An unbound
+    re-export defaults to the parent league;
+  - every module-level fitted literal read by a league-aware function lives in
+    the per-league constants table. Each sibling row is either a refit on that
+    league's own fixture, with a test that the row equals the refit, or a seed
+    comment naming why it reuses the parent and which fixture is missing,
+    plus a test that pins the seed so a later refit has to change it on
+    purpose.
+  An unjustified parent value on a published sibling surface is MUST-FIX.
 - Every published artifact needs a **Model registry row** in the owning
   repo's `CLAUDE.md`: `model | artifact(s) | release tag | training data |
   fitting script | gates at publish | last retrain | cadence` — `frozen` is a
@@ -365,6 +418,25 @@ Procedure:
 
 ## §7 — oracle-join lens
 
+- **"Oracle" and "benchmark" are earned by a verifiable publish time.** An
+  external number (a published rating, a projection, a closing line, a
+  third-party model output) may be called an oracle or benchmark, and may
+  gate, only when its as-of or publish time can be verified and matches the
+  point the model claims: before the decision time for a prediction, the same
+  snapshot (for example final, post-bowl) for a retrospective rating.
+  Verifiable means a timestamp captured with the value: an API field, a dated
+  snapshot, or an archived page with its capture time. A parity oracle
+  regenerated from a pinned commit (the R package's output on a committed
+  fixture) is dated by that commit and qualifies. A fixture capture date does
+  not count when the capture came after the decision time, because the source
+  may have been revised since. Otherwise the number is a **comparison**: label
+  it so in tests, fixture READMEs and model cards, and never assert a gate
+  against it.
+  Grep: `grep -rniE "oracle|benchmark" tests/ docs/ <fixture>/README*`. For
+  each named source, find its publish-time column or README field. A gate
+  asserting against a source with no verifiable publish time is MUST-FIX. The
+  same source merely *called* an oracle or benchmark, with no gate, is
+  IMPORTANT.
 - Dtype agreement asserted before every oracle/crosswalk join
   (`left.schema[k] == right.schema[k]`); ids `Utf8` cast from the raw integer,
   never from a float (`"123.0"` is a common float-origin bug).
@@ -420,6 +492,24 @@ surfaces this ecosystem ships **default-on**.
 - **Conformal intervals need a cluster-respecting calibration split** and a
   coverage check on a held-out season. An interval quoted without realized
   coverage is unverified.
+- **An interval must widen when a material input changes or is uncertain.**
+  A starter or QB change, an unconfirmed lineup, or a late scratch moves the
+  point estimate, and it also makes the projection less certain. An interval
+  built from one fixed spread constant (`margin_sd`, `sigma`) or from
+  residuals pooled over normal games keeps the same width, so it is
+  overconfident exactly when the input is least settled. Grep the interval
+  code for its width source (`grep -nE "_sd\b|sigma|quantile|_lower|_upper" <file>`)
+  and the inputs for a lineup or starter state
+  (`grep -niE "starter|lineup|qb_|injur|scratch|confirmed" <file>`). Both
+  present with no path from the input state to the width is the finding.
+  Require a test that changes only that input and asserts the width grew:
+  ```python
+  base = project(game)
+  moved = project(game.with_columns(pl.lit(False).alias("lineup_confirmed")))
+  assert (moved["upper"] - moved["lower"]).item() > (base["upper"] - base["lower"]).item()
+  ```
+  Also require realized coverage reported separately for changed-input games.
+  Missing on a published decision surface is MUST-FIX; elsewhere IMPORTANT.
 
 ---
 
