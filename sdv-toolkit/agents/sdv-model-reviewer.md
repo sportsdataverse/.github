@@ -129,7 +129,8 @@ to surface prior threshold values for comparison against the current one.
   Assertions to require:
   ```python
   opener = pl.col("game_date") == pl.col("game_date").min().over(["team_id", "season"])
-  assert df.filter(opener)["rest_days"].is_null().all(), "a season opener carries off-season rest"
+  ok_opener = pl.col("rest_days").is_null() | pl.col("break_flag").fill_null(False)
+  assert df.filter(opener).select(ok_opener.all()).item(), "a season opener carries unflagged off-season rest"
   assert df.filter(~opener & ~pl.col("break_flag").fill_null(False))["rest_days"].max() <= cap, "a break is counted as rest"
   ```
   `cap` is a stated number with its source (the longest gap in the league's
@@ -427,7 +428,10 @@ Procedure:
   Verifiable means a timestamp captured with the value: an API field, a dated
   snapshot, or an archived page with its capture time. A parity oracle
   regenerated from a pinned commit (the R package's output on a committed
-  fixture) is dated by that commit and qualifies. A fixture capture date does
+  fixture) qualifies as a *parity* oracle. It proves the port matches its
+  source on the same inputs, and it is dated by that commit. It does not show
+  that a prediction was available before the decision, so it can gate parity
+  but not predictive skill. A fixture capture date does
   not count when the capture came after the decision time, because the source
   may have been revised since. Otherwise the number is a **comparison**: label
   it so in tests, fixture READMEs and model cards, and never assert a gate
@@ -502,14 +506,26 @@ surfaces this ecosystem ships **default-on**.
   and the inputs for a lineup or starter state
   (`grep -niE "starter|lineup|qb_|injur|scratch|confirmed" <file>`). Both
   present with no path from the input state to the width is the finding.
-  Require a test that changes only that input and asserts the width grew:
-  ```python
-  base = project(game)
-  moved = project(game.with_columns(pl.lit(False).alias("lineup_confirmed")))
-  assert (moved["upper"] - moved["lower"]).item() > (base["upper"] - base["lower"]).item()
-  ```
-  Also require realized coverage reported separately for changed-input games.
-  Missing on a published decision surface is MUST-FIX; elsewhere IMPORTANT.
+  Two requirements:
+  - **An unsettled input widens the interval.** Do not use a point
+    imputation. Average the projection over the possible lineups instead: by
+    the law of total variance that adds the between-scenario spread, so the
+    interval must come out wider than the settled one for the expected
+    lineup. Require a test that
+    changes only that input:
+    ```python
+    base = project(game)
+    moved = project(game.with_columns(pl.lit(False).alias("lineup_confirmed")))
+    assert (moved["upper"] - moved["lower"]).item() > (base["upper"] - base["lower"]).item()
+    ```
+  - **A confirmed change re-derives the width.** It must not inherit the old
+    one. The width usually grows, because the model has less history on the
+    new configuration. A width that stays put or shrinks needs realized
+    coverage on changed-input games as evidence. Do not pad the bounds to
+    pass a direction check.
+  For both, require realized coverage reported separately for changed-input
+  games. A width that ignores the input state on a published decision surface
+  is MUST-FIX; elsewhere it is IMPORTANT.
 
 ---
 
