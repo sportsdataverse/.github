@@ -1,6 +1,6 @@
 # Direction: R → Python (polars)
 
-Source is an R package function; target is sdv-py (polars 1.x and 2.x). This is the classic
+Source is an R package function; target is sdv-py (polars 2.x: 2.0 and 2.2). This is the classic
 "port an nflfastR/cfbfastR/bigballR recipe" or "reconcile `0.36-live` into `main`" case.
 
 ## Canonical R sources in the workspace
@@ -81,7 +81,7 @@ mark them `# derived-by-inspection` — still better than no oracle.
   0-indexed. A literal port of `x[i]`, `head(x, n)[n]`, or a row-number comparison off by a
   constant is the classic silent off-by-one — check every hard-coded index and every
   `row_number()`/`seq_along()` translation.
-- **polars 1.x/2.x surface only.** No `groupby` / `with_row_count` / `apply` / `pl.count` /
+- **polars 2.x surface only.** No `groupby` / `with_row_count` / `apply` / `pl.count` /
   `cumsum` / `set_at_idx` / `how="outer"` / `str.strip`, and follow the 2.0 rules (explicit `explode(empty_as_null=)`, no String->Date `cast`, matching `is_in` dtypes, `list.to_struct(fields=)`).
   If you wrote a 0.18-era call, it's
   a bug (the review step catches these).
