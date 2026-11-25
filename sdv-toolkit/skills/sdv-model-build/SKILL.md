@@ -191,6 +191,11 @@ Task-loop gotchas that recur:
 Shim the sibling league by reference (`wbb_rapm` pattern): re-export the core
 functions, default `league="<sibling>"`, supply the sibling's constants row.
 Re-run the same oracle gates on the sibling's fixtures at identical thresholds.
+Bind EVERY re-exported league-aware helper, not only the entry point: an
+unbound re-export silently defaults to the parent league. Refit each fitted
+constant on the sibling's own fixture and test that the row equals the refit.
+Where no fixture exists, keep the parent value as a commented seed and pin it
+with a test (`sdv-py#1264`; `sdv-model-reviewer` §6).
 
 ### Phase 6 — Close-out (per phase or per session)
 
