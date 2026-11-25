@@ -128,13 +128,18 @@ to surface prior threshold values for comparison against the current one.
     looks like ordinary rest.
   Assertions to require:
   ```python
-  opener = pl.col("game_date") == pl.col("game_date").min().over(["team_id", "season"])
+  df = df.sort("team_id", "season", "game_date", "game_id")
+  opener = pl.int_range(pl.len()).over(["team_id", "season"]) == 0  # row order, so a doubleheader has one opener
   ok_opener = pl.col("rest_days").is_null() | pl.col("break_flag").fill_null(False)
   assert df.filter(opener).select(ok_opener.all()).item(), "a season opener carries unflagged off-season rest"
   assert df.filter(~opener & ~pl.col("break_flag").fill_null(False))["rest_days"].max() <= cap, "a break is counted as rest"
   ```
   `cap` is a stated number with its source (the longest gap in the league's
   schedule outside its listed breaks), not a value tuned until the test passes.
+  The cap cannot see a break shorter than itself, so also join the league's
+  break calendar and assert that every gap containing a break date carries
+  `break_flag`. A flagged row is allowed past the cap on purpose: the flag is
+  the model's signal that the gap is not rest.
 - Trained artifacts: the training season(s) and the gate/backtest season(s)
   must not overlap (e.g. train in-game WP on 2023, gate on 2024). Check the
   trainer script and the gate test agree.
