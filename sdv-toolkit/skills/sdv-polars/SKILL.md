@@ -3,7 +3,7 @@ name: sdv-polars
 description: High-performance DataFrame library for Python ETL, analytics, and pandas migration. Use for expression-based data manipulation with lazy query optimization, parallel execution, streaming out-of-core processing, Arrow interoperability, and optional GPU execution.
 license: https://github.com/pola-rs/polars/blob/main/LICENSE
 allowed-tools: Read
-compatibility: polars 2.x requires Python 3.10+ (1.36 is the last release for 3.9); SDV code must run on both 1.x and 2.x. Install with uv pip install; optional extras enable Excel, database, cloud, pandas/NumPy, and GPU integrations.
+compatibility: polars 2.0 requires Python 3.10+ and 2.1+ requires 3.11+ (1.36 is the last release for 3.9); SDV code must run on every version its lock resolves (sdv-py 2.0 and 2.2; some satellite repos still 1.x). Install with uv pip install; optional extras enable Excel, database, cloud, pandas/NumPy, and GPU integrations.
 metadata:
   version: "1.1"
   skill-author: K-Dense Inc.
@@ -21,12 +21,12 @@ Polars is a lightning-fast DataFrame library for Python and Rust built on Apache
 
 Install the current stable Polars release verified during this refresh:
 ```bash
-uv pip install "polars==2.0.0"
+uv pip install "polars==2.2.0"
 ```
 
 Install optional integrations only when needed:
 ```bash
-uv pip install "polars[excel,database,fsspec,pandas,numpy]==2.0.0"
+uv pip install "polars[excel,database,fsspec,pandas,numpy]==2.2.0"
 ```
 
 Basic DataFrame creation and operations:
@@ -233,7 +233,7 @@ result = lf.filter(...).select(...).collect()
 df = pl.read_parquet("file.parquet")
 df.write_parquet("output.parquet")
 
-# A GitHub release URL: always use_pyarrow=True. polars 2.0's own reader asks for the
+# A GitHub release URL: always use_pyarrow=True. polars 2.x's own reader asks for the
 # footer with a suffix range, which the release CDN answers with 501 (1.x worked).
 df = pl.read_parquet(url, use_pyarrow=True)
 # footer-only schema of a release asset (bounded ranges; needs fsspec[http])
@@ -343,7 +343,7 @@ For comprehensive migration guide, load `references/pandas_migration.md`.
    - Use `.map_elements()` only when necessary
    - Prefer native Polars operations
 
-3. **Use streaming for very large data** (the default for lazy `collect()` in 2.0; explicit on 1.x):
+3. **Use streaming for very large data** (the default for lazy `collect()` in 2.x; explicit on 1.x):
    ```python
    lf.collect(engine="streaming")
    ```
@@ -361,6 +361,13 @@ For comprehensive migration guide, load `references/pandas_migration.md`.
    - Categorical for low-cardinality strings
    - Appropriate integer sizes (i32 vs i64)
    - Date types for temporal data
+
+6. **Build list-of-dict frames with `infer_schema_length=None`** when the keys vary by row
+   (stat names, flattened JSON). From 2.2, a key first seen after the inference window
+   (100 rows) raises `ComputeError`; 2.0 dropped that column silently:
+   ```python
+   pl.DataFrame(rows, infer_schema_length=None)  # or a full schema=
+   ```
 
 ### Expression Patterns
 

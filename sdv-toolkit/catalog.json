@@ -170,7 +170,7 @@
     {
       "name": "sdv-python-reviewer",
       "kind": "agent",
-      "purpose": "Python review by lens: polars (1.x + 2.x hazards) | http | parser-contract | docstring.",
+      "purpose": "Python review by lens: polars (1.x, 2.0 and 2.1/2.2 hazards) | http | parser-contract | docstring.",
       "archetypes": [
         "sdv-py",
         "raw",
@@ -438,7 +438,7 @@
     {
       "name": "sdv-polars",
       "kind": "skill",
-      "purpose": "High-performance polars DataFrame patterns for ETL and analytics -- lazy queries, streaming, and Arrow interop; code runs on polars 1.x and 2.x.",
+      "purpose": "High-performance polars DataFrame patterns for ETL and analytics -- lazy queries, streaming, and Arrow interop; code runs on every polars its lock resolves (sdv-py: 2.0 and 2.2).",
       "archetypes": [
         "sdv-py",
         "data"
