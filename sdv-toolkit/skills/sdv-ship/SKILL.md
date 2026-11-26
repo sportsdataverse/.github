@@ -22,6 +22,7 @@ off as you go.
 | "ship this", "open the PR", "land this change" | Phase 1 |
 | "address the coderabbit comments", "resolve the bot reviews" | Phase 5 |
 | "merge the stack", "retarget after merge" | Phase 8 |
+| "merged main into the PR", "catch-up merge" | Phase 8, catch-up merges |
 | "cut a release", "publish to PyPI" | Phase 9 |
 
 Do NOT replay earlier phases when entering mid-flow. State which phase you
@@ -104,6 +105,10 @@ A quick, scoped sweep that mirrors what CI will check, but only over what you
 changed — seconds, not a full `pytest`. Use this for fast inner-loop feedback
 before a commit; Phase 3 still runs the full suite as the final gate.
 
+**Just merged `main` into an open PR?** Skip this phase and Phase 3's full
+suite. Phase 8's *Catch-up merges* rule scopes the re-test to what the merge
+changed.
+
 1. **Find changed Python files** (staged + unstaged + untracked):
 
    ```sh
@@ -173,6 +178,8 @@ When preflight is green, proceed to Phase 3 for the full-suite gate and commit.
 
 1. **Run the full test suite.** Not a subset — the whole thing must be green
    before declaring done, even though Phase 2 already ran a scoped pass.
+   Once per PR, at its first green state: a later catch-up merge re-tests by
+   Phase 8's *Catch-up merges* rule instead.
 
    ```sh
    uv run pytest
@@ -639,8 +646,10 @@ The drift gate passing at the old head means nothing at the new one:
 
 ```sh
 uv run python tools/codegen/generate.py && uv run python tools/codegen/generate.py --check
-uv run pytest -q   # or Phase 2's scoped preflight
 ```
+
+Then re-test by the *Catch-up merges* rule below: only what the rebase
+changed, not the full suite.
 
 Commit any regen delta as its own `chore(docs): regenerate reference docs`
 commit. Check `git status` for a silent `uv.lock` re-lock before committing.
@@ -649,13 +658,63 @@ commit. Check `git status` for a silent `uv.lock` re-lock before committing.
 
 The child is now the bottom. Loop steps 2–4 until the stack is flat.
 
-### Quick reference — the three past incidents this prevents
+### Catch-up merges — re-test only what the merge changed
+
+After merging `main` into an open PR (or rebasing a child onto it), re-test
+only what the merge changed in that PR's diff. Main's own changes already
+passed CI on main. The rule exists because "We can't be doing a full test
+suite every time we have to deal with merge conflicts that take 25min." A
+props PR lost hours repeating 25-minute local runs after each catch-up merge.
+
+The scope is the files both sides touched. That is a superset of the textual
+conflicts, and it should be: a clean auto-merge in a shared file can break
+too. After the merge commit:
+
+```sh
+comm -12 <(git diff --name-only --no-renames HEAD^2...HEAD^1 | sort) \
+         <(git diff --name-only --no-renames HEAD^1...HEAD^2 | sort)
+```
+
+`--no-renames` keeps a file one side renamed and the other edited in the
+overlap under its old name; test its new name. Pass ruff and pytest only paths
+that still exist (`[ -e "$f" ]`), since a deleted file stays in the overlap.
+
+A rebase leaves no merge commit. Save the old tip first
+(`pre=$(git rev-parse HEAD)`), then use `$pre` for `HEAD^1` and `origin/main`
+for `HEAD^2`. For a stacked child, list its own files with
+`git diff --name-only <old-parent-branch>..$pre` instead, so the parent's
+files stay out of the scope.
+
+Rows stack, and every catch-up runs `generate.py` + `--check`. An empty
+overlap means drift check, then push.
+
+| The overlap is in | Re-test |
+|---|---|
+| Generated and bookkeeping files only: generated docs, `tools/codegen/manual_column_descriptions.yaml`, the `tests/mutants/registry.yaml` tail, `changelog.d/` fragments, ledger rows | `ruff` on the changed `.py`, push. No pytest, no mutant runs, no quality scoreboard |
+| Source or test files | `ruff` + the mypy ratchet on them, then only the tests that cover them: the overlapped test files plus `git grep -l -w '<module stem>' -- tests/`. Run `uv run pytest <those files> -q`; if the list is empty, skip pytest (no paths means the full suite) |
+| A resolved hunk inside a mutant row's `snippet` | That row's group only: `uv run python tools/run_mutants.py --only <group>` |
+
+- **Full suites run once per PR**, at its first green state (Phase 3). CI
+  covers the rest.
+- **Main churning?** Briefly freeze other merges and land this PR, instead of
+  re-running suites after every new catch-up.
+- **Push in the background.** The pre-push hook is slow. Confirm the push:
+  `git ls-remote origin <branch>` must print `git rev-parse HEAD`.
+- **Taking one side can bring back code another PR replaced.** After taking
+  one side of a conflict in a file that another merged PR also fixed, re-check
+  that the other PR's fix survived (`git log --oneline HEAD^1..HEAD^2 -- <file>`
+  names the PRs that just arrived). Taking sdv-py #1316's side of `nba_player_props.py`
+  silently brought back the All-Star filter that #1319 had replaced.
+
+### Quick reference — the past incidents this prevents
 
 | Incident | Guard |
 |---|---|
 | Drift gate red after retarget (regenerated at old head) | Step 4 always re-runs `generate.py --check` at the new head |
 | Docs merge-conflict hand-resolved wrong | Step 3 conflict rule: take either side, regenerate |
 | Branch deleted while PR still open → stranded work | Step 2: verify `state == MERGED` before any cleanup |
+| Hours lost to a 25-minute full suite after each catch-up merge | Catch-up merges: re-test only the overlap |
+| Taking one side resurrected a filter another PR had replaced | Catch-up merges: re-check the other PR's fix survived |
 
 ## Phase 9 — Release
 
