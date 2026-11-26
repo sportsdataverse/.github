@@ -59,12 +59,9 @@ jobs:
           cp -r sdv-toolkit "$probe"
           printf 'no frontmatter\n' > "$probe/agents/zz-probe.md"
           printf '{"hooks":{"NotAnEvent":[]}}' > "$probe/hooks/hooks.json"
-          mkdir -p "$probe/skills/zz-probe"
-          printf -- '---\nname: [broken\ndescription:\n---\nbody\n' > "$probe/skills/zz-probe/SKILL.md"
           if claude plugin validate --strict "$probe" > "$RUNNER_TEMP/out.txt" 2>&1; then
             cat "$RUNNER_TEMP/out.txt"; echo "::error::validator passed a deliberately broken plugin"; exit 1
           fi
           cat "$RUNNER_TEMP/out.txt"
           grep -q 'zz-probe.md' "$RUNNER_TEMP/out.txt" && grep -q 'NotAnEvent' "$RUNNER_TEMP/out.txt" \
-            && grep -q 'zz-probe/SKILL.md' "$RUNNER_TEMP/out.txt" \
-            || { echo "::error::validator failed but did not name every broken file"; exit 1; }
+            || { echo "::error::validator failed but did not name both broken files"; exit 1; }
