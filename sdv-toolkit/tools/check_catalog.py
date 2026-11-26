@@ -30,53 +30,96 @@ def discover(root: pathlib.Path) -> tuple[set, set]:
     return skills, agents
 
 
+def _scalars(node):
+    """Every value scalar under a composed PyYAML node (mapping keys skipped)."""
+    if hasattr(node, "value") and isinstance(node.value, list):
+        for item in node.value:
+            yield from _scalars(item[1] if isinstance(item, tuple) else item)
+    elif node is not None:
+        yield node
+
+
 def _yaml_values(yaml, who: str, body: list) -> tuple:
     """Parse the front matter with PyYAML: exact, used whenever it is installed (CI)."""
+    src = "\n".join(body)
     try:
-        data = yaml.safe_load("\n".join(body))
+        root, data = yaml.compose(src), yaml.safe_load(src)
     except yaml.YAMLError as exc:
-        first = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
+        mark = getattr(exc, "problem_mark", None)
+        what = getattr(exc, "problem", None) or str(exc).splitlines()[0]
+        at = " at line %d" % (mark.line + 2) if mark else ""
         return [
-            "%s: front matter is not valid YAML (%s); quote the value or use '>-'"
-            % (who, first)
+            "%s: front matter is not valid YAML (%s%s); quote the value or use '>-'"
+            % (who, what, at)
         ], None
     if not isinstance(data, dict):
         return ["%s: front matter is not a key: value mapping" % who], None
-    # A ' #' in a plain value parses, but YAML drops the rest of the line as a comment.
-    hashes = sum(l.count("#") for l in body if not l.lstrip().startswith("#"))
-    if hashes != yaml.safe_dump(data).count("#"):
-        return [
-            "%s: an unquoted value contains ' #', so YAML cuts it there; quote it or use '>-'"
-            % who
-        ], None
-    return [], {k: "" if v is None else str(v) for k, v in data.items()}
+    problems = []
+    for node in _scalars(root):
+        # A '#' after a plain value on the same line starts a comment: YAML keeps
+        # only the text before it. Block (| >) and quoted scalars are not affected.
+        line, col = node.end_mark.line, node.end_mark.column
+        if (
+            node.style is None
+            and line < len(body)
+            and body[line][col:].lstrip().startswith("#")
+        ):
+            problems.append(
+                "%s: line %d: ' #' after an unquoted value starts a comment, so YAML "
+                "drops the rest; quote it or use '>-'" % (who, line + 2)
+            )
+    return problems, {k: "" if v is None else str(v) for k, v in data.items()}
 
 
 def _subset_values(who: str, body: list) -> tuple:
-    """Stdlib fallback: top-level plain scalars only."""
+    """Stdlib fallback: top-level scalars only."""
     # ponytail: subset, not a YAML parser, so release.py still runs on a bare python.
-    # It misses e.g. a trailing ':', a value opening with * @ ` % !, and ': ' on a
-    # continuation line; CI installs PyYAML and takes the exact path instead.
-    problems, values = [], {}
+    # It misses e.g. a trailing ':', a value opening with * @ ` % !, and text after a
+    # closing quote; CI installs PyYAML and takes the exact path instead.
+    problems, values, plain = [], {}, None
+
+    def bad(n, msg):
+        problems.append("%s: line %d: %s; quote it or use '>-'" % (who, n + 2, msg))
+
     for i, line in enumerate(body):
-        if not line.strip() or line[0] in " \t#-":
-            continue  # continuation, nested block, comment or list item
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if line[0] in " \t":
+            if line[0] == "\t":
+                bad(i, "indented with a tab, which YAML does not allow")
+            elif plain and (": " in line or " #" in line):
+                bad(
+                    i,
+                    "continues unquoted %s and contains %r"
+                    % (plain, ": " if ": " in line else " #"),
+                )
+            continue  # continuation, nested block or block-scalar content
+        plain = None
+        if line[0] == "-":
+            continue
         key, sep, value = line.partition(":")
+        key = key.strip()
         if not sep:
             problems.append(
                 "%s: front-matter line %r is not 'key: value'" % (who, line[:60])
             )
             continue
+        if value[:1] not in ("", " "):
+            bad(i, "%s needs one space after ':', not %r" % (key, value[:1]))
+            continue
         value = value.strip()
         if value[:1] in ("|", ">"):
-            nxt = body[i + 1] if i + 1 < len(body) else ""
-            value = nxt.strip() if nxt[:1] in " \t" else ""
-        elif value[:1] not in ("'", '"', "[", "{") and (": " in value or " #" in value):
-            problems.append(
-                "%s: %s is an unquoted value containing %r; quote it or use '>-'"
-                % (who, key.strip(), ": " if ": " in value else " #")
-            )
-        values[key.strip()] = value.strip("'\"")
+            nxt = next((l for l in body[i + 1 :] if l.strip()), "")
+            value = nxt.strip() if nxt[:1] == " " else ""
+        elif value[:1] not in ("'", '"', "[", "{"):
+            plain = key if value else None
+            if ": " in value or " #" in value:
+                bad(
+                    i,
+                    "%s is an unquoted value containing %r"
+                    % (key, ": " if ": " in value else " #"),
+                )
+        values[key] = value.strip("'\"")
     return problems, values
 
 
@@ -87,11 +130,11 @@ def frontmatter_problems(
 
     `claude plugin validate` (2.1.326) does not check skills and tolerates these
     agent errors, but a plain value holding ': ' is a YAML error ("mapping values
-    are not allowed here") that other loaders reject, and one holding ' #' is
-    silently cut at the '#'. use_yaml: None = PyYAML if installed, else the subset.
+    are not allowed here") that other loaders reject, and a ' #' after a plain value
+    silently cuts it there. use_yaml: None = PyYAML if installed, else the subset.
     """
     who = "%s %r" % (kind, name)
-    lines = text.lstrip("﻿").splitlines()
+    lines = text.lstrip(chr(0xFEFF)).splitlines()
     if not lines or lines[0].strip() != "---":
         return ["%s: does not open with a --- front-matter block" % who]
     end = next((i for i, l in enumerate(lines[1:], 1) if l.strip() == "---"), None)
