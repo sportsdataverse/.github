@@ -74,7 +74,8 @@ These rules are the probe's own (the SessionStart router's archetypes differ: it
 `AGENTS.md`, `CONTRIBUTING.md`) that contradicts a reference wins for that repo; record
 the conflict.
 
-Ask (or take from the request) which lenses and which questions. Default: all five.
+Ask (or take from the request) which lenses and which questions. Default: all five;
+add `claims` when asked whether the docs' facts are true, or before the script goes blocking.
 
 ## Phase 1 — Pin the commit
 
@@ -136,7 +137,7 @@ session rate limit). Never a `general-purpose` agent for a lens this agent owns.
 prompt carries exactly:
 
 ```
-lens: <contributor-docs | companions | coverage | currency | polish>
+lens: <contributor-docs | companions | coverage | currency | polish | claims>
 archetype: <primary> (+ secondary: <secondary, ...>)
 repo: <owner/name>   audit tree: <W>   sha: <short sha>   date: <YYYY-MM-DD>
 references: <this-skill-dir>/references/<file>.md, ...   (every file the archetype probe listed; run only your lens's section in each)
@@ -153,6 +154,7 @@ questions: <the user's questions this lens answers, verbatim>
 | 03 | `coverage` | Do the front pages (home, intro, README, nav) cover what the registries say exists, with consistent names and live links? |
 | 04 | `currency` | Release state, outdated deps, lock advisories, docs/MCP/search index freshness, CI and crons on main |
 | 05 | `polish` | What a stranger sees first, ranked by visibility: live pages, leaks, metadata/SEO, root clutter, README header, repo description/topics |
+| 06 | `claims` (opt-in) | Does every checkable SDV fact (F1-F6: names, columns, endpoint params, release tags, paths, env vars/flags) resolve at this SHA? Seeded by `tools/check_claims.py`; runs after the five, so the cap of 5 holds |
 
 When subagents are unavailable, read `<this-skill-dir>/../../agents/sdv-repo-auditor.md`
 and run each lens inline, one after another, writing the same files.
