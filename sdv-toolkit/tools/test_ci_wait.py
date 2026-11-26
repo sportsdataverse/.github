@@ -343,6 +343,7 @@ class Verdicts(unittest.TestCase):
 
     def test_sha_mode_without_a_pr_reaches_a_verdict(self):
         # --sha reads no PR, so bot_states is {}: it once raised KeyError 'Copilot' on its first poll.
+        # Only the ready case reaches that lookup; the failed case returns before it.
         for checks_, rc_want, verdict in ((GREEN, 0, "ready"), (checks(run_("pytest", conclusion="failure")), 1, "failed")):
             table = routes(PY, checks_=checks_)
             clock, out = Clock(T0), io.StringIO()
