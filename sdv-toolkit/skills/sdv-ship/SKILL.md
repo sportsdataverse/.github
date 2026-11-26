@@ -671,9 +671,13 @@ conflicts, and it should be: a clean auto-merge in a shared file can break
 too. After the merge commit:
 
 ```sh
-comm -12 <(git diff --name-only HEAD^2...HEAD^1 | sort) \
-         <(git diff --name-only HEAD^1...HEAD^2 | sort)
+comm -12 <(git diff --name-only --no-renames HEAD^2...HEAD^1 | sort) \
+         <(git diff --name-only --no-renames HEAD^1...HEAD^2 | sort)
 ```
+
+`--no-renames` keeps a file one side renamed and the other edited in the
+overlap under its old name; test its new name. Pass ruff and pytest only paths
+that still exist (`[ -e "$f" ]`), since a deleted file stays in the overlap.
 
 A rebase leaves no merge commit. Save the old tip first
 (`pre=$(git rev-parse HEAD)`), then use `$pre` for `HEAD^1` and `origin/main`

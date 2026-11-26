@@ -952,7 +952,7 @@ class CatchUpMergeRule(unittest.TestCase):
         body = sk[rule:p9]
         for needle in (
             "comm -12",
-            "HEAD^2...HEAD^1",
+            "--no-renames HEAD^2...HEAD^1",
             "pre=$(git rev-parse HEAD)",
             "--only <group>",
             "No pytest",
