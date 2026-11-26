@@ -30,51 +30,50 @@ def discover(root: pathlib.Path) -> tuple[set, set]:
     return skills, agents
 
 
-def frontmatter_problems(name: str, text: str) -> list:
-    """Problems with one SKILL.md's front matter.
+def frontmatter_problems(name: str, text: str, kind: str = "skill") -> list:
+    """Problems with one SKILL.md's (or agents/<name>.md's) front matter.
 
-    `claude plugin validate` (2.1.326) does not check skills, and a plain value
-    holding ': ' is a YAML error ("mapping values are not allowed here") that
-    other skill loaders reject. A value holding ' #' is silently cut at the '#'.
+    `claude plugin validate` (2.1.326) does not check skills and tolerates these
+    agent errors, but a plain value holding ': ' is a YAML error ("mapping values
+    are not allowed here") that other loaders reject. A value holding ' #' is
+    silently cut at the '#'.
     """
     # ponytail: stdlib subset check of top-level plain scalars, not a YAML parser
     # (tools stay stdlib-only so release.py runs on a bare python). Upgrade path:
     # yaml.safe_load once the tools take a dependency; test_check_catalog
     # cross-checks this against PyYAML when it is installed.
+    who = "%s %r" % (kind, name)
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
-        return ["skill %r: SKILL.md does not open with a --- front-matter block" % name]
+        return ["%s: does not open with a --- front-matter block" % who]
     end = next((i for i, l in enumerate(lines[1:], 1) if l.strip() == "---"), None)
     if end is None:
-        return ["skill %r: front matter has no closing ---" % name]
+        return ["%s: front matter has no closing ---" % who]
     problems, values = [], {}
     body = lines[1:end]
     for i, line in enumerate(body):
-        if not line.strip() or line[0] in " \t#-":
+        if not line.strip() or line[0] in " 	#-":
             continue  # continuation, nested block, comment or list item
         key, sep, value = line.partition(":")
         if not sep:
-            problems.append(
-                "skill %r: front-matter line %r is not 'key: value'" % (name, line[:60])
-            )
+            problems.append("%s: front-matter line %r is not 'key: value'" % (who, line[:60]))
             continue
         value = value.strip()
         if value[:1] in ("|", ">"):
             nxt = body[i + 1] if i + 1 < len(body) else ""
-            value = nxt.strip() if nxt[:1] in " \t" else ""
+            value = nxt.strip() if nxt[:1] in " 	" else ""
         elif value[:1] not in ("'", '"', "[", "{") and (": " in value or " #" in value):
             problems.append(
-                "skill %r: %s is an unquoted value containing %r; quote it or use '>-'"
-                % (name, key.strip(), ": " if ": " in value else " #")
+                "%s: %s is an unquoted value containing %r; quote it or use '>-'"
+                % (who, key.strip(), ": " if ": " in value else " #")
             )
         values[key.strip()] = value
     if values.get("name", "").strip("'\"") != name:
         problems.append(
-            "skill %r: front-matter name %r does not match its directory"
-            % (name, values.get("name"))
+            "%s: front-matter name %r does not match its path" % (who, values.get("name"))
         )
     if not values.get("description", "").strip("'\""):
-        problems.append("skill %r: front matter has no description" % name)
+        problems.append("%s: front matter has no description" % who)
     return problems
 
 
@@ -123,6 +122,9 @@ def check(root: pathlib.Path) -> list:
     for name in sorted(disk_skills):
         text = (root / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
         problems.extend(frontmatter_problems(name, text))
+    for name in sorted(disk_agents):
+        text = (root / "agents" / (name + ".md")).read_text(encoding="utf-8")
+        problems.extend(frontmatter_problems(name, text, kind="agent"))
     for name in sorted(disk_agents - catalog_agents):
         problems.append("agent %r exists on disk but has no catalog.json row" % name)
     for name in sorted(catalog_agents - disk_agents):

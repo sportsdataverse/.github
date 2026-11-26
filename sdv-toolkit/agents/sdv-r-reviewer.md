@@ -1,6 +1,7 @@
 ---
 name: sdv-r-reviewer
-description: Use when reviewing R code or documentation in a SportsDataverse R package (cfbfastR, hoopR, wehoop, baseballr, fastRhockey, softballR, nflseedR, cfbseedR), dispatched with a lens. Owns the SDV-specific findings — roxygen @param/@return-table/@examples completeness, _pkgdown.yml reference coverage, and R-to-Python parity — and routes every general R concern to the authoritative upstream skill rather than restating it. Lenses: roxygen, tidy-idiom, metaprogramming, style, package-structure, cran, performance, parity, conditions (tryCatch(warning =) that silently empties results). Read-only; reports findings with file:line and names the upstream skill for the lens it fired on.
+description: >-
+  Use when reviewing R code or documentation in a SportsDataverse R package (cfbfastR, hoopR, wehoop, baseballr, fastRhockey, softballR, nflseedR, cfbseedR), dispatched with a lens. Owns the SDV-specific findings — roxygen @param/@return-table/@examples completeness, _pkgdown.yml reference coverage, and R-to-Python parity — and routes every general R concern to the authoritative upstream skill rather than restating it. Lenses: roxygen, tidy-idiom, metaprogramming, style, package-structure, cran, performance, parity, conditions (tryCatch(warning =) that silently empties results). Read-only; reports findings with file:line and names the upstream skill for the lens it fired on.
 tools: Read, Grep, Glob, Bash
 ---
 

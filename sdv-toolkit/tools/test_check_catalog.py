@@ -20,7 +20,8 @@ def build(root: pathlib.Path, skills, agents, catalog) -> None:
     (root / "agents").mkdir(parents=True, exist_ok=True)
     for name in agents:
         (root / "agents" / (name + ".md")).write_text(
-            "---\nname: %s\n---\n" % name, encoding="utf-8"
+            "---\nname: %s\ndescription: Use when testing.\n---\n" % name,
+            encoding="utf-8",
         )
     (root / "catalog.json").write_text(json.dumps(catalog), encoding="utf-8")
 
@@ -132,6 +133,28 @@ class FrontmatterTest(unittest.TestCase):
                 any("sdv-ship" in p and "unquoted" in p for p in problems), problems
             )
 
+    def test_check_reports_a_broken_agent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            build(
+                root,
+                [],
+                ["sdv-r-reviewer"],
+                {"entries": [entry("sdv-r-reviewer", "agent")]},
+            )
+            (root / "agents" / "sdv-r-reviewer.md").write_text(
+                "---\nname: sdv-r-reviewer\ndescription: Lenses: roxygen\n---\n",
+                encoding="utf-8",
+            )
+            problems = check_catalog.check(root)
+            self.assertTrue(
+                any(
+                    p.startswith("agent 'sdv-r-reviewer'") and "unquoted" in p
+                    for p in problems
+                ),
+                problems,
+            )
+
     def test_agrees_with_pyyaml(self):
         """Oracle: the subset check and a real YAML parser agree on every case and
         every real skill. CI installs PyYAML so this runs there, not skipped."""
@@ -144,6 +167,10 @@ class FrontmatterTest(unittest.TestCase):
             f.parent.name: f.read_text(encoding="utf-8")
             for f in skills.glob("*/SKILL.md")
         }
+        agents = skills.parent / "agents"
+        real.update(
+            {f.stem: f.read_text(encoding="utf-8") for f in agents.glob("*.md")}
+        )
         self.assertGreater(len(real), 0)
         cases = [("s", t) for t in GOOD.values()] + [("s", BAD["colon"][0])]
         for name, text in cases + list(real.items()):
