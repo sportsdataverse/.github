@@ -1,6 +1,7 @@
 """Tests for sdv_router. Run: python -m unittest discover -s hooks -p 'test_*.py'"""
 
 import pathlib
+import shutil
 import tempfile
 import unittest
 
@@ -108,8 +109,65 @@ class RenderTest(unittest.TestCase):
         )
         self.assertIn("ARCHIVE", card)
 
+    def test_card_carries_the_facts_line(self):
+        card = sdv_router.render_card("sdv-py", "sportsdataverse-py", CATALOG, {})
+        self.assertIn(sdv_router.FACTS_LINE, card)
+        self.assertNotIn("DEGRADED", card)
+
+    def test_degraded_line_when_docs_mcp_cannot_start(self):
+        card = sdv_router.render_card(
+            "r-package", "cfbfastR", CATALOG, {}, "uvx is not on PATH"
+        )
+        self.assertIn("DEGRADED: sdv-docs cannot start (uvx is not on PATH)", card)
+        self.assertIn("[unverified: from memory]", card)
+
+
+class DocsMcpProbeTest(unittest.TestCase):
+    def write(self, root, servers):
+        (root / ".mcp.json").write_text(
+            '{"mcpServers": %s}' % servers, encoding="utf-8"
+        )
+
+    def test_missing_launcher_is_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self.write(
+                root,
+                '{"sdv-docs": {"type": "stdio", "command": "no-such-launcher-xyz"}}',
+            )
+            self.assertEqual(
+                sdv_router.docs_mcp_problem(root), "no-such-launcher-xyz is not on PATH"
+            )
+
+    @unittest.skipUnless(shutil.which("git"), "git not on PATH")
+    def test_launcher_on_path_is_healthy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self.write(root, '{"sdv-docs": {"type": "stdio", "command": "git"}}')
+            self.assertIsNone(sdv_router.docs_mcp_problem(root))
+
+    def test_missing_entry_is_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self.write(root, '{"context7": {"type": "http", "url": "x"}}')
+            self.assertEqual(
+                sdv_router.docs_mcp_problem(root), "no sdv-docs entry in .mcp.json"
+            )
+
+    def test_shipped_config_names_sdv_docs(self):
+        # the real plugin config must still have the entry the probe looks for
+        root = pathlib.Path(sdv_router.__file__).resolve().parent.parent
+        self.assertNotIn(
+            sdv_router.docs_mcp_problem(root),
+            {".mcp.json is unreadable", "no sdv-docs entry in .mcp.json"},
+        )
+
+
+class BoundedTest(unittest.TestCase):
     def test_card_is_bounded(self):
-        card = sdv_router.render_card("data", "nfl-data", CATALOG, {})
+        card = sdv_router.render_card(
+            "data", "nfl-data", CATALOG, {}, "uvx is not on PATH"
+        )
         self.assertLessEqual(
             len(card.splitlines()), 30, "router card must stay ~25 lines"
         )

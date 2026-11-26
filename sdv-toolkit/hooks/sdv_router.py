@@ -10,8 +10,14 @@ Silent by design outside SDV repos: no archetype means no output, no cost.
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
+
+FACTS_LINE = (
+    "Facts:   SDV facts: sdv-docs -> source -> capture -> one probe; all miss = "
+    "'not indexed'; sdv-docs down = [unverified: from memory]  (/sdv-conventions)"
+)
 
 ARCHETYPE_BINDINGS = {
     "sdv-py": "polars 2.x (>=2.0,<3; code runs on 2.0 and 2.2) · codegen output is never hand-edited · returns descriptions "
@@ -89,7 +95,32 @@ def load_overrides(path: pathlib.Path) -> dict:
     return overrides
 
 
-def render_card(archetype: str, repo: str, catalog: dict, overrides: dict) -> str:
+def docs_mcp_problem(plugin_root: pathlib.Path):
+    """Why the sdv-docs MCP server cannot start, or None when nothing local says so.
+
+    No network: reads the plugin's .mcp.json and looks the launcher up on PATH. A
+    server that starts and then fails is invisible here; the session banner shows it.
+    """
+    try:
+        servers = json.loads((plugin_root / ".mcp.json").read_text(encoding="utf-8"))
+        entry = servers.get("mcpServers", {}).get("sdv-docs")
+    except (OSError, ValueError, AttributeError):
+        return ".mcp.json is unreadable"
+    if not isinstance(entry, dict):
+        return "no sdv-docs entry in .mcp.json"
+    command = entry.get("command")
+    if entry.get("type", "stdio") == "stdio" and command and not shutil.which(command):
+        return "%s is not on PATH" % command
+    return None
+
+
+def render_card(
+    archetype: str,
+    repo: str,
+    catalog: dict,
+    overrides: dict,
+    docs_problem=None,
+) -> str:
     entries = catalog.get("entries", [])
 
     def applies(entry):
@@ -112,6 +143,12 @@ def render_card(archetype: str, repo: str, catalog: dict, overrides: dict) -> st
     gate = ARCHETYPE_GATES.get(archetype, "")
     if gate:
         lines.append("Gate:    " + gate)
+    lines.append(FACTS_LINE)
+    if docs_problem:
+        lines.append(
+            "DEGRADED: sdv-docs cannot start (%s). Say so once; label each fact you "
+            "do not resolve from source [unverified: from memory]." % docs_problem
+        )
     lines.append("Index:   /sdv-guide   ·   Found something durable? /sdv-learn")
     note = overrides.get(repo)
     if note:
@@ -134,8 +171,12 @@ def main() -> int:
         return 0  # never let a broken catalog break session start
 
     overrides = load_overrides(here / "sdv-overrides.tsv")
+    try:
+        problem = docs_mcp_problem(here.parent)
+    except Exception:  # a malformed config must not cost the whole card
+        problem = None
     sys.stdout.write(
-        render_card(archetype, repo_name(remote), catalog, overrides) + "\n"
+        render_card(archetype, repo_name(remote), catalog, overrides, problem) + "\n"
     )
     return 0
 

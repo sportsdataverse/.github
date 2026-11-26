@@ -1,7 +1,7 @@
 ---
 name: sdv-conventions
 description: >-
-  Use when working in any SportsDataverse repo to load that repo archetype's binding conventions — the rules that differ between sdv-py, a -raw producer, a -data producer, and an R package, and that are the usual source of drift when moving between repos. Loaded automatically by the SessionStart router; invoke directly for "what are the conventions here", "what applies in this repo", "repo rules", or when a convention question arises mid-task. Reference files: sdv-py (polars 1.x/2.x surface, codegen is never hand-edited, manual_column_descriptions.yaml is the only place returns descriptions live, ID/join-key dtype discipline, mypy ratchet), raw (scraping-only, committed per-game JSON, rate discipline), data (NN_ stage numbering is intended build order not run order, idempotent re-runs, scripts earn scripts/ only via runbook wiring, models need registry rows), r-package (roxygen completeness, pkgdown reference coverage, tibble returns, snake_case). Also carries UNIVERSAL rules that apply in every archetype — validate the instrument, not just the result (a measurement that drives an action must carry a control, a reconciliation, or a negative case before it is reported, and a selector that narrows silently is worse than no selector); the shared-checkout collision protocol (gh pr list for your item before writing code, rebase-and-drop rather than force-push, never git reset --hard in a shared worktree); and the Windows file-rewrite hazards that turn a small diff into an unreviewable one (pathlib read_text/write_text flipping LF to CRLF, format-on-save reflowing untouched files, MSYS mangling leading-slash git arguments, and a pipe swallowing the exit code).
+  Use when working in any SportsDataverse repo to load that repo archetype's binding conventions — the rules that differ between sdv-py, a -raw producer, a -data producer, and an R package, and that are the usual source of drift when moving between repos. Loaded automatically by the SessionStart router; invoke directly for "what are the conventions here", "what applies in this repo", "repo rules", or when a convention question arises mid-task. Reference files: sdv-py (polars 1.x/2.x surface, codegen is never hand-edited, manual_column_descriptions.yaml is the only place returns descriptions live, ID/join-key dtype discipline, mypy ratchet), raw (scraping-only, committed per-game JSON, rate discipline), data (NN_ stage numbering is intended build order not run order, idempotent re-runs, scripts earn scripts/ only via runbook wiring, models need registry rows), r-package (roxygen completeness, pkgdown reference coverage, tibble returns, snake_case). Also carries UNIVERSAL rules that apply in every archetype — facts come from lookups (a function, column, endpoint parameter, release tag, path, env var or flag stated about an SDV repo is resolved through sdv-docs, then origin/main source, then a capture, then one probe, and labelled [unverified: from memory] when sdv-docs is down); validate the instrument, not just the result (a measurement that drives an action must carry a control, a reconciliation, or a negative case before it is reported, and a selector that narrows silently is worse than no selector); the shared-checkout collision protocol (gh pr list for your item before writing code, rebase-and-drop rather than force-push, never git reset --hard in a shared worktree); and the Windows file-rewrite hazards that turn a small diff into an unreviewable one (pathlib read_text/write_text flipping LF to CRLF, format-on-save reflowing untouched files, MSYS mangling leading-slash git arguments, and a pipe swallowing the exit code).
 ---
 
 # SDV conventions — archetype packs
@@ -17,6 +17,26 @@ full style guide.
 | `-data` producer (build → publish parquet) | `references/data.md` |
 | R package (cfbfastR, hoopR, wehoop, …) | `references/r-package.md` |
 | README of any archetype (sections, badges, footer) | `references/readme.md` |
+| Facts about any SDV repo: classes, lookup order, exemptions | `references/facts.md` |
+
+## Universal — facts come from lookups
+
+A function name, column and dtype, endpoint parameter, release tag, path, env var
+or CLI flag stated as true about an SDV repo is a **checkable fact** (classes F1-F6
+in `references/facts.md`). Plans and future tense are not.
+
+1. **Lookup before statement.** Before writing one into a durable surface (repo
+   file, PR body, ledger, register row, spec), resolve it: the sdv-docs MCP, then
+   repo source at `origin/main`, then a captured payload, then one live probe. Cite
+   where it resolved (`file:line`, schema key, probe status) unless the same diff
+   defines it.
+2. **If every lookup misses, that is the finding.** Do not state the fact; write
+   `<fact>: not indexed (close: a, b)`. Never fall back to a remembered spelling.
+3. **Degraded mode.** If sdv-docs is unreachable, say so once per session and label
+   each fact still unchecked `[unverified: from memory]`.
+4. **Durable surfaces get the strict check.** Chat follows 1-3 as discipline; files
+   also get the toolkit's `tools/check_claims.py` (T1 names, T2 paths;
+   report-only) and the `claims` lens of `sdv-repo-auditor`.
 
 ## Universal — validate the instrument, not just the result
 

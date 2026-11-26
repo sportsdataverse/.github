@@ -1,7 +1,7 @@
 ---
 name: sdv-docs-reviewer
 description: >-
-  Use to audit or produce the three-column returns table (col_name, type, description) across sdv-py and the SportsDataverse R packages — the one documentation artifact both languages share. Modes — audit (find functions and endpoints missing a returns table, schema columns with empty descriptions, and endpoint YAMLs that declare a parser but no returns_schema) and map (turn a captured provider payload from ESPN, Fox, CBS, or Yahoo into documentation: a top-level-key table, a returns table, and divergence-vs-sibling notes). Descriptions belong in manual_column_descriptions.yaml and never in schemas/**.yaml, which is clobbered on re-capture. Language-agnostic — both sdv-python-reviewer and sdv-r-reviewer hand off here rather than duplicating the check.
+  Use to audit or produce the three-column returns table (col_name, type, description) across sdv-py and the SportsDataverse R packages — the one documentation artifact both languages share. Modes — audit (find functions and endpoints missing a returns table, schema columns with empty descriptions, endpoint YAMLs that declare a parser but no returns_schema, and claims — function names, columns and dtypes, endpoint parameters, release tags, paths and env vars in docstrings and returns tables that do not resolve at origin/main, with the future-tense and negation exemptions) and map (turn a captured provider payload from ESPN, Fox, CBS, or Yahoo into documentation: a top-level-key table, a returns table, and divergence-vs-sibling notes). Descriptions belong in manual_column_descriptions.yaml and never in schemas/**.yaml, which is clobbered on re-capture. Language-agnostic — both sdv-python-reviewer and sdv-r-reviewer hand off here rather than duplicating the check.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -112,9 +112,44 @@ site):
 grep -c "fun:" _pkgdown.yml 2>/dev/null || echo "no _pkgdown.yml"
 ```
 
+## Check D — Claims in the documentation are true
+
+Returns tables and docstrings state facts. Resolve each against `origin/main` (rules
+and exemptions: `skills/sdv-conventions/references/facts.md`):
+
+- **F1 function / export** named in a docstring, roxygen block, `@return` prose or
+  See-Also: in `NAMESPACE` / `R/*.R`, or in the Python module's defs and `__all__`.
+  Seed with `python <toolkit>/tools/check_claims.py --repo . --ref origin/main` (T1
+  names and T2 paths; `<toolkit>` is the sdv-toolkit plugin root, the directory
+  holding `tools/`; for sdv-py add `--names-file` with `dir()` of every module, since
+  factory-built wrappers are invisible to a static scan).
+- **F2 column + dtype**: every `col_name` and `type` in a returns table exists in the
+  schema the function emits (`tools/codegen/schemas/**`, `loader_schemas.yaml`, the
+  R function's `select()`/`mutate()` output). A documented column the frame never
+  carries is a finding; so is a dtype that disagrees.
+- **F3 endpoint + params**: an `Example URL:` or example call's parameter form matches
+  the endpoint YAML's documented shapes.
+- **F4 release asset / tag**, **F5 path**, **F6 env var / flag** named in the docs
+  resolve (`releases.yaml` or `gh release view`; `git cat-file -e origin/main:<path>`;
+  a grep of the source).
+
+Not findings (the full list is `skills/sdv-conventions/references/facts.md`
+§ Exemptions): future tense or a plan ("will add", "planned", "proposed", "TODO",
+"is adding", "once #123 lands"); a sentence stating absence or change ("does not
+exist", "not on main", "removed", "renamed", "replaced", "instead of", "no
+longer", "previously"), also when the absence phrase is in the next sentence;
+`NEWS.md` / `CHANGELOG.md` / versioned docs, except lines a change adds; a name
+qualified with or attributed to another package; placeholders (`R/pbp_xyz.R`,
+`cfbd_new_endpoint()`); text inside `<!-- -->`; planning notes (`*proposal*`,
+`*audit*`, `*plan*`, `*spec*`); generated surfaces (`man/`, pkgdown `docs/`,
+`*_espn_ext.py`, `docs/docs/**/reference/`). A generated returns table is checked at its source
+(`manual_column_descriptions.yaml`, the docstring, the roxygen `@return`), never on the
+generated page. Each finding carries `file:line`, the class, what resolved instead
+(close matches), and the fix.
+
 ## Audit output format
 
-Emit a single Markdown report with three sections:
+Emit a single Markdown report with four sections:
 
 ```
 ## A. Endpoints missing returns_schema (P1)
@@ -132,6 +167,11 @@ Total empty descriptions: N
 ## C. R @return without column table
 | File | Function | Notes |
 |---|---|---|
+...
+
+## D. Claims that do not resolve
+| File:line | Class | As written | Resolved instead | Fix |
+|---|---|---|---|---|
 ...
 ```
 

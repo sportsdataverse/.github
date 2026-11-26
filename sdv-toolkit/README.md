@@ -15,7 +15,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-api-sync` | Turn an open api-sync issue (opened daily by the reusable api-spec-sync workflow) into a PR adding the upstream API's missing endpoints as in-style wrappers (CFBD to cfbfastR, CBBD to hoopR) plus drifted query params; never deletes, never closes the issue, never merges. |
 | `/sdv-assuring-data-pipelines` | Data quality validation and observability for pipelines via Great Expectations/Pandera plus OpenTelemetry/Prometheus monitoring. |
 | `/sdv-building-data-pipelines` | Production batch data pipelines with Polars, DuckDB, and PyArrow -- ETL patterns, medallion architecture, and partitioning. |
-| `/sdv-conventions` | Archetype convention packs; the router points here. |
+| `/sdv-conventions` | Archetype convention packs plus universal rules (facts come from lookups, validate the instrument, shared checkouts, Windows rewrites); the router points here. |
 | `/sdv-data-pipeline` | Producer lifecycle for -raw/-data repos: standardize, placement, scrape, build, validate, publish. |
 | `/sdv-dataset-lifecycle` | Drive a new or updated release tag through all 12 downstream surfaces across five repos; record deliberate skips. |
 | `/sdv-document` | Produce documentation surface: Python returns schema, roxygen @return table, notebook, pkgdown theming. |
@@ -29,7 +29,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `/sdv-python-performance-optimization` | Profile and optimize Python code with cProfile and memory profilers to find and fix performance bottlenecks. |
 | `/sdv-r-coverage` | Raise an SDV R package's test coverage: rank zero-coverage families from the CI log, record httr2 responses once and replay them offline, triage empty wrappers into upstream-empty / dead route / parser bug, and set up the Codecov or self-hosted coverage badge. |
 | `/sdv-regen-docs` | Regenerate sdv-py reference docs, verify the Docusaurus build, and snapshot a versioned archive at release. |
-| `/sdv-repo-audit` | Read-only whole-repo audit at one commit, for R, Python and JS/TS libraries, producers, DB/API services and web apps (mixed repos load every matching checklist): five parallel lenses (contributor docs vs code, companions, front-page coverage vs registries, release/deps/OSV/CI currency, public polish), mechanical probes, a verdict table and cleanup in PR-sized batches; every fix batch needs confirmation. |
+| `/sdv-repo-audit` | Read-only whole-repo audit at one commit, for R, Python and JS/TS libraries, producers, DB/API services and web apps (mixed repos load every matching checklist): five parallel lenses (contributor docs vs code, companions, front-page coverage vs registries, release/deps/OSV/CI currency, public polish) plus an opt-in claims lens, mechanical probes, a verdict table and cleanup in PR-sized batches; every fix batch needs confirmation. |
 | `/sdv-reprocess` | Rebuild a -raw corpus after an sdv-py change: gather the PRs, lock + SCHEMA_REV bump, clear the runway, launch the reprocess chain, recover, close out. |
 | `/sdv-research-paper` | Runs a research paper or abstract (SSAC, CMSAC, JQAS, preprint) as a gated scientific process: design freeze with a prior-access ledger, number provenance including the abstract, a claim-to-evidence audit of every abstract and conclusion sentence, inference on the shared-state cluster unit with bounded nulls, benchmark-integrity, reproducibility, figure, citation and venue checks, then lens review. Includes a verdict table on the installed research-writing skills, personas and plugins, scored blind against a known-defect benchmark. |
 | `/sdv-review-pr` | Review one pull request in any SDV or saiemgilani repo: failure-path, test and environment ledgers first, then contracts, security and domain depth; verified findings with failure scenarios; posting needs confirmation. |
@@ -42,7 +42,7 @@ routing card automatically; run `/sdv-guide` for the full index.
 | Agent | What it reviews |
 |---|---|
 | `sdv-dataset-coverage-auditor` | Read-only: report which of the 12 dataset propagation surfaces are missing, per dataset or across the inventory. |
-| `sdv-docs-reviewer` | Audit or produce the three-column returns table, Python or R; map a provider payload into documentation. |
+| `sdv-docs-reviewer` | Audit or produce the three-column returns table, Python or R, and check that documented names, columns, parameters and paths resolve; map a provider payload into documentation. |
 | `sdv-harness-triage` | Triage a validation-harness WARN by finding_type and emit a Verdict. |
 | `sdv-issue-triage` | Classify one open issue or PR into one of six verdicts, read-only, with evidence. |
 | `sdv-model-reviewer` | Audit new model/validation code: gates, leakage boundary, metric fit, silent no-op, sklearn contract, lineage, oracle joins. |
@@ -50,4 +50,4 @@ routing card automatically; run `/sdv-guide` for the full index.
 | `sdv-parity-reviewer` | Audit a cross-language port for ID-dtype, regex, indexing, null-semantics, and numeric-fidelity bug classes. |
 | `sdv-python-reviewer` | Python review by lens: polars (1.x, 2.0 and 2.1/2.2 hazards) \| http \| parser-contract \| docstring. |
 | `sdv-r-reviewer` | R review by lens; owns roxygen/pkgdown/parity and the conditions lens (tryCatch(warning =) that silently empties results), routes general R concerns upstream. |
-| `sdv-repo-auditor` | Run one repo-audit lens (contributor-docs \| companions \| coverage \| currency \| polish) for one archetype or a mixed set (sdv-py, producer, r-package, js-package, web-app, db-service, python-package) at a pinned commit, read-only, and write its ranked, evidence-backed report. |
+| `sdv-repo-auditor` | Run one repo-audit lens (contributor-docs \| companions \| coverage \| currency \| polish \| claims) for one archetype or a mixed set (sdv-py, producer, r-package, js-package, web-app, db-service, python-package) at a pinned commit, read-only, and write its ranked, evidence-backed report. |
