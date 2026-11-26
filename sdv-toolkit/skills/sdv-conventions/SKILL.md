@@ -30,15 +30,13 @@ in `references/facts.md`). Plans and future tense are not.
    repo source at `origin/main`, then a captured payload, then one live probe. Cite
    where it resolved (`file:line`, schema key, probe status) unless the same diff
    defines it.
-2. **A miss is a finding.** Write "not indexed" and the close matches. Never fall
-   back to a remembered spelling.
-3. **Degraded mode.** If sdv-docs is unreachable, say so once per session; each fact
-   still unchecked carries `[unverified: from memory]` until a later step resolves
-   it.
+2. **If every lookup misses, that is the finding.** Do not state the fact; write
+   `<fact>: not indexed (close: a, b)`. Never fall back to a remembered spelling.
+3. **Degraded mode.** If sdv-docs is unreachable, say so once per session and label
+   each fact still unchecked `[unverified: from memory]`.
 4. **Durable surfaces get the strict check.** Chat follows 1-3 as discipline; files
    also get the toolkit's `tools/check_claims.py` (T1 names, T2 paths;
-   report-only) and the
-   `claims` lens of `sdv-repo-auditor`.
+   report-only) and the `claims` lens of `sdv-repo-auditor`.
 
 ## Universal — validate the instrument, not just the result
 

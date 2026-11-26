@@ -33,7 +33,7 @@ Cite where it resolved, inline: `R/cfbd_api_key.R:8`, `_PLAYER_STATS_SCHEMA` in
 `sportsdataverse/nfl/nfl_loaders.py`, "probe 2026-11-26: 400". Leave the citation implicit only when
 the same diff defines the fact (you are adding the function you document).
 
-**A miss is a finding.** Write `not indexed` and give the close matches (`git grep`
+**If every step misses, that is the finding.** Write `not indexed` and give the close matches (`git grep`
 for the stem, `difflib`-style near names). Never fall back to the spelling you
 remember: that is exactly how a nonexistent helper reached a roxygen bullet, a
 CLAUDE.md and a copilot-instructions file in one package.
@@ -43,7 +43,7 @@ CLAUDE.md and a copilot-instructions file in one package.
 When the MCP fails to connect (the session banner lists it under "failed to
 connect", or a call errors), say so **once** in the session, then keep resolving
 through steps 2-4. Every fact still unchecked when you write it carries
-`[unverified: from memory]` until a later step resolves it. A durable surface (repo
+`[unverified: from memory]` until a later step resolves it, and then the label goes. A durable surface (repo
 file, PR body, ledger, register row, spec) should not ship with that label: resolve
 the fact or drop the sentence.
 
@@ -71,7 +71,8 @@ the session banner stays the signal for those.
 - **Placeholders and hidden text**: `R/pbp_xyz.R`, `cfbd_new_endpoint()`, and
   markdown inside `<!-- -->` (template instructions).
 - **Planning notes** (`*proposal*`, `*audit*`, `*plan*`, `*spec*` files) get the
-  L2 read, not the script, except on lines a change adds.
+  manual read (the auditor's `claims` lens), not the script, except on lines a
+  change adds.
 
 ## Mechanical checks
 
@@ -80,7 +81,7 @@ the session banner stays the signal for those.
 | Test | Class | What it does |
 |---|---|---|
 | T1 | F1 | call-shaped names in docs-like text (backticked `name(`, `pkg::name`, roxygen `[name()]`, calls in `r`/`python`/untagged fences and `@examples`) against `NAMESPACE`, R definitions, Python defs and `__all__`, base R, builtins and the DESCRIPTION dependencies |
-| T2 | F5 | repo-relative paths whose first part is a top-level entry, against `git cat-file --batch-check <ref>:<path>` |
+| T2 | F5 | repo-relative paths whose first part is a top-level entry, against `git cat-file --batch-check <ref>:<path>` (also `origin/main` unless `--path-ref` is given) |
 
 ```sh
 python <toolkit>/tools/check_claims.py --repo . --ref origin/main          # whole files
@@ -89,7 +90,10 @@ python <toolkit>/tools/check_claims.py --repo . --diff origin/main         # add
 
 It exits 0 unless `--strict` is passed. It is not wired into any pre-commit or CI:
 it goes blocking only after a week of report-only runs measures at least 90% of its
-findings as real.
+findings as real. Keep each labelled run (findings, labels, precision) with the
+audit reports. For a package that builds wrappers at
+import time, pass `--names-file` with `dir()` of every module, or those names read
+as misses.
 
 ## Incidents
 

@@ -1,7 +1,7 @@
 ---
 name: sdv-repo-auditor
 description: >-
-  Use to run ONE lens of a whole-repo docs, currency and polish audit on a SportsDataverse repo at a pinned commit, dispatched by sdv-repo-audit with a lens and an archetype — a primary plus any secondaries for a mixed repo (sdv-py, producer, r-package, js-package, web-app, db-service, python-package, other) — and runs that lens's checklist from every matching reference file. Lenses — contributor-docs (every concrete claim in CHANGELOG and changelog.d fragments, CONTRIBUTING, README, CLAUDE.md/AGENTS.md, copilot-instructions and the issue/PR templates checked against the code: counts, module paths, commands, env vars, version and extras pins, links, template dropdowns, contradictions between files, internal jargon), companions (plotting/surface companion integration — sdvplot and sportypy for sdv-py, cfbplotR/nflplotR/sportyR/sdvplotR for R: extras and pins, what an extra actually installs, code integration, a notebook/vignette coverage matrix, links both directions), coverage (home page, intro, README and nav against the registries — leagues.json/sources.yaml, the _pkgdown.yml reference index, release tags: missing or extra entries, hard-coded counts, naming, dead links, old paths), currency (version vs PyPI/CRAN/npm vs tags vs GitHub Releases, unreleased fragments, outdated deps, lock advisories via OSV, docs/MCP index and site-search freshness, CI and crons on main), polish (what a stranger sees, ranked by visibility: live pages, leaked internal content such as private repo names, local paths and task/rule ids, metadata/SEO, root clutter, README header, repo description/topics), claims (every checkable SDV fact in the docs-like surfaces — function and export names, columns and dtypes, endpoint parameters, release assets and tags, paths, env vars and CLI flags, fact classes F1-F6 — resolved against origin/main source, with the future-tense, negation and history exemptions; seeded by tools/check_claims.py). Read-only on the audited repo; the only file it writes is its own report. Every finding is verified with file:line, evidence and a fix.
+  Use to run ONE lens of a whole-repo docs, currency and polish audit on a SportsDataverse repo at a pinned commit, dispatched by sdv-repo-audit with a lens and an archetype — a primary plus any secondaries for a mixed repo (sdv-py, producer, r-package, js-package, web-app, db-service, python-package, other) — and runs that lens's checklist from every matching reference file. Lenses — contributor-docs (every concrete claim in CHANGELOG and changelog.d fragments, CONTRIBUTING, README, CLAUDE.md/AGENTS.md, copilot-instructions and the issue/PR templates checked against the code: counts, module paths, commands, env vars, version and extras pins, links, template dropdowns, contradictions between files, internal jargon), companions (plotting/surface companion integration — sdvplot and sportypy for sdv-py, cfbplotR/nflplotR/sportyR/sdvplotR for R: extras and pins, what an extra actually installs, code integration, a notebook/vignette coverage matrix, links both directions), coverage (home page, intro, README and nav against the registries — leagues.json/sources.yaml, the _pkgdown.yml reference index, release tags: missing or extra entries, hard-coded counts, naming, dead links, old paths), currency (version vs PyPI/CRAN/npm vs tags vs GitHub Releases, unreleased fragments, outdated deps, lock advisories via OSV, docs/MCP index and site-search freshness, CI and crons on main), polish (what a stranger sees, ranked by visibility: live pages, leaked internal content such as private repo names, local paths and task/rule ids, metadata/SEO, root clutter, README header, repo description/topics), claims (every checkable SDV fact in the docs-like surfaces — function and export names, columns and dtypes, endpoint parameters, release assets and tags, paths, env vars and CLI flags, fact classes F1-F6 — resolved at the pinned sha, with the future-tense, negation and history exemptions; seeded by tools/check_claims.py). Read-only on the audited repo; the only file it writes is its own report. Every finding is verified with file:line, evidence and a fix.
 tools: Read, Grep, Glob, Bash, WebFetch
 ---
 
@@ -82,21 +82,26 @@ of six classes, each resolved at `sha`:
 | F6 env var / CLI flag | `git -C W grep -n <TOKEN> <sha>`; `--help` |
 
 1. **Seed with the script.** Run `python <toolkit>/tools/check_claims.py --repo W --ref
-   <sha> --format md` (T1 = F1, T2 = F5). Each row is a lead: open the line, then keep
-   it, or drop it with the reason in one line per class (foreign package, placeholder,
-   history).
+   <sha> --path-ref <sha> --format md` (T1 = F1, T2 = F5; `<toolkit>` is the
+   sdv-toolkit plugin root, the directory holding `tools/`; add `--names-file` with
+   `dir()` of every module when the package builds wrappers at import time). Each row
+   is a lead: open the line, then keep it, or drop it with the reason in one line per
+   class (foreign package, placeholder, history).
 2. **Then read for F2, F3, F4 and F6**, which the script does not check: the
    instruction files (CLAUDE.md/AGENTS.md, copilot-instructions, CONTRIBUTING), the
    issue/PR templates, README, vignettes and docstrings. Column lists that filter by
    membership (`[c for c in WANTED if c in df.columns]`) are F2 claims too: an entry no
    input schema carries is a silent no-op.
-3. **Exemptions** (not findings): a token whose sentence is future tense or a plan
-   ("will add", "planned", "proposed", "TODO"); a token whose sentence states absence
-   or change ("does not exist", "not on main", "removed", "renamed", "instead of",
-   "previously"), including an absence phrase in the next sentence; `NEWS.md` /
-   `CHANGELOG.md` / versioned-doc snapshots (history); a name qualified with or
-   attributed to another package; placeholders (`R/pbp_xyz.R`, `cfbd_new_endpoint()`);
-   generated surfaces (`man/`, pkgdown `docs/`, `*_espn_ext.py`, `docs/docs/**/reference/`).
+3. **Exemptions.** Not findings (the full list is `skills/sdv-conventions/references/facts.md`
+   § Exemptions): future tense or a plan ("will add", "planned", "proposed", "TODO",
+   "is adding", "once #123 lands"); a sentence stating absence or change ("does not
+   exist", "not on main", "removed", "renamed", "replaced", "instead of", "no
+   longer", "previously"), also when the absence phrase is in the next sentence;
+   `NEWS.md` / `CHANGELOG.md` / versioned docs, except lines a change adds; a name
+   qualified with or attributed to another package; placeholders (`R/pbp_xyz.R`,
+   `cfbd_new_endpoint()`); text inside `<!-- -->`; planning notes (`*proposal*`,
+   `*audit*`, `*plan*`, `*spec*`); generated surfaces (`man/`, pkgdown `docs/`,
+   `*_espn_ext.py`, `docs/docs/**/reference/`).
 4. **Each finding** is `file:line`, the fact as written, its class, what resolved
    instead (the close matches, e.g. `cfbd_game_info()` for `cfbd_games()`), and the fix.
    A fact you could not resolve either way goes in **Unverified**, never Findings.

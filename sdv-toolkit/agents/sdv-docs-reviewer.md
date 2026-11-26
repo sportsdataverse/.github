@@ -119,7 +119,10 @@ and exemptions: `skills/sdv-conventions/references/facts.md`):
 
 - **F1 function / export** named in a docstring, roxygen block, `@return` prose or
   See-Also: in `NAMESPACE` / `R/*.R`, or in the Python module's defs and `__all__`.
-  Seed with `python <toolkit>/tools/check_claims.py --repo . --ref origin/main --checks T1`.
+  Seed with `python <toolkit>/tools/check_claims.py --repo . --ref origin/main` (T1
+  names and T2 paths; `<toolkit>` is the sdv-toolkit plugin root, the directory
+  holding `tools/`; for sdv-py add `--names-file` with `dir()` of every module, since
+  factory-built wrappers are invisible to a static scan).
 - **F2 column + dtype**: every `col_name` and `type` in a returns table exists in the
   schema the function emits (`tools/codegen/schemas/**`, `loader_schemas.yaml`, the
   R function's `select()`/`mutate()` output). A documented column the frame never
@@ -130,10 +133,19 @@ and exemptions: `skills/sdv-conventions/references/facts.md`):
   resolve (`releases.yaml` or `gh release view`; `git cat-file -e origin/main:<path>`;
   a grep of the source).
 
-Not findings: future tense or plans, a sentence stating absence or a rename (also in
-the next sentence), `NEWS.md` / `CHANGELOG.md` history, names qualified with or
-attributed to another package, placeholders, generated reference pages. Each finding
-carries `file:line`, the class, what resolved instead (close matches), and the fix.
+Not findings (the full list is `skills/sdv-conventions/references/facts.md`
+§ Exemptions): future tense or a plan ("will add", "planned", "proposed", "TODO",
+"is adding", "once #123 lands"); a sentence stating absence or change ("does not
+exist", "not on main", "removed", "renamed", "replaced", "instead of", "no
+longer", "previously"), also when the absence phrase is in the next sentence;
+`NEWS.md` / `CHANGELOG.md` / versioned docs, except lines a change adds; a name
+qualified with or attributed to another package; placeholders (`R/pbp_xyz.R`,
+`cfbd_new_endpoint()`); text inside `<!-- -->`; planning notes (`*proposal*`,
+`*audit*`, `*plan*`, `*spec*`); generated surfaces (`man/`, pkgdown `docs/`,
+`*_espn_ext.py`, `docs/docs/**/reference/`). A generated returns table is checked at its source
+(`manual_column_descriptions.yaml`, the docstring, the roxygen `@return`), never on the
+generated page. Each finding carries `file:line`, the class, what resolved instead
+(close matches), and the fix.
 
 ## Audit output format
 

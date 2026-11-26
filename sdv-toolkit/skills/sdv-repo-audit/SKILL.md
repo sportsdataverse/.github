@@ -1,7 +1,7 @@
 ---
 name: sdv-repo-audit
 description: >-
-  Use to audit a whole SportsDataverse repo's documentation, currency and public polish at one commit, read-only — after a big merge or layout move, before a release, or when asked "is the README/CONTRIBUTING/CHANGELOG still true", "are we behind on the release or deps", "what does the site look like to a stranger", "docs audit", "polish pass", "currency check". Works on R, Python and JS/TS libraries, DB/API services and web apps: detects the archetype (sdv-py, python-package, r-package, -raw/-data producer, js-package, web-app, db-service; mixed repos get a primary plus secondaries, and every matching reference loads), runs five lenses in parallel through the sdv-repo-auditor agent — contributor docs and templates checked claim-by-claim against the code, companion-package integration (sdvplot/sportypy, cfbplotR/nflplotR/sportyR), front-page coverage against the registries, currency (release vs PyPI/CRAN/npm vs tags vs GitHub Releases, outdated deps, OSV advisories in the lock, docs/MCP index freshness, CI and crons on main), and public polish ranked by visibility (live pages, leaked internal content, metadata/SEO, root clutter, README header, repo description/topics) — and synthesizes a verdict table plus cleanup in PR-sized batches. Never edits; each fix batch is tier 1, confirmed separately. Not for reviewing one PR (sdv-review-pr), the issue queue (sdv-triage), or dataset propagation (sdv-dataset-lifecycle).
+  Use to audit a whole SportsDataverse repo's documentation, currency and public polish at one commit, read-only — after a big merge or layout move, before a release, or when asked "is the README/CONTRIBUTING/CHANGELOG still true", "are we behind on the release or deps", "what does the site look like to a stranger", "docs audit", "polish pass", "currency check". Works on R, Python and JS/TS libraries, DB/API services and web apps: detects the archetype (sdv-py, python-package, r-package, -raw/-data producer, js-package, web-app, db-service; mixed repos get a primary plus secondaries, and every matching reference loads), runs five lenses in parallel (plus an opt-in claims lens after them) through the sdv-repo-auditor agent — contributor docs and templates checked claim-by-claim against the code, companion-package integration (sdvplot/sportypy, cfbplotR/nflplotR/sportyR), front-page coverage against the registries, currency (release vs PyPI/CRAN/npm vs tags vs GitHub Releases, outdated deps, OSV advisories in the lock, docs/MCP index freshness, CI and crons on main), and public polish ranked by visibility (live pages, leaked internal content, metadata/SEO, root clutter, README header, repo description/topics) — and synthesizes a verdict table plus cleanup in PR-sized batches. Never edits; each fix batch is tier 1, confirmed separately. Not for reviewing one PR (sdv-review-pr), the issue queue (sdv-triage), or dataset propagation (sdv-dataset-lifecycle).
 ---
 
 # sdv-repo-audit — is everything this repo says about itself still true?
@@ -75,7 +75,7 @@ These rules are the probe's own (the SessionStart router's archetypes differ: it
 the conflict.
 
 Ask (or take from the request) which lenses and which questions. Default: all five;
-add `claims` when asked whether the docs' facts are true, or before the script goes blocking.
+add `claims` when asked whether the docs' facts are true, or to measure the script's precision.
 
 ## Phase 1 — Pin the commit
 
@@ -130,7 +130,7 @@ python "$P" osv       "$W/uv.lock"                  > "$O/osv.md"       # or: re
 | `counts` | every "N <noun>" claim in hand-written docs, grouped by noun | context: "128 wrappers" (one stem) and "4,566 wrappers" (all ESPN) can both be right — measure each |
 | `osv` | every locked package against OSV, with severity | whether the package reaches runtime (`uv tree --frozen --invert --package <pkg>`; extras/dev only is lower) |
 
-## Phase 3 — Dispatch the five lenses
+## Phase 3 — Dispatch the lenses
 
 One `sdv-repo-auditor` per lens, **in parallel, at most 5 at once** (more trips the
 session rate limit). Never a `general-purpose` agent for a lens this agent owns. Each
@@ -159,7 +159,8 @@ questions: <the user's questions this lens answers, verbatim>
 When subagents are unavailable, read `<this-skill-dir>/../../agents/sdv-repo-auditor.md`
 and run each lens inline, one after another, writing the same files.
 
-The five lenses are the whole agent budget: no lens starts a sixth agent. A producer's
+The five lenses, plus `claims` when asked for and run after them, are the whole agent
+budget: never more than 5 agents at once, and no lens starts another. A producer's
 per-tag surface check applies `sdv-dataset-coverage-auditor`'s definition **inline**
 inside lens 02 (`references/producer.md`). Run that agent separately only after the
 five lenses have reported.
