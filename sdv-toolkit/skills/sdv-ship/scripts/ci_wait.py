@@ -4,15 +4,15 @@
 Owner rules:
   1. Stop waiting on CI --cap after start once every bot review is addressed and
      no job has failed. Any failure ends the wait at once (never capped).
-  2. On a package PR (repo not ending -raw/-data), if CodeRabbit AND Sourcery
-     are both rate-limited for more than --bots-limited-after, request a GitHub
-     Copilot review when the actor is allowed (saiemgilani, or a login in
-     SDV_COPILOT_REVIEWERS); otherwise stop and ask the user. Self-review comes
-     first (owner rule, 2026-11-26): unless --self-reviewed names the current
-     head, the rule stops with verdict `self-review-first` instead of requesting
-     or asking. Run the self-review rounds, push their fixes, and rerun with
-     --self-reviewed <that head SHA>. A later push needs a new SHA, so Copilot
-     is never requested on commits nobody self-reviewed.
+  2. On a package PR (repo not ending -raw/-data), once CodeRabbit AND Sourcery
+     are both rate-limited for more than --bots-limited-after, two self-review
+     rounds replace them (owner rule, 2026-11-26). By default the script stops
+     with verdict `self-review-first`. Run the rounds, push their fixes, and rerun
+     with --self-reviewed <that head SHA>: Copilot is then never requested, and the
+     script waits for CI. A later push needs a new SHA. Only an explicit
+     --copilot auto|ask (a PR that gets no self-review) requests a GitHub Copilot
+     review when the actor is allowed (saiemgilani, or a login in
+     SDV_COPILOT_REVIEWERS), or asks the user otherwise.
   3. Copilot reviews spend the actor's premium credits. Before requesting, read
      them (`copilot_internal/user`); below SDV_COPILOT_MIN_CREDITS (default 500)
      -- or when Copilot already answered this PR with a quota refusal -- stop with
@@ -25,16 +25,17 @@ not take. `gh pr checks` / `gh pr view` would burn the shared GraphQL quota.
 Usage:
     python3 ci_wait.py owner/repo (--pr N | --sha SHA) [--interval 60s] [--cap 15m]
         [--timeout 60m] [--bots-limited-after 5m] [--bots-grace 5m]
-        [--copilot auto|ask|never] [--self-reviewed SHA] [--package | --no-package]
+        [--self-reviewed SHA] [--copilot auto|ask|never] [--package | --no-package]
 
 A push restarts --cap and --bots-grace (CodeRabbit/Sourcery with no review of the
 current head count as pending for --bots-grace); --timeout never restarts.
 
 Exit: 0 ready / ready-capped / merged, 1 failed, 2 conflict, 3 timeout, 4 ask-user,
       5 bots-unaddressed, 6 error (including usage errors), 7 closed without merging,
-      8 self-review (no bot can review: run a self-review and push its fixes; to
-        wait for CI only, rerun with --copilot never), 9 self-review-first (Copilot
-        is next: self-review the head, push, rerun with --self-reviewed <head SHA>).
+      8 self-review (--copilot auto|ask, but Copilot can't review: run a self-review
+        and push its fixes; to wait for CI only, rerun with --copilot never),
+      9 self-review-first (run the two self-review rounds, push, rerun with
+        --self-reviewed <head SHA>; Copilot is not requested).
 """
 
 from __future__ import annotations
@@ -388,7 +389,8 @@ def parse_args(argv):
     p.add_argument("--timeout", type=duration, default=60 * 60)
     p.add_argument("--bots-limited-after", type=duration, default=5 * 60)
     p.add_argument("--bots-grace", type=duration, default=5 * 60)
-    p.add_argument("--copilot", choices=("auto", "ask", "never"), default="auto")
+    # default None: self-review is the path; auto/ask request Copilot only when passed explicitly
+    p.add_argument("--copilot", choices=("auto", "ask", "never"), default=None)
     # the self-review rounds ran on this head (a 4-40 hex SHA prefix): Copilot may be requested on it
     p.add_argument("--self-reviewed", metavar="SHA", type=sha_prefix)
     p.add_argument("--package", dest="package", action="store_true")
@@ -423,10 +425,9 @@ def run(
         "to wait for CI only, rerun with --copilot never"
     )
     self_review_first = (
-        "ACTION: run the self-review rounds (sdv-ship: a fresh-context review of the whole diff, then an "
-        "independent adversarial pass on the fix commits), push their fixes, then rerun with "
-        "--self-reviewed <the pushed head SHA> to request Copilot. If Copilot already reviewed an "
-        "earlier head and only its fixes were pushed since, wait for CI with --copilot never"
+        "ACTION: run the two self-review rounds (sdv-ship: a fresh-context review of the whole diff, then "
+        "an independent adversarial pass on the fix commits), push their fixes, then rerun with "
+        "--self-reviewed <the pushed head SHA>: Copilot is not requested and ci_wait waits for CI"
     )
     allowed = {OWNER} | {
         x.strip() for x in env.get("SDV_COPILOT_REVIEWERS", "").split(",") if x.strip()
@@ -580,7 +581,27 @@ def run(
             ):
                 if now() - both_since <= a.bots_limited_after:
                     waiting.append("CodeRabbit+Sourcery rate-limited")
-                else:
+                elif a.self_reviewed and snap["sha"].lower().startswith(a.self_reviewed):
+                    # owner rule 2026-11-26: two self-review rounds replace Copilot -- never request it
+                    copilot_tried = True  # decided for this head; a push re-arms the rule
+                    say("self-reviewed head %s: no Copilot review (owner rule); waiting for CI" % snap["sha"][:7])
+                elif a.copilot is None:  # the default: self-review is the path, Copilot only when asked for
+                    return finish(
+                        "self-review-first",
+                        snap,
+                        [
+                            "CodeRabbit and Sourcery rate-limited"
+                            + (
+                                " (--self-reviewed %s is not the head %s)"
+                                % (a.self_reviewed, snap["sha"][:7])
+                                if a.self_reviewed
+                                else ""
+                            ),
+                            self_review_first,
+                        ],
+                        threads,
+                    )
+                else:  # --copilot auto|ask, passed explicitly for a PR that gets no self-review
                     if a.copilot == "auto" and actor is None:
                         actor = (gh.get("user") or {}).get("login", "")
                     if bots["Copilot"][0] == "no-credits":
@@ -589,23 +610,6 @@ def run(
                             snap,
                             ["CodeRabbit and Sourcery rate-limited; Copilot answered with a quota refusal",
                              self_review],
-                            threads,
-                        )
-                    # owner rule 2026-11-26: self-review before Copilot, on the head it reviews
-                    if not (a.self_reviewed and snap["sha"].lower().startswith(a.self_reviewed)):
-                        return finish(
-                            "self-review-first",
-                            snap,
-                            [
-                                "CodeRabbit and Sourcery rate-limited; self-review comes before Copilot"
-                                + (
-                                    " (--self-reviewed %s is not the head %s)"
-                                    % (a.self_reviewed, snap["sha"][:7])
-                                    if a.self_reviewed
-                                    else ""
-                                ),
-                                self_review_first,
-                            ],
                             threads,
                         )
                     if a.copilot == "ask" or actor not in allowed:
@@ -631,14 +635,6 @@ def run(
                             ],
                             threads,
                         )
-                    # Re-read the head: the gate checked the poll's snapshot, and a push during the
-                    # user/credit lookups would get an unreviewed head the request (Copilot on #73).
-                    # ponytail: requested_reviewers takes no SHA, so a ms-wide window stays between
-                    # this read and the POST; the next poll's head-move check restarts the rule.
-                    head_now = ((gh.get("repos/%s/pulls/%d" % (a.repo, a.pr)) or {}).get("head") or {}).get("sha")
-                    if head_now and head_now != snap["sha"]:
-                        say("head moved to %s during the Copilot checks: not requesting on it" % head_now[:7])
-                        continue
                     copilot_tried = True
                     ok, how = gh.request_copilot(a.repo, a.pr)
                     if not ok:
