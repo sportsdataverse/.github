@@ -29,3 +29,39 @@ jobs:
       - name: Rendered surfaces are current
         working-directory: sdv-toolkit
         run: python tools/render.py --check
+
+  # The official Claude Code validator, so a bad manifest, agent front matter or hook
+  # event fails here instead of after bump + mirror + `claude plugin update` + restart.
+  # --strict: the runtime only warns (and silently ignores the entry), CI should fail.
+  plugin-validate:
+    runs-on: ubuntu-latest
+    env:
+      CLAUDE_CODE_VERSION: '2.1.326'  # npm "stable" tag on 2026-11-26; bump deliberately
+      DISABLE_AUTOUPDATER: '1'
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Install Claude Code
+        run: npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+      - name: Marketplace manifest
+        run: claude plugin validate --strict .
+      - name: Plugin manifest, agents and hooks
+        run: claude plugin validate --strict ./sdv-toolkit
+      # A validator that checks nothing would also pass the two steps above. Break a
+      # copy and require it to fail, naming both broken files.
+      - name: Validator rejects a broken copy (negative control)
+        run: |
+          set -u
+          probe="$RUNNER_TEMP/probe"
+          cp -r sdv-toolkit "$probe"
+          printf 'no frontmatter\n' > "$probe/agents/zz-probe.md"
+          printf '{"hooks":{"NotAnEvent":[]}}' > "$probe/hooks/hooks.json"
+          if claude plugin validate --strict "$probe" > "$RUNNER_TEMP/out.txt" 2>&1; then
+            cat "$RUNNER_TEMP/out.txt"; echo "::error::validator passed a deliberately broken plugin"; exit 1
+          fi
+          cat "$RUNNER_TEMP/out.txt"
+          grep -q 'zz-probe.md' "$RUNNER_TEMP/out.txt" && grep -q 'NotAnEvent' "$RUNNER_TEMP/out.txt" \
+            || { echo "::error::validator failed but did not name both broken files"; exit 1; }
