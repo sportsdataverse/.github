@@ -959,6 +959,19 @@ class SelfReviewFirst(unittest.TestCase):
         self.assertIn("--self-reviewed abc123 is not the head def456", out)
         self.assertEqual(out.count("self-reviewed head abc123: no Copilot review"), 1)  # once per head
 
+    def test_a_stale_flag_rules_copilot_out_even_with_an_explicit_mode(self):
+        # Round 2 on #74: `--copilot auto --self-reviewed <old head>` (the #73 documented line) fell
+        # through to the Copilot request after a push. Any --self-reviewed means the PR gets the rounds.
+        table = self.limited(PY)
+        table["repos/%s/commits/%s/check-runs?per_page=100" % (PY, SHA)] = checks(
+            run_("slow", status="in_progress")
+        )
+        table["repos/%s/pulls/7" % PY] = Seq(pr(), pr(sha=NEW))
+        add_head(table, PY, NEW, GREEN, status(("CodeRabbit", "success")))
+        rc, out, fake, _ = go(PY, table, "--copilot", "auto", "--self-reviewed", SHA, "--timeout", "30m", start=T0 + 360)
+        self.assertEqual((rc, fake.posts), (9, []))
+        self.assertIn("--self-reviewed abc123 is not the head def456", out)
+
     def test_under_the_limit_still_waits_without_the_flag(self):
         rc, _, _, clock = go(PY, self.limited(PY), start=T0 + 60)
         self.assertEqual(rc, 9)

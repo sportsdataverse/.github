@@ -9,7 +9,8 @@ Owner rules:
      rounds replace them (owner rule, 2026-11-26). By default the script stops
      with verdict `self-review-first`. Run the rounds, push their fixes, and rerun
      with --self-reviewed <that head SHA>: Copilot is then never requested, and the
-     script waits for CI. A later push needs a new SHA. Only an explicit
+     script waits for CI. A later push needs a new SHA (exit 9 under any
+     --copilot mode: a PR with the rounds never gets Copilot). Only an explicit
      --copilot auto|ask (a PR that gets no self-review) requests a GitHub Copilot
      review when the actor is allowed (saiemgilani, or a login in
      SDV_COPILOT_REVIEWERS), or asks the user otherwise.
@@ -391,7 +392,7 @@ def parse_args(argv):
     p.add_argument("--bots-grace", type=duration, default=5 * 60)
     # default None: self-review is the path; auto/ask request Copilot only when passed explicitly
     p.add_argument("--copilot", choices=("auto", "ask", "never"), default=None)
-    # the self-review rounds ran on this head (a 4-40 hex SHA prefix): Copilot may be requested on it
+    # the two self-review rounds ran on this head (a 4-40 hex SHA prefix): Copilot is never requested
     p.add_argument("--self-reviewed", metavar="SHA", type=sha_prefix)
     p.add_argument("--package", dest="package", action="store_true")
     p.add_argument("--no-package", dest="package", action="store_false")
@@ -585,7 +586,7 @@ def run(
                     # owner rule 2026-11-26: two self-review rounds replace Copilot -- never request it
                     copilot_tried = True  # decided for this head; a push re-arms the rule
                     say("self-reviewed head %s: no Copilot review (owner rule); waiting for CI" % snap["sha"][:7])
-                elif a.copilot is None:  # the default: self-review is the path, Copilot only when asked for
+                elif a.copilot is None or a.self_reviewed:  # default, or a stale --self-reviewed under any mode
                     return finish(
                         "self-review-first",
                         snap,

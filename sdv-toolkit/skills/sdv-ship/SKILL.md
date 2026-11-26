@@ -482,7 +482,10 @@ gh api -X POST repos/<owner>/<repo>/pulls/<N>/requested_reviewers -f 'reviewers[
 gh pr edit <N> -R <owner>/<repo> --add-reviewer @copilot
 ```
 
-Copilot's threads then get the same treatment as any bot's.
+Copilot's threads then get the same treatment as any bot's. After you fix them and push, wait for CI with
+`--copilot never`: a rerun with `--copilot auto` requests Copilot again on the new head and spends more credits.
+Re-request it only if the fixes were substantial (Phase 5, step 8). Passing `--self-reviewed` rules Copilot out
+under any `--copilot` mode.
 
 **Check Copilot's credits first** (owner rule, 2026-10-11). A Copilot review spends the requester's premium
 credits, and with too few left Copilot answers with a review whose body is a quota refusal ("unable to review
@@ -533,7 +536,7 @@ python <toolkit>/skills/sdv-ship/scripts/ci_wait.py <owner/repo> --pr <N>    # d
 | `ready-capped` (0) | Nothing failed and every bot thread is answered, but some checks are still running 15 minutes after `ci_wait` first saw the current head. That is the owner's cap: merge without waiting longer. A push restarts the clock, and the cap only fires once the bot threads are answered. The still-pending jobs are listed. |
 | `failed` (1) | Read the named job, fix it and loop back to Phase 1. Never merge past a failure. |
 | `conflict` (2) | Merge the base branch first: a conflicting PR starts no `pull_request` workflows. |
-| `bots-unaddressed` (5) | Answer the listed bot threads (Phase 5), then run it again. |
+| `bots-unaddressed` (5) | Answer the listed bot threads (Phase 5), push, then run it again: with `--self-reviewed <new head SHA>` once the fix commits had their self-review, or with `--copilot never` just to wait for CI. Never rerun `--copilot auto` after fixing Copilot's own threads. |
 | `self-review-first` (9) | Both review bots are rate-limited and `--self-reviewed` doesn't name the current head. Run the two self-review rounds above, push their fixes, and rerun with `--self-reviewed <that head SHA>`; Copilot is not requested, and the script waits for CI. |
 | `self-review` (8) | Only with an explicit `--copilot auto`/`ask`: Copilot can't review (out of premium credits, or it already refused). Run the self-review above and push its fixes, then wait for CI with `--copilot never`. |
 | `ask-user` (4) | Only with an explicit `--copilot auto`/`ask`: the acting login may lack Copilot review. Ask the user whether to request a Copilot review. |
