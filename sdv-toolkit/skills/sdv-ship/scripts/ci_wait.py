@@ -8,9 +8,11 @@ Owner rules:
      are both rate-limited for more than --bots-limited-after, request a GitHub
      Copilot review when the actor is allowed (saiemgilani, or a login in
      SDV_COPILOT_REVIEWERS); otherwise stop and ask the user. Self-review comes
-     first (owner rule, 2026-11-26): without --self-reviewed the rule stops with
-     verdict `self-review` instead of requesting or asking; rerun with the flag
-     once the self-review rounds ran and their fixes are pushed.
+     first (owner rule, 2026-11-26): unless --self-reviewed names the current
+     head, the rule stops with verdict `self-review-first` instead of requesting
+     or asking. Run the self-review rounds, push their fixes, and rerun with
+     --self-reviewed <that head SHA>. A later push needs a new SHA, so Copilot
+     is never requested on commits nobody self-reviewed.
   3. Copilot reviews spend the actor's premium credits. Before requesting, read
      them (`copilot_internal/user`); below SDV_COPILOT_MIN_CREDITS (default 500)
      -- or when Copilot already answered this PR with a quota refusal -- stop with
@@ -23,15 +25,16 @@ not take. `gh pr checks` / `gh pr view` would burn the shared GraphQL quota.
 Usage:
     python3 ci_wait.py owner/repo (--pr N | --sha SHA) [--interval 60s] [--cap 15m]
         [--timeout 60m] [--bots-limited-after 5m] [--bots-grace 5m]
-        [--copilot auto|ask|never] [--self-reviewed] [--package | --no-package]
+        [--copilot auto|ask|never] [--self-reviewed SHA] [--package | --no-package]
 
 A push restarts --cap and --bots-grace (CodeRabbit/Sourcery with no review of the
 current head count as pending for --bots-grace); --timeout never restarts.
 
 Exit: 0 ready / ready-capped / merged, 1 failed, 2 conflict, 3 timeout, 4 ask-user,
       5 bots-unaddressed, 6 error (including usage errors), 7 closed without merging,
-      8 self-review (run a self-review and push its fixes: no bot can review, or
-        Copilot is next and --self-reviewed was not passed).
+      8 self-review (no bot can review: run a self-review and push its fixes; to
+        wait for CI only, rerun with --copilot never), 9 self-review-first (Copilot
+        is next: self-review the head, push, rerun with --self-reviewed <head SHA>).
 """
 
 from __future__ import annotations
@@ -93,6 +96,7 @@ EXIT = {
     "merged": 0,
     "closed": 7,
     "self-review": 8,
+    "self-review-first": 9,
 }
 
 
@@ -367,6 +371,12 @@ class _Parser(argparse.ArgumentParser):
         self.exit(EXIT["error"], "%s: error: %s\n" % (self.prog, message))
 
 
+def sha_prefix(text):
+    if not re.fullmatch(r"[0-9a-fA-F]{4,40}", text):
+        raise argparse.ArgumentTypeError("not a commit SHA: %r" % text)
+    return text.lower()
+
+
 def parse_args(argv):
     p = _Parser(description=__doc__.split("\n")[0])
     p.add_argument("repo", help="owner/repo")
@@ -379,8 +389,8 @@ def parse_args(argv):
     p.add_argument("--bots-limited-after", type=duration, default=5 * 60)
     p.add_argument("--bots-grace", type=duration, default=5 * 60)
     p.add_argument("--copilot", choices=("auto", "ask", "never"), default="auto")
-    # the self-review rounds ran and their fixes are pushed: Copilot may be requested
-    p.add_argument("--self-reviewed", action="store_true")
+    # the self-review rounds ran on this head (a 4-40 hex SHA prefix): Copilot may be requested on it
+    p.add_argument("--self-reviewed", metavar="SHA", type=sha_prefix)
     p.add_argument("--package", dest="package", action="store_true")
     p.add_argument("--no-package", dest="package", action="store_false")
     p.set_defaults(package=None)
@@ -409,7 +419,14 @@ def run(
         min_credits = float(COPILOT_MIN_CREDITS)
     self_review = (
         "ACTION: run a self-review -- a fresh-context reviewer (the repo's sdv-*-reviewer) over the "
-        "whole diff -- fix Critical/Important findings test-first, push, and reply on the PR"
+        "whole diff -- fix Critical/Important findings test-first, push, and reply on the PR; "
+        "to wait for CI only, rerun with --copilot never"
+    )
+    self_review_first = (
+        "ACTION: run the self-review rounds (sdv-ship: a fresh-context review of the whole diff, then an "
+        "independent adversarial pass on the fix commits), push their fixes, then rerun with "
+        "--self-reviewed <the pushed head SHA> to request Copilot. If Copilot already reviewed an "
+        "earlier head and only its fixes were pushed since, wait for CI with --copilot never"
     )
     allowed = {OWNER} | {
         x.strip() for x in env.get("SDV_COPILOT_REVIEWERS", "").split(",") if x.strip()
@@ -574,13 +591,20 @@ def run(
                              self_review],
                             threads,
                         )
-                    if not a.self_reviewed:  # owner rule 2026-11-26: self-review before Copilot
+                    # owner rule 2026-11-26: self-review before Copilot, on the head it reviews
+                    if not (a.self_reviewed and snap["sha"].lower().startswith(a.self_reviewed)):
                         return finish(
-                            "self-review",
+                            "self-review-first",
                             snap,
                             [
-                                "CodeRabbit and Sourcery rate-limited; self-review comes before Copilot",
-                                self_review + "; then rerun with --self-reviewed to request Copilot",
+                                "CodeRabbit and Sourcery rate-limited; self-review comes before Copilot"
+                                + (
+                                    " (--self-reviewed %s is not the head %s)"
+                                    % (a.self_reviewed, snap["sha"][:7])
+                                    if a.self_reviewed
+                                    else ""
+                                ),
+                                self_review_first,
                             ],
                             threads,
                         )

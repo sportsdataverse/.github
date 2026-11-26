@@ -227,7 +227,7 @@ def go(repo, table, *args, start=T0, env=None, post_ok=True):
 
 def go_sr(repo, table, *args, **kw):
     """go() after the self-review rounds ran: Copilot may be requested."""
-    return go(repo, table, "--self-reviewed", *args, **kw)
+    return go(repo, table, "--self-reviewed", SHA, *args, **kw)
 
 
 PY = "sportsdataverse/sportsdataverse-py"
@@ -717,9 +717,10 @@ class HeadChanges(unittest.TestCase):
         self.assertTrue(out.rstrip().endswith("VERDICT: ready-capped"))
         self.assertEqual(clock.t - T0, 14 * 60 + 15 * 60)
 
-    def test_push_mid_wait_rearms_the_copilot_rule(self):
-        # Copilot reviewed the OLD head; after the push both bots are still
-        # limited, so the rule must fire again, 5m after the push (not at once).
+    def test_push_mid_wait_needs_a_new_self_review(self):
+        # Copilot reviewed the OLD head; after the push both bots are still limited. The
+        # self-review named the old head, so 5m after the push (not at once) the rule asks for
+        # a self-review of the new one instead of spending Copilot credits on it.
         limited = [comment(CR, CR_LIMITED), comment(SOURCERY, SOURCERY_BUDGET)]
         table = routes(PY, checks_=GREEN, comments=limited)
         table["repos/%s/pulls/7" % PY] = Seq(
@@ -729,8 +730,11 @@ class HeadChanges(unittest.TestCase):
             [], [], [review(COPILOT_BOT, iso(T0 + 400), commit_id=SHA)]
         )
         add_head(table, PY, NEW, GREEN, status(("CodeRabbit", "success")))
-        rc, out, fake, _ = go_sr(PY, table, "--timeout", "30m", start=T0 + 360)
-        self.assertEqual(fake.post_times, [T0 + 360, T0 + 480 + 360])
+        rc, out, fake, clock = go_sr(PY, table, "--timeout", "30m", start=T0 + 360)
+        self.assertEqual(fake.post_times, [T0 + 360])
+        self.assertEqual(rc, 9)
+        self.assertEqual(clock.t, T0 + 480 + 360)
+        self.assertIn("--self-reviewed abc123 is not the head def456", out)
 
 
 class Staleness(unittest.TestCase):
@@ -888,22 +892,46 @@ class SelfReviewFirst(unittest.TestCase):
         rc, out, fake, _ = go(PY, table, start=T0 + 360)
         self.assertEqual(fake.posts, [])
         self.assertNotIn("copilot_internal/user", fake.gets)
-        self.assertEqual(rc, 8)
-        self.assertIn("--self-reviewed", out)
-        self.assertTrue(out.rstrip().endswith("VERDICT: self-review"))
+        self.assertEqual(rc, 9)
+        self.assertIn("--self-reviewed <the pushed head SHA>", out)
+        self.assertTrue(out.rstrip().endswith("VERDICT: self-review-first"))
 
     def test_ask_mode_also_self_reviews_first(self):
         rc, out, fake, _ = go(PY, self.limited(PY), "--copilot", "ask", start=T0 + 360)
         self.assertEqual(fake.posts, [])
-        self.assertEqual(rc, 8)
+        self.assertEqual(rc, 9)
         self.assertNotIn("ACTION: ask the user", out)
 
-    def test_with_the_flag_copilot_is_requested(self):
+    def test_the_flag_on_the_head_requests_copilot(self):
         table = self.limited(PY)
         table["copilot_internal/user"] = credits(5000)
-        rc, out, fake, _ = go_sr(PY, table, "--timeout", "2m", start=T0 + 360)
-        self.assertEqual(len(fake.posts), 1)
+        rc, out, fake, _ = go(PY, table, "--self-reviewed", "ABC12", "--timeout", "2m", start=T0 + 360)
+        self.assertEqual(len(fake.posts), 1)  # a prefix, any case
         self.assertIn("ACTION: requested Copilot review (", out)
+
+    def test_the_flag_on_another_head_does_not(self):
+        rc, out, fake, _ = go(PY, self.limited(PY), "--self-reviewed", NEW, start=T0 + 360)
+        self.assertEqual((rc, fake.posts), (9, []))
+        self.assertIn("--self-reviewed def456 is not the head abc123", out)
+
+    def test_a_malformed_flag_is_a_usage_error(self):
+        with (
+            self.assertRaises(SystemExit) as cm,
+            contextlib.redirect_stderr(io.StringIO()),
+        ):
+            go(PY, self.limited(PY), "--self-reviewed", "HEAD", start=T0 + 360)
+        self.assertEqual(cm.exception.code, 6)
+
+    def test_never_mode_needs_no_flag(self):
+        rc, out, fake, _ = go(PY, self.limited(PY), "--copilot", "never", start=T0 + 360)
+        self.assertEqual((rc, fake.posts), (0, []))
+        self.assertTrue(out.rstrip().endswith("VERDICT: ready"))
+
+    def test_copilot_reviewed_this_head_needs_no_flag(self):
+        table = self.limited(PY, reviews=[review(COPILOT_BOT)])
+        rc, out, fake, _ = go(PY, table, start=T0 + 360)
+        self.assertEqual((rc, fake.posts), (0, []))
+        self.assertTrue(out.rstrip().endswith("VERDICT: ready"))
 
     def test_bots_not_limited_needs_no_flag(self):
         rc, out, fake, _ = go(PY, routes(PY, checks_=GREEN, reviews=[review(CR)]))
@@ -924,7 +952,7 @@ class SelfReviewFirst(unittest.TestCase):
 
     def test_under_the_limit_still_waits_without_the_flag(self):
         rc, _, _, clock = go(PY, self.limited(PY), start=T0 + 60)
-        self.assertEqual(rc, 8)
+        self.assertEqual(rc, 9)
         self.assertGreater(clock.t - T0, 300)
 
 
@@ -947,6 +975,7 @@ class CopilotCredits(unittest.TestCase):
         self.assertEqual(rc, 8)
         self.assertIn("171 of 7000", out)
         self.assertIn("ACTION: run a self-review", out)
+        self.assertIn("to wait for CI only, rerun with --copilot never", out)  # not a loop
         self.assertTrue(out.rstrip().endswith("VERDICT: self-review"))
 
     def test_refusal_already_on_the_head_means_self_review(self):
