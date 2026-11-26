@@ -1,6 +1,6 @@
 ---
 name: sdv-reprocess
-description: Use when a -raw corpus has to be rebuilt because sportsdataverse-py changed what it produces — after an sdv-py fix to play types, EPA/WPA or end states lands, on a SCHEMA_REV bump, or for "rev-N reprocess", "rebuild the finals", "bump the lock and reprocess", "re-run the corpus after the sdv-py fix". Phases — (1) gather every sdv-py PR the run must carry BEFORE bumping, because the processing stamp embeds the sdv-py commit and a later bump re-stales the whole corpus, (2) lock + SCHEMA_REV bump PRs in the -raw and -data repos under the shared locks, venv sync, stamp check, (3) clear the runway — the daily scrape/build chain, the :40 git_pull sweep, other sessions' rebuild jobs on the same locks, (4) launch `scripts/reprocess_chain.sh --data` detached and hand over watch commands, (5) the failure modes and their fixes (a season timing out on /tmp/git_pull_sdv.lock, a daemonized `git gc` or `credential-cache--daemon` holding it, git 2.25 ignoring GIT_CONFIG_COUNT, stopping by PID, a new sdv-py fix mid-run), (6) close-out. Also the two rules every -raw/-data repo keeps, in any sport — commit + push per season, and a lock holder runs git with the lock fd closed (`9>&-` / `flock -o`). cfbfastR-cfb-raw / cfbfastR-cfb-data is the worked example.
+description: Use when a -raw corpus has to be rebuilt because sportsdataverse-py changed what it produces — after an sdv-py fix to play types, EPA/WPA or end states lands, on a SCHEMA_REV bump, or for "rev-N reprocess", "rebuild the finals", "bump the lock and reprocess", "re-run the corpus after the sdv-py fix". Phases — (1) gather every sdv-py PR the run must carry BEFORE bumping, because the processing stamp embeds the sdv-py commit and a later bump re-stales the whole corpus, (2) lock + SCHEMA_REV bump PRs in the -raw and -data repos under the shared locks, venv sync, stamp check, (3) clear the runway — the daily scrape/build chain, the :40 git_pull sweep, other sessions' rebuild jobs on the same locks, (4) launch `scripts/reprocess_chain.sh --data` detached and hand over watch commands, (5) the failure modes and their fixes (a season timing out on /tmp/git_pull_sdv.lock, a daemonized `git gc` or `credential-cache--daemon` holding it, git 2.25 ignoring GIT_CONFIG_COUNT, stopping by PID, a new sdv-py fix mid-run), (6) close-out. Also the three rules every -raw/-data repo keeps, in any sport — commit + push per season, a lock holder runs git with the lock fd closed (`9>&-` / `flock -o`), and a manual -data build takes the daily build's lock (`/tmp/cfbfastR-cfb-data-build.lock`). cfbfastR-cfb-raw / cfbfastR-cfb-data is the worked example.
 ---
 
 # Reprocess a -raw corpus after an sdv-py change
@@ -13,7 +13,7 @@ repo recompiles and republishes every dataset from them. A full CFB run is ~23 s
 restart on 2026-10-01 (rev 13); the incidents are in the ClaudeCowork ledger
 `ledgers/2026-09-30-cfbd-return-docs/LEDGER.md`.
 
-## Two rules for every -raw / -data repo
+## Three rules for every -raw / -data repo
 
 Not CFB rules: every sport's drivers keep them, and a new driver, backfill or chain must too.
 
@@ -31,6 +31,16 @@ Not CFB rules: every sport's drivers keep them, and a new driver, backfill or ch
   shell keeps the lock. `gc.auto=0` alone misses the credential daemon. Applied 2026-10-01 to
   `bin/git_pull_cron.sh`, cfb-data `cron_daily_cfb.sh`, cfb-raw `reprocess_chain.sh` and the
   `run_autocommit.sh` loops (ncaa-{mbb,wbb}-hoops-raw, pff-{cfb,nfl}-raw).
+- **A manual build takes the daily build's lock.** `cron_daily_cfb.sh` holds
+  `/tmp/cfbfastR-cfb-data-build.lock` for its whole pull → build → push. Any other build that
+  writes the same repo's outputs (a full republish, a model refit, a one-season rerun; from the
+  main checkout, a clone or a worktree) holds it too:
+  `flock -w 10800 /tmp/cfbfastR-cfb-data-build.lock bash scripts/<build>.sh …`. Without it two
+  builds run from different sdv-py commits, the later push conflicts on binary parquet (git
+  cannot merge it), `main` is left diverged, and every later cron fails its `pull --ff-only`.
+  A -data repo with no build lock: `ps` for its daily build and wait for it to exit. Incident
+  2026-11-26: a lock bump and a 2004-2026 republish ran during the 04:05 cron, which had pulled
+  5 min before the bump and built 2026 on the old sdv-py.
 
 ## Phase 1 — gather before you bump
 
@@ -67,7 +77,8 @@ Not CFB rules: every sport's drivers keep them, and a new driver, backfill or ch
 - The daily chain: if the user cancels it ("no games last night"), kill its process tree BY
   PID, then restore the partial outputs it left (`git checkout -- <the season's parquets>`),
   or `cron_daily_cfb.sh` refuses the dirty tree later.
-- Another session's job: leave it alone. It takes the same locks; the chain waits for it.
+- Another session's job: leave it alone. A job launched through the repo's scripts takes the
+  same locks and the chain waits for it; an ad-hoc one may not (rule 3), so check `fuser`.
   Tell the user if the two overlap (a -data rebuild of every dataset supersedes a narrower
   republish) and let them decide.
 
@@ -95,6 +106,7 @@ the chain drives itself, and `--data` starts the -data side when the raw side is
 | `GIT_CONFIG_COUNT=…` had no effect | git 2.25 on the droplet; that variable is 2.31+ | `export GIT_CONFIG_PARAMETERS="'gc.auto=0'"`; check with `git config --get gc.auto` |
 | need to stop the chain | — | kill BY PID: `ps -eo pid,args \| awk '$3=="scripts/reprocess_chain.sh"'`. Never `pkill -f` a pattern your own shell's command line contains (exit 144, self-kill); never edit a running bash script — stop and relaunch |
 | a new sdv-py fix lands mid-run | — | stop between seasons, bump again (Phase 2), relaunch; finals already at the new stamp are skipped, so nothing finished is redone |
+| the daily -data log says `cannot rebase onto origin/main`; `main` is ahead N, behind M | two builds raced (rule 3); the loser built on an older base or sdv-py | check the loser is superseded (`git merge-base --is-ancestor <winner's locked sdv-py> <loser's venv sdv-py>` fails), save it (`git bundle create <scratch>/x.bundle origin/main..main`), ask, then `git reset --hard origin/main` under `/tmp/git_pull_sdv.lock` with the build lock free; the next cron rebuilds |
 | a -data season `EXIT=1` on `gh release upload` | GitHub 500 on an asset | rerun that season's `cron_daily_cfb.sh -s Y -e Y` |
 
 ## Phase 6 — close out
