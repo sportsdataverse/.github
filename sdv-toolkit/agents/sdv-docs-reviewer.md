@@ -1,6 +1,7 @@
 ---
 name: sdv-docs-reviewer
-description: Use to audit or produce the three-column returns table (col_name, type, description) across sdv-py and the SportsDataverse R packages — the one documentation artifact both languages share. Modes — audit (find functions and endpoints missing a returns table, schema columns with empty descriptions, and endpoint YAMLs that declare a parser but no returns_schema) and map (turn a captured provider payload from ESPN, Fox, CBS, or Yahoo into documentation: a top-level-key table, a returns table, and divergence-vs-sibling notes). Descriptions belong in manual_column_descriptions.yaml and never in schemas/**.yaml, which is clobbered on re-capture. Language-agnostic — both sdv-python-reviewer and sdv-r-reviewer hand off here rather than duplicating the check.
+description: >-
+  Use to audit or produce the three-column returns table (col_name, type, description) across sdv-py and the SportsDataverse R packages — the one documentation artifact both languages share. Modes — audit (find functions and endpoints missing a returns table, schema columns with empty descriptions, and endpoint YAMLs that declare a parser but no returns_schema) and map (turn a captured provider payload from ESPN, Fox, CBS, or Yahoo into documentation: a top-level-key table, a returns table, and divergence-vs-sibling notes). Descriptions belong in manual_column_descriptions.yaml and never in schemas/**.yaml, which is clobbered on re-capture. Language-agnostic — both sdv-python-reviewer and sdv-r-reviewer hand off here rather than duplicating the check.
 tools: Read, Grep, Glob, Bash
 ---
 
