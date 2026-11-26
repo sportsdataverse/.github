@@ -341,6 +341,20 @@ class Verdicts(unittest.TestCase):
             cw.run(["sportsdataverse/sportsdataverse-py"])  # neither --pr nor --sha
         self.assertEqual(cm.exception.code, 6)
 
+    def test_sha_mode_without_a_pr_reaches_a_verdict(self):
+        # --sha reads no PR, so bot_states is {}: it once raised KeyError 'Copilot' on its first poll.
+        # Only the ready case reaches that lookup; the failed case returns before it.
+        for checks_, rc_want, verdict in ((GREEN, 0, "ready"), (checks(run_("pytest", conclusion="failure")), 1, "failed")):
+            with self.subTest(verdict):
+                table = routes(PY, checks_=checks_)
+                clock, out, fake = Clock(T0), io.StringIO(), FakeGh(table)
+                gh = cw.Gh(fake, now=clock.now, sleep=clock.sleep)
+                rc = cw.run([PY, "--sha", SHA, "--interval", "60s"], gh=gh, now=clock.now, sleep=clock.sleep, env={}, out=out)
+                self.assertEqual(rc, rc_want, out.getvalue())
+                self.assertIn("bots: n/a", out.getvalue())
+                self.assertTrue(out.getvalue().rstrip().endswith("VERDICT: " + verdict))
+                self.assertEqual([g for g in fake.gets if "/pulls/" in g or "/issues/" in g], [])  # no PR reads
+
     def test_conflict_with_zero_check_runs(self):
         table = routes(PY, pr_=pr("dirty"), checks_=checks())
         rc, out, _, _ = go(PY, table)
