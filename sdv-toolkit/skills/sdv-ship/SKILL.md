@@ -470,6 +470,13 @@ gh pr edit <N> -R <owner>/<repo> --add-reviewer @copilot
 
 Copilot's threads then get the same treatment as any bot's.
 
+**Self-review comes before Copilot** (owner rule, 2026-11-26). Run the self-review rounds first: a fresh-context
+review of the whole diff, then an independent adversarial pass on the fix commits. Push every fix, and only then
+request Copilot, on the self-reviewed head, as the last gate. That also covers mirror PRs. Copilot credits are finite,
+and on an already-cleaned diff its findings are the non-obvious ones (sportsdataverse/.github#72: 3 findings after two
+self-review rounds and CodeRabbit). `ci_wait.py` returns `self-review` instead of requesting or asking until you
+rerun it with `--self-reviewed`.
+
 **Check Copilot's credits first** (owner rule, 2026-10-11). A Copilot review spends the requester's premium
 credits, and with too few left Copilot answers with a review whose body is a quota refusal ("unable to review
 this pull request because the user who requested the review has reached their quota limit") -- 171 of 7,000
@@ -510,6 +517,7 @@ prints every job line and encodes the owner's rules (2026-10-09):
 
 ```sh
 python <toolkit>/skills/sdv-ship/scripts/ci_wait.py <owner/repo> --pr <N>    # defaults: --cap 15m --copilot auto
+# after the self-review rounds and their fixes are pushed, add --self-reviewed so it may request Copilot
 ```
 
 | Verdict (exit) | Do |
@@ -519,7 +527,7 @@ python <toolkit>/skills/sdv-ship/scripts/ci_wait.py <owner/repo> --pr <N>    # d
 | `failed` (1) | Read the named job, fix it and loop back to Phase 1. Never merge past a failure. |
 | `conflict` (2) | Merge the base branch first: a conflicting PR starts no `pull_request` workflows. |
 | `bots-unaddressed` (5) | Answer the listed bot threads (Phase 5), then run it again. |
-| `self-review` (8) | No bot can review: CodeRabbit and Sourcery are rate-limited and Copilot is out of premium credits (or already refused). Run the self-review above, push its fixes, then run `ci_wait` again for CI. |
+| `self-review` (8) | CodeRabbit and Sourcery are rate-limited, and either Copilot can't review (out of premium credits, or it already refused) or it is next but `--self-reviewed` wasn't passed. Run the self-review rounds above and push their fixes. Then run `ci_wait` again: with `--self-reviewed` if Copilot can still review, or without it just to wait for CI. |
 | `ask-user` (4) | Both review bots have been rate-limited for 5+ minutes on a package PR, and the acting login may lack Copilot review. Ask the user whether to request a Copilot review. |
 | `timeout` (3), `error` (6) | Report it. Don't merge on it. |
 | `merged` (0), `closed` (7) | Stop. |

@@ -7,7 +7,10 @@ Owner rules:
   2. On a package PR (repo not ending -raw/-data), if CodeRabbit AND Sourcery
      are both rate-limited for more than --bots-limited-after, request a GitHub
      Copilot review when the actor is allowed (saiemgilani, or a login in
-     SDV_COPILOT_REVIEWERS); otherwise stop and ask the user.
+     SDV_COPILOT_REVIEWERS); otherwise stop and ask the user. Self-review comes
+     first (owner rule, 2026-11-26): without --self-reviewed the rule stops with
+     verdict `self-review` instead of requesting or asking; rerun with the flag
+     once the self-review rounds ran and their fixes are pushed.
   3. Copilot reviews spend the actor's premium credits. Before requesting, read
      them (`copilot_internal/user`); below SDV_COPILOT_MIN_CREDITS (default 500)
      -- or when Copilot already answered this PR with a quota refusal -- stop with
@@ -20,14 +23,15 @@ not take. `gh pr checks` / `gh pr view` would burn the shared GraphQL quota.
 Usage:
     python3 ci_wait.py owner/repo (--pr N | --sha SHA) [--interval 60s] [--cap 15m]
         [--timeout 60m] [--bots-limited-after 5m] [--bots-grace 5m]
-        [--copilot auto|ask|never] [--package | --no-package]
+        [--copilot auto|ask|never] [--self-reviewed] [--package | --no-package]
 
 A push restarts --cap and --bots-grace (CodeRabbit/Sourcery with no review of the
 current head count as pending for --bots-grace); --timeout never restarts.
 
 Exit: 0 ready / ready-capped / merged, 1 failed, 2 conflict, 3 timeout, 4 ask-user,
       5 bots-unaddressed, 6 error (including usage errors), 7 closed without merging,
-      8 self-review (no bot can review: run a self-review and push its fixes).
+      8 self-review (run a self-review and push its fixes: no bot can review, or
+        Copilot is next and --self-reviewed was not passed).
 """
 
 from __future__ import annotations
@@ -375,6 +379,8 @@ def parse_args(argv):
     p.add_argument("--bots-limited-after", type=duration, default=5 * 60)
     p.add_argument("--bots-grace", type=duration, default=5 * 60)
     p.add_argument("--copilot", choices=("auto", "ask", "never"), default="auto")
+    # the self-review rounds ran and their fixes are pushed: Copilot may be requested
+    p.add_argument("--self-reviewed", action="store_true")
     p.add_argument("--package", dest="package", action="store_true")
     p.add_argument("--no-package", dest="package", action="store_false")
     p.set_defaults(package=None)
@@ -566,6 +572,16 @@ def run(
                             snap,
                             ["CodeRabbit and Sourcery rate-limited; Copilot answered with a quota refusal",
                              self_review],
+                            threads,
+                        )
+                    if not a.self_reviewed:  # owner rule 2026-11-26: self-review before Copilot
+                        return finish(
+                            "self-review",
+                            snap,
+                            [
+                                "CodeRabbit and Sourcery rate-limited; self-review comes before Copilot",
+                                self_review + "; then rerun with --self-reviewed to request Copilot",
+                            ],
                             threads,
                         )
                     if a.copilot == "ask" or actor not in allowed:
