@@ -1,6 +1,7 @@
 ---
 name: sdv-review-pr
-description: Use when asked to review a pull request, branch, or diff in a SportsDataverse org repo or a saiemgilani repo (game-on-paper-app, sdv-swagger, Sports-Research-Papers, dotfiles), including the data platform (sdv-db, sdv-orch, sportsdataverse-web) and outside-contributor PRs — before merge, before approving, or to audit a merged PR after a regression. Invoke for "review PR #N", "review this PR", "code review <PR url>", "is this safe to merge", "second opinion on this diff", "check akeaswaran's PR", "what did this PR break". Not for triaging bot comments on your own PR (use sdv-ship Phase 5) or sweeping the whole org queue (use sdv-triage).
+description: >-
+  Use when asked to review a pull request, branch, or diff in a SportsDataverse org repo or a saiemgilani repo (game-on-paper-app, sdv-swagger, Sports-Research-Papers, dotfiles), including the data platform (sdv-db, sdv-orch, sportsdataverse-web) and outside-contributor PRs — before merge, before approving, or to audit a merged PR after a regression. Invoke for "review PR #N", "review this PR", "code review <PR url>", "is this safe to merge", "second opinion on this diff", "check akeaswaran's PR", "what did this PR break". Not for triaging bot comments on your own PR (use sdv-ship Phase 5) or sweeping the whole org queue (use sdv-triage).
 ---
 
 # sdv-review-pr — review a pull request the way this org actually breaks
