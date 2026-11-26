@@ -30,49 +30,92 @@ def discover(root: pathlib.Path) -> tuple[set, set]:
     return skills, agents
 
 
-def frontmatter_problems(name: str, text: str, kind: str = "skill") -> list:
-    """Problems with one SKILL.md's (or agents/<name>.md's) front matter.
+def _yaml_values(yaml, who: str, body: list) -> tuple:
+    """Parse the front matter with PyYAML: exact, used whenever it is installed (CI)."""
+    try:
+        data = yaml.safe_load("\n".join(body))
+    except yaml.YAMLError as exc:
+        first = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
+        return [
+            "%s: front matter is not valid YAML (%s); quote the value or use '>-'"
+            % (who, first)
+        ], None
+    if not isinstance(data, dict):
+        return ["%s: front matter is not a key: value mapping" % who], None
+    # A ' #' in a plain value parses, but YAML drops the rest of the line as a comment.
+    hashes = sum(l.count("#") for l in body if not l.lstrip().startswith("#"))
+    if hashes != yaml.safe_dump(data).count("#"):
+        return [
+            "%s: an unquoted value contains ' #', so YAML cuts it there; quote it or use '>-'"
+            % who
+        ], None
+    return [], {k: "" if v is None else str(v) for k, v in data.items()}
 
-    `claude plugin validate` (2.1.326) does not check skills and tolerates these
-    agent errors, but a plain value holding ': ' is a YAML error ("mapping values
-    are not allowed here") that other loaders reject. A value holding ' #' is
-    silently cut at the '#'.
-    """
-    # ponytail: stdlib subset check of top-level plain scalars, not a YAML parser
-    # (tools stay stdlib-only so release.py runs on a bare python). Upgrade path:
-    # yaml.safe_load once the tools take a dependency; test_check_catalog
-    # cross-checks this against PyYAML when it is installed.
-    who = "%s %r" % (kind, name)
-    lines = text.splitlines()
-    if not lines or lines[0].strip() != "---":
-        return ["%s: does not open with a --- front-matter block" % who]
-    end = next((i for i, l in enumerate(lines[1:], 1) if l.strip() == "---"), None)
-    if end is None:
-        return ["%s: front matter has no closing ---" % who]
+
+def _subset_values(who: str, body: list) -> tuple:
+    """Stdlib fallback: top-level plain scalars only."""
+    # ponytail: subset, not a YAML parser, so release.py still runs on a bare python.
+    # It misses e.g. a trailing ':', a value opening with * @ ` % !, and ': ' on a
+    # continuation line; CI installs PyYAML and takes the exact path instead.
     problems, values = [], {}
-    body = lines[1:end]
     for i, line in enumerate(body):
-        if not line.strip() or line[0] in " 	#-":
+        if not line.strip() or line[0] in " \t#-":
             continue  # continuation, nested block, comment or list item
         key, sep, value = line.partition(":")
         if not sep:
-            problems.append("%s: front-matter line %r is not 'key: value'" % (who, line[:60]))
+            problems.append(
+                "%s: front-matter line %r is not 'key: value'" % (who, line[:60])
+            )
             continue
         value = value.strip()
         if value[:1] in ("|", ">"):
             nxt = body[i + 1] if i + 1 < len(body) else ""
-            value = nxt.strip() if nxt[:1] in " 	" else ""
+            value = nxt.strip() if nxt[:1] in " \t" else ""
         elif value[:1] not in ("'", '"', "[", "{") and (": " in value or " #" in value):
             problems.append(
                 "%s: %s is an unquoted value containing %r; quote it or use '>-'"
                 % (who, key.strip(), ": " if ": " in value else " #")
             )
-        values[key.strip()] = value
-    if values.get("name", "").strip("'\"") != name:
+        values[key.strip()] = value.strip("'\"")
+    return problems, values
+
+
+def frontmatter_problems(
+    name: str, text: str, kind: str = "skill", use_yaml=None
+) -> list:
+    """Problems with one SKILL.md's (or agents/<name>.md's) front matter.
+
+    `claude plugin validate` (2.1.326) does not check skills and tolerates these
+    agent errors, but a plain value holding ': ' is a YAML error ("mapping values
+    are not allowed here") that other loaders reject, and one holding ' #' is
+    silently cut at the '#'. use_yaml: None = PyYAML if installed, else the subset.
+    """
+    who = "%s %r" % (kind, name)
+    lines = text.lstrip("﻿").splitlines()
+    if not lines or lines[0].strip() != "---":
+        return ["%s: does not open with a --- front-matter block" % who]
+    end = next((i for i, l in enumerate(lines[1:], 1) if l.strip() == "---"), None)
+    if end is None:
+        return ["%s: front matter has no closing ---" % who]
+    body = lines[1:end]
+    yaml = None
+    if use_yaml is not False:
+        try:
+            import yaml
+        except ImportError:
+            if use_yaml:
+                raise
+    problems, values = (
+        _yaml_values(yaml, who, body) if yaml else _subset_values(who, body)
+    )
+    if values is None:
+        return problems
+    if values.get("name", "") != name:
         problems.append(
-            "%s: front-matter name %r does not match its path" % (who, values.get("name"))
+            "%s: front-matter name %r does not match its path"
+            % (who, values.get("name"))
         )
-    if not values.get("description", "").strip("'\""):
+    if not values.get("description", "").strip():
         problems.append("%s: front matter has no description" % who)
     return problems
 

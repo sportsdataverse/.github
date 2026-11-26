@@ -20,10 +20,10 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      # Test-only: lets test_check_catalog cross-check the stdlib front-matter check
-      # against a real YAML parser instead of skipping. The tools stay stdlib-only.
+      # check_catalog.py checks front matter with PyYAML when it is installed (exact),
+      # else a stdlib subset; the tests compare the two. The tools stay stdlib-only.
       - name: Install PyYAML (test oracle)
-        run: python -m pip install --quiet pyyaml
+        run: python -m pip install --quiet 'pyyaml==6.0.4'
       - name: Unit tests
         working-directory: sdv-toolkit
         run: python -m unittest discover -s tools -p 'test_*.py' -v

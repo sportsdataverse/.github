@@ -97,6 +97,8 @@ GOOD = {
     "quoted": '---\nname: s\ndescription: "Phases: (1) one"\n---\n',
     "nested": "---\nname: s\ndescription: d\nmetadata:\n  author: x\nallowed-tools:\n  - Read\n---\n",
     "url": "---\nname: s\ndescription: see https://example.com/a\n---\n",
+    "bom": "﻿---\nname: s\ndescription: d\n---\n",
+    "comment": "---\n# a comment\nname: s\ndescription: d\n---\n",
 }
 BAD = {
     "colon": ("---\nname: s\ndescription: Phases: (1) one\n---\n", "unquoted"),
@@ -106,19 +108,55 @@ BAD = {
     "wrong-name": ("---\nname: t\ndescription: d\n---\n", "does not match"),
     "no-desc": ("---\nname: s\n---\n", "no description"),
 }
+# YAML errors the stdlib subset misses (documented in _subset_values); PyYAML must catch them.
+SUBSET_GAPS = {
+    "trailing-colon": "---\nname: s\ndescription: Use when this:\n---\n",
+    "star": "---\nname: s\ndescription: *bold* text\n---\n",
+    "at": "---\nname: s\ndescription: @user text\n---\n",
+    "backtick": "---\nname: s\ndescription: `code` text\n---\n",
+    "continuation-colon": "---\nname: s\ndescription: first line\n  second: line\n---\n",
+    "quoted-then-text": '---\nname: s\ndescription: "a" b\n---\n',
+}
+
+
+def _yaml():
+    try:
+        import yaml
+
+        return yaml
+    except ImportError:
+        return None
+
+
+def _paths():
+    """Both code paths: the stdlib subset always, PyYAML when installed (CI)."""
+    return [False] + ([True] if _yaml() else [])
 
 
 class FrontmatterTest(unittest.TestCase):
     def test_good_front_matter_passes(self):
-        for label, text in GOOD.items():
-            with self.subTest(label):
-                self.assertEqual(check_catalog.frontmatter_problems("s", text), [])
+        for use_yaml in _paths():
+            for label, text in GOOD.items():
+                with self.subTest(label, use_yaml=use_yaml):
+                    self.assertEqual(
+                        check_catalog.frontmatter_problems("s", text, use_yaml=use_yaml), []
+                    )
 
     def test_bad_front_matter_is_named(self):
         for label, (text, needle) in BAD.items():
             with self.subTest(label):
-                problems = check_catalog.frontmatter_problems("s", text)
+                problems = check_catalog.frontmatter_problems("s", text, use_yaml=False)
                 self.assertTrue(any(needle in p for p in problems), problems)
+
+    def test_pyyaml_path_rejects_bad_and_subset_gaps(self):
+        if not _yaml():
+            self.skipTest("PyYAML not installed")
+        cases = {k: v[0] for k, v in BAD.items()} | SUBSET_GAPS
+        for label, text in cases.items():
+            with self.subTest(label):
+                self.assertNotEqual(
+                    check_catalog.frontmatter_problems("s", text, use_yaml=True), []
+                )
 
     def test_check_reports_a_broken_skill(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -129,66 +167,50 @@ class FrontmatterTest(unittest.TestCase):
                 encoding="utf-8",
             )
             problems = check_catalog.check(root)
-            self.assertTrue(
-                any("sdv-ship" in p and "unquoted" in p for p in problems), problems
-            )
+            self.assertTrue(any(p.startswith("skill 'sdv-ship':") for p in problems), problems)
 
     def test_check_reports_a_broken_agent(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = pathlib.Path(tmp)
-            build(
-                root,
-                [],
-                ["sdv-r-reviewer"],
-                {"entries": [entry("sdv-r-reviewer", "agent")]},
-            )
+            build(root, [], ["sdv-r-reviewer"], {"entries": [entry("sdv-r-reviewer", "agent")]})
             (root / "agents" / "sdv-r-reviewer.md").write_text(
                 "---\nname: sdv-r-reviewer\ndescription: Lenses: roxygen\n---\n",
                 encoding="utf-8",
             )
             problems = check_catalog.check(root)
             self.assertTrue(
-                any(
-                    p.startswith("agent 'sdv-r-reviewer'") and "unquoted" in p
-                    for p in problems
-                ),
-                problems,
+                any(p.startswith("agent 'sdv-r-reviewer':") for p in problems), problems
             )
 
-    def test_agrees_with_pyyaml(self):
-        """Oracle: the subset check and a real YAML parser agree on every case and
-        every real skill. CI installs PyYAML so this runs there, not skipped."""
-        try:
-            import yaml
-        except ImportError:
+    def test_subset_agrees_with_pyyaml(self):
+        """Oracle: the stdlib subset agrees with an independent PyYAML read on every
+        case and on every real skill and agent, so a bare-python run (release.py)
+        reaches the same verdict as CI. CI installs PyYAML, so this is not skipped."""
+        yaml = _yaml()
+        if not yaml:
             self.skipTest("PyYAML not installed")
-        skills = pathlib.Path(__file__).resolve().parent.parent / "skills"
-        real = {
-            f.parent.name: f.read_text(encoding="utf-8")
-            for f in skills.glob("*/SKILL.md")
-        }
-        agents = skills.parent / "agents"
-        real.update(
-            {f.stem: f.read_text(encoding="utf-8") for f in agents.glob("*.md")}
-        )
+        root = pathlib.Path(__file__).resolve().parent.parent
+        real = {f.parent.name: f.read_text(encoding="utf-8") for f in root.glob("skills/*/SKILL.md")}
+        real.update({f.stem: f.read_text(encoding="utf-8") for f in root.glob("agents/*.md")})
         self.assertGreater(len(real), 0)
-        cases = [("s", t) for t in GOOD.values()] + [("s", BAD["colon"][0])]
+        cases = [("s", t) for t in GOOD.values()] + [("s", BAD["colon"][0]), ("s", BAD["hash"][0])]
         for name, text in cases + list(real.items()):
             with self.subTest(name):
+                fm = text.lstrip("﻿").split("\n---", 1)[0][4:]
                 try:
-                    fm = text.split("\n---", 1)[0][4:]
                     d = yaml.safe_load(fm)
+                    body = [l for l in fm.splitlines() if not l.lstrip().startswith("#")]
                     yaml_ok = (
                         isinstance(d, dict)
                         and d.get("name") == name
                         and bool(d.get("description"))
                         # a ' #' in a plain value parses, but YAML drops the rest
                         # as a comment: a silently truncated description is not ok
-                        and fm.count("#") == yaml.safe_dump(d).count("#")
+                        and "\n".join(body).count("#") == yaml.safe_dump(d).count("#")
                     )
                 except yaml.YAMLError:
                     yaml_ok = False
-                ours_ok = check_catalog.frontmatter_problems(name, text) == []
+                ours_ok = check_catalog.frontmatter_problems(name, text, use_yaml=False) == []
                 self.assertEqual(ours_ok, yaml_ok)
 
 
