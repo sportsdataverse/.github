@@ -13,7 +13,7 @@ each one. Do not edit them to make a test pass.
 | `ledger/progress.md` | one line of a progress ledger | T2 stays green: the path's next sentence says the file does not exist |
 | `foreign/R/geom_sdv_headshots.R` | sportsdataverse/sdvplotR `4043700`, `R/geom_sdv_headshots.R` lines 9-13 | T1 stays green: each unqualified name follows a `pkg::name()` span it is chained to |
 | `foreign/R/court_coords.R` | same commit, `R/court_coords.R` lines 5-8 | T1 stays green: `hoopR's/wehoop's` owns both names after it |
-| `foreign/.github/PULL_REQUEST_TEMPLATE.md` | sportsdataverse/hoopR `aba3054`, `.github/PULL_REQUEST_TEMPLATE.md` lines 48-55 | T2 stays green: the example paths sit inside an HTML comment |
+| `foreign/.github/PULL_REQUEST_TEMPLATE.md` | sportsdataverse/hoopR `aba3054`, its pull-request template, lines 48-55 | T2 stays green: the example paths sit inside an HTML comment |
 
 The `cfbfastR` and `sdvplotR` `DESCRIPTION` files hold only the `Package:` and
 `Title:` lines of the same commits; `foreign/DESCRIPTION` and `foreign/NAMESPACE`
