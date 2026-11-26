@@ -233,6 +233,15 @@ def main(argv) -> int:
         for p in problems:
             sys.stderr.write("  - %s\n" % p)
         return 1
+    try:
+        import yaml  # noqa: F401
+    except ImportError:
+        # Not silent: a bare-python pass is partial; CI (PyYAML installed) is exact.
+        sys.stderr.write(
+            "NOTE: PyYAML not installed, so front matter was checked with the stdlib "
+            "subset only (it misses e.g. a trailing ':'). CI runs the exact check; for "
+            "it here: uv run --with pyyaml python tools/check_catalog.py .\n"
+        )
     sys.stdout.write("catalog check OK\n")
     return 0
 
