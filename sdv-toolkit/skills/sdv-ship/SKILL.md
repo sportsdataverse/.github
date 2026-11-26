@@ -457,8 +457,9 @@ block a small, tested fix indefinitely either.
 
 CodeRabbit runs out (about one review an hour, shared across the org) and so does Sourcery (250,000 diff characters
 a week). Owner rule, 2026-10-09: once **both** have been rate-limited for more than 5 minutes on a **package** PR
-(not a `-raw`/`-data` producer), request a GitHub Copilot review without asking if you are the owner (`saiemgilani`)
-or have Copilot PR review. Otherwise ask the user whether to request one. `ci_wait.py --copilot auto` does both,
+(not a `-raw`/`-data` producer), and once the self-review rounds below have run on the head, request a GitHub Copilot
+review without asking if you are the owner (`saiemgilani`) or have Copilot PR review. Otherwise ask the user whether to
+request one. `ci_wait.py --copilot auto --self-reviewed <head SHA>` does both,
 and its rate-limit detection reads the real notices, not the bots' green statuses. By hand:
 
 ```sh
@@ -469,6 +470,15 @@ gh pr edit <N> -R <owner>/<repo> --add-reviewer @copilot
 ```
 
 Copilot's threads then get the same treatment as any bot's.
+
+**Self-review comes before Copilot** (owner rule, 2026-11-26). Run the self-review rounds first: a fresh-context
+review of the whole diff, then an independent adversarial pass on the fix commits. Push every fix, and only then
+request Copilot, on the self-reviewed head, as the last gate. That also covers mirror PRs. Copilot credits are finite,
+and on an already-cleaned diff its findings are the non-obvious ones (sportsdataverse/.github#72: 3 findings after two
+self-review rounds and CodeRabbit). Until `--self-reviewed <SHA>` names the current head, `ci_wait.py` returns
+`self-review-first` (exit 9) instead of requesting or asking. The flag names one commit, so a later push needs a new
+self-review before Copilot is requested again. After you fix Copilot's own threads and push, don't request it
+again: wait for CI with `--copilot never`.
 
 **Check Copilot's credits first** (owner rule, 2026-10-11). A Copilot review spends the requester's premium
 credits, and with too few left Copilot answers with a review whose body is a quota refusal ("unable to review
@@ -510,6 +520,7 @@ prints every job line and encodes the owner's rules (2026-10-09):
 
 ```sh
 python <toolkit>/skills/sdv-ship/scripts/ci_wait.py <owner/repo> --pr <N>    # defaults: --cap 15m --copilot auto
+# after the self-review rounds and their fixes are pushed: add --self-reviewed <head SHA> so it may request Copilot
 ```
 
 | Verdict (exit) | Do |
@@ -519,7 +530,8 @@ python <toolkit>/skills/sdv-ship/scripts/ci_wait.py <owner/repo> --pr <N>    # d
 | `failed` (1) | Read the named job, fix it and loop back to Phase 1. Never merge past a failure. |
 | `conflict` (2) | Merge the base branch first: a conflicting PR starts no `pull_request` workflows. |
 | `bots-unaddressed` (5) | Answer the listed bot threads (Phase 5), then run it again. |
-| `self-review` (8) | No bot can review: CodeRabbit and Sourcery are rate-limited and Copilot is out of premium credits (or already refused). Run the self-review above, push its fixes, then run `ci_wait` again for CI. |
+| `self-review` (8) | No bot can review: CodeRabbit and Sourcery are rate-limited, and Copilot is out of premium credits or has already refused. Run the self-review rounds above and push their fixes, then wait for CI with `--copilot never` (rerunning without it returns `self-review-first`). |
+| `self-review-first` (9) | Copilot is next, but `--self-reviewed` doesn't name the current head. Run the self-review rounds above and push their fixes, then rerun with `--self-reviewed <that head SHA>`. If Copilot already reviewed an earlier head and only its fixes were pushed since, wait for CI with `--copilot never` instead. |
 | `ask-user` (4) | Both review bots have been rate-limited for 5+ minutes on a package PR, and the acting login may lack Copilot review. Ask the user whether to request a Copilot review. |
 | `timeout` (3), `error` (6) | Report it. Don't merge on it. |
 | `merged` (0), `closed` (7) | Stop. |
