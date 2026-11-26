@@ -15,8 +15,8 @@ import subprocess
 import sys
 
 FACTS_LINE = (
-    "Facts:   SDV facts: sdv-docs -> source -> capture; else label [unverified]"
-    "  (/sdv-conventions)"
+    "Facts:   SDV facts: sdv-docs -> source -> capture -> one probe; all miss = "
+    "'not indexed'; sdv-docs down = [unverified: from memory]  (/sdv-conventions)"
 )
 
 ARCHETYPE_BINDINGS = {

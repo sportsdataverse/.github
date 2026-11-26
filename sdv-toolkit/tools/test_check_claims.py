@@ -62,6 +62,22 @@ class T1RegisterCfbd(unittest.TestCase):
             [("R/cfbd_api_key.R", 8, "register_cfbd()")],
         )
 
+    def test_positional_paths_are_normalised(self):
+        for arg in ("./R/cfbd_api_key.R", ".", "R/"):
+            got = [f.token for f in run(self.repo, "--checks", "T1", arg)]
+            self.assertEqual(got, ["register_cfbd()"], arg)
+
+    def test_local_binding_does_not_cover_a_qualified_call(self):
+        names = check_claims.Names(package="cfbfastR", exports={"cfbd_key"})
+        names.heads = {"cfbfastR"}
+        text = (
+            "```r\nregister_cfbd <- function() TRUE\ncfbfastR::register_cfbd()\n```\n"
+        )
+        got, _ = check_claims.check_file(
+            "README.md", text, names, {"T1"}, set(), check_claims.local_names(text)
+        )
+        self.assertEqual([f.token for f in got], ["cfbfastR::register_cfbd()"])
+
     def test_exported_neighbours_resolve(self):
         # negative case: lines 7, 9, 10 name exported functions and must stay quiet
         lines = {f.line for f in run(self.repo, "--checks", "T1")}

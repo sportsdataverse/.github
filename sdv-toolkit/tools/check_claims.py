@@ -860,11 +860,15 @@ def check_file(
         if exempt(tok):
             continue
         if tok.kind == "call" and "T1" in checks:
-            if tok.name in local_defs or PLACEHOLDER.search(tok.name):
+            # a doc's own binding covers only unqualified calls: `pkg::helper()`
+            # still has to be an export of pkg
+            local = not tok.qualifier and tok.name in local_defs
+            if local or PLACEHOLDER.search(tok.name):
                 continue
             ok = resolve_call(tok, names)
             if ok is False and python_doc and not tok.qualifier:
-                if not sdv_shaped(tok.name, names.prefixes):
+                # sdv.load_x() is shaped by load_x, not by the alias in front
+                if not sdv_shaped(tok.name.rsplit(".", 1)[-1], names.prefixes):
                     continue
             if ok is False:
                 pool = names.exports | names.defined
@@ -964,11 +968,14 @@ def run(args: argparse.Namespace) -> list[Finding]:
         or re.match(r"R/[^/]+\.[Rr]$", f)
     ]
     if args.paths:
-        wanted = [p.replace("\\", "/").rstrip("/") for p in args.paths]
+        wanted = []
+        for raw in args.paths:
+            w = posixpath.normpath(raw.replace("\\", "/")).rstrip("/")
+            wanted.append("" if w == "." else w)  # "." is the whole repo
         candidates = [
             f
             for f in candidates
-            if any(f == w or f.startswith(w + "/") for w in wanted)
+            if any(not w or f == w or f.startswith(w + "/") for w in wanted)
         ]
     if added is not None:
         candidates = [f for f in candidates if f in added]
