@@ -34,13 +34,18 @@ Not CFB rules: every sport's drivers keep them, and a new driver, backfill or ch
 - **A manual build takes the daily build's lock.** `cron_daily_cfb.sh` holds
   `/tmp/cfbfastR-cfb-data-build.lock` for its whole pull → build → push. Any other build that
   writes the same repo's outputs (a full republish, a model refit, a one-season rerun; from the
-  main checkout, a clone or a worktree) holds it too:
-  `flock -w 10800 /tmp/cfbfastR-cfb-data-build.lock bash scripts/<build>.sh …`. Without it two
-  builds run from different sdv-py commits, the later push conflicts on binary parquet (git
-  cannot merge it), `main` is left diverged, and every later cron fails its `pull --ff-only`.
-  A -data repo with no build lock: `ps` for its daily build and wait for it to exit. Incident
-  2026-11-26: a lock bump and a 2004-2026 republish ran during the 04:05 cron, which had pulled
-  5 min before the bump and built 2026 on the old sdv-py.
+  main checkout, a clone or a worktree) holds it too. The repo's entry points take it
+  themselves: `cron_daily_cfb.sh -s Y -e Y` (a season rebuild), `cron_alt_fill.sh` (the
+  crosswalks), cfb-raw's `reprocess_chain.sh` (a reprocess). Prefer them, and never wrap one in
+  `flock`: the inner `flock -w` waits on the outer one for 3 h,
+  then fails. Wrap only a build that does not lock, with `-o` so no git child inherits the fd
+  (rule 2): `flock -o -w 10800 /tmp/cfbfastR-cfb-data-build.lock bash scripts/<build>.sh …`.
+  Without the lock two builds run from different sdv-py commits, the later push conflicts on
+  binary parquet (git cannot merge it), `main` is left diverged, and every later cron fails its
+  `pull --ff-only`. A -data repo with no build lock: `ps` for its daily build and wait for it
+  to exit. Incident 2026-11-26: a 2004-2026 republish ran outside the lock during the daily
+  cfb-data build, which had pulled 5 min before a lock bump merged and built 2026 on the old
+  sdv-py.
 
 ## Phase 1 — gather before you bump
 
@@ -106,7 +111,7 @@ the chain drives itself, and `--data` starts the -data side when the raw side is
 | `GIT_CONFIG_COUNT=…` had no effect | git 2.25 on the droplet; that variable is 2.31+ | `export GIT_CONFIG_PARAMETERS="'gc.auto=0'"`; check with `git config --get gc.auto` |
 | need to stop the chain | — | kill BY PID: `ps -eo pid,args \| awk '$3=="scripts/reprocess_chain.sh"'`. Never `pkill -f` a pattern your own shell's command line contains (exit 144, self-kill); never edit a running bash script — stop and relaunch |
 | a new sdv-py fix lands mid-run | — | stop between seasons, bump again (Phase 2), relaunch; finals already at the new stamp are skipped, so nothing finished is redone |
-| the daily -data log says `cannot rebase onto origin/main`; `main` is ahead N, behind M | two builds raced (rule 3); the loser built on an older base or sdv-py | check the loser is superseded (`git merge-base --is-ancestor <winner's locked sdv-py> <loser's venv sdv-py>` fails), save it (`git bundle create <scratch>/x.bundle origin/main..main`), ask, then `git reset --hard origin/main` under `/tmp/git_pull_sdv.lock` with the build lock free; the next cron rebuilds |
+| the daily -data log says `cannot rebase onto origin/main`; `main` is ahead N, behind M | two builds raced (rule 3); the loser built on an older base or sdv-py | check the loser is superseded (in sdv-py, `git merge-base --is-ancestor <winner's locked commit> <loser's venv commit>` fails; the loser's venv is the one its log's `interpreter:` line names), save it (`git bundle create <scratch>/x.bundle origin/main..main`), ask, then `git reset --hard origin/main` under `/tmp/git_pull_sdv.lock` with the build lock free. The reset does not touch releases: grep the loser's log for `uploaded` and republish those assets from the winner's tree. The next cron rebuilds the current season only |
 | a -data season `EXIT=1` on `gh release upload` | GitHub 500 on an asset | rerun that season's `cron_daily_cfb.sh -s Y -e Y` |
 
 ## Phase 6 — close out
