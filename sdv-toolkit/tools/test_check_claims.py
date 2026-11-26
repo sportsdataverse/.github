@@ -77,6 +77,60 @@ class T1RegisterCfbd(unittest.TestCase):
             self.assertEqual(check_claims.main(base + ["--strict"]), 1)
 
 
+class NeverBlocks(unittest.TestCase):
+    """Report-only: exit 0 on an internal error and on bad usage, unless --strict."""
+
+    def quiet(self, argv):
+        with (
+            contextlib.redirect_stdout(io.StringIO()),
+            contextlib.redirect_stderr(io.StringIO()),
+        ):
+            return check_claims.main(argv)
+
+    def test_internal_error_exits_0(self):
+        real = check_claims.run
+        check_claims.run = lambda args: (_ for _ in ()).throw(RuntimeError("boom"))
+        try:
+            self.assertEqual(self.quiet(["--repo", "."]), 0)
+            self.assertEqual(self.quiet(["--repo", ".", "--strict"]), 1)
+        finally:
+            check_claims.run = real
+
+    def test_bad_usage_exits_0(self):
+        self.assertEqual(self.quiet(["--format", "nonesuch"]), 0)
+
+
+@unittest.skipUnless(HAS_GIT, "git not on PATH")
+class DiffMode(unittest.TestCase):
+    """--diff reports only the lines a commit adds, at HEAD's line numbers."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.repo = pathlib.Path(self.tmp.name)
+        copy_fixture("cfbfastR", self.repo)
+        git(self.repo, "init", "-q", "-b", "main")
+        git(self.repo, "add", ".")
+        git(self.repo, "commit", "-q", "-m", "base")
+        git(self.repo, "branch", "base")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_only_added_lines_are_reported(self):
+        # move the real bad bullet (line 8) to the top: the old line 8 is not
+        # added, the new line 1 is
+        p = self.repo / "R" / "cfbd_api_key.R"
+        lines = p.read_text(encoding="utf-8").splitlines(keepends=True)
+        bad = lines.pop(7)
+        p.write_text(bad + "".join(lines), encoding="utf-8")
+        git(self.repo, "commit", "-q", "-am", "move")
+        got = run(self.repo, "--diff", "base", "--checks", "T1")
+        self.assertEqual([(f.line, f.token) for f in got], [(1, "register_cfbd()")])
+
+    def test_nothing_added_reports_nothing(self):
+        self.assertEqual(run(self.repo, "--diff", "base", "--checks", "T1"), [])
+
+
 class T1ValidTeamNames(unittest.TestCase):
     """sdvplotR's data-issue template asked reporters to run a function NAMESPACE lacks."""
 

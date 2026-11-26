@@ -31,7 +31,8 @@ SDV package, a language or a dataframe library; ``pkg's `name()```; a list item
 that opens with another package's link; and the spans chained to one of those
 (```hoopR::a()` and `b()```). In Python sources it checks only names shaped like
 the repo's own API (snake_case, a first word that starts 3+ public names), since
-their docstrings quote maths and the R or JS functions a port follows.
+their docstrings quote maths and the R or JS functions a port follows; in a
+repo with no DESCRIPTION the same filter covers its markdown too.
 
 T2 also skips a path the sentence says is written or lives in another repo, one
 the repo's ``.gitignore`` covers, one that resolves relative to the doc's own
@@ -116,6 +117,9 @@ ABSENCE_NEXT = re.compile(
     r"was (?:removed|deleted|renamed|dropped)|has been (?:removed|deleted|renamed))\b",
     re.I,
 )
+# An example name (T2 only: "For example, `changelog.d/x.fixed.md`"); for T1 an
+# example call is still a call a reader will run.
+EXAMPLE = re.compile(r"\b(?:for example|for instance|e\.g\.|such as)", re.I)
 # A path the sentence says is produced (T2 only): "writes tools/codegen/x.yaml".
 OUTPUT = re.compile(
     r"\b(?:writes?|written|writing|outputs?|generates?|generated|emits?|creates?|"
@@ -124,13 +128,16 @@ OUTPUT = re.compile(
 )
 # A path the sentence places in another repo (T2 only).
 OTHER_REPO = re.compile(
-    r"\b(?:in|from|of) (?:the |those |these |each |every |other |sibling |a |an )?"
-    r"(?:[\w.-]+ )?repos?\b|\brepo's\b|\bcopied (?:[\w-]+ )?from\b",
+    r"\b(?:in|from|of) (?!this |our |the current )"
+    r"(?:the |those |these |each |every |other |sibling |a |an )?"
+    r"(?:(?!this |our )[\w.-]+ )?repos?\b|\b(?<!this )(?<!our )repo's\b|"
+    r"\bcopied (?:[\w-]+ )?from\b",
     re.I,
 )
 FUTURE = re.compile(
-    r"\b(?:will|would|shall|planned|planning|plan to|proposed?|proposal|todo|"
-    r"for example|for instance|e\.g\.|hypothetical|placeholder|"
+    r"\b(?:(?:will|would|shall|should|to) (?:be )?(?:add|added|write|written|create|"
+    r"created|port|ported|land|ship|move|moved|rename|renamed|build|built)|"
+    r"planned|planning|plan to|proposed?|proposal|todo|hypothetical|placeholder|"
     r"to be added|to be written|is adding|are adding|being added|should add|"
     r"next step|upcoming|future|(?:once|when|if) .{1,60} lands?|"
     r"not yet|wip)\b",
@@ -272,10 +279,12 @@ class Source:
         self.ref = ref
         self._cache: dict[str, str] = {}
         if ref:
-            self.files = _git(repo, "ls-tree", "-r", "--name-only", ref).splitlines()
+            # -z: git C-quotes non-ASCII paths otherwise
+            out = _git(repo, "ls-tree", "-r", "-z", "--name-only", ref)
+            self.files = [f for f in out.split("\0") if f]
         else:
             try:
-                self.files = _git(repo, "ls-files").splitlines()
+                self.files = [f for f in _git(repo, "ls-files", "-z").split("\0") if f]
             except (subprocess.CalledProcessError, FileNotFoundError):
                 self.files = [
                     str(p.relative_to(repo)).replace(os.sep, "/")
@@ -350,10 +359,11 @@ def gitignored(repo: Path, paths: set[str]) -> set[str]:
         "check-ignore",
         "--no-index",
         "--stdin",
-        stdin="".join(p + "\n" for p in sorted(paths)),
+        "-z",
+        stdin="".join(p + "\0" for p in sorted(paths)),
         check=False,  # exit 1 means "none ignored"
     )
-    return set(out.splitlines())
+    return {p for p in out.split("\0") if p}
 
 
 def top_level(repo: Path, refs: list[str]) -> set[str]:
@@ -381,6 +391,7 @@ class Names:
     classes: set = field(default_factory=set)  # Python classes: Class.method resolves
     export_all: bool = False
     prefixes: dict = field(default_factory=dict)  # first snake word -> public names
+    data: set = field(default_factory=set)  # R lazy data (data/*.rda)
 
     def known(self, name: str) -> bool:
         return name in self.exports or name in self.defined or name in self.allowed
@@ -417,18 +428,23 @@ def _r_dep_exports(desc: str, enabled: bool) -> set[str]:
                     deps.append(name)
     if not deps:
         return set()
+    # writeLines ends every name with a newline; cat(sep=) would glue the last
+    # export of one package to the first of the next
     code = (
         "for (p in commandArgs(TRUE)) tryCatch("
-        "cat(getNamespaceExports(p), sep='\\n'), error = function(e) NULL)"
+        "writeLines(getNamespaceExports(p)), error = function(e) NULL)"
     )
     try:
-        out = subprocess.run(
-            ["Rscript", "-e", code, *deps],
-            capture_output=True,
-            text=True,
-            timeout=120,
+        raw = subprocess.run(
+            ["Rscript", "-e", code, *deps], capture_output=True, timeout=120
         ).stdout
-    except (OSError, subprocess.SubprocessError):
+        out = raw.decode("utf-8", "replace")
+    except Exception as exc:  # report-only: a failed lookup only adds noise
+        print(
+            "check_claims: note: Rscript dependency lookup failed (%s); "
+            "dependency calls may read as misses" % exc,
+            file=sys.stderr,
+        )
         return set()
     return {ln.strip() for ln in out.splitlines() if ln.strip()}
 
@@ -485,6 +501,7 @@ def collect_names(src: Source, r_deps: bool) -> Names:
         m = re.match(r"data/([\w.]+)\.(?:rda|RData|rds)$", f)
         if m:
             n.defined.add(m.group(1))
+            n.data.add(m.group(1))
     if n.export_all:
         n.exports |= n.defined
     for f in py_files:
@@ -694,6 +711,8 @@ def extract(
             if COMMIT_LINE.match(text):
                 code = ""  # a commit subject, not a call
             for m in CODE_CALL.finditer(code):
+                # exemptions read the code with strings and comments blanked, so
+                # stop("not found") does not exempt the calls on its line
                 tokens.append(
                     Token(
                         ln,
@@ -702,7 +721,7 @@ def extract(
                         m.group(1) or "",
                         m.group(2) == ":::",
                         True,
-                        text,
+                        code,
                     )
                 )
             for m in PATH.finditer(text):
@@ -772,7 +791,9 @@ def exempt(tok: Token) -> bool:
     if FUTURE.search(tok.context) or NEGATION.search(tok.context):
         return True
     if tok.kind == "path" and (
-        OUTPUT.search(tok.context) or OTHER_REPO.search(tok.context)
+        OUTPUT.search(tok.context)
+        or OTHER_REPO.search(tok.context)
+        or EXAMPLE.search(tok.context)
     ):
         return True  # a file the code writes, or one in another repo
     return bool(tok.next_context and ABSENCE_NEXT.search(tok.next_context))
@@ -803,6 +824,9 @@ def resolve_call(tok: Token, names: Names) -> bool | None:
             return None  # another package: qualification is the allowlist
         if tok.triple:
             return names.known(name)
+        if names.package and not names.export_all:
+            # R: pkg::name needs an export (or lazy data); internals need :::
+            return name in names.exports or name in names.data
         return name in names.exports or name in names.defined
     if names.known(name):
         return True
@@ -872,23 +896,38 @@ def check_file(
 
 
 def added_lines(repo: Path, base: str) -> dict[str, set[int]]:
-    out = _git(repo, "diff", "--unified=0", "--no-color", "%s...HEAD" % base)
+    # pin the output shape: user diff config (noprefix, external diff, textconv)
+    # must not change the prefixes or the line numbers
+    out = _git(
+        repo,
+        "diff",
+        "--unified=0",
+        "--no-color",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--src-prefix=a/",
+        "--dst-prefix=b/",
+        "%s...HEAD" % base,
+    )
     added: dict[str, set[int]] = {}
     cur = None
+    prev = ""
     for line in out.splitlines():
-        if line.startswith("+++ "):
+        if line.startswith("+++ ") and prev.startswith("--- "):
             cur = line[6:] if line.startswith("+++ b/") else None
         elif line.startswith("@@") and cur:
             m = re.search(r"\+(\d+)(?:,(\d+))?", line)
             start, count = int(m.group(1)), int(m.group(2) or 1)
             added.setdefault(cur, set()).update(range(start, start + count))
+        prev = line
     return added
 
 
 def run(args: argparse.Namespace) -> list[Finding]:
     repo = Path(args.repo).resolve()
     checks = {c.strip().upper() for c in args.checks.split(",")}
-    src = Source(repo, None if args.diff else args.ref)
+    # --diff reads HEAD, the same tree its line numbers come from
+    src = Source(repo, "HEAD" if args.diff else args.ref)
     files = set(src.files)
     names = collect_names(src, args.r_deps)
     for extra_file in args.names_file or []:
@@ -1059,15 +1098,24 @@ def parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = parser().parse_args(argv)
+    argv = sys.argv[1:] if argv is None else argv
+    strict = "--strict" in argv
+    try:  # a cp1252 console must not turn a non-ASCII token into a crash
+        sys.stdout.reconfigure(errors="backslashreplace")  # type: ignore[union-attr]
+    except Exception:
+        pass
+    try:
+        args = parser().parse_args(argv)
+    except SystemExit as exc:  # bad usage is reported, never a block
+        return int(exc.code or 0) if strict else 0
     try:
         findings = run(args)
+        out = render(findings, args.format)
+        if out:
+            print(out)
     except Exception as exc:  # report-only: a broken check never blocks
         print("check_claims: error: %s" % exc, file=sys.stderr)
         return 1 if args.strict else 0
-    out = render(findings, args.format)
-    if out:
-        print(out)
     print("check_claims: %d finding(s)" % len(findings), file=sys.stderr)
     return 1 if (args.strict and findings) else 0
 

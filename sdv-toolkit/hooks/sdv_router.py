@@ -171,7 +171,10 @@ def main() -> int:
         return 0  # never let a broken catalog break session start
 
     overrides = load_overrides(here / "sdv-overrides.tsv")
-    problem = docs_mcp_problem(here.parent)
+    try:
+        problem = docs_mcp_problem(here.parent)
+    except Exception:  # a malformed config must not cost the whole card
+        problem = None
     sys.stdout.write(
         render_card(archetype, repo_name(remote), catalog, overrides, problem) + "\n"
     )
