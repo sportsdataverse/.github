@@ -556,7 +556,7 @@ def run(
                 and now() - copilot_asked_at < a.bots_grace
             ):
                 waiting.append("Copilot")
-            if bots["Copilot"][0] == "no-credits" and copilot_asked_at is not None:
+            if bots.get("Copilot", ("",))[0] == "no-credits" and copilot_asked_at is not None:  # {} under --sha
                 # we asked, and Copilot answered with a quota refusal: no review is coming
                 return finish(
                     "self-review",
