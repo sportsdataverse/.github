@@ -934,5 +934,36 @@ class CopilotCredits(unittest.TestCase):
             self.assertEqual(fake.posts, [], bad)
 
 
+class CatchUpMergeRule(unittest.TestCase):
+    """SKILL.md: catch-up merges re-test only the overlap; Phase 2 points there."""
+
+    def test_rule_in_phase_8_and_pointer_in_phase_2(self):
+        sk = (
+            pathlib.Path(__file__).resolve().parent.parent
+            / "skills"
+            / "sdv-ship"
+            / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        p2, p3 = sk.index("\n## Phase 2"), sk.index("\n## Phase 3")
+        p8, p9 = sk.index("\n## Phase 8"), sk.index("\n## Phase 9")
+        rule = sk.index("\n### Catch-up merges")
+        self.assertTrue(p8 < rule < p9)
+        self.assertIn("*Catch-up merges*", sk[p2:p3])
+        body = sk[rule:p9]
+        for needle in (
+            "comm -12",
+            "HEAD^2...HEAD^1",
+            "pre=$(git rev-parse HEAD)",
+            "--only <group>",
+            "No pytest",
+            "skip pytest",
+            "once per PR",
+            "#1319",
+        ):
+            self.assertIn(needle, body)
+        # step 4 no longer re-runs the full suite after a rebase
+        self.assertNotIn("uv run pytest", sk[sk.index("\n### 4. Re-verify") : rule])
+
+
 if __name__ == "__main__":
     unittest.main()
