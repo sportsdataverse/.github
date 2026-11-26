@@ -584,7 +584,7 @@ class CopilotRule(unittest.TestCase):
     def test_rest_reply_without_copilot_but_requested_on_reread_needs_no_fallback(self):
         table = self.limited(PY)
         table["POST"] = NOBODY_ADDED
-        table["repos/%s/pulls/7" % PY] = Seq(pr(), pr(requested=["Copilot"]), pr())
+        table["repos/%s/pulls/7" % PY] = Seq(pr(), pr(), pr(requested=["Copilot"]), pr())  # pr() #2: the head re-read just before the request
         rc, out, fake, _ = go_sr(PY, table, "--timeout", "2m", start=T0 + 360)
         self.assertEqual(self.kinds(fake), ["api"])
 
@@ -597,9 +597,9 @@ class CopilotRule(unittest.TestCase):
             requested_event(T0_ISO),
             requested_event(iso(T0 + 361), who="alice"),
         ]
-        # poll 1, re-read after REST, re-read after gh pr edit, poll 2, then gone.
+        # poll 1, the head re-read, re-read after REST, re-read after gh pr edit, poll 2, then gone.
         table["repos/%s/pulls/7" % PY] = Seq(
-            pr(), pr(), pr(requested=["Copilot"]), pr(requested=["Copilot"]), pr()
+            pr(), pr(), pr(), pr(requested=["Copilot"]), pr(requested=["Copilot"]), pr()
         )
         rc, out, fake, _ = go_sr(PY, table, start=T0 + 360)
         self.assertEqual(self.kinds(fake), ["api", "pr"])
@@ -614,8 +614,8 @@ class CopilotRule(unittest.TestCase):
         table["repos/%s/commits/%s/check-runs?per_page=100" % (PY, SHA)] = checks(
             run_("slow", status="in_progress")
         )
-        table["repos/%s/pulls/7" % PY] = Seq(
-            pr(), pr(), pr(requested=["Copilot"]), pr()
+        table["repos/%s/pulls/7" % PY] = Seq(  # pr() #2: the head re-read just before the request
+            pr(), pr(), pr(), pr(requested=["Copilot"]), pr()
         )
         rc, out, fake, clock = go_sr(PY, table, start=T0 + 360)  # runs to --cap
         self.assertTrue(out.rstrip().endswith("VERDICT: ready-capped"))
@@ -723,8 +723,8 @@ class HeadChanges(unittest.TestCase):
         # a self-review of the new one instead of spending Copilot credits on it.
         limited = [comment(CR, CR_LIMITED), comment(SOURCERY, SOURCERY_BUDGET)]
         table = routes(PY, checks_=GREEN, comments=limited)
-        table["repos/%s/pulls/7" % PY] = Seq(
-            pr(), pr(requested=["Copilot"]), pr(sha=NEW)
+        table["repos/%s/pulls/7" % PY] = Seq(  # pr() #2: the head re-read just before the request
+            pr(), pr(), pr(requested=["Copilot"]), pr(sha=NEW)
         )
         table["repos/%s/pulls/7/reviews?per_page=100" % PY] = Seq(
             [], [], [review(COPILOT_BOT, iso(T0 + 400), commit_id=SHA)]
@@ -949,6 +949,18 @@ class SelfReviewFirst(unittest.TestCase):
         self.assertEqual((rc, fake.posts), (8, []))
         self.assertIn("quota", out)
         self.assertNotIn("--self-reviewed", out)
+
+    def test_a_push_during_the_copilot_checks_is_not_requested_on(self):
+        # Copilot on #73: the gate read the head at the start of the poll; a push during the
+        # credit lookup must not get the new, unreviewed head a Copilot request.
+        table = self.limited(PY)
+        table["copilot_internal/user"] = credits(5000)
+        table["repos/%s/pulls/7" % PY] = Seq(pr(), pr(sha=NEW))  # snapshot, then the re-read
+        add_head(table, PY, NEW, GREEN, status(("CodeRabbit", "success")))
+        rc, out, fake, _ = go_sr(PY, table, "--timeout", "30m", start=T0 + 360)
+        self.assertEqual(fake.posts, [])
+        self.assertIn("head moved to def456 during the Copilot checks", out)
+        self.assertEqual(rc, 9)
 
     def test_under_the_limit_still_waits_without_the_flag(self):
         rc, _, _, clock = go(PY, self.limited(PY), start=T0 + 60)

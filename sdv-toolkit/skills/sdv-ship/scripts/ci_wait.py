@@ -631,6 +631,14 @@ def run(
                             ],
                             threads,
                         )
+                    # Re-read the head: the gate checked the poll's snapshot, and a push during the
+                    # user/credit lookups would get an unreviewed head the request (Copilot on #73).
+                    # ponytail: requested_reviewers takes no SHA, so a ms-wide window stays between
+                    # this read and the POST; the next poll's head-move check restarts the rule.
+                    head_now = ((gh.get("repos/%s/pulls/%d" % (a.repo, a.pr)) or {}).get("head") or {}).get("sha")
+                    if head_now and head_now != snap["sha"]:
+                        say("head moved to %s during the Copilot checks: not requesting on it" % head_now[:7])
+                        continue
                     copilot_tried = True
                     ok, how = gh.request_copilot(a.repo, a.pr)
                     if not ok:
